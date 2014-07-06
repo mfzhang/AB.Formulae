@@ -1,0 +1,109 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Steve Woods' Cumulative Vol. Percentage Indicator
+//  Author/Uploader: Eric Tangen 
+//  E-mail:          
+//  Date/Time Added: 2002-07-12 08:47:28
+//  Origin:          Steve Woods "The Precision Profit Float Indicator"
+//  Keywords:        Float Steve Woods Cumulative Volume Percentage
+//  Level:           medium
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=202
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=202
+//
+//------------------------------------------------------------------------------
+//
+//  This is the third of Steve Woods' indicators - his Cumulative Volume
+//  'Percentage' indicator. It is a sawtooth histogram of volume summation
+//  normalized to a fraction of one float. When the fraction becomes one float,
+//  the summation is reset - hence the sawtooth appearance.
+//
+//  The theory is that significant advances/declines occur during integer
+//  multiples of one float and bases are also integer multiples of one float.
+//
+//  The bar for the beginning of the summation is set at the beginning of the
+//  AFL code.
+//
+//------------------------------------------------------------------------------
+
+// File NAME: ...Afl/Indicators/FloatHistogram.afl
+// Name in Indicator Builder: FloatHistogram // 
+
+// Plots the forward looking volume histogram; have to nail the beginning point manually below - 
+StartBar = LastValue(ValueWhen(DateNum()==1020207,Cum(1),1) );// use the calendar version - it is easier
+// or do it the hard way by counting the bar number:
+// StartBar =  LastValue(Cum(1)) - 120 ; //he '- x' is the number of bars from the rh edge of the chart
+// Change the '- x'  to set the beginning bar for the indicator
+// Use the cum function to establish the first bar         
+
+Title="(AmiSheet #) "+Name()+"  "+FullName()+"  Group: "+SectorID(1)+ " // 9_FloatHistogram //  "  ;
+
+BarCounter = Cum(1);
+
+AFL_float =  GetExtraData("SharesFloat"); // Use QuotesPlus data feed for easy database access to the shares in 
+                                                                //  float number
+                                                                //  Another method would be to set up foreign tickers to contain float data
+                                                                //  Or one could enter the number in the AFL code for each stock examined
+
+float_scaled = 1000000*(AFL_float)+.001; // the .001 handles possible div by 0 issues if AFL_float = 0
+
+VolumefromBarCounter=(IIf(BarCounter >= StartBar ,V,-1E10 ));
+PerCentFloatfromBarCounter = frac(Cum(VolumefromBarCounter)/Float_Scaled);
+OneFloat = IIf(PerCentFloatfromBarCounter >= 0.95,1,-1E10 ); // early detection of float turnover
+
+//Plot( BarCounter, " ",9,2); // GraphColor = 9; //9=maize
+//Plot( VolumefromBarCounter, " ",9,2); // GraphColor = 9; //9=maize
+
+Plot(  PerCentFloatfromBarCounter , " ",4,2);// Graph1Color = 4; //4=red //
+Plot(OneFloat, " ",6,2);     // GraphColor = 6; //6=blue
+Plot((HHV(OneFloat,Cum(1)))+.25," ",1,256); // 256 = no draw: scale axis only
+Plot(0," ",1,256); // 256 = no draw: scale axis only
+
+/*
+        AFL CHART COLORS Amibroker 4.0
+Plot( AFLarray, "ArrayString",0,4);// Graph1Color = 0; //0=Gray Thick Line Chart
+Plot( AFLarray, "ArrayString",1,4);// Graph1Color = 1; //1=black
+Plot( AFLarray, "ArrayString",2,4);// Graph1Color = 2; //2=white
+Plot( AFLarray, "ArrayString",3,4);// Graph1Color = 3; //3=blank (not transparent, use graph type 16 to delete)
+Plot( AFLarray, "ArrayString",4,4);// Graph1Color = 4; //4=red 
+Plot( AFLarray, "ArrayString",5,4);// Graph1Color = 5; //5=bright green
+Plot( AFLarray, "ArrayString",6,4);// Graph1Color = 6; //6=blue
+Plot( AFLarray, "ArrayString",7,4);// Graph1Color = 7; //7=yellow
+Plot( AFLarray, "ArrayString",8,4);// Graph1Color = 8; //8=bright green
+Plot( AFLarray, "ArrayString",9,4);// Graph1Color = 9; //9=maize
+Plot( AFLarray, "ArrayString",10,4);// Graph1Color = 10; //10=cyan
+Plot( AFLarray, "ArrayString",11,4);// Graph1Color = 11; //11=magenta
+Plot( AFLarray, "ArrayString",12,4);// Graph1Color = 12; //12=violet (almost black)
+Plot( AFLarray, "ArrayString",13,4);// Graph1Color = 13; //13=peach
+Plot( AFLarray, "ArrayString",14,4);// Graph1Color = 14; //14=even lighter cyan
+Plot( AFLarray, "ArrayString",15,4);// Graph1Color = 15; //15=brick
+Plot( AFLarray, "ArrayString",16,4);// Graph1Color = 16; //16=black
+Plot( AFLarray, "ArrayString",17,4);// Graph1Color = 17; //17=brown
+Plot( AFLarray, "ArrayString",18,4);// Graph1Color = 18; //18=black
+Plot( AFLarray, "ArrayString",19,4);// Graph1Color = 19; //19=forest green
+Plot( AFLarray, "ArrayString",20,4);// Graph1Color = 20; //20=black
+Plot( AFLarray, "ArrayString",25,4);// Graph1Color = 25; //25=orange
+Plot( AFLarray, "ArrayString",26,4);// Graph1Color = 26; //26=olive green
+Plot( AFLarray, "ArrayString",27,4);// Graph1Color = 27; //27=medium green
+Plot( AFLarray, "ArrayString",28,4);// Graph1Color = 28; //28=blue-green
+Plot( AFLarray, "ArrayString",29,4);// Graph1Color = 29; //29=blue
+Plot( AFLarray, "ArrayString",30,4);// Graph1Color = 30; //30=blue-gray
+Plot( AFLarray, "ArrayString",37,4);// Graph1Color = 37; //37=lighter shade of 30 (blue-gray)
+
+GRAPH TYPES
+
+1 = normal line
+2 = histogram
+4 = thick line
+8 = include dots
+16 = no line
+32 = semi log
+64 = candlestick chart
+128 = bar chart
+256 = no draw: scale axis only
+512 = Gann Staircase
+1024 = Gann Swing Dots
+
+// Amibroker AFL code by Eric Tangen
+
+*/ 

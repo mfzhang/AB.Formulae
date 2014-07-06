@@ -1,0 +1,6 @@
+// calculate TRsV
+TRSV = Volume / ATR( 1 );
+// Plot TRsV ...
+Plot( TRSV, "TRsV", colorBlue, styleThick );
+// ... and color-coded volume
+Plot( Volume, "Volume", IIf(  Close > Open, colorGreen, colorRed ), styleHistogram );

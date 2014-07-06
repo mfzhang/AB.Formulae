@@ -1,0 +1,294 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Steve Woods' Cum. Vol. Float + Cum. Vol. Channels
+//  Author/Uploader: Eric Tangen 
+//  E-mail:          
+//  Date/Time Added: 2002-07-12 08:51:23
+//  Origin:          Steve Woods "The Precision Profit Float Indicator"
+//  Keywords:        Float Channel Steve Woods Cumulative Volume
+//  Level:           advanced
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=203
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=203
+//
+//------------------------------------------------------------------------------
+//
+//  This file contains two of Steve Woods' indicators: his Cumulative-Volume
+//  'Float' indicator and his Cumulative-Volume 'Channel' indicator.
+//
+//  The Cumulative-Volume 'Float' indicator is a channel of the high/close and
+//  lowest low/close during a period of time where the cumulative volume of
+//  shares traded equaled the float. It is for a single bar. The date of this
+//  bar is set at the beginning of the AFL code.
+//
+//  The Cumulative-Volume 'Channel' indicator is channel lines constructed from
+//  the Cumulative-Volume 'Float' indicator for all bars in the chart.
+//
+//  The last of Steve Woods' indicators - his Cumulative Volume 'Percentage'
+//  indicator can be implemented entirely in AFL. I have posted it in a
+//  separate file.
+//
+//------------------------------------------------------------------------------
+
+// file name .../Indicators/Float_Cum_Vol_VBscript.afl
+
+Title="(AmiSheet #) "+Name()+"  "+FullName()+"  Group: "+SectorID(1)+ " // Float Cumulative Vol and Float Channels Work using VBscript //  "  ;
+
+myCumVolLastBar = LastValue(Cum(1)) - 100 ;
+// the '-x' term in the above equation sets the last bar of the Float Cumulative Volume Indicator 
+// use 0 for setting the last bar of the indicator to the last bar loaded. Set it to 
+// 10 for 10 bars back from last bar loaded, 20 for 20 bars back...OR 
+
+// use the calendar version (below) - it is easier:
+myCumVolLastBar = LastValue(ValueWhen(DateNum()==1020703,Cum(1),1) ); 
+// Change the DateNum in the above equation to set the last bar of the Float Cumulative Volume Indicator 
+
+EnableScript("VBscript");
+
+AFL_float =  GetExtraData("SharesFloat"); // Use QuotesPlus data feed for easy database access to the shares in 
+                                                                //  float number
+                                                                //  Another method would be to set up foreign tickers to contain float data
+                                                                //  Or one could enter the number in the AFL code for each stock examined
+BarsLoaded = LastValue(Cum(1))-1;
+
+<%
+'// VBscript code begins here
+'// ***************** alter range of float calc here in order to change execution speed
+
+'// the following 'For' statement calcs float for A specific range of bars
+'// zero = most distant bar, Ubound = most recent bar = largest positive integer
+
+vbdaystocalc = AFL("BarsLoaded") ' positive integer, set number of bars
+                    '  for the float channels calculation
+
+vbmostrecentbar  =  AFL("BarsLoaded")+1 '// A larger value than the number of days loaded
+                          '// defaults to today as the most recent bar
+
+'// ***********************************************
+
+'//  the 1000000 factor reconciles QP float with QP vol units
+
+vbfloat = 1000000*AFL("AFL_float") 
+vb0d25float = 0.25*vbfloat
+vb0d50float = 0.50*vbfloat
+vb0d75float = 0.75*vbfloat
+vbvol = AFL("V")
+
+'/* it looks like the only way to create/initialize
+' an array in VBscript is to set it 
+' equal to an AFL Array
+' so for arrays that I will pass back to AFL from  
+' vbscript, I will set them equal to 
+' OpenInterest, a field that isn't used by stock guys
+'*/
+vbFTdays= AFL("OI") 
+'// Create Outputs Arrays
+vb0d25FTdays = AFL("OI") ' days for 0.25 percent of float to turnover
+vb0d50FTdays = AFL("OI") ' days for 0.5 percent of float to turnover
+vb0d75FTdays = AFL("OI") ' days for 0.75 percent of float to turnover
+
+'//  initialize the vbscript arrays 
+'//(Belt+suspenders precaution if they 
+'// aren't zeroed from the QP database)
+For i = Ubound(vbFTdays) to 0 step  -1
+    vb0d25FTdays(i) = 0
+    vb0d50FTdays(i) = 0
+    vb0d75FTdays(i) = 0
+Next
+
+'// calculates the number of days it took looking backward from
+'// today for the float to turn over...
+'// implemented as a Do While loop (for the Volume summation)
+'// nested Inside a For-Next loop (to do this calculation for each
+'// bar loaded)
+
+'//  ********************* The range of the following FOR statement
+'//  ********************* has a dramatic affect on program exectution time
+
+If vbmostrecentbar > Ubound(vbvol) Then
+	vbmostrecentbar =Ubound(vbvol)
+End If
+
+vbmostdistantbar = vbmostrecentbar - vbdaystocalc
+
+If vbmostdistantbar > vbmostrecentbar Then
+	vbmostdistantbar = 0
+End If
+
+'//  the following 'For' statement calcs float for all bars loaded and is included for
+'//  future reference only
+'//  zero = most distant bar, Ubound = most recent bar = largest positive integer
+'//  For i = Ubound(vbvol) to 0 step  -1
+'//  the user configurable range follows:
+
+For i = vbmostrecentbar to vbmostdistantbar step  -1
+
+'// ********************** END FOR I = x to y SELECTION ***********
+
+'// vbFTdays array contains the number of days for the 
+'// float to turn over
+
+vbFTdays(i) = 0
+vbtempvolsum = 0
+vbtemp0d25volsum = 0
+vbtemp0d50volsum = 0
+vbtemp0d75volsum = 0
+j = i
+vbcountFTdays = 0
+
+'// Add vol till you get one float
+
+Do While vbtempvolsum < vbfloat	
+    vbtempvolsum = vbtempvolsum+Vbvol(j)
+    vbtemp0d25volsum = vbtemp0d25volsum + vbvol(j)
+    vbtemp0d50volsum = vbtemp0d25volsum + vbvol(j)
+    vbtemp0d75volsum = vbtemp0d25volsum + vbvol(j)   
+    vbcountFTdays = vbcountFTdays+1
+
+'// Pick up the partial float turnovers - very convenient to do it here  
+   
+    If vbtemp0d25volsum < vb0d25float Then
+   	vb0d25FTdays(i) = vbcountFTdays
+        vbtemp0d25volsum = vbtempvolsum 
+    End If
+
+    If vbtemp0d50volsum < vb0d50float Then
+   	vb0d50FTdays(i) = vbcountFTdays
+    End If
+
+    If vbtemp0d75volsum < vb0d75float Then
+   	vb0d75FTdays(i) = vbcountFTdays
+    End If
+
+    j = j-1  '// decrement to set the index to the prior bar
+    If j <= 0 Then
+        Exit Do '// exit at vbVol(0)
+    End If
+Loop
+
+If vbtempvolsum >= vbfloat Then
+vbFTdays(i) = vbcountFTdays '// successful float turnover calc
+Else  
+vbFTdays(i) =0   '// unsuccessful float turnover calc - insufficient number of bars loaded
+End If
+
+'// set float turnover to 0 until you get an entire fractional float
+'// similiar to needing n periods prior to getting A valid n period 
+'// moving average. Without this check, the earliest bars show A ramp up 
+
+'// there is no need for the >= check for the fractional floats here
+
+If vbtemp0d25volsum < vb0d25float Then
+vb0d25FTdays(i) = 0 ' unsuccessful fractional float turnover calc
+End If
+
+If vbtemp0d50volsum < vb0d50float Then
+vb0d50FTdays(i) = 0 '// unsuccessful fractional float turnover calc
+End If
+
+If vbtemp0d75volsum < vb0d75float Then
+vb0d75FTdays(i) = 0 '// unsuccessful fractional float turnover calc
+End If
+
+Next 
+
+'// end of float turnover bars calc
+
+AFL.Var("Floatout") = 1000000*vbfloat
+AFL.Var("FTdays") = vbFTdays
+AFL.Var("quarterFTdays") = vb0d25FTdays
+AFL.Var("halfFTdays") = vb0d50FTdays
+AFL.Var("threequarterFTdays") = vb0d75FTdays
+%>
+// Float Cumulative Volume 
+
+BarCounter = Cum(1);
+lastbararray = IIf(myCumVolLastBar==BarCounter,1,-1E10);
+CumVolFirstBar = myCumVolLastBar - LastValue(ValueWhen(lastbararray==1,FTdays, n=1));
+Window1 = IIf(barcounter <= myCumVolLastBar AND barcounter > CumVolFirstBar, 1, -1E10);
+
+myhh = HHV(H,LastValue(ValueWhen(lastbararray==1,FTdays, n=1)));     
+myhh1 = Window1*LastValue(ValueWhen( lastbararray==1, myhh, n=1));
+
+myll = LLV(L,LastValue(ValueWhen(lastbararray==1,FTdays, n=1)));     
+myll1 = Window1*LastValue(ValueWhen( lastbararray==1, myll, n=1));
+
+// Float Cumulative Volume Plot:
+Plot( C, " ",1,64); // Graph1Color = 1; //1=black; Graph Type 64 = candlestick chart
+Plot(myhh1," ",1,8);// Graph1Color = 8; //8=bright green Graph1Color = 1; //1=black
+Plot(myll1," ",1,8);// Graph1Color = 11; //11=magenta Graph1Color = 1; //1=black
+
+// The below 2 lines are used to prevent the indicator from sitting on the chart's upper or lower
+// borders when scaling is set to automatic. 
+Plot( myhh1+ATR(10), " ",1,256);// 256 = no draw: scale axis only
+Plot( myll1-ATR(10), " ",1,256);// 256 = no draw: scale axis only
+
+// Float Channel Bars : undocumented Amibroker feature - LLV, HHV will take an array for the 'periods' argument
+// Thank You Again, TJ
+
+Window2 = IIf(FTdays != 0, 1, -1E10); // this removes the invalid first N bars of FT 
+
+Ch_LLV_C = Window2*Ref(LLV(C,FTdays),-1);
+Ch_HHV_C = Window2*Ref(HHV(C,FTdays),-1);
+Ch_LLV_L = Window2*Ref(LLV(L,FTdays),-1);
+Ch_HHV_H = Window2*Ref(HHV(H,FTdays),-1);
+
+Plot( Ch_LLV_C," ",4,4);// Graph1Color = 4; //4=red 
+Plot( Ch_HHV_C," ",6,4);// Graph1Color = 6; //6=blue 
+Plot( Ch_LLV_L," ",5,4);// Graph1Color = 5;  //5=bright green
+Plot( Ch_HHV_H," ",11,4);// Graph1Color = 11; //11=magenta
+
+// The below 2 lines are used to prevent the indicator from sitting on the chart's upper or lower
+// borders when scaling is set to automatic. 
+
+Plot( Ref(LLV(L,FTdays),-1)-ATR(10), " ",1,256);// Graph = 256 = no draw: scale axis only
+Plot( Ref(HHV(H,FTdays),-1)+ATR(10), " ",1,256);// Graph1 = 256 = no draw: scale axis only
+
+/*
+        AFL CHART COLORS Amibroker 4.0
+Plot( AFLarray, "ArrayString",0,4);// Graph1Color = 0; //0=Gray Thick Line Chart
+Plot( AFLarray, "ArrayString",1,4);// Graph1Color = 1; //1=black
+Plot( AFLarray, "ArrayString",2,4);// Graph1Color = 2; //2=white
+Plot( AFLarray, "ArrayString",3,4);// Graph1Color = 3; //3=blank (not transparent, use graph type 16 to delete)
+Plot( AFLarray, "ArrayString",4,4);// Graph1Color = 4; //4=red 
+Plot( AFLarray, "ArrayString",5,4);// Graph1Color = 5; //5=bright green
+Plot( AFLarray, "ArrayString",6,4);// Graph1Color = 6; //6=blue
+Plot( AFLarray, "ArrayString",7,4);// Graph1Color = 7; //7=yellow
+Plot( AFLarray, "ArrayString",8,4);// Graph1Color = 8; //8=bright green
+Plot( AFLarray, "ArrayString",9,4);// Graph1Color = 9; //9=maize
+Plot( AFLarray, "ArrayString",10,4);// Graph1Color = 10; //10=cyan
+Plot( AFLarray, "ArrayString",11,4);// Graph1Color = 11; //11=magenta
+Plot( AFLarray, "ArrayString",12,4);// Graph1Color = 12; //12=violet (almost black)
+Plot( AFLarray, "ArrayString",13,4);// Graph1Color = 13; //13=peach
+Plot( AFLarray, "ArrayString",14,4);// Graph1Color = 14; //14=even lighter cyan
+Plot( AFLarray, "ArrayString",15,4);// Graph1Color = 15; //15=brick
+Plot( AFLarray, "ArrayString",16,4);// Graph1Color = 16; //16=black
+Plot( AFLarray, "ArrayString",17,4);// Graph1Color = 17; //17=brown
+Plot( AFLarray, "ArrayString",18,4);// Graph1Color = 18; //18=black
+Plot( AFLarray, "ArrayString",19,4);// Graph1Color = 19; //19=forest green
+Plot( AFLarray, "ArrayString",20,4);// Graph1Color = 20; //20=black
+Plot( AFLarray, "ArrayString",25,4);// Graph1Color = 25; //25=orange
+Plot( AFLarray, "ArrayString",26,4);// Graph1Color = 26; //26=olive green
+Plot( AFLarray, "ArrayString",27,4);// Graph1Color = 27; //27=medium green
+Plot( AFLarray, "ArrayString",28,4);// Graph1Color = 28; //28=blue-green
+Plot( AFLarray, "ArrayString",29,4);// Graph1Color = 29; //29=blue
+Plot( AFLarray, "ArrayString",30,4);// Graph1Color = 30; //30=blue-gray
+Plot( AFLarray, "ArrayString",37,4);// Graph1Color = 37; //37=lighter shade of 30 (blue-gray)
+
+GRAPH TYPES
+
+1 = normal line
+2 = histogram
+4 = thick line
+8 = include dots
+16 = no line
+32 = semi log
+64 = candlestick chart
+128 = bar chart
+256 = no draw: scale axis only
+512 = Gann Staircase
+1024 = Gann Swing Dots
+
+// Amibroker AFL code by Eric Tangen
+
+*/ 

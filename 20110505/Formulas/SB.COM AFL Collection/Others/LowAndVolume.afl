@@ -1,0 +1,4 @@
+Cond1 = Close <3;
+Cond2 = Volume > 150000;
+Buy = Cond1 AND Cond2;
+Sell = High > 4;

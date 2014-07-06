@@ -1,0 +1,53 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Lagging MA-Xover
+//  Author/Uploader: Thomas Heyen 
+//  E-mail:          
+//  Date/Time Added: 2006-06-08 05:27:49
+//  Origin:          Result of testing futures intraday models
+//  Keywords:        Model Moving Average Crossover
+//  Level:           medium
+//  Flags:           system
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=625
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=625
+//
+//------------------------------------------------------------------------------
+//
+//  Fast DEMA crossing its same period lagging EMA.
+//
+//------------------------------------------------------------------------------
+
+/* ###################
+Lagging MA-Xover
+Author: Thomas Heyen
+Intraday Trading Model
+
+Please set your Chart to
+the Timeframe of the Model!
+Otherwise Trading Ribbbon and
+Shapes will not correspond to
+the Graph.
+#####################*/
+
+
+MarketHours = TimeNum()>=094000 AND TimeNum()<=154400; 
+MarketClose= TimeNum()>=154444 AND TimeNum()<=240000;
+
+
+TimeFrameSet(120);
+smooth = Optimize("smooth",20,2,40,1);
+Lag = Optimize("lag",22,2,40,1);
+fast = DEMA(C,smooth);
+slow = Ref(EMA(C,smooth),-Lag);
+Buy = Cross(fast,slow) AND MArkethours;
+Sell = Cross(slow,fast) OR slow == fast OR MArketclose;
+Cover = Cross(fast,slow) OR slow == fast OR MArketclose;
+Short = Cross(slow,fast) AND MArkethours;
+
+
+PlotShapes(IIf(Buy,shapeUpArrow,shapeNone),colorGreen);
+PlotShapes(IIf(Short,shapeDownArrow,shapeNone),colorRed);
+// Plot Trading Ribbon
+Color = IIf( BarsSince(Sell)>BarsSince(Buy), colorGreen, IIf( BarsSince(Cover)>BarsSince(Short), colorRed, colorWhite ));
+Plot( 1, "", Color, styleArea | styleOwnScale | styleNoLabel, -0.1, 15 );
+TimeFrameRestore();

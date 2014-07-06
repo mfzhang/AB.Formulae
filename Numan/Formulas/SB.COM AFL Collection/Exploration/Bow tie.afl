@@ -1,0 +1,76 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Bow tie
+//  Author/Uploader: dtholz 
+//  E-mail:          
+//  Date/Time Added: 2002-02-28 00:06:30
+//  Origin:          AFL Implementation by Geoff Mulhall
+//  Keywords:        Dave Landry's Bow
+//  Level:           basic
+//  Flags:           exploration
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=167
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=167
+//
+//------------------------------------------------------------------------------
+//
+//  /* Boe Tie - AFL Implementation by Geoff Mulhall 12-5-2001
+//
+//------------------------------------------------------------------------------
+
+ 
+/* Boe Tie - AFL Implementation by Geoff Mulhall 12-5-2001 */
+
+dollars = 5000; /* Or whatever you investment is to be - for the bangforbuck calculation */
+maShort = 10;
+maMedium = 20;
+maLong = 30;
+ 
+
+/* Bow Tie conditions - Short term moving average has crossed the medium term moving average sometime in the last 15 days - Add more conditions for more days */ 
+ 
+cond11 = ref(cross(ma(close,maShort),ma(close,maMedium)),-1) > 0;
+cond12 =  ref(cross(ma(close,maShort),ma(close,maMedium)),-2) > 0;
+cond13 =  ref(cross(ma(close,maShort),ma(close,maMedium)),-3) > 0;
+cond14 =  ref(cross(ma(close,maShort),ma(close,maMedium)),-4) > 0;
+cond15 =  ref(cross(ma(close,maShort),ma(close,maMedium)),-5) > 0;
+cond16 =  ref(cross(ma(close,maShort),ma(close,maMedium)),-6) > 0;
+cond17 =  ref(cross(ma(close,maShort),ma(close,maMedium)),-7) > 0;
+cond18 =  ref(cross(ma(close,maShort),ma(close,maMedium)),-8) > 0;
+cond19 =  ref(cross(ma(close,maShort),ma(close,maMedium)),-9) > 0;
+cond110 =  ref(cross(ma(close,maShort),ma(close,maMedium)),-10) > 0;
+cond111 =  ref(cross(ma(close,maShort),ma(close,maMedium)),-11) > 0;
+cond112 =  ref(cross(ma(close,maShort),ma(close,maMedium)),-12) > 0;
+cond113 =  ref(cross(ma(close,maShort),ma(close,maMedium)),-13) > 0;
+cond114 =  ref(cross(ma(close,maShort),ma(close,maMedium)),-14) > 0;
+cond115 =  ref(cross(ma(close,maShort),ma(close,maMedium)),-15) > 0;
+ 
+cond1 = cond11 OR cond12 OR cond13 OR cond14 OR cond15 OR cond16 OR cond17 OR cond18 OR cond19 OR cond110 OR cond111 OR cond112 OR cond113 OR cond114 OR cond115; 
+ 
+/* Moving averages must be in the correct order at the buy signal */
+ 
+cond2 = (ma(close,maShort) > ma(close,maMedium)) AND (ma(close,maMedium) > ma(close,maLong)); 
+ 
+/* Signal is given when the close crosses above the short term moving average */
+ 
+cond3 = cross(close,ma(close,maShort));
+ 
+filter =  cond1 AND cond2 AND cond3;
+ 
+buy = filter;
+ 
+sell = 0; 
+ 
+BangForBucks = (dollars/close) * atr(200);
+ 
+numcolumns = 3;
+column0 = close;
+column0format = 3.2;
+column0name = "Close";
+column1 = atr(maLong);
+column1format = 3.4;
+column1name = "ATR - maLong";
+column2 = BangForBucks;
+column2format = 3.2;
+column2name = "BangForBucks"; 
+
+ 

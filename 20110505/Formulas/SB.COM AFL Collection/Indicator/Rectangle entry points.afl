@@ -1,0 +1,77 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Rectangle entry points
+//  Author/Uploader: Ed 
+//  E-mail:          empottasch@home.nl
+//  Date/Time Added: 2004-11-14 15:28:38
+//  Origin:          from "Professional Stock Trading, by Conway / Behle, 2003
+//  Keywords:        Rectangle Geometric trading entry long short
+//  Level:           semi-advanced
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=401
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=401
+//
+//------------------------------------------------------------------------------
+//
+//  Rectangles give amazing entry positions so it seems. Trick is what to do
+//  with them. That .... I leave for yourself to find out (I did not work this
+//  out myself yet as well). The system is documented starting in Chapter 5 of
+//  Conway's book. Trick as with any system is where do you get in and where do
+//  you get out. This is essential for a system to work. The code I give here
+//  just locates the entries.
+//
+//------------------------------------------------------------------------------
+
+/*
+
+Rectangle System Development
+
+after: "Professional Stock Trading", M. Conway / A. Behle, 2003, pages 106, 107, 108
+
+Edward Pottasch, nov 2004
+
+*/
+
+RectangleLength = 4;
+RangeLength = RectangleLength * 3;
+RangeFactor = 1.0;
+RangeRatioLimit = 0.3;
+AtrPeriod = RangeLength;
+
+// rectangle
+hg = HHV(H,RectangleLength);
+lw = LLV(L,RectangleLength);
+HeightRectangle = hg - lw;
+
+// preceding range
+hgp = Ref(HHV(H,RangeLength),RectangleLength * -1);
+lwp = Ref(LLV(L,RangeLength),RectangleLength * -1);
+HeightRangeLength = hgp - lwp;
+
+// aspect ratio
+ar = HeightRectangle / HeightRangeLength;
+
+// ATR
+at = ATR(AtrPeriod);
+
+// decide if it is a rectangle
+yon = IIF(ar < RangeRatioLimit AND HeightRectangle < at * RangeFactor, 1, 0);
+
+// breakout level
+long_breakout_level = IIF(yon,yon * hg,null);
+short_breakout_level = IIF(yon,yon * lw,null);
+
+// decide about direction
+Buy = IIF(H > Ref(long_breakout_level,-1),1,0);
+BuyPrice = IIF(O > Ref(long_breakout_level,-1), O, Ref(long_breakout_level,-1));
+Short = IIF(L < Ref(short_breakout_level,-1),1,0);
+ShortPrice = IIF(O < Ref(short_breakout_level,-1), O, Ref(short_breakout_level,-1));
+
+Plot(C,"",colorwhite,64);
+Plot(ref(hg,-1),"Long breakout level",colorblue,1);
+Plot(ref(lw,-1),"Short breakout level",coloryellow,1);
+
+PlotShapes(IIf(yon,shapeCircle,0),colorWhite, layer = 0, yposition = O, offset = 0 );
+
+PlotShapes(IIf(Buy,shapeUpArrow,0),colorWhite, layer = 0, yposition = BuyPrice, offset = 0 );
+PlotShapes(IIf(Short,shapeHollowDownArrow,0),colorLightBlue, layer = 0, yposition = ShortPrice, offset = 0 );

@@ -1,0 +1,36 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Trending Ribbon
+//  Author/Uploader: Jim Wiehe 
+//  E-mail:          
+//  Date/Time Added: 2006-07-17 06:22:25
+//  Origin:          It leaked out of my brain.
+//  Keywords:        ADX and MACD
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=635
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=635
+//
+//------------------------------------------------------------------------------
+//
+//  This uses the nifty ribbon function in Amibroker. I use this in most of my
+//  price charts because it reduces the clutter with too many indicators on the
+//  screen. So if the ribbon is green both the MACD and ADX have started
+//  trending up. If the ribbon is red both the MACD and ADX are trending down.
+//
+//------------------------------------------------------------------------------
+
+// Paste the code below to your price chart somewhere and green ribbon means both
+// both MACD and ADX trending up so if the red ribbon shows up the MACD and the ADX 
+// are both trending down.
+
+_SECTION_BEGIN("trending ribbon");
+uptrend=PDI()>MDI()AND Signal()<MACD();
+downtrend=MDI()>PDI()AND Signal()>MACD();
+
+
+Plot( 2, /* defines the height of the ribbon in percent of pane width */"ribbon",
+IIf( uptrend, colorGreen, IIf( downtrend, colorRed, 0 )), /* choose color */
+styleOwnScale|styleArea|styleNoLabel, -0.5, 100 );
+
+_SECTION_END();

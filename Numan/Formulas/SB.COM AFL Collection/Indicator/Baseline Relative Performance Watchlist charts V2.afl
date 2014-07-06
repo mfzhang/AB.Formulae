@@ -1,0 +1,62 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Baseline Relative Performance Watchlist charts V2
+//  Author/Uploader: Michael.S.G. 
+//  E-mail:          OzFalcon@Bden.org
+//  Date/Time Added: 2003-08-06 02:10:25
+//  Origin:          
+//  Keywords:        Baseline Relative Performance Watchlist charts
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=294
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=294
+//
+//------------------------------------------------------------------------------
+//
+//  A Slightly more streamline version of the original.
+//
+//  This revision uses the currently selected ticker as the baseline. Watchlist
+//  May be selected via CTRL-R Param Dialog.
+//
+//  This example plots lines for each entry in watchlist.
+//
+//  <OzFalcon>
+//
+//------------------------------------------------------------------------------
+
+/* Baseline Relative Performance Watchlist charts
+** Current Symbol used as a base line.
+** (Use an Index as your Base eg XAO,XEJ,XMJ Etc...)
+**
+** This example plots lines for each entry in watchlist
+** White = Base Line. (Usualy Selected Index)
+** 
+** Change the Watchlist with CTRL-R. Carefull of Big Watchlists.
+**
+** AFL implementation by Tomasz Janeczko
+** Watchlist & Parameter's Addition by Michael.S.G. 
+**
+** Use Automatic scaling, Grid: Percent, Limits, Middle
+*/
+Listnum = Param( "Watchlist", 5, 0, 100, 1 );// Watchlist to display.
+
+// the start point of comparision will be StartPoint bar
+sp = Param( "Startpoint %", 55, 1, 100, 1 ); 
+startpoint = int(BarCount*(sp/100));
+
+// Here is a base line - We Use Currenty Selected Ticker.
+// (Use an Index as your Base eg XAO,XEJ,XMJ Etc...) 
+price = Close;
+baseline = 100 * ( price/ValueWhen( Cum(1) == startpoint, price ) - 1 );
+
+// base line chart (flat line)
+Plot ( baseline - baseline,Name(),2,1);
+
+list = GetCategorySymbols( categoryWatchlist, listnum );
+for( i = 0; ( sym = StrExtract( list, i ) ) != ""; i++ )
+ {
+    price = Foreign( sym, "C" );
+	 Plot (100 * ( price/ValueWhen( Cum(1) == startpoint, price ) - 1 )- baseline,sym,6+i,1);
+ }
+
+"StartPoint =" +WriteVal(startpoint);

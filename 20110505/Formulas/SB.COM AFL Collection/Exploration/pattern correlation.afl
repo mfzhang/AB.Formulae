@@ -1,0 +1,121 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    pattern correlation
+//  Author/Uploader: Ed Pottasch 
+//  E-mail:          pablito@home.nl
+//  Date/Time Added: 2004-02-13 06:05:56
+//  Origin:          
+//  Keywords:        pattern correlation
+//  Level:           medium
+//  Flags:           exploration
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=339
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=339
+//
+//------------------------------------------------------------------------------
+//
+//  Finds pattern similar as the pattern defined by using the Amibroker
+//  markers. Just click a pattern using the mouse and run the program. This
+//  program can be used for scanning purposes. The pattern that you want to
+//  look for can be marked anywhere in the active chart. The resulting pattern
+//  is looked for only at the current date.
+//
+//  also see header program for a description.
+//
+//------------------------------------------------------------------------------
+
+/*
+
+Program searches for a pattern within a predefined list of symbols. 
+The pattern searched for is marked with the AB markers anywhere 
+inside the active chart.
+
+1) Put this code in the Automatic Analysis window.
+2) Display a chart of a certain symbol.
+3) Select a piece of this chart using AB markers.
+4) Explore a predefined list of symbols ("use filter")
+   use from: to: (last date available), or use "n last 
+   days", where n = 1
+5) Sort the sum by clicking on "sum" in the AA window 
+   (smallest Sum is best correlation).
+
+ed2000nl, Feb 2004, pablito@home.nl
+
+*/
+
+// select the symbol from the active chart
+EnableScript("jscript");
+<%
+AB = new ActiveXObject("Broker.Application");
+AFL("symb")=AB.ActiveDocument.Name;
+%>
+
+// select the variables of the stock you want to correlate
+xo=Foreign(symb,"Open");
+xh=Foreign(symb,"High");
+xl=Foreign(symb,"Low");
+xc=Foreign(symb,"Close");
+xv=Foreign(symb,"Volume");
+
+// define help arrays in which to store the data you want to fit
+xoh = xo; xoh = 100000;
+xhh = xh; xhh = 100000;
+xlh = xl; xlh = 100000;
+xch = xc; xch = 100000;
+xvh = xv; xvh = 100000;
+
+// extract the period from the graph selected by using the markers
+period = EndValue( BarIndex() ) - BeginValue( BarIndex() );
+
+// store the piece of array selected by using the markers 
+cnt = 0;
+for( i = BeginValue( BarIndex() ); i < BeginValue( BarIndex() ) + period + 1; i++ ) {
+
+	xoh[cnt] = xo[i];
+	xhh[cnt] = xh[i];
+	xlh[cnt] = xl[i];
+	xch[cnt] = xc[i];
+	xvh[cnt] = xv[i];
+	cnt = cnt + 1;			
+		
+}
+
+// define a storage array to store the fit
+st = C; st = 100000;
+
+// test to avoid that marked period is out of range of the available data. 
+if (period > 0 AND BeginValue( BarIndex() ) != 0 AND EndValue( BarIndex() ) != BarCount) {
+
+	// correlate this selected piece of data with the last 
+	// "period" data for each symbol in a given list
+	for( i = BarCount - 1; i < BarCount; i++) {
+
+		// calculate scale factor
+		scl = xch[0] / C[i-period];
+
+		hsum = 0;
+		for( j = 0; j < period + 1; j++) {
+			
+			// the fit or correlation procedure
+			hsum = hsum +
+				((xoh[j] - O[i-period+j]*scl)/xoh[j])^2 +
+				((xhh[j] - H[i-period+j]*scl)/xhh[j])^2 +
+				((xlh[j] - L[i-period+j]*scl)/xlh[j])^2 +
+				((xch[j] - C[i-period+j]*scl)/xch[j])^2;
+				
+				//AddColumn(C[i-period+j],"Clp");
+				//AddColumn(xch[j],"Cfit");
+
+		}
+	
+		st[i] = hsum/(period+1);
+
+	}
+
+Filter=1;
+AddColumn(st,"Sum",format = 1.6);
+AddColumn(period,"Period Fitted");
+AddColumn(scl,"Scale Factor");
+AddTextColumn(symb,"Symbol Fitted");
+AddColumn(BarCount,"BarCount");
+
+}

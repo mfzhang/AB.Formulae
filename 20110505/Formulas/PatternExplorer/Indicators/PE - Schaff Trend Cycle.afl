@@ -1,0 +1,76 @@
+//|-----------------------------------------------------------------------------------------
+//|PatternExplorer.com - Schaff Trend Cycle indicator
+//|Copyright © 2007, PatternExplorer.com
+//|http://www.PatternExplorer.com
+//|e-mail: support@PatternExplorer.com
+//|-----------------------------------------------------------------------------------------
+FormulaName = "PE - Schaff Trend Cycle";
+
+SetChartOptions( 0, chartShowDates | chartWrapTitle, Chartgridmiddle == 0 );
+GraphXSpace = 10;
+#pragma nocache
+#include_once  <\PEInc\PatternExplorer_f0.afl>
+#Include_once "C:\Program Files (x86)\AmiBroker5\Formulas\PatternExplorer\#Defaults & Mods\PE - Defaults.afl"
+#Include_once "C:\Program Files (x86)\AmiBroker5\Formulas\PatternExplorer\#Defaults & Mods\PE - Mods.afl"
+/*******************************************************************************************/
+AddCustomCodeBeforePE();
+/*******************************************************************************************/
+_SECTION_BEGIN( "Build-In Average" );
+AddAvgTypeParam( 3 );
+_SECTION_END();
+/*******************************************************************************************/
+_SECTION_BEGIN( "First Time Frame" );
+TC = Param( "TC Period", 10, 1, 100, 1 );
+MA1 = Param( "MA1 Period", 23, 5, 50, 1 );
+MA2 = Param( "MA2 Period", 50, 20, 200, 1 );
+LowerLevel1 = Param( "Lower level", 25, 5, 35, 1 );
+UpperLevel1 = Param( "Upper level", 75, 65, 95, 1 );
+STCstyle = ParamStyle( "Style", styleLine | styleThick, maskDefault );
+Color = ParamColor( "Color", def_STCcolor );
+_SECTION_END();
+/*******************************************************************************************/
+_SECTION_BEGIN( "Second Time Frame" );
+TF = Param( "TF-Multiplier", 4, 0, 24, 1 );
+STC2expandMode = ParamToggle( "STC TF2 Expand Mode", "Expand First|Expand Last", 1 );
+TC_TF2 = Param( "TC Period", 10, 1, 100, 1 );
+MA1_TF2 = Param( "MA1 Period", 23, 5, 50, 1 );
+MA2_TF2 = Param( "MA2 Period", 50, 20, 200, 1 );
+LowerLevel2 = Param( "Lower level", 25, 5, 35, 1 );
+UpperLevel2 = Param( "Upper level", 75, 65, 95, 1 );
+STCstyle = ParamStyle( "Style", styleLine | styleThick, maskDefault );
+Color2 = ParamColor( "Color", def_STC_TF2color );
+_SECTION_END();
+/*******************************************************************************************/
+#include_once  <\PEInc\Lib\PatternExplorer_f11.afl>
+AddGradientBackground( def_BGColorswitch, def_BgTopcolor, def_BgBottomcolor, def_titlebkcolor );
+/*******************************************************************************************/
+Buy = def_Buy AND STC_TF2 > UpperLevel2 AND STC_TF2 >= Ref( STC_TF2, -1 ) AND STCValley;
+Sell = def_Sell AND STC_TF2 < LowerLevel2 AND STC_TF2 <= Ref( STC_TF2, -1 ) AND STCTop;
+/*******************************************************************************************/
+Filter = def_Filter AND NOT GroupID() == 253;
+Filter = Filter AND ( WB | WS | SB | SS | WB_TF2 | WS_TF2 | SB_TF2 | SS_TF2 );
+/*******************************************************************************************/
+BC = colorDefault;
+Addefaultcolumns();
+Adddefaultcolumns( 2, 1 );
+AddColumn( IIf( WB, 66, IIf( WS, 83, Null ) ), "Weak Signal", formatChar, TC, BC, 80 );
+AddColumn( IIf( SB, 66, IIf( SS, 83, Null ) ), "Strong Signal", formatChar, TC, BC, 80 );
+AddColumn( IIf( WB_TF2, 66, IIf( WS_TF2, 83, Null ) ), "TF2 Weak Signal", formatChar, TC, BC, 100 );
+AddColumn( IIf( SB_TF2, 66, IIf( SS_TF2, 83, Null ) ), "TF2 Strong Signal", formatChar, TC, BC, 100 );
+AddTextColumn( FullName(), "Full name" );
+/*******************************************************************************************/
+Plot( STC1, "STC", Color, STCstyle );
+Plot( STC_TF2, "STC TF2", Color2, STCstyle );
+PlotGrid( LowerLevel1, colorDefault );
+PlotGrid( UpperLevel1, colorDefault );
+PlotGrid( LowerLevel2, colorDefault );
+PlotGrid( UpperLevel2, colorDefault );
+/*******************************************************************************************/
+ToolTip = def_ToolTip;
+/*******************************************************************************************/
+AddCustomCodeAfterPE();
+/*******************************************************************************************/
+Title =
+    "PatternExplorer.com - Schaff Trend Cycle" + " - " +  Name() + " - " +
+    EncodeColor( colorRed ) + Interval( 2 ) + EncodeColor() + "  - " + Date() + " - " + EncodeColor( Color ) +
+    "STC = " + WriteVal( STC1, 1.2 ) + ", " + EncodeColor( color2 ) + "STC 2nd time frame = " + WriteVal( STC_TF2, 1.2 );

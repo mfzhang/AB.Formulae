@@ -1,0 +1,31 @@
+//|-----------------------------------------------------------------------------------------
+//|PatternExplorer.com - PatternExplorer_f13
+//|Copyright © 2007, PatternExplorer.com
+//|http://www.PatternExplorer.com
+//|e-mail: support@PatternExplorer.com
+//|-----------------------------------------------------------------------------------------
+X = BarIndex();
+ValleyInput = IIf( PatternPriceBasis, L, C );
+Valley =  PeValleyInput( ValleyInput, Bars, MinVertSize, SelectedMode = 1 );
+ValleyLow = ValueWhen( Valley, ValleyInput );
+ValleyX = ValueWhen( Valley, X );
+x_lastvalley = LastValue( ValueWhen( Valley, x, 1 ) );
+TopInput = IIf( PatternPriceBasis, H, C );
+Top = PeTopInput( TopInput, Bars, MinVertSize, SelectedMode = 1 );
+TopHigh = ValueWhen( Top, TopInput );
+TopX = ValueWhen( Top, X );
+x_lasttop = LastValue( ValueWhen( top, x, 1 ) );
+Distance = 0.5 * ATR( 14 );//could be adjusted
+Sup_break = Cross( ValleyLow, C ) & Ref( LowestSince( Ref( Valley, -1 ), Low ) > ValleyLow, -1 );
+Sup_pricejustabove = L < ValleyLow + Distance & L > ValleyLow & LowestSince( Ref( Valley, -1 ), Low, 1 ) > ValleyLow;
+Sup_confirmed = L <= ValleyLow & C > ValleyLow & Ref( LowestSince( Ref( Valley, -1 ), Low ) > ValleyLow, -1 );
+Sup_confirmed = Sup_confirmed AND NOT Valley;
+Res_break = Cross( C, TopHigh ) & Ref( HighestSince( Ref( Top, -1 ), High ) < TopHigh, -1 );
+Res_pricejustbelow = H > TopHigh - Distance & H < TopHigh & HighestSince( Ref( Top, -1 ), High ) < TopHigh;
+Res_confirmed = H >= TopHigh & C < TopHigh & Ref( HighestSince( Ref( Top, -1 ), High ) < TopHigh, -1 );
+Res_confirmed = Res_confirmed AND NOT Top;
+SupSignals = Sup_break | Sup_pricejustabove | Sup_confirmed;
+ResSignals = Res_break | Res_pricejustbelow | Res_confirmed;
+ZZ = Zig( C, LastValue( SwingSize ) );
+PivotLow = Ref( IIf( Ref( ROC( ZZ, 1 ), -1 ) < 0 AND ROC( ZZ, 1 ) > 0, 1, Null ), 1 );
+PivotHigh = Ref( IIf( Ref( ROC( ZZ, 1 ), -1 ) > 0 AND ROC( ZZ, 1 ) < 0, 1, Null ), 1 );

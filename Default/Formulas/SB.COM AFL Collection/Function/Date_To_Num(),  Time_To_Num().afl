@@ -1,0 +1,78 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Date_To_Num(),  Time_To_Num()
+//  Author/Uploader: Antonio Marra 
+//  E-mail:          ant.marra@virgilio.it
+//  Date/Time Added: 2004-07-20 06:36:17
+//  Origin:          
+//  Keywords:        DateNum TimeNum
+//  Level:           basic
+//  Flags:           showemail,function
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=362
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=362
+//
+//------------------------------------------------------------------------------
+//
+//  These functions will convert a quotation date or a quotation time in
+//  correct DateNum() and TimeNum() format.
+//
+//------------------------------------------------------------------------------
+
+/*_________________________________________________________________________________________ 
+
+  SYNTAX:
+         Date_To_Num(ddmmaaaa)
+         Time_To_Num(hhmmss)
+
+  PURPOSE:
+          These functions will convert a quotation date or a quotation time in correct
+          DateNum() and TimeNum() format. 
+  
+  HOW TO USE:
+          Copy this file in your include directory or append it to another file that You 
+          use as "functions database".
+          Write the value to convert as TEXT (i.e. "ddmmyyyy" or "hhmmss").
+          For time values, if the hour value is less than 10, use zero ("094000") and
+          always include the seconds.
+          Separators are not needed.
+
+  EXAMPLE:
+          1. if you want to know the BarIndex() value at a given date:
+          
+             Index = ValueWhen( DateNum()== Date_To_Num("10012004") , BarIndex(), 1);
+          
+          2. if you want to know the Close price at a given time:
+          
+             Date_Value = DateNum() == Date_To_Num("10012004");
+             Time_Value = TimeNum() == Time_To_Num("094500");  // or ("155900")
+             valueWhen( Date_Value And Time_Value, C,1);
+
+  ________________________________________________________________________________________  
+                                                                                          */
+
+
+function Date_To_Num(ddmmaaaa)
+{
+   dd_ = StrToNum(strLeft(ddmmaaaa,2));
+   mm_ = StrToNum(StrMid(ddmmaaaa,2,2));
+   aa_ = StrToNum(StrRight(ddmmaaaa,4));
+
+   Date_Num = (10000 * (aa_ - 1900)) + (100 * mm_) + dd_;
+   RESULT = Date_Num;
+
+   return RESULT;
+}
+
+
+
+function Time_To_Num(hhmmss)
+{
+   hh_t = StrToNum(strLeft(hhmmss,2));
+   mm_t = StrToNum(StrMid(hhmmss,2,2));
+   ss_t = StrToNum(StrRight(hhmmss,2));
+   
+   Time_Num = 10000 * hh_t + 100 * mm_t + ss_t;
+   RESULT = Time_Num;
+
+   return RESULT;
+}

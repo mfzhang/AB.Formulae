@@ -1,0 +1,37 @@
+//|-----------------------------------------------------------------------------------------
+//|PatternExplorer.com - PatternExplorer_f04
+//|Copyright © 2007, PatternExplorer.com
+//|http://www.PatternExplorer.com
+//|e-mail: support@PatternExplorer.com
+//|-----------------------------------------------------------------------------------------
+T1_mov = PeGMA( Foreign( Symbol1, "Close" ), pds );
+T2_mov = PeGMA( Foreign( Symbol2, "Close" ), pds );
+T3_mov = PeGMA( Foreign( Symbol3, "Close" ), pds );
+T4_mov = PeGMA( Foreign( Symbol4, "Close" ), pds );
+T5_mov = PeGMA( C, pds );
+T1 = T1_mov;
+T2 = T2_mov;
+T3 = T3_mov;
+T4 = T4_mov;
+T5 = T5_mov;
+barvisible = Status( "barvisible" );
+FVB = barvisible AND NOT
+      Ref( barvisible, -1 );
+FVB_T1 = ValueWhen( FVB == 1, T1 );
+FVB_T2 = ValueWhen( FVB == 1, T2 );
+FVB_T3 = ValueWhen( FVB == 1, T3 );
+FVB_T4 = ValueWhen( FVB == 1, T4 );
+FVB_T5 = ValueWhen( FVB == 1, T5 );
+FVB_X = ValueWhen( FVB == 1, Cum( 1 ) );
+Lastvisiblebar = LastValue( ValueWhen( barvisible, Cum( 1 ) ) );
+No_of_bars = Lastvisiblebar - FVB_X;
+First_T1_OV = ValueWhen( Cum( 1 ) == 1, T1 );
+First_T2_OV = ValueWhen( Cum( 1 ) == 1, T2 );
+First_T3_OV = ValueWhen( Cum( 1 ) == 1, T3 );
+First_T4_OV = ValueWhen( Cum( 1 ) == 1, T4 );
+First_T5_OV = ValueWhen( Cum( 1 ) == 1, T5 );
+Perf_T1 = IIf( IsEmpty( FVB_T5 ), 100 * ( T1 / First_T1_OV ) - 100, 100 * ( T1 / FVB_T1 ) - 100 );
+Perf_T2 = IIf( IsEmpty( FVB_T5 ), 100 * ( T2 / First_T2_OV ) - 100, 100 * ( T2 / FVB_T2 ) - 100 );
+Perf_T3 = IIf( IsEmpty( FVB_T5 ), 100 * ( T3 / First_T3_OV ) - 100, 100 * ( T3 / FVB_T3 ) - 100 );
+Perf_T4 = IIf( IsEmpty( FVB_T5 ), 100 * ( T4 / First_T4_OV ) - 100, 100 * ( T4 / FVB_T4 ) - 100 );
+Perf_T5 = IIf( IsEmpty( FVB_T5 ), 100 * ( T5 / First_T5_OV ) - 100, 100 * ( T5 / FVB_T5 ) - 100 );

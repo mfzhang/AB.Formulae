@@ -1,0 +1,32 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    McClellan Oscillator
+//  Author/Uploader: Tomasz Janeczko 
+//  E-mail:          tj@amibroker.com
+//  Date/Time Added: 2001-06-16 08:26:59
+//  Origin:          Originally developed Sherman and Marian McClellan
+//  Keywords:        breadth,overbought,oversold
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=12
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=12
+//
+//------------------------------------------------------------------------------
+//
+//  The McClellan Oscillator, developed by Sherman and Marian McClellan, is a
+//  market breadth indicator that is based on the smoothed difference between
+//  the number of advancing and declining issues on the New York Stock
+//  Exchange. The McClellan Oscillator is one of the most popular breadth
+//  indicators. Buy signals are typically generated when the McClellan
+//  Oscillator falls into the oversold area of -70 to -100 and turns up. Sell
+//  signals are generated when the oscillator rises into the overbought area of
+//  +70 to +100 and then turns down. Extensive coverage of the McClellan
+//  Oscillator is provided in their book "Patterns for Profit" .
+//
+//------------------------------------------------------------------------------
+
+/*
+McClellan Oscillator
+*/
+
+Graph0 = Ema( AdvIssues()-DecIssues(), 19 ) - Ema( AdvIssues()-DecIssues(), 39 );

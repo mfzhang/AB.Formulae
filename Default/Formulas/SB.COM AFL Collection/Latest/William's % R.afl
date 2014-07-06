@@ -1,0 +1,54 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    William's % R
+//  Author/Uploader: Mubashar Virk 
+//  E-mail:          mavirk@gmail.com
+//  Date/Time Added: 2006-10-01 05:11:23
+//  Origin:          Williams %R
+//  Keywords:        William's % R
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=725
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=725
+//
+//------------------------------------------------------------------------------
+//
+//  Williams % R and Short Term Trading.
+//
+//------------------------------------------------------------------------------
+
+function PercentR( periods )
+{
+ return 100 * ( HHV( H, periods ) - C )/( HHV( H, periods ) - LLV( L, periods ) ); 
+}
+
+Plot( PercentR( Param("Periods", 10, 2, 100 ) ),
+		_DEFAULT_NAME(),
+		ParamColor("Color", ColorCycle ) );
+
+Plot( 90, "", colorBlue, styleDashed);
+Plot( 10, "", colorBlue, styleDashed );
+Plot( 80, "", colorGreen, styleNoLabel);
+Plot( 20, "", colorGreen, styleNoLabel);
+
+"Statistics of " + Name() + " as of " + Date();
+"";
+"Closing price = " + WriteVal( Close );
+"Change since yesterday = " + WriteVal( Close - Ref( Close, -1 ) );
+"Percent chg. since yesterday = " + WriteVal( ROC( Close, 1 ) ) + " %";
+"R% = " + WriteVal ( PercentR( Param("Periods", 14, 2, 100 ) ));
+"";
+"BUY when 90 or Higher.";
+
+"";
+
+"SELL when 10 or Lower.";
+"";
+
+"An excellent Trading Indicator. Needless to say the signals MUST be varied/compared with Bollinger Bands and any of Mr. Chaikin's Indicators.";
+"";
+"All things being equal, which unfortunately they are not, I would enter a BUY between 80-90 or above, and liquidate my position between 20-10 or below.";
+"";
+"GOOD TRADING";
+"";
+"Mubashar Virk, mavirk@gmail.com";

@@ -1,0 +1,7 @@
+/*
+The Breadth Thrust indicator is a market momentum indicator developed by Dr.
+Martin Zweig. 
+AFL implementation by Tomasz Janeczko
+*/
+
+Graph0 = EMA( AdvIssues()/( AdvIssues()+DecIssues() ), 10 );

@@ -1,0 +1,49 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Elder's SafeZone Stop
+//  Author/Uploader: sloughbridge 
+//  E-mail:          
+//  Date/Time Added: 2003-10-16 00:12:05
+//  Origin:          Alexander Elder, "Come Into My Trading Room"
+//  Keywords:        Elder SafeZone Stop
+//  Level:           medium
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=303
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=303
+//
+//------------------------------------------------------------------------------
+//
+//  This indicator sets a Stop beneath the range of expected downside
+//  fluctuations during an uptrend.
+//
+//------------------------------------------------------------------------------
+
+
+/* Elder's SafeZone, from "Trading Room."  
+This stop method takes into account the "noise" in an uptrend, the lower lows, and sets a safe stop below the normal price fluctuation.  This is done by calculating the difference between a lower Low and the Low preceding it, the "Downside Penetration," DP.  The "Average Downside Penetration," ADP, is then calculated and a multiple of that is plotted beneath the Lows to indicate a SafeZone, which future Lows should not exceed.  Elder suggests using multiples of the average downside penetration to set the stop, and that is included.  The default choice, however, is to use the average plus variable standard deviations of downside penetrations.  You can obviously get the same numbers either way, but using StdDevs is less arbitrary. Based on your Buy point, a level should be determined from which the Stop will not decline.  That is handled here with the adjustable StpLvl.  */
+
+GraphXSpace=6;
+
+Plot(C,"",16,64);
+
+Pd= Param("Period",9,2,50,1);  /*Lookback for DPs.  Elder: Do not go back past "the last important turning point."*/
+
+DP= IIf(L<Ref(L,-1), Ref(L,-1)-L,0); // Downside penetrations
+DPSum= Sum(DP,Pd);
+DPCount= Sum(L<Ref(L,-1),Pd);
+ADP= DPsum/DPcount;  //Average Downside Penetration
+
+MultiplierSwitch= Param("+SDs (0) or *ADP (1)",0,0,1,1); /*Keep at 0 to use Mean+StdDev of DP, or set to 1 to use multiples of mean DP */
+ADPmult= Param("ADP Multiplier",2,1,4,.1);  /*How many multiples of mean DP to use*/
+SDmult = Param("StDev Multiplier",1,0,3,.1); /*Or use Mean + StdDevs*/
+StpLvl= Param("StopLevel",2,1,50,1); /*Adjust to keep the stop from dropping past the relevant low*/
+
+Plot(DPcount,"\nDPcount",46,styleNoLine+styleOwnScale); /* It can be handy to know how many DPs go into your calculation */
+
+ADPzone= L-(ADP*ADPmult); //If based on ADPmultiple
+SDzone= L-(ADP+(SDmult*(StDev(DP,Pd)))); //If based on Mean+StdDev
+SafeZone= IIf(MultiplierSwitch == 0,SDzone,ADPzone);
+SafeZoneStop= HHV(SafeZone, StpLvl);
+Plot (SafeZoneStop,"   SafeZoneStop",54,1);  
+
+Title = Name() + ":  " + Date() + "\\c55    Open \\c-1" + WriteVal(O,1.2) + "\\c55  Hi \\c-1" +WriteVal(H,1.2) + "\\c55  Lo \\c-1" +WriteVal(L,1.2) + " \\c55 Close \\c-1" +  WriteVal(C,1.2) + " \\c46 \nDPcount = \\c-1" +WriteVal(DPcount,1) + "\\c54    SafeZone Stop = \\c-1" +WriteVal(SafeZoneStop,1.2);

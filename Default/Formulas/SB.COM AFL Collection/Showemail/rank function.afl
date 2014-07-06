@@ -1,0 +1,47 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    rank function
+//  Author/Uploader: walt schwarz 
+//  E-mail:          wschwarz@optonline.net
+//  Date/Time Added: 2003-05-26 17:15:01
+//  Origin:          
+//  Keywords:        rank array function
+//  Level:           medium
+//  Flags:           showemail,function
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=284
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=284
+//
+//------------------------------------------------------------------------------
+//
+//  will return the percent ranking of an item within a sorted array. (see
+//  "sort" function)
+//
+//------------------------------------------------------------------------------
+
+ function rankIt(rankItem,inlist)
+
+{
+
+//see where rankItem fits…
+
+rank=0;
+
+for(i = BarCount-1; i>=0; i--)
+
+{
+
+if(rankItem > inlist[i] )
+
+{
+
+rank=i; 
+
+i=-1;
+
+}
+
+}
+
+return rank/BarCount*100;
+
+}

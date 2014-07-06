@@ -1,0 +1,75 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Dave Landry Pullbacks
+//  Author/Uploader: Daniel Ervi 
+//  E-mail:          
+//  Date/Time Added: 2001-11-06 22:05:47
+//  Origin:          "Dave Landry on Swing Trading", by Dave Landry.  Available through M. Gordon Publishing.
+//  Keywords:        Landry pullback adx trend
+//  Level:           medium
+//  Flags:           exploration
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=132
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=132
+//
+//------------------------------------------------------------------------------
+//
+//  A rough implementation of the setup criteria that Dave Landry uses to
+//  trades pullbacks in an established trend. A buy (sell) stop is placed above
+//  (below) todays high (low) to enter the position. A trailing stop is then
+//  used to capture any gains. He recommends placing your stop loss below the
+//  nearest low pivot point (or high pivot for a short signal).
+//
+//------------------------------------------------------------------------------
+
+// Dave Landry Pullback Scan.
+// For further explanation, refer to "Dave Landry on Swing Trading"
+// from MGordon Publishing. Coded by Daniel Ervi
+
+NumColumns = 5;
+
+Period = 14;
+
+// Determines trend direction using DMI indicators
+PDIFilter = PDI(period) > MDI(period);
+MDIFilter = MDI(period) > PDI(period);
+
+// Returns TRUE if 3 to 7 day pullback in up or down trend
+UPB3 = H <= Ref(H,-1) AND Ref(H,-1) <= Ref(H,-2) AND Ref(H,-2) <= Ref(H, -3);
+UPB4 = UPB3 AND Ref(H,-3) <= Ref(H,-4);
+UPB5 = UPB4 AND Ref(H,-4) <= Ref(H,-5);
+UPB6 = UPB5 AND Ref(H,-5) <= Ref(H,-6);
+UPB7 = UPB6 AND Ref(H,-6) <= Ref(H,-7);
+DPB3 = L >= Ref(L,-1) AND Ref(L,-1) >= Ref(L,-2) AND Ref(L,-2) >= Ref(L, -3);
+DPB4 = DPB3 AND Ref(L,-3) >= Ref(L,-4);
+DPB5 = DPB4 AND Ref(L,-4) >= Ref(L,-5);
+DPB6 = DPB5 AND Ref(L,-5) >= Ref(L,-6);
+DPB7 = DPB6 AND Ref(L,-6) >= Ref(L,-7);
+
+// New 2 month low has occurred in the last 5 days?
+NewHighs   = IIf(HHV(H,5) >= HHV(H,40), 1, 0);
+NewLows    = LLV(L,5) <= LLV(L,40);
+
+// Are moving averages lined up correctly?
+BullishMAs = IIf(MA(C,10) >= EMA(C,20) AND EMA(C,20) >= EMA(C,30), 1, 0);
+BearishMAs = IIf(MA(C,10) <= EMA(C,20) AND EMA(C,20) <= EMA(C,30), 1, 0);
+
+Column0     = ADX(period);
+Column0Name = "ADX";
+
+Column1     = IIf(PDIFilter AND (UPB3 OR UPB4 OR UPB5 OR UPB6 OR UPB7) AND NewHighs AND BullishMAs, 1, 0);
+Column1Name = "Buy Signal";
+
+Column2     = IIf(Column1 == 1, H + .125, 0);
+Column2Name = "Buy Stop";
+
+Column3     = IIf(MDIFilter AND (DPB3 OR DPB4 OR DPB5 OR DPB6 OR DPB7) AND NewLows AND BearishMAs, 1, 0);
+Column3Name = "Sell Signal";
+
+Column4     = IIf(Column3 == 1, L - .125, 0);
+Column4Name = "Sell Stop";
+
+// Filter based on ADX > 30 (trending) and if buy or sell has triggered
+Filter = ADX(period) >= 30 AND (Column1 OR Column3);
+
+Buy  = ADX(period) >=30 AND Column1;
+Sell = ADX(period) >=30 AND Column3;

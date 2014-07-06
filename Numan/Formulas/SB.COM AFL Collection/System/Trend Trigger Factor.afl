@@ -1,0 +1,38 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Trend Trigger Factor
+//  Author/Uploader: Kelly Griffiths 
+//  E-mail:          
+//  Date/Time Added: 2004-11-10 01:35:58
+//  Origin:          Stocks and Commodities (Dec04)
+//  Keywords:        trend buy power sell trigger factor
+//  Level:           basic
+//  Flags:           system,indicator,function
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=400
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=400
+//
+//------------------------------------------------------------------------------
+//
+//  Allows you to follow the trend.
+//
+//------------------------------------------------------------------------------
+
+function TTF( periods )
+{
+	BuyPower = HHV( High, periods ) - Ref( LLV( Low, periods ), -periods );
+	SellPower = Ref( HHV( High, periods ), -periods ) - LLV( Low, periods );
+	return 100 * (BuyPower - SellPower) / (0.5 * (BuyPower + SellPower));
+}
+
+ttf15 = TTF( 15 );
+
+Plot( ttf15, "TTF(15)", colorRed );
+
+bt = Optimize( "Buy Trigger", 125, 35, 150, 5 );
+st = Optimize( "Sell Trigger", -40, -100, 25, 5 );
+
+Buy = Cross( ttf15, bt );
+Sell = Cross( -st, ttf15 );
+
+Short = Sell;
+Cover = Buy;

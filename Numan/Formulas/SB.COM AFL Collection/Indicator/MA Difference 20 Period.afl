@@ -1,0 +1,64 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    MA Difference 20 Period
+//  Author/Uploader: Larry Lovrencic 
+//  E-mail:          lvl@firstpacific.net
+//  Date/Time Added: 2001-09-02 21:06:20
+//  Origin:          
+//  Keywords:        moving average
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=104
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=104
+//
+//------------------------------------------------------------------------------
+//
+//  This indicator displays how far the closing price is above or below a 20
+//  period moving average in % terms. It is displayed as a histogram and the
+//  bars are green if the closing price is above the MA and red if the closing
+//  price is below the MA.
+//
+//  T may be changed to alter the MA period. ie Change T=20 to T=200 for the
+//  200 period MA.
+//
+//  /*MA Diff 20 by Larry Lovrencic*/
+//
+//  T=20; /*Time Period for MA*/
+//
+//  KMA=((C-MA(C,T))/MA(C,T))*100;
+//
+//  GRAPH0=KMA;
+//
+//  GRAPH0STYLE=2+4;
+//
+//  GRAPH0BARCOLOR=iif(KMA>0,5,4);
+//
+//  graphxspace=5;
+//
+//  title=name()+" "+date()+" The Close is
+//  "+writeval(abs(KMA),format=1.2)+"%"+writeif(KMA>0," above"," below")+" the
+//  20 period MA";
+//
+//  Mark Grid lines:
+//
+//  Level 0
+//
+//  Limits
+//
+//  Show dates
+//
+//  Percent
+//
+//  Middle
+//
+//------------------------------------------------------------------------------
+
+/*MA Diff 20 by Larry Lovrencic*/
+T=20; /*Time Period for MA*/
+KMA=((C-MA(C,T))/MA(C,T))*100;   
+GRAPH0=KMA;
+GRAPH0STYLE=2+4;
+GRAPH0BARCOLOR=iif(KMA>0,5,4);
+graphxspace=5;
+
+title=name()+" "+date()+" The Close is "+writeval(abs(KMA),format=1.2)+"%"+writeif(KMA>0," above"," below")+" the 20 period MA";

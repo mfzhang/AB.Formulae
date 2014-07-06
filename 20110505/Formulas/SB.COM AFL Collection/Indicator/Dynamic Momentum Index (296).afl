@@ -1,0 +1,87 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Dynamic Momentum Index
+//  Author/Uploader: jayson casavant 
+//  E-mail:          jcasavant@verizon.net
+//  Date/Time Added: 2003-08-07 17:28:26
+//  Origin:          
+//  Keywords:        DMI
+//  Level:           medium
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=296
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=296
+//
+//------------------------------------------------------------------------------
+//
+//  Description
+//
+//  The Dynamic Momentum Index (DMI) was developed by Tushar Chande and Stanley
+//  Kroll. The indicator is covered in detail in their book The New Technical
+//  Trader.
+//
+//  The DMI is identical to Welles Wilder&amp;#8217;s Relative Strength Index
+//  except the number of periods is variable rather than fixed. The variability
+//  of the time periods used in the DMI is controlled by the recent volatility
+//  of prices. The more volatile the prices, the more sensitive the DMI is to
+//  price changes. In other words, the DMI will use more time periods during
+//  quiet markets, and less during active markets. The maximum time periods the
+//  DMI can reach is 30 and the minimum is 3. This calculation method is
+//  similar to the Variable Moving Average, also developed by Tushar Chande.
+//
+//  The advantage of using a variable length time period when calculating the
+//  RSI is that it overcomes the negative effects of smoothing, which often
+//  obscure short-term moves.
+//
+//  The volatility index used in controlling the time periods in the DMI is
+//  based on a calculation using a five period standard deviation and a ten
+//  period average of the standard deviation.
+//
+//  Interpretation
+//
+//  Chande recommends using the DMI much the same as the RSI. However, because
+//  the DMI is more sensitive to market dynamics, it often leads the RSI into
+//  overbought / oversold territories by one or two days.
+//
+//  Like the RSI, look for overbought (bearish) conditions above 70 and
+//  oversold (bullish) conditions below 30. However, before basing any trade
+//  off of strict overbought/oversold levels using DMI or any
+//  overbought/oversold indicator, Chande recommends that you first qualify the
+//  trendiness of the market using indicators such as r-squared or CMO. If
+//  these indicators suggest a non-trending market, then trades based on strict
+//  overbought/oversold levels should produce the best results. If a trending
+//  market is suggested, you can use the DMI to enter trades in the direction
+//  of the trend.
+//
+//------------------------------------------------------------------------------
+
+ //Dynamic Momentum Index Tushar Chande Translated to AFL by Jayson Casavant
+//Cmo5 formula
+CMO5_1=Sum( IIf( C > Ref( C, -1 ) , ( C - Ref( C ,-1 ) ) ,0 ) ,5 ) ;
+CMO5_2=Sum( IIf( C < Ref( C ,-1 ) , ( Ref( C ,-1 ) - C )  ,0 ) ,5 );
+CMO5=DEMA(100 * Nz(( CMO5_1 -CMO5_2)  /( CMO5_1+CMO5_2)),3);
+
+//Cmo10 formula
+CMO10_1=Sum( IIf( C > Ref( C, -1 ) , ( C - Ref( C ,-1 ) ) ,0 ) ,10 ) ;
+CMO10_2=Sum( IIf( C < Ref( C ,-1 ) , ( Ref( C ,-1 ) - C )  ,0 ) ,10 );
+CMO10=DEMA(100 * Nz(( CMO10_1 -CMO10_2)  /( CMO10_1+CMO10_2)),3);
+
+//Cmo20 formula
+CMO20_1=Sum( IIf( C > Ref( C, -1 ) , ( C - Ref( C ,-1 ) ) ,0 ) ,20 ) ;
+CMO20_2=Sum( IIf( C < Ref( C ,-1 ) , ( Ref( C ,-1 ) - C )  ,0 ) ,20 );
+CMO20=DEMA(100 * Nz(( CMO20_1 -CMO20_2)  /( CMO20_1+CMO20_2)),3);
+
+// dmi formula
+dmi=((StDev(C,5)* CMO5)+(StDev(C,10)* CMO10)+(StDev(C,20)*
+CMO20))/(StDev(C,5)+StDev(C,10)+StDev(C,20));
+pds=Param("Smoothing",3,1,10,1);
+pds1=Param("Trigger Line",5,1,10,1);
+
+Plot(EMA(dmi,pds),"Dynamic Momentum Index",colorWhite,1);
+Plot(MA(dmi,pds1),"trigger",colorYellow,1);
+
+Buy=Cross(EMA(dmi,pds),MA(dmi,pds1));
+Sell=Cross(MA(dmi,pds1),EMA(dmi,pds));
+PlotShapes(IIf(Buy,shapeUpArrow,shapeNone) ,colorBrightGreen);
+PlotShapes(IIf(Sell,shapeDownArrow,shapeNone),colorRed);
+PlotGrid(70,colorRed);
+PlotGrid(30,colorBrightGreen);

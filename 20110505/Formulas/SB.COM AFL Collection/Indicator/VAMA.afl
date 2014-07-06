@@ -1,0 +1,56 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    VAMA
+//  Author/Uploader: kysiek 
+//  E-mail:          
+//  Date/Time Added: 2006-07-05 12:20:34
+//  Origin:          
+//  Keywords:        
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=632
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=632
+//
+//------------------------------------------------------------------------------
+//
+//  Volume Adjusted Moving Average
+//
+//------------------------------------------------------------------------------
+
+Period=Param("Period",50,1,100);
+agg=0;
+for (i=0;i<BarCount;i++)
+{
+Vama[i]=0;
+}
+for (i=1;i<BarCount;i++)
+{
+agg=agg+Volume[i];
+}
+ave=agg/(BarCount-1);
+
+
+for (i=1;i<BarCount;i++)
+{
+weight_day[i]=int((Volume[i]/ave)-0.5)+1;
+}
+agg=0;
+for (i=1;i<BarCount;i++)
+{
+index=i;
+Copy_wd=weight_day;
+ for (j=0;j<Period;j++)
+     {
+      if(Copy_wd[index]==0) {index--;};
+      agg=agg+C[Index];
+      Copy_wd[index]--;
+     }
+Vama[i]=agg/Period;
+agg=0;
+}
+Plot(Vama,"Vama",ParamColor( "Vama", colorRed),1);
+Plot(C,"Price",ParamColor( "Price",colorBlack),1);
+Plot(MA(C,Period),"Ma",colorBlue,1);
+Short=Cover=0;
+Buy=Cross(C,Vama);
+Sell=Cross(Vama,C);

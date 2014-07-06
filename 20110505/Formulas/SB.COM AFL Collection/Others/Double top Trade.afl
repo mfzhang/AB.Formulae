@@ -1,0 +1,21 @@
+/* Detecting double tops */
+percdiff = 5; /* peak detection threshold */
+fwdcheck = 5; /* forward validity check */
+mindistance = 10;
+validdiff = percdiff/400;
+PK= Peak( H, percdiff, 1 ) == High;
+
+x = Cum( 1 );
+XPK1 =  ValueWhen( PK, x, 1 ); 
+XPK2 = ValueWhen( PK, x, 2 ); 
+
+peakdiff = ValueWhen( PK, H, 1 )/ValueWhen( PK, H, 2 );
+doubletop = PK AND abs( peakdiff - 1 ) < validdiff AND (XPK1 -
+XPK2)>mindistance
+AND High > HHV( Ref( H, fwdcheck ), fwdcheck - 1 );
+Buy = doubletop;
+Sell = 0;
+
+WriteIf( Highest( doubletop ) == 1, "AmiBroker has detected some possible
+double top patterns for " + name() + "\nLook for green arrows on the price
+chart.", "There are no double top patterns for " + name() );

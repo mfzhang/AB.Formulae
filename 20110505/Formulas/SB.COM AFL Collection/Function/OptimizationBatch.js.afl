@@ -1,0 +1,66 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    OptimizationBatch.js
+//  Author/Uploader: Rick Charon 
+//  E-mail:          rickcharon@yahoo.com
+//  Date/Time Added: 2004-08-11 17:47:19
+//  Origin:          
+//  Keywords:        Optimization, JavaScript
+//  Level:           medium
+//  Flags:           showemail,function
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=377
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=377
+//
+//------------------------------------------------------------------------------
+//
+//  This is a JavaScript that batchs up Optimizations on a list of stocks. (You
+//  provide the optimization routine in the call to LoadFormula). The
+//  optimization will be run on each stock in the watch list and results saved
+//  to a csv file.
+//
+//------------------------------------------------------------------------------
+
+/*		     -***-   c:\data\Scripts\OptimizationBatch.js  -***-
+ * * Mon Aug 09 00:19:06 2004 rpc - 
+ * This is a JavaScript that batchs up Optimizations on a list of stocks. (You provide the optimization routine
+ * in the call to LoadFormula).
+ * The optimization will be run on each instrument in the watch list and results saved to a csv file.
+ *
+ * The following variables need to be set (you'll probably want to set others as well):
+ * listNum - The number of the watch list that contains the instruments you want to do all the optimizations on.
+ * tempListNum - an empty watch list that will be used by this routine.
+ * optimizationRoutine - your optimization routine.
+ * exportDirectory - directory to save the exported-from-Amibroker optimization reports.
+ * AASettingsFile - path to settings file.
+ */
+
+listNum = 0;
+tempListNum = 31;
+optimizationRoutine = "c:\\data\\AmiBroker\\indicators\\PercentChangeRatios1.afl";
+exportDirectory = "c:\\data\\AmiBroker\\entryexit\\optimized081004\\";
+AASettingsFile = "c:\\data\\AmiBroker\\entryexit\\Optimize1.ABS";
+
+AB = new ActiveXObject("Broker.Application");
+AA = AB.Analysis;
+AA.LoadFormula(optimizationRoutine);
+AA.LoadSettings(AASettingsFile);
+AA.ClearFilters(); 
+AA.Filter( 0, "watchlist" ) = tempListNum;
+AA.ApplyTo = 2; // use filters
+AA.RangeMode = 2; // use RangeN last days.
+RangeN = 180;  // 180 days.
+
+stocksArray = AB.Stocks.GetTickerList(0).split(",");
+
+nb1 = 0;
+nb1 = nb1 |= 1 << listNum;
+
+// Get all the stocks in the watch list 
+for(i = 0; i <  AB.Stocks.Count; i++) {
+  if(AB.Stocks.Item(stocksArray[i]).WatchListBits & nb1) {
+    AB.Stocks.Item(stocksArray[i]).WatchListBits |= 1 << tempListNum;
+    AA.Optimize();
+    AA.Export(exportDirectory + AB.Stocks.Item(stocksArray[i]).Ticker + ".csv");
+    AB.Stocks.Item(stocksArray[i]).WatchListBits ^= 1 << tempListNum;
+  }
+}

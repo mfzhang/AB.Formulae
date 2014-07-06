@@ -1,0 +1,64 @@
+_SECTION_BEGIN("ASI");
+
+function SwingIndex( Limit )
+{
+ Hy = Ref( H, -1 );
+ Cy = Ref( C, -1 );
+ Ly = Ref( L, -1 );
+ Oy = Ref( O, -1 );
+  
+ r1 = abs( H - Cy );
+ r2 = abs( L - Cy );
+ r3 = abs( H - L );
+ r4 = abs( Cy - Oy );
+ 
+ k = Max( r1, r2 ); 
+ 
+ r = IIf( r1 >= Max( r2, r3 ), r1 - r2/2 + r4/4,
+     IIf( r2 >= Max( r1, r3 ), r2 - r1/2 + r4/4,
+          r3 + r4/4 ) );
+ 
+ return IIf( r == 0, 0, 50 * ( ( C - Cy + 0.5 * ( C - O ) + 0.25 * ( Cy - Oy ) ) / r ) * k/Limit );
+}
+  
+function AccumulationSwingIndex( Limit )
+{
+  return Cum( SwingIndex( Limit ) );
+}
+
+Plot( AccumulationSwingIndex( Param("Limit", 100, 1, 1000 ) ), 
+        _DEFAULT_NAME(), ParamColor( "Color", colorRed ) );
+_SECTION_END();
+
+_SECTION_BEGIN("AccDist");
+Plot( AccDist(), _DEFAULT_NAME(), ParamColor("Color", colorCycle ), ParamStyle("Style") );
+_SECTION_END();
+
+_SECTION_BEGIN("AD Price");
+
+function AdvDecWilliams()
+{
+ C1 = Ref( C, -1 );
+ trhi = IIf( C1 > High, C1, High );
+ trlo = IIf( C1 < Low, C1, Low );
+
+ return Cum( IIf( C > C1, Close - trlo, Close - trhi ) );
+}
+
+Plot( AdvDecWilliams(), _DEFAULT_NAME(), ParamColor("Color", ColorCycle ) );
+_SECTION_END();
+
+_SECTION_BEGIN("AD Ratio");
+Plot( AdvIssues()/DecIssues(), _DEFAULT_NAME(), ParamColor( "Color", ColorCycle ) );
+_SECTION_END();
+
+_SECTION_BEGIN("ADLine");
+Plot( ADLine(), _DEFAULT_NAME(), ParamColor("Color",  colorCycle ), ParamStyle("Style")  );
+_SECTION_END();
+
+_SECTION_BEGIN("ADX");
+range = Param("Periods", 14, 2, 200, 1 );
+Plot( ADX(range), _DEFAULT_NAME(), ParamColor( "ADX color", colorBlue ), ParamStyle("ADX style", styleThick ) );
+Plot( PDI(range), "+DI", ParamColor( "+DI color", colorGreen ), ParamStyle("+DI style") );
+Plot( MDI(range), "-DI", ParamColor( "-DI color", colorRed ), ParamStyle("-DI style") );
+_SECTION_END();

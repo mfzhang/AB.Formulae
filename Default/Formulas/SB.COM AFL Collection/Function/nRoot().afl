@@ -1,0 +1,58 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    nRoot()
+//  Author/Uploader: Antonio Marra 
+//  E-mail:          ant.marra@virgilio.it
+//  Date/Time Added: 2004-07-20 15:08:34
+//  Origin:          
+//  Keywords:        root sqrt
+//  Level:           basic
+//  Flags:           showemail,function
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=366
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=366
+//
+//------------------------------------------------------------------------------
+//
+//  This function calculates the n-root of a number or array.
+//
+//------------------------------------------------------------------------------
+
+/*_______________________________________________________________________________________ 
+
+  SYNTAX:
+         nRoot(index,number)
+  
+  PURPOSE:
+          This function calculates the n-root of a number or array.
+          The n-root of a negative number returns a zero value. 
+  
+  HOW TO USE:
+          Copy this file in your "include" directory or append it to another file
+          that You use as "functions database".
+
+  EXAMPLE:
+          1. if you want to calculate the square-root of 100, you can use
+             indifferently:
+
+             Square_root = Sqrt(100);
+             or
+             n_Root = nRoot(2,100);
+
+          2. if you want to calculate the cube-root of 100 or whatever:
+
+             n_Root = nRoot(3,100);
+             n_Root = nRoot(10,100);
+             n_Root = nRoot(-2,Close);
+
+  ______________________________________________________________________________________  
+                                                                                        */
+
+Function nRoot(index,number)
+{    
+    cond_r = index == 0 or number == 0 or number < 0;
+    If_True = 0;
+    If_False = (Exp ( (1 / index) * Log(number)));
+    result = iif(cond_r, If_True, If_False);
+    
+    Return result;
+}

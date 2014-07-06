@@ -1,0 +1,7 @@
+/* 
+Chaikin Money Flow Indicator
+
+
+*/  
+
+Graph0 = Sum(((( C-L )-( H-C )) / ( H-L ))*V, 21 ) / Sum(V,21); 

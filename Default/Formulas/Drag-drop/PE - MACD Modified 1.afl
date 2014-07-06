@@ -1,0 +1,89 @@
+//|-----------------------------------------------------------------------------------------
+//|PatternExplorer.com - MACD - modified
+//|Copyright © 2007, PatternExplorer.com
+//|http://www.PatternExplorer.com
+//|e-mail: support@PatternExplorer.com
+//|-----------------------------------------------------------------------------------------
+FormulaName = "PE - MACD Modified";
+
+SetChartOptions( 0, chartShowDates | chartWrapTitle, chartGridMiddle = 0 );
+GraphXSpace = 10;
+#pragma nocache
+#include_once  <\PEInc\PatternExplorer_f0.afl>
+#Include_once "C:\Program Files (x86)\AmiBroker\Formulas\PatternExplorer\#Defaults & Mods\PE - Defaults.afl"
+#Include_once "C:\Program Files (x86)\AmiBroker\Formulas\PatternExplorer\#Defaults & Mods\PE - Mods.afl"
+/*******************************************************************************************/
+AddCustomCodeBeforePE();
+/*******************************************************************************************/
+AddAlertParam( def_AudioAlert, def_EmailAlert, def_BarComplete );
+/*******************************************************************************************/
+_SECTION_BEGIN( "Alerts" );
+BuySig = ParamList( "Buy Signal", List1 = "MACD crosses Signal,MACD crosses zero Level", 0 );
+SellSig = ParamList( "Sell Signal", List2 = "Signal crosses MACD,MACD crosses zero Level", 0 );
+
+for ( i = 0; i < 10; i++ )
+{
+    if ( StrExtract( List1, i ) == BuySig )
+        BuySignal = i + 1;
+}
+
+for ( i = 0; i < 10; i++ )
+{
+    if ( StrExtract( List2, i ) == SellSig )
+        SellSignal = i + 1;
+}
+
+_SECTION_END();
+
+/*******************************************************************************************/
+_SECTION_BEGIN( "Main Parameters" );
+AddAvgTypeParam( 1 );
+r1 = Param( "Fast Average", 6, 2, 100, 1 );
+r2 = Param( "Slow Average", 13, 2, 100, 1 );
+r3 = Param( "Signal Average", 5, 2, 100, 1 );
+_SECTION_END();
+/*******************************************************************************************/
+_SECTION_BEGIN( "Styles" );
+MACDstyle = ParamStyle( "MACD", styleThick );
+Signalstyle = ParamStyle( "Signal", styleThick );
+Histostyle = ParamStyle( "Histogram", styleHistogram, maskAll );
+_SECTION_END();
+/*******************************************************************************************/
+_SECTION_BEGIN( "Colors" );
+MACDcolor = ParamColor( "MACD", def_MACDcolor );
+Signalcolor = ParamColor( "Signal", def_Signalcolor );
+Histocolor = ParamColor( "Histogram", def_Histocolor );
+_SECTION_END();
+/*******************************************************************************************/
+MACD_mod = Average( C, r1, AvgType ) - Average( C, r2, AvgType );
+MACDsignal_mod = Average( MACD_mod, r3, AvgType );
+MACDHistogram_mod = MACD_mod - MACDsignal_mod;
+/*******************************************************************************************/
+AddGradientBackground( def_BGColorswitch, def_BgTopcolor, def_BgBottomcolor, def_titlebkcolor );
+/*******************************************************************************************/
+Plot( MACD_mod, StrFormat( _SECTION_NAME() + "(%g,%g)", r1, r2 ), MACDcolor, MACDstyle );
+Plot( MACDsignal_mod, "Signal" + _PARAM_VALUES(), Signalcolor, Signalstyle );
+Plot( MACDHistogram_mod, "MACD Histogram", Histocolor, Histostyle );
+/*******************************************************************************************/
+Buy = def_Buy AND IIf( BuySignal == 1, Cross( MACD_mod, MACDsignal_mod ), Cross( MACD_mod, 0 ) );
+Sell = def_Sell AND IIf( SellSignal == 1, Cross( MACDsignal_mod, MACD_mod ), Cross( 0, MACD_mod ) );
+Filter = def_Filter AND NOT GroupID() == 253;
+Filter = Filter AND ( Buy OR Sell );
+Addefaultcolumns();
+Adddefaultcolumns( 2, 1 );
+AddTextColumn( FullName(), "Full name" );
+/*******************************************************************************************/
+Alerttext =
+    "\n, MACD =   " + WriteVal( MACD_mod ) + ", "
+    + "\n, Signal =   " + WriteVal( MACDSignal_mod );
+AddAlert( Buy, Audio, Email, BuySig + Alerttext, 1, BarComplete, def_BuySound1 );
+AddAlert( Sell, Audio, Email, SellSig + Alerttext, 2, BarComplete, def_SellSound1 );
+/*******************************************************************************************/
+ToolTip = def_ToolTip;
+/*******************************************************************************************/
+AddCustomCodeAfterPE();
+/*******************************************************************************************/
+Title = "PatternExplorer.com - MACD Modified " + AvgText + " - " +  Name() + " - " + EncodeColor( colorRed ) + Interval( 2 ) + EncodeColor() + " " + Date() + ", " + EncodeColor( colorRed ) + "MACD("
+        + WriteVal( r1, 1.0 ) + "," + WriteVal( r2, 1.0 ) + ") = "
+        + WriteVal( MACD_mod, 1.2 ) + "," + EncodeColor( Signalcolor ) + " Signal(" + WriteVal( r1, 1.0 ) + ","
+        + WriteVal( r2, 1.0 ) + "," + WriteVal( r3, 1.0 ) + ") = " + WriteVal( MACDSignal_mod, 1.2 ) + " ";

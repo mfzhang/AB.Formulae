@@ -1,0 +1,246 @@
+//|-----------------------------------------------------------------------------------------
+//|PatternExplorer.com - Pivot Points
+//|Copyright © 2007, PatternExplorer.com
+//|http://www.PatternExplorer.com
+//|e-mail: support@PatternExplorer.com
+//|-----------------------------------------------------------------------------------------
+FormulaName = "PE - Pivots";
+
+SetChartOptions( 0, chartShowDates | chartShowArrows | chartLogarithmic | chartWrapTitle );
+#pragma nocache
+#include_once  <\PEInc\PatternExplorer_f0.afl>
+#Include_once "C:\Program Files (x86)\AmiBroker5\Formulas\PatternExplorer\#Defaults & Mods\PE - Defaults.afl"
+#Include_once "C:\Program Files (x86)\AmiBroker5\Formulas\PatternExplorer\#Defaults & Mods\PE - Mods.afl"
+/*******************************************************************************************/
+AddCustomCodeBeforePE();
+/*******************************************************************************************/
+AddAlertParam( def_AudioAlert, def_EmailAlert, def_BarComplete );
+_SECTION_BEGIN( "Main Parameters" );
+PivotTF = ParamList( "Time Frame", List = "15 min,Hourly,4 Hour,Daily,Weekly", 3 );
+TF =
+    IIf( PivotTF == "15 min", in15Minute,
+         IIf( PivotTF == "Hourly", inHourly,
+              IIf( PivotTF == "4 Hour", inHourly * 4,
+                   IIf( PivotTF == "Daily", inDaily,
+                        IIf( PivotTF == "Weekly", inWeekly,
+                             IIf( PivotTF == "Weekly", inMonthly, Null ) ) ) ) ) );
+PivotTyp = ParamList( "Calculation Method", List = "Regular,Woodies FIB,Woodies" );
+PivotLineMode = ParamToggle( "Plot Pivot as entirely Line", "Off,On", 1 );
+LineMode = ParamToggle( "Plot entirely Lines", "On,Off", 1 );
+Shadow = ParamToggle( "Plot Shadow", "Off,On", 0 );
+Titledisplay = ParamToggle( "Display Title Information", "Horizontal,Vertical", 0 );
+_SECTION_END();
+_SECTION_BEGIN( "Buy and Sell Signals" );
+SignalType = ParamList( "Strategy Selection", List1 = "Off,1: Pivot with Taio & GMA,2: Simple Level-Cross Signals", 0 );
+UseExrem = ParamToggle( "Use Exrem", "Off|0n", 0 );
+BuyShape = Param( "Buy Shape Typ", def_BuyShape, 0, 50, 1 );
+SellShape = Param( "Sell Shape Typ", def_SellShape, 0, 50, 2 );
+Buyshapecolor = ParamColor( "Buy Shape Color", def_BuyShapeColor );
+Sellshapecolor = ParamColor( "Sell Shape Color", def_SellShapeColor );
+_SECTION_END();
+
+for ( i = 0; i < 10; i++ )
+{
+    if ( StrExtract( List1, i ) == SignalType )
+        SignalTypeNumber = i;
+}
+
+/*******************************************************************************************/
+_SECTION_BEGIN( "Styles" );
+
+PivotStyle = ParamStyle( "Pivot", styleThick | styleDots, maskAll ) + styleNoTitle;
+
+LineStyle = ParamStyle( "S/R Lines", styleThick, maskAll ) + styleNoTitle;
+
+_SECTION_END();
+
+/*******************************************************************************************/
+_SECTION_BEGIN( "Colors" );
+
+R12Shadow = ParamColor( "Resistance Shadow", def_R12Shadow );
+
+Rcolor = ParamColor( "Resistance", def_ResistanceColor );
+
+RPcolor = ParamColor( "Rising Pivot", def_RPcolor );
+
+FPcolor = ParamColor( "Falling Pivot", def_FPcolor );
+
+Scolor = ParamColor( "Support", def_SupportColor );
+
+S12Shadow = ParamColor( "Support Shadow", def_S12Shadow );
+
+BackgroundColor = ParamColor( "Background", def_BackgroundColor );
+
+_SECTION_END();
+
+/*******************************************************************************************/
+#include_once  <\PEInc\Lib\PatternExplorer_f14.afl>
+#include_once  <\PEInc\PatternExplorer_1.afl>
+/*******************************************************************************************/
+/*******************************************************************************************/
+if ( SignalTypeNumber == 1 )
+{
+    MaxBars = 10;
+    Buy = PeTaio() > 0 AND BarsSince( Cross( PeGMA( C, 5 ), PeGMA( C, 10 ) ) )<MaxBars AND Close > PP;
+    Sell = PeTaio() < 0 AND BarsSince( Cross( PeGMA( C, 10 ), PeGMA( C, 5 ) ) ) < MaxBars AND Close < PP;
+    Short = 0;
+    Cover = 0;
+    BuyText = "Strategy 1 Buy";
+    SellText = "Strategy 1 Sell";
+    Buy = ExRem( Buy, Sell );
+    Sell = ExRem( Sell, Buy );
+    Short = ExRem( Short, Cover );
+    Cover = ExRem( Cover, Short );
+}
+else
+    if ( SignalTypeNumber == 2 )
+    {
+        BarRef = 1;
+        //A signal is generated when the Close on the first bar of the new pivot period
+        //is below a level like R1 while it was above the R1 on the previous bar.
+        //This behaviour could be confusing, but it is a cross signal.
+        //To prevent confusions the default value is set to 1 which means that the first bar is ignored.
+        //The value could also be set to zero to use the first bar of the pivot period.
+
+        Buy =
+            IIf( PP == Ref( PP, -1 ),
+                 Cross( C, S1 ) OR Cross( C, S2 ) OR Cross( C, S3 ) OR Cross( C, PP ) OR Cross( C, R1 ) OR Cross( C, R2 ) OR Cross( C, R3 ),
+                 Cross( C, Ref( S1, -BarRef ) ) OR Cross( C, Ref( S2, -BarRef ) ) OR Cross( C, Ref( S3, -BarRef ) ) OR Cross( C, Ref( PP, -BarRef ) ) OR Cross( C, Ref( R1, -BarRef ) ) OR Cross( C, Ref( R2, -BarRef ) ) OR Cross( C, Ref( R3, -BarRef ) ) );
+        BuyText =
+            WriteIf( Cross( C, S1 ) AND PP == Ref( PP, -1 ), "Close crossed S1 upwards",
+                     WriteIf( Cross( C, S2 ) AND PP == Ref( PP, -1 ), "Close crossed S2 upwards",
+                              WriteIf( Cross( C, S3 ) AND PP == Ref( PP, -1 ), "Close crossed S3 upwards",
+                                       WriteIf( Cross( C, PP ) AND PP == Ref( PP, -1 ), "Close crossed PP upwards",
+                                                WriteIf( Cross( C, R1 ) AND PP == Ref( PP, -1 ), "Close crossed R1 upwards",
+                                                         WriteIf( Cross( C, R2 ) AND PP == Ref( PP, -1 ), "Close crossed R2 upwards",
+                                                                  WriteIf( Cross( C, R3 ) AND PP == Ref( PP, -1 ), "Close crossed R3 upwards",
+                                                                           WriteIf( Cross( C, Ref( S1, -BarRef ) ) AND PP != Ref( PP, -1 ), "Close crossed S1 upwards",
+                                                                                    WriteIf( Cross( C, Ref( S2, -BarRef ) ) AND PP != Ref( PP, -1 ), "Close crossed S2 upwards",
+                                                                                             WriteIf( Cross( C, Ref( S3, -BarRef ) ) AND PP != Ref( PP, -1 ), "Close crossed S3 upwards",
+                                                                                                      WriteIf( Cross( C, Ref( PP, -BarRef ) ) AND PP != Ref( PP, -1 ), "Close crossed PP upwards",
+                                                                                                               WriteIf( Cross( C, Ref( R1, -BarRef ) ) AND PP != Ref( PP, -1 ), "Close crossed R1 upwards",
+                                                                                                                        WriteIf( Cross( C, Ref( R2, -BarRef ) ) AND PP != Ref( PP, -1 ), "Close crossed R2 upwards",
+                                                                                                                                 WriteIf( Cross( C, Ref( R3, -BarRef ) ) AND PP != Ref( PP, -1 ), "Close crossed R3 upwards", "" ) ) ) ) ) ) ) ) ) ) ) ) ) );
+
+        SellText =
+            WriteIf( Cross( S1, C ) AND PP == Ref( PP, -1 ), "Close crossed S1 downwards",
+                     WriteIf( Cross( S2, C ) AND PP == Ref( PP, -1 ), "Close crossed S2 downwards",
+                              WriteIf( Cross( S3, C ) AND PP == Ref( PP, -1 ), "Close crossed S3 downwards",
+                                       WriteIf( Cross( PP, C ) AND PP == Ref( PP, -1 ), "Close crossed PP downwards",
+                                                WriteIf( Cross( R1, C ) AND PP == Ref( PP, -1 ), "Close crossed R1 downwards",
+                                                         WriteIf( Cross( R2, C ) AND PP == Ref( PP, -1 ), "Close crossed R2 downwards",
+                                                                  WriteIf( Cross( R3, C ) AND PP == Ref( PP, -1 ), "Close crossed R3 downwards",
+                                                                           WriteIf( Cross( Ref( S1, -BarRef ), C ) AND PP != Ref( PP, -1 ), "Close crossed S1 downwards",
+                                                                                    WriteIf( Cross( Ref( S2, -BarRef ), C ) AND PP != Ref( PP, -1 ), "Close crossed S2 downwards",
+                                                                                             WriteIf( Cross( Ref( S3, -BarRef ), C ) AND PP != Ref( PP, -1 ), "Close crossed S3 downwards",
+                                                                                                      WriteIf( Cross( Ref( PP, -BarRef ), C ) AND PP != Ref( PP, -1 ), "Close crossed PP downwards",
+                                                                                                               WriteIf( Cross( Ref( R1, -BarRef ), C ) AND PP != Ref( PP, -1 ), "Close crossed R1 downwards",
+                                                                                                                        WriteIf( Cross( Ref( R2, -BarRef ), C ) AND PP != Ref( PP, -1 ), "Close crossed R2 downwards",
+                                                                                                                                 WriteIf( Cross( Ref( R3, -BarRef ), C ) AND PP != Ref( PP, -1 ), "Close crossed R3 downwards", "" ) ) ) ) ) ) ) ) ) ) ) ) ) );
+
+
+        Sell =
+            IIf( PP == Ref( PP, -1 ),
+                 Cross( S1, C ) OR Cross( S2, C ) OR Cross( S3, C ) OR Cross( PP, C ) OR Cross( R1, C ) OR Cross( R2, C ) OR Cross( R3, C ),
+                 Cross( Ref( S1, -BarRef ), C ) OR Cross( Ref( S2, -BarRef ), C ) OR Cross( Ref( S3, -BarRef ), C ) OR Cross( Ref( PP, -BarRef ), C ) OR Cross( Ref( R1, -BarRef ), C ) OR Cross( Ref( R2, -BarRef ), C ) OR Cross( Ref( R3, -BarRef ), C ) );
+        Short = 0;
+        Cover = 0;
+    }
+    else
+    {
+        Buy = 0;
+        Sell = 0;
+        Short = 0;
+        Cover = 0;
+        BuyText = "";
+        SellText = "";
+    }
+
+/*******************************************************************************************/
+/*******************************************************************************************/
+AddAlert( Buy, Audio, Email, BuyText, 1, BarComplete, def_BuySound1 );
+
+AddAlert( Sell, Audio, Email, SellText, 2, BarComplete, def_SellSound1 );
+
+/*******************************************************************************************/
+/*******************************************************************************************/
+if ( UseExrem )
+{
+    Buy = ExRem( Buy, Sell );
+    Sell = ExRem( Sell, Buy );
+    Short = ExRem( Short, Cover );
+    Cover = ExRem( Cover, Short );
+}
+
+/*******************************************************************************************/
+/*******************************************************************************************/
+Filter = def_Filter AND NOT GroupID() == 253;
+
+Filter = Filter AND ( Buy OR Sell );
+
+Addefaultcolumns();
+
+Adddefaultcolumns( 2, 1 );
+
+AddTextColumn( SignalType, "Selected Strategy" );
+
+AddTextColumn( FullName(), "Full name" );
+
+/*******************************************************************************************/
+/*******************************************************************************************/
+PlotPivotLevels( LineMode, PivotLineMode, SColor, RColor, RPColor, FPColor, LineStyle, PivotStyle );
+
+PlotShapes( BuyShape*Buy, BuyShapecolor, 0, L, -def_BuyShapeOffset );
+
+PlotShapes( SellShape*Sell, SellShapecolor, 0, H, -def_SellShapeOffset );
+
+/*******************************************************************************************/
+/*******************************************************************************************/
+ToolTip = def_ToolTip;
+
+/*******************************************************************************************/
+AddCustomCodeAfterPE();
+
+/*******************************************************************************************/
+if ( Titledisplay )
+{
+    Title = "PatternExplorer.com - Pivot Points" + default_priceTitle +
+            ",Calculation Time Frame = " + PivotTF + "  " +
+            EncodeColor( Rcolor ) + "\nR3 = " + WriteVal( R3, digits ) +
+            EncodeColor( Rcolor ) + "\nR2 = " + WriteVal( R2, digits ) +
+            EncodeColor( Rcolor ) + "\nR1 = " + WriteVal( R1, digits ) +
+            EncodeColor( IIf( LastValue( ppflip ), RPcolor, FPcolor ) ) + "\nPP = " + WriteVal( PP, digits ) +
+            EncodeColor( Scolor ) + "\nS1 = " + WriteVal( S1, digits ) +
+            EncodeColor( Scolor ) + "\nS2 = " + WriteVal( S2, digits ) +
+            EncodeColor( Scolor ) + "\nS3 = " + WriteVal( S3, digits );
+}
+else
+{
+    Title = "PatternExplorer.com - Pivot Points" + default_priceTitle +
+            ", Calculation Time Frame = " + PivotTF + ",  " +
+            EncodeColor( Scolor ) + "S1 = " + WriteVal( S1, digits ) + ", " +
+            EncodeColor( Scolor ) + "S2 = " + WriteVal( S2, digits ) + ", " +
+            EncodeColor( Scolor ) + "S3 = " + WriteVal( S3, digits ) + ", " +
+            EncodeColor( IIf( LastValue( ppflip ), RPcolor, FPcolor ) ) + "PP = " + WriteVal( PP, digits ) + ", " +
+            EncodeColor( Rcolor ) + "R1 = " + WriteVal( R1, digits ) + ", " +
+            EncodeColor( Rcolor ) + "R2 = " + WriteVal( R2, digits ) + ", " +
+            EncodeColor( Rcolor ) + "R3 = " + WriteVal( R3, digits ) + "  ";
+}
+
+//The following lines can be used to plot single pivot levels
+AddSinglePivotLevel( "Level 1", def_PLevel = 0, def_TF = 3, def_color = colorcycle, style = 1 );
+
+AddSinglePivotLevel( "Level 2", def_PLevel = 0, def_TF = 4, def_color = colorcycle, style = 1 );
+
+AddSinglePivotLevel( "Level 3", def_PLevel = 0, def_TF = 5, def_color = colorcycle, style = 1 );
+
+AddSinglePivotLevel( "Level 4", def_PLevel = 0, def_TF = 4, def_color = colorcycle, style = 1 );
+
+AddSinglePivotLevel( "Level 5", def_PLevel = 0, def_TF = 4, def_color = colorcycle, style = 1 );
+
+AddSinglePivotLevel( "Level 6", def_PLevel = 0, def_TF = 4, def_color = colorcycle, style = 1 );
+
+AddSinglePivotLevel( "Level 7", def_PLevel = 0, def_TF = 4, def_color = colorcycle, style = 1 );
+
+AddSinglePivotLevel( "Level 8", def_PLevel = 0, def_TF = 4, def_color = colorcycle, style = 1 );
+/*******************************************************************************************/

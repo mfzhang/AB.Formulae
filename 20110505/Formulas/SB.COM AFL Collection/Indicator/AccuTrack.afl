@@ -1,0 +1,48 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    AccuTrack
+//  Author/Uploader: Salil V Gangal 
+//  E-mail:          salil_gangal@yahoo.com
+//  Date/Time Added: 2003-09-12 12:50:01
+//  Origin:          FastTrack
+//  Keywords:        AccuTrack
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=298
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=298
+//
+//------------------------------------------------------------------------------
+//
+//  // AccuTrack Compares performance of two securities
+//
+//  // The basic idea is to switch between the two securities
+//
+//  // AccuTrack was developed by FastTrack (fasttrack.net)
+//
+//------------------------------------------------------------------------------
+
+// AccuTrack Compares performance of two securities
+// The basic idea is to switch between the two securities
+// AccuTrack was developed by FastTrack (http://fasttrack.net)
+
+// Following is the Indicator Builder Formula
+
+fnd = Name();
+ind = "FDRXX";      // FDRXX is money market fund, so the comparison is done with cash.
+fund = Foreign(fnd, "Close");
+index = Foreign(ind, "Close");
+
+fast = 6;
+slow = 24;
+RawAT = EMA((EMA(ROC(fund,1), slow) - EMA(ROC(index,1),slow)),fast); 
+tradeAccuTrack = RawAT * 265;
+Plot(tradeAccuTrack, "tradeAccuTrack", colorBlue, styleLine);
+
+Title =   Date()
+        + "  Trade AccuTrack of "
+        + fnd
+        +" / "
+        + ind 
+        + " = " + WriteVal(tradeAccuTrack, 1.2) + " ";
+
+GraphXSpace = 2;

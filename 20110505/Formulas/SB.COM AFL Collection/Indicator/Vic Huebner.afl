@@ -1,0 +1,37 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Vic Huebner
+//  Author/Uploader: Vic Huebner 
+//  E-mail:          atlantic@engineer.com
+//  Date/Time Added: 2002-02-23 10:57:10
+//  Origin:          Martin Pring in Active Trader, June 2001
+//  Keywords:        Inside, Outside, Reversal
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=160
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=160
+//
+//------------------------------------------------------------------------------
+//
+//  This is an elementary display of Inside, Outside, and Key reversal bars.
+//  These sometimes are used to signal short term reversals.
+//
+//------------------------------------------------------------------------------
+
+//One bar reversal patterns
+//Inside, Outside, and Key reversal candle stick patterns are believed to be indicators of a short term reversal, especially after a strong uptrend or downtrend.
+
+Title="One bar reversal patterns. Inside = Red, Outside = Yellow, Key reversal = Green";
+Graph0=Close;
+Graph0Style=128; //Candlesticks
+
+//Outside patterns require a volume boost (40% above the past 10 days here). We're also requiring the current range to encompass the previous 2 days here.
+Graph0BarColor=IIf(Outside() AND H>Ref(H,-2) AND L<Ref(L,-2) AND V>1.4*(MA(V,10)),7,1);
+
+//Inside patterns require much smaller range (less than 40% here). We also require the range to be smaller than 2 days ago (60% here).
+Graph0BarColor=IIf(Inside() AND ((H-L)<0.4*Ref(H-L,-1)) AND Ref(H-L,-2)<0.6*Ref(H-L,-1) ,4,Graph0BarColor);
+
+//Key reversals require a gap up or down, a bigger range (2 times 2 days ago here), and a volume boost (40% above the 10 day average here).
+Graph0BarColor=IIf((L>Ref(H,-1)) AND (H-L)>2*(Ref(H-L,-2)) AND V>1.4*(MA(V,10)),8,Graph0BarColor);
+Graph0BarColor=IIf((H<Ref(L,-1)) AND (H-L)>2*(Ref(H-L,-2)) AND V>1.4*(MA(V,10)),8,Graph0BarColor);
+//Graph0BarColor=IIf((abs((H-L)-(Ref(H-L,-1)))<(H-L)*.05),7,1);

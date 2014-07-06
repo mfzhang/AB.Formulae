@@ -1,0 +1,1464 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Reaction Trend System
+//  Author/Uploader: Ed 
+//  E-mail:          ed2000nl@home.nl
+//  Date/Time Added: 2004-05-20 13:32:18
+//  Origin:          translated from J. Welles Wilder Jr. using New Concepts in Technical Trading 1978
+//  Keywords:        trading system trend
+//  Level:           advanced
+//  Flags:           system
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=357
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=357
+//
+//------------------------------------------------------------------------------
+//
+//  see code for details.
+//
+//  Think most of the bugs are out but if you find any please let me know. Also
+//  suggestions to write it more efficiently are welcome.
+//
+//  Best to use hourly intraday data. Should work in any timeframe but it
+//  should be used with intraday data.
+//
+//  If you want to do a backtest do not forget to select the timeframe in the
+//  settings!!!
+//
+//------------------------------------------------------------------------------
+
+/*
+
+Reaction Trend System ---- to be used with Intraday Data
+
+Originally develloped by: J. Welles Wilder Jr. 
+Translated from: New Concepts in Technical Trading systems (1978)
+
+Translation in Amibroker-AFL by Edward Pottasch (May 2004), Email: ed2000nl@home.nl
+
+Shapes in Chart: 
+1) hollow yellow down arrow: Reaction mode short position
+2) hollow white up arrow: COVER of short positions of BOTH modes (either trend and reaction mode)
+3) solid yellow down arrow: sell of long positions of BOTH modes (either trend and reaction mode)
+4) solid white up arrow: Reaction mode long position
+5) solid yellow down triangle: Trend mode short position
+6) solid white up triangle: Trend mode long position
+
+Digits in Chart:
+1) "1": a "B" day (see rules in code below or in WW's book).
+2) "2": a "O" day
+3) "3": a "S" day
+
+Colors of Digits:
+1) white: normal color
+2) yellow: highest or lows day during trend mode. Represents a discontinuity in phase
+3) lightblue: always drawn below a yellow digit. It means that even though the phase
+is as the yellow digit shows the phase of the lightblue digit is used (which was the phase
+before the discontinuity). This is an exceptional situation where the outbreak to the 
+trend mode coincides with the highest or lowest day.
+
+Short description of the system.
+
+phase == 1: B day (1 digit in chart)
+- LONG positions are initiated only on a "B" day
+- SHORT positions are reversed on a "B" day
+- breakout of HBOP or LBOP initiate a long or short position on a "B" day
+- we must exit a short position entered in the reaction mode. If target not hit exit at close
+
+phase == 2: O day (2 digit in chart)
+- No positions are initiated on an "O" day except those initiated by the breakout points
+- LONG positions may be close on an "O" day.
+- breakout of HBOP or LBOP initiate a long or short position on an "O" day
+
+phase == 3: S day (3 digit in chart)
+- SHORT positions are initiated only on an "S" day
+- LONG positions are reversed on a "S" day
+- breakout of HBOP or LBOP initiate a long or short position on a "S" day
+- we must exit a long position entered in the reaction mode. If target not hit exit at close
+
+
+remarks:
+
+A)
+Any timeframe may be used but I suggest hourly data because it is still fast and provides 
+basicly the same information as any other timeframe.
+
+B)
+I am not sure if Wilder's original idea was to open a reaction mode position in the same 
+day where the trend mode position was closed but the code is set up to do such a thing.
+
+C) Backtesting using minute, hourly etc. timeframes may give a slightly different result. 
+Sorry but it is inherent to the system.
+
+D) Assumed is that the close is at 16:00. Certain exits will take place between 15:55 and 16:00
+if there is a trade. Otherwise no exit occurs. So for now this program should only be used with
+densely traded stocks where there are a couple of trades in the last minutes.
+*/
+
+// set to use all bars required for looping
+setbarsrequired(100000,100000);
+
+// set timeframe
+TimeFrameSet( inDaily );
+
+//calculate the average + the four price action points.
+// average
+xx = (H + L + C) / 3;
+// four price action points
+// 1) Buy point
+B1 = 2 * Ref(xx,-1) - Ref(H,-1);
+// 2) Sell point
+S1 = 2 * Ref(xx,-1) - Ref(L,-1);
+// 3) High break out point
+HBOP = 2 * Ref(xx,-1) - 2 * Ref(L,-1) + Ref(H,-1);
+// 4) Low break out point 
+LBOP = 2 * Ref(xx,-1) - 2 * Ref(H,-1) + Ref(L,-1);
+
+// short trail stop: highest high made in previous 2 days (used in trend mode only)
+trailstop_short = Ref(HHV(H,2),-1);
+// long trail stop: lowest low made in previous 2 days (used in trend mode only)
+trailstop_long = Ref(LLV(L,2),-1);
+
+// declare some arrays
+phase_arr = C; 
+phase_arr = 0;
+phase_arr_l1 = phase_arr; // additional layer of phase changes
+stop_short = phase_arr; stop_long = stop_short;
+short_index_position = phase_arr; long_index_position = short_index_position;
+b_day = phase_arr; s_day = phase_arr;
+
+// first determine "B" and "S" days
+idx = 0;
+for (i = 0; i < BarCount; i++) {
+
+	// short trend mode
+	if (L[ i ] <= LBOP[ i ] AND i >= idx) {
+	
+		// indicate the short trend mode outbreak
+		short_index_position[ i ] = 1;
+	
+		// variables tracking lowest day in short trend mode
+		idx_b = i;
+		loi = L[ i ];
+		
+		// exit at trailing stop
+		for (j = i + 1; j < BarCount; j++) {
+		
+			if (L[ j ] < loi) {
+			
+				loi = L[ j ];
+				
+				// track index of lowest point in trend mode 
+				idx_b = j;
+			
+			} else
+		
+			if (H[ j ] >= trailstop_short[ j ]) {
+			
+				stop_short[ j ] = 1;
+				
+				// idx is used to make sure we finish a position before starting a new one
+				idx = j;
+				
+				// used to exit the j-for loop
+				j = BarCount - 1;
+			
+			}
+		
+		}
+		
+		// save index position of lowest point in short trend mode
+		b_day[ idx_b ] = 1;
+
+	
+	} else if (H[ i ] >= HBOP[ i ] AND i >= idx) {
+	
+		// indicate the long trend mode outbreak
+		long_index_position[ i ] = 1;
+	
+		// variables tracking highest day in long trend mode
+		idx_s = i;
+		hii = H[ i ];
+	
+		// exit at trailing stop
+		for (j = i + 1; j < BarCount; j++) {
+		
+			if (H[ j ] > hii) {
+			
+				hii = H[ j ];
+				
+				// track index of highest point in trend mode 
+				idx_s = j;
+			
+			} else
+			
+			if (L[ j ] <= trailstop_long[ j ]) {
+			
+				stop_long[ j ] = 1;
+				
+				// idx is used to make sure we finish a position before starting a new one
+				idx = j; 
+				
+				// used to exit the j-for loop
+				j = BarCount - 1;
+			
+			}
+		
+		}
+		
+		// save index position of highest point in long trend mode
+		s_day[ idx_s ] = 1;
+		
+	}
+	
+}
+
+// fill in the rest of the phase array. Sequence: 1 - 2 - 3 - 1 - 2 - etc
+for (i = 1; i < BarCount; i++) {
+
+	if (b_day[ i ] == 1) {
+	
+		phase_arr[ i ] = 1;
+		
+		// if b_day equal to the day of outbreak store the original phase
+		if (b_day[ i ] == 1 AND short_index_position[ i ] == 1) {
+		
+			if (phase_arr[ i - 1 ] == 1) {
+			
+				phase_arr_l1[ i ] = 2;
+				
+			} else
+			
+			if (phase_arr[ i - 1 ] == 2) {
+			
+				phase_arr_l1[ i ] = 3;
+			
+			} else
+			
+			if (phase_arr[ i - 1 ] == 3) {
+			
+				phase_arr_l1[ i ] = 1;
+			
+			} else
+			
+			if (phase_arr[ i - 1 ] == 0) {
+			
+				phase_arr_l1[ i ] = 1;
+			
+			}			
+		
+		}
+		
+	} else if (s_day[ i ] == 1) {
+	
+		phase_arr[ i ]  = 3;
+		
+		// if s_day equal to the day of outbreak store the original phase
+		if (s_day[ i ] == 1 AND long_index_position[ i ] == 1) {
+		
+			if (phase_arr[ i - 1 ] == 1) {
+			
+				phase_arr_l1[ i ] = 2;
+				
+			} else
+			
+			if (phase_arr[ i - 1 ] == 2) {
+			
+				phase_arr_l1[ i ] = 3;
+			
+			} else
+			
+			if (phase_arr[ i - 1 ] == 3) {
+			
+				phase_arr_l1[ i ] = 1;
+			
+			} else
+			
+			if (phase_arr[ i - 1 ] == 0) {
+			
+				phase_arr_l1[ i ] = 1;
+			
+			}			
+		
+		}		
+		
+		
+	} else if (b_day[ i ] == 0 AND s_day[ i ] == 0 AND phase_arr[ i - 1 ] == 3) {
+	
+		phase_arr[ i ] = 1;
+	
+	} else if (b_day[ i ] == 0 AND s_day[ i ] == 0 AND phase_arr[ i - 1 ] == 2) {
+	
+		phase_arr[ i ] = 3;
+	
+	} else if (b_day[ i ] == 0 AND s_day[ i ] == 0 AND phase_arr[ i - 1 ] == 1) {
+
+		phase_arr[ i ] = 2;
+
+	}
+
+}
+
+// restore to current time frame
+TimeFrameRestore();
+
+// expand arrays 
+xx = TimeFrameExpand( xx, inDaily,mode = expandFirst  );
+B1 = TimeFrameExpand( B1, inDaily,mode = expandFirst  );
+S1 = TimeFrameExpand( S1, inDaily,mode = expandFirst  );
+HBOP = TimeFrameExpand( HBOP, inDaily,mode = expandFirst  );
+LBOP = TimeFrameExpand( LBOP, inDaily,mode = expandFirst  );
+trailstop_short = TimeFrameExpand( trailstop_short, inDaily,mode = expandFirst  );
+trailstop_long = TimeFrameExpand( trailstop_long, inDaily,mode = expandFirst  );
+phase_arr = TimeFrameExpand( phase_arr, inDaily,mode = expandFirst  );
+phase_arr_l1 = TimeFrameExpand( phase_arr_l1, inDaily,mode = expandFirst  );
+b_day = TimeFrameExpand( b_day, inDaily,mode = expandFirst  );
+s_day = TimeFrameExpand( s_day, inDaily,mode = expandFirst  );
+
+// time bar is used on B and S days + position to close out on last bar if target not hit
+timebar = Cross(TimeNum(),155500);
+
+// adjust phase array for charting purposes
+hlp_phase = phase_arr; hlp_phase = 0; hlp_b = hlp_phase; hlp_s = hlp_phase; hlp_phase_l1 = hlp_phase;
+for (i = 1; i < BarCount; i++) {
+
+	if (HBOP[ i ] != HBOP[ i - 1]) {
+	
+		hlp_phase[ i ] = phase_arr[ i ];
+		hlp_phase_l1[ i ] = phase_arr_l1[ i ];
+		hlp_b[ i ] = b_day[ i ];
+		hlp_s[ i ] = s_day[ i ];
+		
+	}
+
+}
+
+// change the phase_arr back to original phase at places where phase change equals outbreak because
+// you need the original phase to determine reaction mode behaviour
+phase_arr = IIF(phase_arr_l1 != 0,phase_arr_l1,phase_arr);
+
+
+// calculate the positions
+
+// flag settings
+reaction_position_buy = 0;
+reaction_position_short = 0;
+trend_position_buy = 0;
+trend_position_short = 0;
+
+// help arrays
+tpsl = C; tpsl = 0; // trend position long index storage array
+tpss = C; tpss = 0; // trend position short index storage array
+
+// reset arrays
+Buy = C; Buy = 0; Sell = Buy; Short = Buy; Cover = Buy;
+
+for (i = 0; i < BarCount; i++) {
+
+	/* "B" day + no position. 4 areas are of importance for the open price as an entry point
+	1) Open between HBOP and B1 (Area 1)
+	2) Open between B1 and LBOP (Area 2)
+	3) Open higher than HBOP (Area 3)
+	4) Open lower than LBOP (Area 4)
+	*/
+	if (phase_arr[ i ] == 1 AND reaction_position_buy == 0 AND trend_position_buy == 0 AND 
+				reaction_position_short == 0 AND trend_position_short == 0) {
+	
+		// open in Area 1
+		if (O[ i ] > B1[ i ] AND O[ i ] < HBOP[ i ]) {
+		
+			// check for entry of Area 2			
+			if (L[ i ] <= B1[ i ]) {
+			
+				Buy[ i ] = 1;
+				BuyPrice[ i ] = B1[ i ];
+				reaction_position_buy = 1;
+				
+				// check for entry of Area 3 (breakout)
+				if (L[ i ] <= LBOP[ i ]) {
+				
+					// sell the reaction mode long position you just entered
+					Sell[ i ] = 1;
+					SellPrice[ i ] = LBOP[ i ];
+					reaction_position_buy = 0;
+				
+					// take a short position in the trend mode
+					Short[ i ] = 1;
+					ShortPrice[ i ] = LBOP[ i ];
+					trend_position_short = 1;
+					tpss[ i ] = 1;
+					
+				} else 
+				
+				// check for enrty of Area 4 (breakout)
+				if (H[ i ] >= HBOP[ i ]) {
+				
+					// only change the mode since we are already long
+					reaction_position_buy = 0;
+					trend_position_buy = 1;
+					tpsl[ i ] = 1;
+					
+				}
+			
+			} else 
+			
+			// check for entry of Area 4
+			if (H[ i ] >= HBOP[ i ]) {
+			
+				Buy[ i ] = 1;
+				BuyPrice[ i ] = HBOP[ i ];
+				trend_position_buy = 1;
+				tpsl[ i ] = 1;
+			
+			}
+			
+		} else
+		
+		// open in Area 2
+		if (O[ i ] <= B1[ i ] AND O[ i ] > LBOP[ i ]) {		
+		
+			Buy[ i ] = 1;
+			BuyPrice[ i ] = O[ i ];
+			reaction_position_buy = 1;
+			
+			// check for entry of Area 3 (breakout)
+			if (L[ i ] <= LBOP[ i ]) {
+				
+				// sell the reaction mode long position you just entered
+				Sell[ i ] = 1;
+				SellPrice[ i ] = LBOP[ i ];
+				reaction_position_buy = 0;
+				
+				// take a short position in the trend mode
+				Short[ i ] = 1;
+				ShortPrice[ i ] = LBOP[ i ];
+				trend_position_short = 1;
+				tpss[ i ] = 1;
+					
+			} else 
+				
+			// check for enrty of Area 4 (breakout)
+			if (H[ i ] >= HBOP[ i ]) {
+				
+				// only change the mode since we are already long
+				reaction_position_buy = 0;
+				trend_position_buy = 1;
+				tpsl[ i ] = 1;
+					
+			}			
+			
+		} else
+		
+		
+		// open in Area 3
+		if (O[ i ] <= LBOP[ i ]) {			
+		
+			// take a short position in the trend mode
+			Short[ i ] = 1;
+			ShortPrice[ i ] = O[ i ];
+			trend_position_short = 1;
+			tpss[ i ] = 1;
+		
+		} else
+				
+		// open in Area 4
+		if (O[ i ] >= HBOP[ i ]) {			
+		
+			// take a long position in the trend mode
+			Buy[ i ] = 1;
+			BuyPrice[ i ] = O[ i ];
+			trend_position_buy = 1;	
+			tpsl[ i ] = 1;
+		
+		}
+		
+	} else
+		
+	/* "O" day + no position. 3 entry areas of importance
+	1) open between LBOP and HBOP (Area 1)
+	2) open higher than HBOP (Area 2)
+	3) open lower than LBOP (Area 3)
+	*/
+	if (phase_arr[ i ] == 2 AND reaction_position_buy == 0 AND trend_position_buy == 0 AND 
+				reaction_position_short == 0 AND trend_position_short == 0) {
+	
+		
+		// open in Area 1
+		if (O[ i ] > LBOP[ i ] AND O[ i ] < HBOP[ i ]) {
+		
+			// entry of Area 3
+			if (L[ i ] <= LBOP[ i ]) {
+		
+				// take a short position in trend mode
+				Short[ i ] = 1;
+				ShortPrice[ i ] = LBOP[ i ];
+				trend_position_short = 1;
+				tpss[ i ] = 1;
+				
+			} else
+			
+			// entry of Area 4
+			if (H[ i ] >= HBOP[ i ]) {
+			
+				// take a long position in the trend mode
+				Buy[ i ] = 1;
+				BuyPrice[ i ] = HBOP[ i ];
+				trend_position_buy = 1;
+				tpsl[ i ] = 1;
+			
+			}
+		
+		} else
+		
+		// open in Area 3
+		if (O[ i ] <= LBOP[ i ]) {			
+		
+			// take a short position in the trend mode
+			Short[ i ] = 1;
+			ShortPrice[ i ] = O[ i ];
+			trend_position_short = 1;
+			tpss[ i ] = 1;
+		
+		} else
+				
+		// open in Area 2
+		if (O[ i ] >= HBOP[ i ]) {			
+		
+			// take a long position in the trend mode
+			Buy[ i ] = 1;
+			BuyPrice[ i ] = O[ i ];
+			trend_position_buy = 1;	
+			tpsl[ i ] = 1;
+		
+		}		
+		
+	} else
+				
+	/* "S" day + no position. 4 areas of entry may be defined
+	1) open between LBOP and S1 (area 1)
+	2) open between S1 and HBOP (area 2)
+	3) open higher than HBOP (area 3)
+	4) open lower than LBOP (area 4)
+	*/
+	if (phase_arr[ i ] == 3 AND reaction_position_buy == 0 AND trend_position_buy == 0 AND 
+				reaction_position_short == 0 AND trend_position_short == 0) {
+				
+		// open in area 1		
+		if (O[ i ] > LBOP[ i ] AND O[ i ] < S1[ i ]) {
+		
+			// check for entry of Area 2			
+			if (H[ i ] >= S1[ i ]) {
+			
+				Short[ i ] = 1;
+				ShortPrice[ i ] = S1[ i ];
+				reaction_position_short = 1;
+				
+				// check for entry of Area 3 (breakout)
+				if (H[ i ] >= HBOP[ i ]) {
+				
+					// cover position first
+					Cover[ i ] = 1;
+					CoverPrice[ i ] = HBOP[ i ];
+					reaction_position_short = 0;
+				
+					// take a long position in the trend mode
+					Buy[ i ] = 1;
+					BuyPrice[ i ] = HBOP[ i ];
+					trend_position_buy = 1;
+					tpsl[ i ] = 1;
+					
+				} else 
+				
+				// check for enrty of Area 4 (breakout)
+				if (L[ i ] <= LBOP[ i ]) {
+				
+					// only change the mode since we are already short
+					reaction_position_short = 0;
+					trend_position_short = 1;
+					tpss[ i ] = 1;
+					
+				}
+			
+			} else 
+			
+			// check for entry of Area 4
+			if (L[ i ] <= LBOP[ i ]) {
+			
+				Short[ i ] = 1;
+				ShortPrice[ i ] = LBOP[ i ];
+				trend_position_short = 1;
+				tpss[ i ] = 1;
+			
+			}			
+		
+		} else
+		
+		// open in area 2		
+		if (O[ i ] >= S1[ i ] AND O[ i ] < HBOP[ i ]) {
+				
+			Short[ i ] = 1;
+			ShortPrice[ i ] = O[ i ];
+			reaction_position_short = 1;
+					
+			// check for entry of Area 3 (breakout)
+			if (H[ i ] >= HBOP[ i ]) {
+						
+				// cover the reaction mode short position you just entered
+				Cover[ i ] = 1;
+				CoverPrice[ i ] = HBOP[ i ];
+				reaction_position_short = 0;
+						
+				// take a long position in the trend mode
+				Buy[ i ] = 1;
+				BuyPrice[ i ] = HBOP[ i ];
+				trend_position_buy = 1;
+				tpsl[ i ] = 1;
+							
+			} else 	
+			
+			// check for enrty of Area 4 (breakout)
+			if (L[ i ] <= LBOP[ i ]) {
+						
+				// only change the mode since we are already short
+				reaction_position_short = 0;
+				trend_position_short = 1;
+				tpss[ i ] = 1;
+							
+			}			
+					
+		} else
+		
+		// open in Area 4
+		if (O[ i ] <= LBOP[ i ]) {			
+		
+			// take a short position in the trend mode
+			Short[ i ] = 1;
+			ShortPrice[ i ] = O[ i ];
+			trend_position_short = 1;
+			tpss[ i ] = 1;
+		
+		} else
+				
+		// open in Area 3
+		if (O[ i ] >= HBOP[ i ]) {			
+		
+			// take a long position in the trend mode
+			Buy[ i ] = 1;
+			BuyPrice[ i ] = O[ i ];
+			trend_position_buy = 1;	
+			tpsl[ i ] = 1;
+		
+		}		
+		
+				
+				
+	} else
+		
+	/* "B" day PLUS short reaction mode position. 4 Entry areas of interest
+	1) open between B1 and HBOP (area 1)
+	2) open between LBOP and B1 (area 2)
+	3) open below LBOP (area 3)
+	4) open above HBOP (area 4)
+	
+	*/
+	if (phase_arr[ i ] == 1 AND reaction_position_buy == 0 AND trend_position_buy == 0 AND 
+				reaction_position_short == 1 AND trend_position_short == 0) {
+	
+		// open in area 1
+		if (O[ i ] > B1[ i ] AND O[ i ] < HBOP[ i ]) {
+		
+			// enter area 2
+			if (L[ i ] <= B1[ i ]) {
+			
+				// cover short position
+				Cover[ i ] = 1;
+				CoverPrice[ i ] = B1[ i ];
+				reaction_position_short = 0;
+				
+				// reverse short into a long
+				Buy[ i ] = 1;
+				BuyPrice[ i ] = B1[ i ];
+				reaction_position_buy = 1;
+				
+				// price enters area 3
+				if (L[ i ] <= LBOP[ i ]) {
+				
+					// close long position
+					Sell[ i ] = 1;
+					SellPrice[ i ] = LBOP[ i ];
+					reaction_position_buy = 0;
+					
+					// open short trend mode position
+					Short[ i ] = 1;
+					ShortPrice[ i ] = LBOP[ i ];
+					trend_position_short = 1;
+					tpss[ i ] = 1;
+				
+				} else
+				
+				// price enters area 4
+				if (H[ i ] >= HBOP[ i ]) {
+				
+					// just change the mode
+					reaction_position_buy = 0;
+					trend_position_buy = 1;
+					tpsl[ i ] = 1;
+				
+				}
+			
+			} else
+			
+			// stay in area 1 and cover position at the close
+			if (L[ i ] > B1[ i ] AND H[ i ] < HBOP[ i ] AND timebar[ i ] == 1) {
+							
+							
+				// cover at close
+				Cover[ i ] = 1;
+				CoverPrice[ i ] = C[ i ];
+				reaction_position_short = 0;
+					
+			} else
+				
+			// price enters area 4
+			if (H[ i ] >= HBOP[ i ]) {
+				
+				// cover short position
+				Cover[ i ] = 1;
+				CoverPrice[ i ] = HBOP[ i ];
+				reaction_position_short = 0;
+				
+				// go long in trend mode
+				Buy[ i ] = 1;
+				BuyPrice[ i ] = HBOP[ i ];
+				trend_position_buy = 1;
+				tpsl[ i ] = 1;
+				
+			}
+			
+			
+		} else
+		
+		// open in area 2
+		if (O[ i ] > LBOP[ i ] AND O[ i ] <= B1[ i ]) {
+		
+			// cover the short position
+			Cover[ i ] = 1;
+			CoverPrice[ i ] = O[ i ];
+			reaction_position_short = 0;
+		
+			// reverse position
+			Buy[ i ] = 1;
+			BuyPrice[ i ] = O[ i ];
+			reaction_position_buy = 1;
+			
+			// price enters area 3
+			if (L[ i ] <= LBOP[ i ]) {
+				
+				// close long position
+				Sell[ i ] = 1;
+				SellPrice[ i ] = LBOP[ i ];
+				reaction_position_buy = 0;
+					
+				// open short trend mode position
+				Short[ i ] = 1;
+				ShortPrice[ i ] = LBOP[ i ];
+				trend_position_short = 1;
+				tpss[ i ] = 1;
+				
+			} else
+				
+			// price enters area 4
+			if (H[ i ] > HBOP[ i ]) {
+				
+				// just change the mode
+				reaction_position_buy = 0;
+				trend_position_buy = 1;
+				tpsl[ i ] = 1;
+				
+			}			
+			
+		} else
+		
+		// open in area 3
+		if (O[ i ] <= LBOP[ i ]) {
+		
+			// position is already short, just change the mode
+			reaction_position_short = 0;
+			trend_position_short = 1;
+			tpss[ i ] = 1;
+		
+		} else
+		
+		// open in area 4
+		if (O[ i ] >= HBOP[ i ]) {
+		
+			// close the short position
+			Cover[ i ] = 1;
+			CoverPrice[ i ] = O[ i ];
+			reaction_position_short = 0;
+			
+			// and go long in trend mode
+			Buy[ i ] = 1;
+			BuyPrice[ i ] = O[ i ];
+			trend_position_buy = 1;
+			tpsl[ i ] = 1;
+		
+		}
+		
+	} else
+			
+	/* "O" day PLUS long reaction mode position,  4 areas of interest
+	1) open between LBOP and S1 (area 1)
+	2) open between S1 and HBOP (area 2)
+	3) open above HBOP (area 3)
+	4) open below LBOP ( area 4)
+	*/
+
+	if (phase_arr[ i ] == 2 AND reaction_position_buy == 1 AND trend_position_buy == 0 AND 
+				reaction_position_short == 0 AND trend_position_short == 0) {
+				
+				
+		// open in area 1		
+		if (O[ i ] > LBOP[ i ] AND O[ i ] < S1[ i ]) {
+		
+			// entry of area 2
+			if (H[ i ] >= S1[ i ]) {
+			
+				Sell[ i ] = 1;
+				SellPrice[ i ] = S1[ i ];
+				reaction_position_buy = 0;
+				
+				// enter area 3
+				if (H[ i ] >= HBOP[ i ]) {
+				
+					// go long in trend mode
+					Buy[ i ] = 1;
+					BuyPrice[ i ] = HBOP[ i ];
+					trend_position_buy = 1;
+					tpsl[ i ] = 1;
+				
+				} else
+				
+				// enter area 4
+				if (L[i ] <= LBOP[ i ]) {
+				
+					// go short in trend mode
+					Short[ i ] = 1;
+					ShortPrice[ i ] = LBOP[ i ];
+					trend_position_short = 1;
+					tpss[ i ] = 1;
+				
+				}
+			
+			} else
+			
+			// entry of area 4
+			if (L[ i ] <= LBOP[ i ]) {
+			
+				// sell currect position
+				Sell[ i ] = 1;
+				SellPrice[ i ] = LBOP[ i ];
+				reaction_position_buy = 0;
+				
+				// enter the short trend mode
+				Short[ i ] = 1;
+				ShortPrice[ i ] = LBOP[ i ];
+				trend_position_short = 1;
+				tpss[ i ] = 1;
+			
+			}
+		
+		} else
+		
+		// open in area 2
+		if (O[ i ] >= S1[ i ] AND O[ i ] < HBOP[ i ]) {
+		
+			// sell position straight away
+			Sell[ i ] = 1;
+			SellPrice[ i ] = O[ i ];
+			reaction_position_buy = 0;
+			
+			// enter area 3
+			if (H[ i ] >= HBOP[ i ]) {
+				
+				// go long in trend mode
+				Buy[ i ] = 1;
+				BuyPrice[ i ] = HBOP[ i ];
+				trend_position_buy = 1;
+				tpsl[ i ] = 1;
+				
+			} else
+				
+			// enter area 4
+			if (L[i ] <= LBOP[ i ]) {
+				
+				// go short in trend mode
+				Short[ i ] = 1;
+				ShortPrice[ i ] = LBOP[ i ];
+				trend_position_short = 1;
+				tpss[ i ] = 1;
+				
+			}			
+		
+		} else
+		
+		// open in area 3
+		if (O[ i ] >= HBOP[ i ]) {
+		
+			// position is already long, just change the mode
+			reaction_position_buy = 0;
+			trend_position_buy = 1;	
+			tpsl[ i ] = 1;
+		
+		} else				
+				
+		// open in area 4
+		if (O[ i ] <= LBOP[ i ]) {
+			
+			// close the long position
+			Sell[ i ] = 1;
+			SellPrice[ i ] = O[ i ];
+			reaction_position_buy = 0;
+			
+			// and go short in trend mode
+			Short[ i ] = 1;
+			ShortPrice[ i ] = O[ i ];
+			trend_position_short = 1;
+			tpss[ i ] = 1;
+		
+		}
+		
+	} else
+		
+	/* "S" day + long reaction mode position, 4 areas of interest
+	1) open between LBOP and S1 (area 1)
+	2) open between S1 and HBOP
+	3) open above HBOP (area 3)
+	4) open below LBOP (area 4)
+	*/
+	if (phase_arr[ i ] == 3 AND reaction_position_buy == 1 AND trend_position_buy == 0 AND 
+				reaction_position_short == 0 AND trend_position_short == 0) {
+
+
+		// open in area 1		
+		if (O[ i ] > LBOP[ i ] AND O[ i ] < S1[ i ]) {
+		
+			// entry of area 2
+			if (H[ i ] >= S1[ i ]) {
+			
+				// sell position
+				Sell[ i ] = 1;
+				SellPrice[ i ] = S1[ i ];
+				reaction_position_buy = 0;
+				
+				// reverse position
+				Short[ i ] = 1;
+				ShortPrice[ i ] = S1[ i ];
+				reaction_position_short = 1;
+				
+				// enter area 3
+				if (H[ i ] >= HBOP[ i ]) {
+				
+					// close out short position
+					Cover[ i ] = 1;
+					CoverPrice[ i ] = HBOP[ i ];
+					reaction_position_short = 0;
+				
+					// go long in trend mode
+					Buy[ i ] = 1;
+					BuyPrice[ i ] = HBOP[ i ];
+					trend_position_buy = 1;
+					tpsl[ i ] = 1;
+				
+				} else
+				
+				// enter area 4
+				if (L[i ] <= LBOP[ i ]) {
+				
+					// just change mode, we are short already
+					reaction_position_short = 0;
+					trend_position_short = 1;
+					tpss[ i ] = 1;
+				
+				}
+			
+			}
+			
+			// price never enters the sell area
+			if (H[ i ] < S1[ i ] AND L[ i ] > LBOP[ i ] AND timebar[ i ] == 1) {
+					// cover at close
+					Sell[ i ] = 1;
+					SellPrice[ i ] = C[ i ];
+					reaction_position_buy = 0;
+					
+			} else
+				
+			// price enters area 4
+			if (L[ i ] <= LBOP[ i ]) {
+				
+				// sell long position
+				Sell[ i ] = 1;
+				SellPrice[ i ] = LBOP[ i ];
+				reaction_position_buy = 0;
+				
+				// go short in trend mode
+				Short[ i ] = 1;
+				ShortPrice[ i ] = LBOP[ i ];
+				trend_position_short = 1;
+				tpss[ i ] = 1;
+				
+			}	
+			
+		
+		} else
+		
+		
+		// open in area 2
+		if (O[ i ] >= S1[ i ] AND O[ i ] < HBOP[ i ]) {
+		
+			// sell position straight away
+			Sell[ i ] = 1;
+			SellPrice[ i ] = O[ i ];
+			reaction_position_buy = 0;
+			
+			// and reverse
+			Short[ i ] = 1;
+			ShortPrice[ i ] = O[ i ];
+			reaction_position_short = 1;
+				
+			// enter area 3
+			if (H[ i ] >= HBOP[ i ]) {
+				
+				// close out short position
+				Cover[ i ] = 1;
+				CoverPrice[ i ] = HBOP[ i ];
+				reaction_position_short = 0;
+				
+				// go long in trend mode
+				Buy[ i ] = 1;
+				BuyPrice[ i ] = HBOP[ i ];
+				trend_position_buy = 1;
+				tpsl[ i ] = 1;
+				
+			} else
+				
+			// enter area 4
+			if (L[i ] <= LBOP[ i ]) {
+				
+				// just change mode, we are short already
+				reaction_position_short = 0;
+				trend_position_short = 1;
+				tpss[ i ] = 1;
+				
+			}			
+		
+		} else		
+		
+		// open in area 3
+		if (O[ i ] >= HBOP[ i ]) {
+		
+			// position is already long, just change the mode
+			reaction_position_buy = 0;
+			trend_position_buy = 1;	
+			tpsl[ i ] = 1;
+		
+		} else				
+				
+		// open in area 4
+		if (O[ i ] <= LBOP[ i ]) {
+			
+			// close the long position
+			Sell[ i ] = 1;
+			SellPrice[ i ] = O[ i ];
+			reaction_position_buy = 0;
+			
+			// and go short in trend mode
+			Short[ i ] = 1;
+			ShortPrice[ i ] = O[ i ];
+			trend_position_short = 1;
+			tpss[ i ] = 1;
+		
+		}
+		
+	} else
+			
+	/* long trend mode position, exit at the trailing stop, 4 entry areas of interest
+	1) open between trailstop_long and HBOP (area 1)
+	2) open between trailstop_long and LBOP (area 2)
+	3) open above HBOP (area 3)
+	4) open below LBOP (area 4)
+	*/
+	if ( (phase_arr[ i ] == 1 OR phase_arr[ i ] == 2 OR phase_arr[ i ] == 3) AND 
+			reaction_position_buy == 0 AND trend_position_buy == 1 AND 
+			reaction_position_short == 0 AND trend_position_short == 0) {	
+		
+
+
+		// open in area 1
+		if (O[ i ] > trailstop_long[ i ] AND O[ i ] < HBOP[ i ]) {
+		
+			// enter area 2
+			if (L[ i ] <= trailstop_long[ i ]) {
+			
+				// long position in trend mode is stopped out
+				Sell[ i ] = 1;
+				SellPrice[ i ] = trailstop_long[ i ];
+				trend_position_buy = 0;
+				
+				// enter area 4
+				if (L[ i ] <= LBOP[ i ]) {
+				
+					Short[ i ] = 1;
+					ShortPrice[ i ] = LBOP[ i ];
+					trend_position_short = 1;
+					tpss[ i ] = 1;
+				
+				} 				
+			
+			} 
+			
+			// enter area 3 **** nothing done here
+		
+		} else
+		
+		// open in area 2
+		if (O[ i ] <= trailstop_long[ i ] AND O[ i ] > LBOP[ i ]) {
+		
+			// long position in trend mode is stopped out at the open
+			Sell[ i ] = 1;
+			SellPrice[ i ] = O[ i ];
+			trend_position_buy = 0;
+			
+			// enter area 4
+			if (L[ i ] <= LBOP[ i ]) {
+			
+				// take a short position
+				Short[ i ] = 1;
+				ShortPrice[ i ] = LBOP[ i ];
+				trend_position_short = 1;
+				tpss[ i ] = 1;
+			
+			} else
+			
+			// enter area 3
+			if (H[ i ] >= HBOP[ i ]) {
+			
+				Buy[ i ] = 1;
+				BuyPrice[ i ] = HBOP[ i ];
+				trend_position_buy = 1;
+				tpsl[ i ] = 1;
+			
+			}
+		
+		} else
+		
+
+		// open in area 3 *** nothing done here
+
+		
+		// open in area 4
+		if (O[ i ] <= LBOP[ i ]) {
+		
+			// sell the long position
+			Sell[ i ] = 1;
+			SellPrice[ i ] = O[ i ];
+			trend_position_buy = 0;
+		
+			// now go short in trend mode
+			Short[ i ] = 1;
+			ShortPrice[ i ] = LBOP[ i ];
+			trend_position_short = 1;
+			tpss[ i ] = 1;
+		
+		}
+		
+	} else
+	
+	/* short trend mode position, exit at the trailing stop, 4 entry areas of interest
+	1) open between LBOP and trailstop_short (area 1)
+	2) open between trailstop_short and HBOP (area 2)
+	3) open below LBOP (area 3)
+	4) open above HBOP (area 4)
+	*/
+	if ( (phase_arr[ i ] == 1 OR phase_arr[ i ] == 2 OR phase_arr[ i ] == 3) AND 
+			reaction_position_buy == 0 AND trend_position_buy == 0 AND 
+			reaction_position_short == 0 AND trend_position_short == 1) {	
+		
+		
+		// open in area 1
+		if (O[ i ] < trailstop_short[ i ] AND O[ i ] > LBOP[ i ]) {
+		
+			// entry of area 2
+			if (H[ i ] >= trailstop_short[ i ]) {
+			
+				// cover short position, short trend mode is stopped out
+				Cover[ i ] = 1;
+				CoverPrice[ i ] = trailstop_short[ i ];
+				trend_position_short = 0;
+				
+				// enter are 4
+				if (H[ i ] >= HBOP[ i ]) {
+				
+					// enter long position
+					Buy[ i ] = 1;
+					BuyPrice[ i ] = HBOP[ i ];
+					trend_position_buy = 1;
+					tpsl[ i ] = 1;
+				
+				}
+			
+			} 
+			
+
+			// entry of area 3 *** nothing done here
+
+		
+		} else
+		
+		// open in area 2
+		if (O[ i ] >= trailstop_short[ i ] AND O[ i ] < HBOP[ i ]) {
+		
+			// cover short position, stopped
+			Cover[ i ] = 1;
+			CoverPrice[ i ] = O[ i ];
+			trend_position_short = 0;
+			
+			// enter area 4
+			if (H[ i ] >= HBOP[ i ]) {
+			
+				// go long
+				Buy[ i ] = 1;
+				BuyPrice[ i ] = HBOP[ i ];
+				trend_position_buy = 1;
+				tpsl[ i ] = 1;
+			
+			} else
+			
+			// enter area 3
+			if (L[ i ] <= LBOP[ i ]) {
+			
+				// go short
+				Short[ i ] = 1;
+				ShortPrice[ i ] = LBOP[ i ];
+				trend_position_short = 1;
+				tpss[ i ] = 1;
+			
+			}
+		
+		} else
+		
+
+		// open in area 3 *** nothing done here
+
+		
+		// open in area 4
+		if (O[ i ] >= HBOP[ i ]) {
+		
+			// cover short position
+			Cover[ i ] = 1;
+			CoverPrice[ i ] = O[ i ];
+			trend_position_short = 0;
+			
+			// go long
+			Buy[ i ] = 1;
+			BuyPrice[ i ] = O[ i ];
+			trend_position_buy = 1;
+			tpsl[ i ] = 1;
+		
+		}
+		
+	}
+
+	// *** extra code that is needed for intraday data ***	
+	// "B" day PLUS LONG reaction mode position. 3 Entry areas of interest
+	//1) open between LBOP and HBOP (area 1)
+	//2) open below LBOP (area 2)
+	//3) open above HBOP (area 3)
+	
+	//check for outbreak on "B" day having a long position
+	
+	if (phase_arr[ i ] == 1 AND reaction_position_buy == 1 AND trend_position_buy == 0 AND 
+				reaction_position_short == 0 AND trend_position_short == 0) {
+	
+		// open in area 1
+		if (O[ i ] > LBOP[ i ] AND O[ i ] < HBOP[ i ]) {
+		
+			// enter area 2
+			if (L[ i ] <= LBOP[ i ]) {
+			
+				// sell long position
+				Sell[ i ] = 1;
+				SellPrice[ i ] = LBOP[ i ];
+				reaction_position_buy = 0;
+				
+				// go short in trend mode
+				Short[ i ] = 1;
+				ShortPrice[ i ] = LBOP[ i ];
+				trend_position_short = 1;
+				tpss[ i ] =1;
+				
+			} else
+			
+			// enter area 3
+			if (H[ i ] >= HBOP[ i ]) {
+			
+				reaction_position_buy = 0;
+				trend_position_buy = 1;
+				tpsl[ i ] = 1;
+			
+			}
+			
+		} else
+		
+		// open in area 2
+		if (O[ i ] <= LBOP[ i ]) {
+		
+			// sell long position
+			Sell[ i ] = 1;
+			SellPrice[ i ] = O[ i ];
+			reaction_position_buy = 0;
+				
+			// go short in trend mode
+			Short[ i ] = 1;
+			ShortPrice[ i ] = O[ i ];
+			trend_position_short = 1;
+			tpss[ i ] = 1;
+		
+		} else
+		
+		// open in area 3
+		if (O[ i ] >= HBOP[ i ]) {
+		
+			// only change the mode
+			reaction_position_buy = 0;
+			trend_position_buy = 1;
+			tpsl[ i ] = 1;
+		
+		}
+				
+		
+	} else	
+	
+	// *** extra code that is needed for intraday data ***	
+	// "S" day PLUS SHORT reaction mode position. 3 Entry areas of interest
+	//1) open between LBOP and HBOP (area 1)
+	//2) open below LBOP (area 2)
+	//3) open above HBOP (area 3)
+	
+	//check for outbreak on "S" day having a short position
+	
+	if (phase_arr[ i ] == 3 AND reaction_position_buy == 0 AND trend_position_buy == 0 AND 
+				reaction_position_short == 1 AND trend_position_short == 0) {	
+				
+		// open in area 1
+		if (O[ i ] > LBOP[ i ] AND O[ i ] < HBOP[ i ]) {
+		
+			// enter area 2
+			if (L[ i ] <= LBOP[ i ]) {
+			
+				// change mode only
+				reaction_position_short = 0;
+				trend_position_short = 1;
+				tpss[ i ] = 1;
+
+				
+			} else
+			
+			// enter area 3
+			if (H[ i ] >= HBOP[ i ]) {
+			
+				// cover short position
+				Cover[ i ] = 1;
+				CoverPrice[ i ] = HBOP[ i ];
+				reaction_position_short = 0;
+				
+				// go long in trend mode
+				Buy[ i ] = 1;
+				BuyPrice[ i ] = HBOP[ i ];
+				trend_position_buy = 1;
+				tpsl[ i ] = 1;
+			
+			}
+			
+		} else	
+		
+		// open in area 2
+		if (O[ i ] <= LBOP[ i ]) {
+
+			// only change the mode
+			reaction_position_short = 0;
+			trend_position_short = 1;
+			tpss[ i ] = 1;
+		
+		} else
+		
+		// open in area 3
+		if (O[ i ] >= HBOP[ i ]) {
+
+			// cover short position
+			Cover[ i ] = 1;
+			CoverPrice[ i ] = O[ i ];
+			reaction_position_short = 0;
+				
+			// go long in trend mode
+			Buy[ i ] = 1;
+			BuyPrice[ i ] = O[ i ];
+			trend_position_buy = 1;
+			tpsl[ i ] = 1;
+		
+		}		
+				
+	}
+	
+	
+}
+
+
+
+// --------------------------------------
+
+// For Chart 
+Plot(C,"",1,64);
+
+// define title
+Title=Name()+ ",  O: "+WriteVal(O)+ ",  H: "+WriteVal(H)+ ",  L: "+WriteVal(L)+ ",  C: "+WriteVal(C) +
+EncodeColor( colorOrange ) + ",  HBOP: " + EncodeColor( colorWhite ) + WriteVal(HBOP) +
+EncodeColor( colorRed ) + ",  S1: " + EncodeColor( colorWhite ) + WriteVal(HBOP) +
+EncodeColor( colorBrightGreen ) + ",  B1: " + EncodeColor( colorWhite ) + WriteVal(HBOP) +
+EncodeColor( colorGreen ) + ",  LBOP: " + EncodeColor( colorWhite ) + WriteVal(HBOP);
+
+// buy, sell, short and cover symbols
+PlotShapes(shapeUpArrow*Buy,colorWhite,0,BuyPrice,0);
+PlotShapes(shapeDownArrow*Sell,colorYellow,0,SellPrice,0);
+PlotShapes(shapeHollowDownArrow*Short,colorYellow,0,ShortPrice,-15);
+PlotShapes(shapeHollowUpArrow*Cover,colorWhite,0,CoverPrice,-15);
+
+// triagle show breakouts 
+PlotShapes(shapeUpTriangle*tpsl,colorWhite,0,BuyPrice,0);
+PlotShapes(shapeDownTriangle*tpss,colorYellow,0,ShortPrice,-15);
+
+// 1 = "B" day, 2 = "O" day, 3 = "S" day
+PlotShapes(shapeDigit1 * (hlp_phase == 1),IIF(hlp_b == 1,colorYellow,colorWhite),0, HBOP,0);
+PlotShapes(shapeDigit2 * (hlp_phase == 2),colorWhite,0, HBOP,0);
+PlotShapes(shapeDigit3 * (hlp_phase == 3),IIF(hlp_s == 1,colorYellow,colorWhite),0, HBOP,0);
+
+// lightblue digits at days where original phase is used for the calculation.
+PlotShapes(shapeDigit1 * (hlp_phase_l1 == 1),colorLightBlue,0, HBOP,-15);
+PlotShapes(shapeDigit3 * (hlp_phase_l1 == 3),colorLightBlue,0, HBOP,-15);
+
+// draw levels
+Plot(B1,"",colorBrightGreen,1);
+Plot(S1,"",colorRed,1);
+Plot(HBOP,"",colorOrange,1);
+Plot(LBOP,"",colorGreen,1);
+
+// for analysis purposes
+Filter = 1;
+AddColumn(phase_arr,"Phase");
+Addcolumn(LBOP,"LBOP");
+AddColumn(O,"O");
+AddColumn(buy,"buy");
+AddColumn(sell,"sell");
+AddColumn(short,"short");
+AddColumn(cover,"cover");
+AddColumn(tpsl,"tpsl");
+AddColumn(tpss,"tpss");

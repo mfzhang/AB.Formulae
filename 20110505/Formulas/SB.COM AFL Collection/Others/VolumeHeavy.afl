@@ -1,0 +1,3 @@
+Filter = Volume > 150000; /* adjust this threshold for your own needs */
+AddColumn(Close,"Close",1.4);
+AddColumn(Volume,"Volume",1.0);

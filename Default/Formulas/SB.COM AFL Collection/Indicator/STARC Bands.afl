@@ -1,0 +1,44 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    STARC Bands
+//  Author/Uploader: Prakash Shenoi 
+//  E-mail:          
+//  Date/Time Added: 2006-08-11 07:18:13
+//  Origin:          
+//  Keywords:        Trading Bands
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=674
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=674
+//
+//------------------------------------------------------------------------------
+//
+//  STARC Bands developed by Manning Stoller consist of a channel surrounding a
+//  Simple Moving Average of typical Price. The width of the channel created
+//  vary with the period of the average range. Like Bollinger Bands, STARC
+//  Bands tighten in steady or low volatility markets and widen as volatility
+//  goes up. The difference lies in that rather than being based on Closes,
+//  STARC Bands are based on the ATR, which reflect indepth picture of the
+//  market volatility. While the penetration of a Bollinger Band may indicate a
+//  continuation of a price move, STARC Bands define the upper and lower limits
+//  for normal price action.
+//
+//  The default for MA is 6 period and ATR average is 15 - can be user defined
+//  through Param settings.
+//
+//------------------------------------------------------------------------------
+
+/* S T A R C Bands */
+/* AFL code by Prakash Shenoi */
+
+x=Param("Average ",5,1,21);
+y=Param("ATR ",1,1,21);
+typ=(H+L+C)/3;
+s=MA(typ,x);
+Up=(s +(ATR(y)*1.33));
+Lo=(s-(ATR(y)*1.33));
+Plot (C,"STARC BANDS - Close",1,64);
+Plot (Up,"UB",27,4);
+Plot (s,"Mid",22,1);
+Plot (Lo,"LB",27,4);
+GraphXSpace=3;

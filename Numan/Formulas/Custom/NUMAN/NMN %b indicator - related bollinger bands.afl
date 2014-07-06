@@ -1,0 +1,3 @@
+Graph0  = (Close - BBandBot (Close, 20, 2)) / ((BBandTop (Close, 20, 2) - BBandBot (Close, 20, 2)));
+
+Plot( Graph0, "%b indicator", colorBlue );

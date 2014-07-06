@@ -1,0 +1,86 @@
+//|-----------------------------------------------------------------------------------------
+//|PatternExplorer.com - Alert 3 - Custom Condition
+//|Copyright © 2007, PatternExplorer.com
+//|http://www.PatternExplorer.com
+//|e-mail: support@PatternExplorer.com
+//|-----------------------------------------------------------------------------------------
+FormulaName = "PE - Alert 3 - Custom";
+
+SetChartOptions( 0, chartShowDates | chartLogarithmic | chartWrapTitle );
+#pragma nocache
+#include_once  <\PEInc\PatternExplorer_f0.afl>
+#Include_once "C:\Program Files (x86)\AmiBroker5\Formulas\PatternExplorer\#Defaults & Mods\PE - Defaults.afl"
+#Include_once "C:\Program Files (x86)\AmiBroker5\Formulas\PatternExplorer\#Defaults & Mods\PE - Mods.afl"
+AddAlertParam( def_AudioAlert = 1, def_EmailAlert, def_BarComplete );
+#include_once  <\PEInc\PatternExplorer_1.afl>
+/*******************************************************************************************/
+AddCustomCodeBeforePE();
+/*******************************************************************************************/
+//The following part is used to define your personal signals.
+//Please save a copy of this file under another name to assure that your modifications
+//will NOT be overwritten when installing PatternExplorer updates.
+//Write = 0; to deativate alerts. Example: Short = 0;
+
+Buy = def_Buy AND Ref( PeTaio(), -1 ) == LLV( PeTaio(), 3 )AND Ref( PeTaio(), -1 ) < -80;//Your buy condition
+Buytext = "Sample buy signal";
+
+Sell = def_Sell AND Ref( PeTaio(), -1 ) == HHV( PeTaio(), 3 )AND Ref( PeTaio(), -1 ) > 80;//Your sell condition
+Selltext = "Sample sell signal";
+
+Short = def_Short AND Cross( 80, StochD() ); //Your short condition
+Shorttext = "Sample short signal";
+
+Cover = def_Cover AND Cross( StochD(), 20 ); //Your cover condition
+Covertext = "Sample cover signal";
+/*******************************************************************************************/
+
+/*
+You can use the following code block to use buy signals only if last long trade was closed and
+short signals only if last short trade was closed.
+Buy = ExRem(Buy,Sell);
+Sell = ExRem(Sell,Buy);
+Cover = ExRem(Cover,Short);
+Short = ExRem(Short,Cover);
+*/
+
+
+/*
+The code below shows some basic implementation of stops AND profits with optimization.
+
+Digits = 0.001;
+TakeProfit=Optimize("profit",0.001*Digits,0.0006*Digits,0.002*Digits,0.0001*Digits);
+LossStop=Optimize("stop",0.0009*Digits,0.0006*Digits,0.002*Digits,0.0001*Digits);
+ApplyStop(type = 0, mode = 2, amount = LossStop, exitatstop = 1, volatile = False, ReEntryDelay = 0 );
+ApplyStop(type = 1, mode = 2, amount = Takeprofit, exitatstop = 1, volatile = False, ReEntryDelay = 0 );
+
+*/
+
+//Equity(1); //This line will also plot your exits at applystop/takeprofit
+
+/*******************************************************************************************/
+AddAlert( Buy, Audio, Email, Buytext, 1, BarComplete, def_BuySound1 );
+AddAlert( Sell, Audio, Email, Selltext, 2, BarComplete, def_SellSound1 );
+AddAlert( Short, Audio, Email, Shorttext, 3, BarComplete, def_ShortSound1 );
+AddAlert( Cover, Audio, Email, Covertext, 4, BarComplete, def_CoverSound1 );
+/*******************************************************************************************/
+Filter = def_Filter AND NOT GroupID() == 253;
+Filter = Filter AND ( Buy OR Sell OR Short OR Cover );
+/*******************************************************************************************/
+Addefaultcolumns();
+Adddefaultcolumns( 3, 1 );
+AddTextColumn( FullName(), "Full name" );
+/*******************************************************************************************/
+PlotShapes( def_BuyShape*Buy, def_BuyShapeColor, layer = 0, yposition = Low, offset = -def_BuyShapeOffset );
+PlotShapes( def_SellShape*Sell, def_SellShapeColor, layer = 0, yposition = High, offset = -def_SellShapeOffset );
+PlotShapes( def_ShortShape*Short, def_ShortShapeColor, layer = 0, yposition = High, offset = -def_ShortShapeOffset );
+PlotShapes( def_CoverShape*Cover, def_CoverShapeColor, layer = 0, yposition = Low, offset = -def_CoverShapeOffset );
+/*******************************************************************************************/
+ToolTip = def_ToolTip;
+/*******************************************************************************************/
+AddCustomCodeAfterPE();
+/*******************************************************************************************/
+Title = "PatternExplorer.com - Alert 3" + default_priceTitle
+        + EncodeColor( def_Text1 ) + ", Activated Alerts:"
+        + WriteIf( Audio AND NOT Email, " Audio ",
+                   WriteIf( Email AND NOT Audio, " Email ",
+                            WriteIf( Email AND Audio, " Audio & Email ", " None " ) ) );

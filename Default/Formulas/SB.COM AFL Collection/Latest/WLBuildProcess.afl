@@ -1,0 +1,151 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    WLBuildProcess
+//  Author/Uploader: Fred Tonetti 
+//  E-mail:          
+//  Date/Time Added: 2006-09-16 05:30:39
+//  Origin:          
+//  Keywords:        WatchList AddToComposite
+//  Level:           basic
+//  Flags:           exploration,function
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=710
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=710
+//
+//------------------------------------------------------------------------------
+//
+//  Builds a user designated working watchlist using the tickers from an
+//  external file, processes the users formula and adds to a composite which is
+//  stored in the final watchlist. Any number of files can be processed
+//
+//------------------------------------------------------------------------------
+
+//
+// Builds Composites From External Lists of Symbols
+//
+// This should be run as an Exploration on the current symbol only
+// 
+// User Supplied Info:
+//
+//     WatchLists 
+//         62 - Work
+//         63 - Final
+//
+//     The requirements of input files are that they all must
+//         - Be in the same directory
+//         - Have the same Prefix   ( In this case ETF  ) 
+//         - Have the same FileType ( In this case .tls )
+//         - Contain a sequential number as part of the name beginning with 1 i.e. ETF1, ETF2 etc ...
+//
+//     FNMax = Number of Files to be Processed 
+//     FNLoc = File Location (Path)
+//     FNPre = FileName Prefix
+//     FNTyp = FileType
+//
+// FNNum = FileName Number ( Suffix ) ... Automatically generated from 1 to FNMax
+//
+// The resulting composites will be named ~FNPreFNNum and will be in the Final WatchList
+//
+
+WLWrk = 62;
+WLFin = 63;
+FNMax =  2;
+FNLoc = "C:/Work/";
+FNPre = "ETF";
+FNTyp = ".tls";
+
+// Clear Final WatchList
+
+IPList = GetCategorySymbols(categoryWatchlist, WLFin);
+
+_TRACE("Removing Tickers from W/L " + NumToStr(WLFin, 1.0));
+for (i = 0; i < 999999; i++)
+{
+    Ticker = StrExtract(IPList, i);
+    if (Ticker == "")
+        i = 999999;
+    else
+    {
+        CategoryRemoveSymbol(Ticker, categoryWatchlist, WLFin);
+        _TRACE("   " + Ticker);
+    }
+}
+
+Filter = BarIndex() == LastValue(BarIndex());
+
+// Loop to process all files
+
+for (FNNum = 1; FNNum <= FNMax; FNNum++)
+{
+    // Clear Work WatchList
+
+    IPList = GetCategorySymbols(categoryWatchlist, WLWrk);
+
+    _TRACE("Removing Tickers from W/L " + NumToStr(WLWrk, 1.0));
+    for (i = 0; i < 999999; i++)
+    {
+        Ticker = StrExtract(IPList, i);
+        if (Ticker == "")
+            i = 999999;
+        else
+        {
+            CategoryRemoveSymbol(Ticker, categoryWatchlist, WLWrk);
+            _TRACE("   " + Ticker);
+        }
+    }
+
+    // Load WatchList
+
+    IPFileName = FNLoc + FNPre + NumToStr(FNNum, 1.0) + FNTyp;
+
+    fh = fopen(IPFileName, "r");  
+    if(fh)  
+    {
+        _TRACE("Loading Tickers from " + IPFileName);
+        while(! feof(fh))  
+        { 
+            Ticker = fgets(fh); 
+            Ticker = StrReplace(Ticker, "\n", "");  
+            Ticker = StrReplace(Ticker, "\r", "");
+            if (Ticker != "")
+            {
+                CategoryAddSymbol(Ticker, categoryWatchlist, WLWrk);
+                _TRACE("   " + Ticker);
+            }
+        } 
+        fclose(fh);  
+    }  
+    else  
+    {  
+        printf("ERROR: " + IPFileName + " does NOT exist");  
+    }  
+
+    // Process WatchList 
+
+    IPList = GetCategorySymbols(categoryWatchlist, WLWrk); 
+    CompNM = "~" + FNPre + NumToStr(FNNum, 1.0);
+
+    _TRACE("Processing Tickers & Adding to Composite " + CompNM);
+    for (i = 0; i < 999999; i++) 
+    { 
+        Ticker = StrExtract(IPList, i); 
+        if (Ticker == "") 
+            i = 999999; 
+        else
+        {
+            _TRACE("   " + Ticker);
+
+            SetForeign(Ticker);
+
+            // Whatever processing for each Ticker - In this case we're just grabbing Close
+
+            AddToComposite(C, CompNM, "X", atcFlagCompositeGroup + atcFlagEnableInExplore);
+
+            CategoryAddSymbol(CompNm, categoryWatchlist, WLFin);
+
+            CategoryRemoveSymbol(CompNm, categoryGroup, 253);
+
+        }
+    }
+    AddTextColumn(CompNm, "Completed");
+}
+

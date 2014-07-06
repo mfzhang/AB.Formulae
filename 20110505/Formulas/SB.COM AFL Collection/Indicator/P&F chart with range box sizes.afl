@@ -1,0 +1,304 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    P&F chart with range box sizes
+//  Author/Uploader: Graham Kavanagh 
+//  E-mail:          gkavanag@bigpond.net.au
+//  Date/Time Added: 2003-01-31 22:52:18
+//  Origin:          
+//  Keywords:        Point Figure
+//  Level:           semi-advanced
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=257
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=257
+//
+//------------------------------------------------------------------------------
+//
+//  Box values are set to be same between set price ranges. The screen image of
+//  the box is a single unit (cent) regardless of the box value.
+//
+//------------------------------------------------------------------------------
+
+/*P&F Chart based on closing prices.
+Place entire code in Indicator Builder.
+Box size has been set for different price ranges to allow more equitable chart viewing over large data ranges.
+The Price ranges are set at change values (cxx) and box values (bxx) below, and are in values of cents. (eg c1000 is $10.00 and b1000 is $0.10 ) My chart price axis is in cents as that is where most of my stock prices reside at lower prices.
+Box sizes are set to be eg b10 is for between c5 and c10.
+They can be altered here to suit your overall chart values. (eg if you deal more in larger priced stocks, or in $ price axis)
+Graham Kavanagh 01/Feb/2003
+*/
+SetBarsRequired(100000,100000);
+//Set the Price limits for change of box values
+c5 = 5;
+c10 = 10;
+c20 = 20;
+c50 = 50;
+c100 = 100;
+c200 = 200;
+c500 = 500;
+c1000 = 1000;
+c2000 = 2000;
+c3000 = 3000;
+c4000 = 4000;
+c5000 = 5000;
+
+//Set box values Bx for the price up to Cx
+b5 = 0.1;
+b10 = 0.2;
+b20 = 0.25;
+b50 = 0.5;
+b100 = 1;
+b200 = 2;
+b500 = 5;
+b1000 = 10;
+b2000 = 20;
+binfinity = 40;
+
+//Number of boxes in each price range
+nb5 = c5/b5;
+nb10 = nb5 + (c10-c5)/b10;
+nb20 = nb10 + (c20-c10)/b20;
+nb50 = nb20 + (c50-c20)/b50;
+nb100 = nb50 + (c100-c50)/b100;
+nb200 = nb100 + (c200-c100)/b200;
+nb500 = nb200 + (c500-c200)/b500;
+nb1000 = nb500 + (c1000-c500)/b1000;
+nb2000 = nb1000 + (c2000-c1000)/b2000;
+nb3000 = nb2000 + (c3000 - c2000)/binfinity;
+nb4000 = nb3000 + (c4000 - c3000)/binfinity;
+nb4000 = nb4000 + (c5000 - c4000)/binfinity;
+
+//define box values for each price zone
+box = IIf(C<=c5,b5,
+IIf(C>c5 AND C<=c10, b10,
+IIf(C>c10 AND C<=c20, b20,
+IIf(C>c20 AND C<=c50, b50,
+IIf(C>c50 AND C<=c100, b100,
+IIf(C>c100 AND C<=c200, b200,
+IIf(C>c200 AND C<=c500, b500,
+IIf(C>c500 AND C<=c1000, b1000,
+IIf(C>c1000 AND C<=c2000, b2000,
+binfinity )))))))));
+
+//Round the Close data into box equivalents
+CF = ceil(C/box)*box;
+CR = floor(C/box)*box;
+
+//Rising chart values
+CRB = IIf(CR<=c5, 0 + CR/b5,
+IIf(CR>c5 AND CR<=c10, nb5+(CR-c5)/b10,
+IIf(CR>c10 AND CR<=c20, nb10+(CR-c10)/b20,
+IIf(CR>c20 AND CR<=c50, nb20+(CR-c20)/b50,
+IIf(CR>c50 AND CR<=c100, nb50+(CR-c50)/b100,
+IIf(CR>c100 AND CR<=c200, nb100+(CR-c100)/b200,
+IIf(CR>c200 AND CR<=c500, nb200+(CR-c200)/b500,
+IIf(CR>c500 AND CR<=c1000, nb500+(CR-c500)/b1000,
+IIf(CR>c1000 AND CR<=c2000, nb1000+(CR-c1000)/b2000,
+nb2000+(CR-c2000)/binfinity
+)))))))));
+
+//Falling chart values
+CFB = IIf(CF<=c5, 0 + CF/b5,
+IIf(CF>c5 AND CF<=c10, nb5+(CF-c5)/b10,
+IIf(CF>c10 AND CF<=c20, nb10+(CF-c10)/b20,
+IIf(CF>c20 AND CF<=c50, nb20+(CF-c20)/b50,
+IIf(CF>c50 AND CF<=c100, nb50+(CF-c50)/b100,
+IIf(CF>c100 AND CF<=c200, nb100+(CF-c100)/b200,
+IIf(CF>c200 AND CF<=c500, nb200+(CF-c200)/b500,
+IIf(CF>c500 AND CF<=c1000, nb500+(CF-c500)/b1000,
+IIf(CF>c1000 AND CF<=c2000, nb1000+(CF-c1000)/b2000,
+nb2000+(CF-c2000)/binfinity
+)))))))));
+
+//Jscript to produce the P&F chart
+EnableScript("jscript");
+<%
+
+Close = VBArray( AFL( "Close" ) ).toArray();
+CRB = VBArray( AFL( "CRB" ) ).toArray();
+CFB = VBArray( AFL( "CFB" ) ).toArray();
+
+PFO = new Array();
+PFC = new Array();
+
+Reverse = 3 ;                   // reversal requirement
+
+// initialize first element
+j = 0;
+PFC[j] = CFB[0];
+PFO[j] = CFB[0]+1;
+down = 1;                  // By default the first bar is a down bar.
+up = 0;
+swap = 0;
+
+// perform the loop that produces PF Chart
+for( i = 1; i < Close.length; i++ )
+{
+
+ if( CFB[i] <= PFC[j]-1 && down)         //continue down
+ {
+  PFC[j] = CFB[i];
+  PFO[j] = CFB[i]+1;
+ }
+ else
+ {
+  if( CRB[i] >= PFC[j] + Reverse && down)  //Change direction to up
+  {
+   j++;
+   swap = 1;
+   PFC[j] = CRB[i];
+   PFO[j] = CRB[i] - 1;
+  }
+ }
+ if( CRB[i] >= PFC[j] + 1 && up)         //Continue up
+ {
+  PFC[j] = CRB[i];
+  PFO[j] = CRB[i] - 1;
+ }
+ else
+ {
+  if( CFB[i] <= PFC[j] - Reverse && up)   //Change direction to down
+  {
+   j++;
+   PFC[j] = CRB[i];
+   PFO[j] = CRB[i]+1;
+   swap = 1;
+  }
+ }
+ if( swap )
+ {
+  swap = 0;
+  if( up )
+  {
+   up = 0;
+   down = 1;
+  }
+  else
+  {
+   up = 1;
+   down = 0;
+  }
+ }
+}
+delta = Close.length - j-1;
+
+AFL.Var("PFO") = PFO;
+AFL.Var("PFC") = PFC;
+AFL.Var("delta") = delta;
+AFL.Var("Reverse") = Reverse;
+AFL.Var("j") = j;
+
+%>
+
+PFO = Ref( PFO, -delta );
+PFC = Ref( PFC, -delta );
+
+// High-Low range sets the height of the P&F bar
+H = IIf(Ref(PFC,-1)>Ref(PFO,-1),Ref(HHV(PFC,1),-1)-1,Max(PFO,PFC));
+L = IIf(Ref(PFC,-1)<Ref(PFO,-1),Ref(LLV(PFC,1),-1)+1,Min(PFO,PFC));
+O = IIf(Ref(PFC,-1)>Ref(PFO,-1),Ref(HHV(PFC,1),-1)-1,IIf(Ref(PFC,-1)<Ref(PFO,-1),Ref(LLV(PFC,1),-1)+
+1,PFO));
+
+// the difference between Open AND Close should be set to box size
+// the sign decides if X or O are plotted
+C = O + 1 * IIf( PFC > PFO, 1,-1);
+
+//Colours of major gridlines at box values change points. Colours for easier chart identification
+Color5 = colorYellow ;
+Color10 = colorBlue;
+Color20 = colorBrown;
+Color50 = colorIndigo;
+Color100 = colorGreen;
+Color200 = colorTan;
+Color500 = colorOrange;
+Color1000 = colorLightBlue;
+Color2000 = colorLime;
+Color3000 = colorRed;
+Color4000 = colorBlack;
+colorgrid = colorWhite; //colours of intermediate gridlines
+
+GraphXSpace = 5;
+
+Title = "PF Chart box varies, H:" + WriteVal(H,1.0)+ ", L:" + WriteVal(L,1.0) +
+".... White gridlines are spaced at 20% intervals betweenmain gridlines." +
+"\n" + "Y-Axis values = " +
+EncodeColor(color5) + WriteVal(C5,1.0) + "c@ " + WriteVal(nb5,1.0) + ", " +
+EncodeColor(color10) + WriteVal(C10,1.0) + "c@ " + WriteVal(nb10,1.0) + ", " +
+EncodeColor(color20) + WriteVal(C20,1.0) + "c@ " + WriteVal(nb20,1.0) + ", " +
+EncodeColor(color50) + WriteVal(C50,1.0) + "c@ " + WriteVal(nb50,1.0) + ", " +
+EncodeColor(color100) + "$" + WriteVal(C100/100,1.0) + "@ " + WriteVal(nb100,1.0) + ", " +
+EncodeColor(color200) + "$" + WriteVal(C200/100,1.0) + "@ " + WriteVal(nb200,1.0) + ", " +
+EncodeColor(color500) + "$" + WriteVal(C500/100,1.0) +"@ " + WriteVal(nb500,1.0) + ", " +
+EncodeColor(color1000)+",$"+WriteVal(C1000/100,1.0) + "@ " + WriteVal(nb1000,1.0) + ", " +
+EncodeColor(color2000) + "$" + WriteVal(C2000/100,1.0) + "@ " + WriteVal(nb2000,1.0) + ", " +
+EncodeColor(color3000) + "$" + WriteVal(C3000/100,1.0) + "@ " + WriteVal(nb3000,1.0) + ", " +
+EncodeColor(color4000) + "$" + WriteVal(C4000/100,1.0) + "@ " + WriteVal(nb4000,1.0) +"\n"+
+"Box Values (cents) = "+ 
+EncodeColor(color5)+"below " +WriteVal(nb5,1.0) + "=" + WriteVal(b5,1.2) + ", " +
+EncodeColor(color10)+WriteVal(nb5,1.0)+"-"+WriteVal(nb10,1.0)+"="+WriteVal(b10,1.2)+", "+
+EncodeColor(color20)+WriteVal(nb10,1.0)+"-"+WriteVal(nb20,1.0)+"="+WriteVal(b20,1.2)+", "+
+EncodeColor(color50)+WriteVal(nb20,1.0)+"-"+WriteVal(nb50,1.0)+"="+WriteVal(b50,1.2)+", "+
+EncodeColor(color100)+WriteVal(nb50,1.0)+"-"+WriteVal(nb100,1.0)+"="+WriteVal(b100,1.1)+", "+
+EncodeColor(color200)+WriteVal(nb100,1.0)+"-"+WriteVal(nb200,1.0)+"="+WriteVal(b200,1.0)+", "+
+EncodeColor(color500)+WriteVal(nb200,1.0)+"-"+WriteVal(nb500,1.0)+"="+WriteVal(b500,1.0)+", "+
+EncodeColor(color1000)+WriteVal(nb500,1.0)+"-"+WriteVal(nb1000,1.0)+"="+WriteVal(b1000,1.0)+", "+
+EncodeColor(color2000)+WriteVal(nb1000,1.0)+"-"+WriteVal(nb2000,1.0)+"="+WriteVal(b2000,1.0)+", "+
+EncodeColor(color3000 )+WriteVal(nb2000,1.0)+"& above"+"="+WriteVal(binfinity,1.0);
+ 
+Plot(C,"P&F Chart Close",IIf( PFC > PFO, colorBlue, colorRed ),styleCandle+styleNoLabel+stylePointAndFigure);
+ 
+PlotGrid( nb5, color5 );
+PlotGrid( nb10, color10 );
+PlotGrid( nb20, color20 );
+PlotGrid( nb50, color50 );
+PlotGrid( nb100, color100 );
+PlotGrid( nb200, color200 );
+PlotGrid( nb500, color500 );
+PlotGrid( nb1000, color1000 );
+PlotGrid( nb2000, color2000 );
+PlotGrid( nb3000, color3000 );
+PlotGrid( nb4000, color4000 );
+
+PlotGrid(nb5*0.2,colorgrid);	
+PlotGrid(nb5*0.4,colorgrid);	
+PlotGrid(nb5*0.6,colorgrid);	
+PlotGrid(nb5*0.8,colorgrid);
+PlotGrid(nb5+(nb10-nb5)*0.2,colorgrid);	
+PlotGrid(nb5+(nb10-nb5)*0.4,colorgrid);	
+PlotGrid(nb5+(nb10-nb5)*0.6,colorgrid);
+PlotGrid(nb5+(nb10-nb5)*0.8,colorgrid);
+PlotGrid(nb10+(nb20-nb10)*0.2,colorgrid);	
+PlotGrid(nb10+(nb20-nb10)*0.4,colorgrid);	
+PlotGrid(nb10+(nb20-nb10)*0.6,colorgrid);	
+PlotGrid(nb10+(nb20-nb10)*0.8,colorgrid);
+PlotGrid(nb20+(nb50-nb20)*0.2,colorgrid);	
+PlotGrid(nb20+(nb50-nb20)*0.4,colorgrid);	
+PlotGrid(nb20+(nb50-nb20)*0.6,colorgrid);	
+PlotGrid(nb20+(nb50-nb20)*0.8,colorgrid);
+PlotGrid(nb50+(nb100-nb50)*0.2,colorgrid);	
+PlotGrid(nb50+(nb100-nb50)*0.4,colorgrid);	
+PlotGrid(nb50+(nb100-nb50)*0.6,colorgrid);	
+PlotGrid(nb50+(nb100-nb50)*0.8,colorgrid);
+PlotGrid(nb100+(nb200-nb100)*0.2,colorgrid);	
+PlotGrid(nb100+(nb200-nb100)*0.4,colorgrid);	
+PlotGrid(nb100+(nb200-nb100)*0.6,colorgrid);	
+PlotGrid(nb100+(nb200-nb100)*0.8,colorgrid);
+PlotGrid(nb200+(nb500-nb200)*0.2,colorgrid);	
+PlotGrid(nb200+(nb500-nb200)*0.4,colorgrid);	
+PlotGrid(nb200+(nb500-nb200)*0.6,colorgrid);	
+PlotGrid(nb200+(nb500-nb200)*0.8,colorgrid);
+PlotGrid(nb500+(nb1000-nb500)*0.2,colorgrid);	
+PlotGrid(nb500+(nb1000-nb500)*0.4,colorgrid);	
+PlotGrid(nb500+(nb1000-nb500)*0.6,colorgrid);	
+PlotGrid(nb500+(nb1000-nb500)*0.8,colorgrid);
+PlotGrid(nb1000+(nb2000-nb1000)*0.2,colorgrid);	
+PlotGrid(nb1000+(nb2000-nb1000)*0.4,colorgrid);	
+PlotGrid(nb1000+(nb2000-nb1000)*0.6,colorgrid);	
+PlotGrid(nb1000+(nb2000-nb1000)*0.8,colorgrid);
+PlotGrid(nb2000+(nb3000-nb2000)*0.2,colorgrid);	
+PlotGrid(nb2000+(nb3000-nb2000)*0.4,colorgrid);	
+PlotGrid(nb2000+(nb3000-nb2000)*0.6,colorgrid);	
+PlotGrid(nb2000+(nb3000-nb2000)*0.8,colorgrid);
+PlotGrid(nb3000+(nb4000-nb3000)*0.2,colorgrid);	
+PlotGrid(nb3000+(nb4000-nb3000)*0.4,colorgrid);	
+PlotGrid(nb3000+(nb4000-nb3000)*0.6,colorgrid);	
+PlotGrid(nb3000+(nb4000-nb3000)*0.8,colorgrid);

@@ -1,0 +1,70 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Color Coded Short Term Reversal Signals
+//  Author/Uploader: Larry Lovrencic 
+//  E-mail:          lvl@firstpacific.net
+//  Date/Time Added: 2001-09-26 21:04:08
+//  Origin:          
+//  Keywords:        short term reversals closing price hook island gap
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=121
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=121
+//
+//------------------------------------------------------------------------------
+//
+//  Find Short Term Reversals - Closing Price, Hook, Island, Key, Open-Close
+//  and Pivot Point Reversals highlighted on your bar chart.
+//
+//  The bars of the reversals may be highlighted by any color you wish. Just
+//  change the numbers for the colors in the formula.
+//
+//  This has been coded for a white background. If you have a different color
+//  background, then you will need to change the bar colors.
+//
+//------------------------------------------------------------------------------
+
+/*Color Coded Short Term Reversal Signals
+by Larry Lovrencic
+
+Some of the colors may need to change depending on your choice of background color.
+This has been coded for a white background*/
+
+/*Closing Price Reversals*/
+CPRbuy=O<(L+0.2*(H-L)) AND C>(H-0.2*(H-L)) AND H<ref(H,-1) AND L<ref(L,-1) AND C>ref(C,-1);
+CPRsell=O>(L+0.8*(H-L)) AND C<(H-0.8*(H-L)) AND H>ref(H,-1) AND L>ref(L,-1) AND C<ref(C,-1);
+
+/*Hook Reversals*/
+HRbuy=O<(L+0.2*(H-L)) AND C>(H-0.2*(H-L)) AND H<ref(H,-1) AND L>ref(L,-1);
+HRsell=O>(L+0.8*(H-L)) AND C<(H-0.8*(H-L)) AND H<ref(H,-1) AND L>ref(L,-1);
+
+/*Island Reversals*/
+IRbuy=ref(L,-2)>ref(H,-1) AND L>ref(H,-1); 
+IRsell=ref(H,-2)<ref(L,-1) AND H<ref(L,-1);
+
+/*Key Reversals*/
+KRbuy=O<ref(C,-1) AND L<ref(L,-1) AND C>ref(H,-1);
+KRsell=O>ref(C,-1) AND H>ref(H,-1) AND C<ref(L,-1);
+
+/*Open Close Reversals*/
+OCRbuy=O<(L+0.2*(H-L)) AND C>(H-0.2*(H-L)) AND H<ref(H,-1) AND L<ref(L,-1) AND C<ref(C,-1);
+OCRsell=O>(L+0.8*(H-L)) AND C<(H-0.8*(H-L)) AND H>ref(H,-1) AND L>ref(L,-1) AND C>ref(C,-1);
+
+/*Pivot Point Reversals*/
+PPRbuy=ref(L,-1)<ref(L,-2) AND ref(L,-1)<L AND C>ref(H,-1);
+PPRsell=ref(H,-1)>ref(H,-2) AND ref(H,-1)>H AND C<ref(L,-1);
+
+graph0 = close;
+graph0style = 128;
+
+
+graphxspace=5;
+
+graph0barcolor = IIF( CPRbuy, 8, IIF( CPRsell,4,  IIF( HRbuy,10, IIF( HRsell,11, IIF( IRbuy,3,  IIF( IRsell,15, IIF( KRbuy,6,  IIF( KRsell,7,  IIF( OCRbuy,9,  IIF( OCRsell,13,  IIF( PPRbuy,16,  IIF( PPRsell,12, 1 ) ) ) ) ) ) ) ) ) ) ) ) ;
+
+
+ch= (close-(ref(close,-1)));
+chpct=ch/ref(c,-1)*100;
+
+ 
+title =date()+" "+name()+" Open"+writeval(O)+" High"+writeval(H)+" Low"+writeval(L)+" Close" + writeval(graph0) + " Previous Close " + writeval((ref(graph0,-1))) + "Change=" + writeval(ch)+" ("+writeval(chpct,format=1.2)+"%)";

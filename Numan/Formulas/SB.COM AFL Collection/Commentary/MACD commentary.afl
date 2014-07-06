@@ -1,0 +1,96 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    MACD commentary
+//  Author/Uploader: Tomasz Janeczko 
+//  E-mail:          tj@amibroker.com
+//  Date/Time Added: 2001-06-16 08:54:12
+//  Origin:          MACD was originally developed by Gerald Appel
+//  Keywords:        moving average
+//  Level:           medium
+//  Flags:           system,commentary
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=21
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=21
+//
+//------------------------------------------------------------------------------
+//
+//  This sample commentary shows how to use WriteVal() and WriteIf functions.
+//  May be also used as a simple trading system.
+//
+//------------------------------------------------------------------------------
+
+/* Project:       AmiBroker
+** File:          macd.afl
+** Title:         MACD Guru Commentary Example (English)
+** Requirements:  AFL 1.1   (AmiBroker 3.0) or above
+** Date:          Feb 9th, 1999
+** Written by:    Tomasz Janeczko
+*/ 
+
+buy=cross( macd(), signal() );
+sell = cross( signal(), macd() );
+
+"Review of " + fullname() + " (" + name() + ")" + "\nas of " + date();
+
+
+"\nCurrent Statistics\n";
+"Close: " + WriteVal(Close);
+"Change: " + WriteVal(Close - Ref( Close, -1 ) ) ;
+"MACD Value: " + WriteVal(MACD());
+"Signal Line: " + WriteVal(SIGNAL());
+
+"\nThe MACD can provide buy/sell indications in three ways, signal line crossovers, overbought/oversold conditions, and divergences.\n";
+
+"Crossovers:\n";
+"Currently the MACD is "+
+writeif(macd() > signal(),"bullish","bearish")+
+" since it is trading "+
+writeif(macd() > signal(),"above","below")+
+" its signal line.";
+
+
+"The MACD crossed "+
+writeif(macd() > signal(),"above","below")+
+" its signal line "+
+writeval( min( barssince( cross( macd(), signal() )), barssince( cross( signal(), macd()))), 0.0)+
+" period(s) ago.";
+
+bars=lastvalue(min( barssince( cross( macd(), signal() )), barssince( cross( signal(), macd())) ));
+
+prevclose=ref(Close,-bars);
+
+"Since the MACD crossed its moving average, "+
+name()+"'s price has "+
+writeif(close>prevclose,"increased ","decreased ")+
+writeval(100*(close-prevclose)/prevclose) + "%";
+
+"And has ranged from a high of "+
+writeval(HHV(High,bars+1),6.3)+
+" to a low of "+
+writeval(LLV(Low,bars+1),6.3);
+
+"\nOverbought/Oversold\n";
+Osc = OscP( 12, 26 );
+Osc1 = Ref( Osc, -1 );
+Osc5 = Ref( Osc, -5 );
+
+writeif( Osc <= -3 AND ( Osc - Osc5 ) == -Sum( Abs( Osc - Osc1 ), 5 ),
+"The MACD is in an oversold range. Prices may continue to move lower for some time.  Wait for prices to move higher before considering any long positions.", 
+writeif( Osc >= 3 AND ( Osc - Osc5 ) ==  Sum( Abs( Osc - Osc1 ), 5 ), 
+"The MACD is in an overbought range.  Prices may continue to move higher for some time.  Wait for prices to move lower before considering any short positions.", 
+"The MACD is not in an Overbought/Oversold range."));
+
+"\nDivergence\n";
+temp = Trough(LOW, 2, 1) < 0.96 * Ref( Trough(LOW, 2, 1), -1) AND ValueWhen( Trough(LOW, 2, 1) != Ref( Trough(LOW, 2, 1), -1 ), MACD(), 1 ) >= 0.90 * ValueWhen( Trough( LOW, 2, 1) != Ref( Trough( LOW, 2, 1), -1 ), MACD(), 2 ) AND MACD() < 0;
+
+temp2= Peak(  HIGH,2, 1) > 1.04 * Ref( Peak( HIGH, 2, 1), -1) AND ValueWhen( Peak( HIGH, 2, 1) != Ref( Peak( HIGH, 2, 1), -1 ), MACD(), 1 ) <= 0.90 * ValueWhen( Peak(  HIGH, 2, 1) != Ref( Peak(  HIGH, 2, 1), -1 ), MACD(), 2 ) AND MACD() > 0;
+
+writeif( hhv( temp, 5 ) == 1,"A bullish divergence occurred " + writeval( barssince( temp ), 1.0 ) + 
+" period(s) ago. Wait for upward price movement for confirmation before considering any long positions.",
+writeif( hhv( temp2,5) == 1,
+"A bearish divergence occurred " +
+writeval( barssince( temp2 ), 1.0 ) +
+" period(s) ago.  Wait for downward price movement for confirmation before considering any short positions.",
+"There have been no divergence signals within the last 5 periods." ) );
+
+"\n\nThis commentary is not a recommendation to buy or sell, but rather a guideline to interpreting the specified indicators.  This information should only be used by investors who are aware of the risk inherent in securities trading.  The author accepts no liability whatsoever for any loss arising from any use of this expert or its contents.";
+

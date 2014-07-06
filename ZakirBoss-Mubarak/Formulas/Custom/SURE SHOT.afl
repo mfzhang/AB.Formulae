@@ -1,0 +1,470 @@
+///////////This system has kpl swing with ishimaku clouds and targets and stop loss
+
+/////////////////////////////////// Programs Begins
+
+//////////////////with near days high low scanner
+
+_SECTION_BEGIN("Price");
+SetChartOptions(0,chartShowArrows|chartShowDates);
+_N(Title = StrFormat("{{NAME}} - {{INTERVAL}} {{DATE}} Open %g, Hi %g, Lo %g, Close %g (%.1f%%) {{VALUES}}", O, H, L, C, SelectedValue( ROC( C, 1 ) ) ));
+Plot( C, "Close", ParamColor("Color", colorBlack ), styleNoTitle | ParamStyle("Style") | GetPriceStyle() );
+_SECTION_END();
+
+
+
+PctVlt=(ATR(10)/C)*100;//PercentVolatility
+
+PK=IIf(PctVlt<0.5,Peak(Close,0.5,1),
+IIf( PctVlt>=0.5 AND PctVlt< 1.0 ,Peak(Close,0.70,1),
+IIf( PctVlt>=1.0 AND PctVlt< 1.5 ,Peak(Close,0.90,1),
+IIf( PctVlt>=1.5 AND PctVlt< 2.0 ,Peak(Close,1.10,1),
+IIf( PctVlt>=2.0 AND PctVlt< 2.5 ,Peak(Close,1.30,1),
+IIf( PctVlt>=2.5 AND PctVlt< 3.0 ,Peak(Close,1.50,1),
+IIf( PctVlt>=3.0 AND PctVlt< 3.5 ,Peak(Close,1.70,1),
+IIf( PctVlt>=3.5 AND PctVlt< 4.0 ,Peak(Close,2.00,1),
+Peak(Close,2.20,1) ))))))));
+
+TGH=IIf(PctVlt<0.5,Trough(Close,0.5,1),
+IIf( PctVlt>=0.5 AND PctVlt< 1.0 ,Trough(Close,0.75,1),
+IIf( PctVlt>=1.0 AND PctVlt< 1.5 ,Trough(Close,1.00,1),
+IIf( PctVlt>=1.5 AND PctVlt< 2.0 ,Trough(Close,1.25,1),
+IIf( PctVlt>=2.0 AND PctVlt< 2.5 ,Trough(Close,1.50,1),
+IIf( PctVlt>=2.5 AND PctVlt< 3.0 ,Trough(Close,1.75,1),
+IIf( PctVlt>=3.0 AND PctVlt< 3.5 ,Trough(Close,2.00,1),
+IIf( PctVlt>=3.5 AND PctVlt< 4.0 ,Trough(Close,2.25,1),
+Trough(Close,2.50,1) ))))))));
+
+Sens=IIf(PctVlt<0.5,0.5,
+IIf( PctVlt>=0.5 AND PctVlt< 1.0 ,0.75,
+IIf( PctVlt>=1.0 AND PctVlt< 1.5 ,1.00,
+IIf( PctVlt>=1.5 AND PctVlt< 2.0 ,1.25,
+IIf( PctVlt>=2.0 AND PctVlt< 2.5 ,1.50,
+IIf( PctVlt>=2.5 AND PctVlt< 3.0 ,1.75,
+IIf( PctVlt>=3.0 AND PctVlt< 3.5 ,2.00,
+IIf( PctVlt>=3.5 AND PctVlt< 4.0 ,2.25,
+2.50 ))))))));
+
+
+Color=IIf(BarsSince(Cross(C,Ref(PK,-1)))<BarsSince(Cross(Ref(TGH,-1),C)),colorBrightGreen,colorRed);
+Plot(C,"",Color,styleCandle);
+
+
+DayH = TimeFrameGetPrice("H", inDaily, -1); DayHI = LastValue (DayH,1);// yesterdays high
+DayL = TimeFrameGetPrice("L", inDaily, -1); DayLI = LastValue (DayL,1); // yesterdays low
+DayC = TimeFrameGetPrice("C", inDaily, -1); // yesterdays close
+DayO = TimeFrameGetPrice("O", inDaily); // current day open
+DayH2= TimeFrameGetPrice("H", inDaily, -2); DayH2I = LastValue (DayH2,1); // Two days before high
+DayL2= TimeFrameGetPrice("L", inDaily, -2); DayL2I = LastValue (DayL2,1); // Two days before low
+DayH3= TimeFrameGetPrice("H", inDaily, -3); DayH3I = LastValue (DayH3,1); // Three days before high
+DayL3= TimeFrameGetPrice("L", inDaily, -3); DayL3I = LastValue (DayL3,1); // Three days before low
+
+numbars = LastValue(Cum(Status("barvisible")));
+hts = -33.5;
+
+
+ 
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////
+
+
+////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+messageboard = ParamToggle("Message Board","Show|Hide",0);
+showsl = ParamToggle("Stop Loss Line", "Show|Hide", 0);
+no=10;
+res=HHV(H,no);
+sup=LLV(L,no);
+avd=IIf(C>Ref(res,-1),1,IIf(C<Ref(sup,-1),-1,0));
+avn=ValueWhen(avd!=0,avd,1);
+s5d=IIf(avn==1,sup,res);
+
+if (showsl == 0)
+//{Plot(s5d,"Stop Loss",colorCustom14,styleDots);}
+exitlong = Cross(s5d, H);
+PlotShapes(exitlong * shapeNone, colorBlack,0,H,-10);
+exitshort = Cross(L, s5d);
+PlotShapes(exitshort * shapeNone, colorBlack,0,L,-15);
+
+Buy = exitshort;
+Sell = exitlong;
+//Short = Sell;
+//Cover = Buy;
+Buy = ExRem(Buy,Sell);
+Sell = ExRem(Sell,Buy);
+//Short = ExRem(Short, Cover);
+//Cover = ExRem(Cover, Short);
+AlertIf( Buy, "", "BUY @ " + C, 1 );
+AlertIf( Sell, "", "SELL @ " + C, 2 );
+
+for(i=BarCount-1;i>1;i--)
+{
+if(Buy[i] == 1)
+{
+entry = C[i];
+sig = "BUY";
+sl = s5d[i];
+tar1 = entry + (entry * .0050);
+tar2 = entry + (entry * .0092);
+tar3 = entry + (entry * .0179);
+
+bars = i;
+i = 0;
+}
+if(Sell[i] == 1)
+{
+sig = "SELL";
+entry = C[i];
+sl = s5d[i];
+tar1 = entry - (entry * .0050);
+tar2 = entry - (entry * .0112);
+tar3 = entry - (entry * .0212);
+
+
+bars = i;
+i = 0;
+}
+}
+Offset = 20;
+Clr = IIf(sig == "BUY", colorLime, colorRed);
+ssl = IIf(bars == BarCount-1, s5d[BarCount-1], Ref(s5d, -1));
+sl = ssl[BarCount-1];
+
+Plot(LineArray(bars-Offset, tar1, BarCount, tar1,1), "", Clr, styleLine|styleDots, Null, Null, Offset);
+Plot(LineArray(bars-Offset, tar2, BarCount, tar2,1), "", Clr, styleLine|styleDots, Null, Null, Offset);
+Plot(LineArray(bars-Offset, tar3, BarCount, tar3,1), "", Clr, styleLine|styleDots, Null, Null, Offset);
+
+Plot(LineArray(bars-Offset, sl, BarCount, sl,1), "", colorDarkRed, styleLine|styleLine, Null, Null, Offset);
+Plot(LineArray(bars-Offset, entry, BarCount, entry,1), "", colorGreen, styleLine|styleLine, Null, Null, Offset);
+
+for (i=bars; i <BarCount;i++)
+{
+PlotText(""+sig+"@"+entry, BarCount+1,entry,Null,colorBlue);
+PlotText("T1@"+tar1,BarCount+3,tar1,Null,Clr);PlotText("T2@"+tar2,BarCount+3,tar2,Null,Clr);PlotText ("T3@"+tar3,BarCount+3,tar3,Null,Clr);
+
+}
+
+
+printf("Last " + sig + " Signal came " + (BarCount-bars) + " bars ago");
+printf("\n" + sig + " @ : " + entry + "\nStop Loss : " + sl + " (" + WriteVal(IIf(sig == "SELL",entry-sl,sl-entry), 2.2) + ")"+ "\nTarget_1 : " + tar1 + "\nTarget_2 : " + tar2 + "\nTarget_3 : " + tar3);
+printf("\nCurrent P/L : " + WriteVal(IIf(sig == "BUY",(C-entry),(entry-C)),2.2));
+
+if (messageboard == 0 )
+{
+GfxSelectFont( "Tahoma", 13, 100 );
+GfxSetBkMode( 1 );
+GfxSetTextColor( colorWhite );
+
+if ( sig =="BUY")
+{
+GfxSelectSolidBrush( colorBlue ); // this is the box background color
+}
+else
+{
+GfxSelectSolidBrush( colorRed ); // this is the box background color
+}
+pxHeight = Status( "pxchartheight" ) ;
+xx = Status( "pxchartwidth");
+Left = 1100;
+width = 310;
+x = 5;
+x2 = 290;
+
+y = pxHeight;
+
+GfxSelectPen( colorGreen, 1); // broader color
+GfxRoundRect( x, y - 163, x2, y , 7, 7 ) ;
+GfxTextOut( ( " Trading System "),88,y-165);
+GfxTextOut( (" "),27,y-160);
+GfxTextOut( ("Last " + sig + " Signal came " + (BarCount-bars-1) * Interval()/60 + " mins ago"), 13, y-140) ; // The text format location
+GfxTextOut( ("" + WriteIf(sig =="BUY",sig + " @ ",sig + " @") + " : " + entry), 13, y-120);
+GfxTextOut( ("Trailing SL : " + sl + " (" + WriteVal(IIf(sig == "SELL",entry-sl,sl-entry), 2.2) + ")"), 13, y-100);
+GfxTextOut( ("TGT:1 : " + tar1), 13, y -80);
+GfxTextOut( ("TGT:2 : " + tar2), 13,y-60);
+GfxTextOut( ("TGT:3 : " + tar3), 13,y-40);
+GfxTextOut( ("Current P/L : " + WriteVal(IIf(sig == "BUY",(C-entry),(entry-C)),2.2)), 88, y-22);;
+
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+ 
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+_SECTION_BEGIN("Magnified Market Price");
+FS=Param("Font Size",30,30,100,1);
+GfxSelectFont("Arial", FS, 700, italic = False, underline = False, True );
+GfxSetBkMode( colorWhite );
+GfxSetTextColor( ParamColor("Color",colorBlack) );
+Hor=Param("Horizontal Position",750,800,800,800);
+Ver=Param("Vertical Position",27,27,27,27);
+GfxTextOut(""+C,Hor , Ver );
+YC=TimeFrameGetPrice("C",inDaily,-1);
+DD=Prec(C-YC,2);
+xx=Prec((DD/YC)*100,2);
+GfxSelectFont("Arial", 12, 700, italic = False, underline = False, True );
+GfxSetBkMode( colorWhite );
+GfxSetTextColor(ParamColor("Color",colorYellow) );
+GfxTextOut(""+DD+" ("+xx+"%)", Hor+5, Ver+45 );
+_SECTION_END();
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+/*Plot EMA*/
+Plot( EMA( Close,13), "13 EMA", colorRed,styleLine);
+Plot( EMA( Close,34), "34 EMA", colorBlue,styleLine);
+Plot( EMA( Close,55), "55 EMA", colorBlack,styleLine);
+Plot( EMA( Close,89), "89 EMA", colorYellow,styleLine);
+
+//////////////////////Clouds
+_SECTION_BEGIN("Ichimoku Cloud Charts");
+GraphXSpace =1;
+prds = Param("Standard Line Periods?", 13,5,26,1);
+prds1 = Param("Turning Line Periods?", 3,3,10,1);
+prds2 = Param("Delayed Line Periods?", 12,4,25,1);
+prds3 = Param("Spans Periods?", 16,10,52,1);
+TL = ( HHV( H, prds1) + LLV( L, prds1) )/2;
+SL = ( HHV( H, prds) + LLV( L, prds) )/2;
+DL = Ref( C, prds2);
+Sp1 = Ref( ( SL + TL )/2, -prds2);
+Sp2 = Ref( (HHV( H, prds3) + LLV(L, prds3))/2, -prds2);
+SetChartOptions( 0, chartShowDates | chartShowArrows | chartLogarithmic | chartWrapTitle );
+_N( Title = StrFormat( "{{NAME}} - " + SectorID( 1 ) + " - {{INTERVAL}} {{DATE}} Open %g, Hi %g, Lo %g, Close %g (%.1f%%) Vol " + WriteVal( V, 1.0 ) + " {{VALUES}}", O, H, L, C, SelectedValue( ROC( C, 1 ) ) ) );
+if ( ParamToggle( "Tooltip shows", "All Values|Only Prices" ) )
+{
+ToolTip = StrFormat( "Open: %g\nHigh: %g\nLow: %g\nClose: %g (%.1f%%)\nVolume: " + NumToStr( V, 1 ), O, H, L, C, SelectedValue( ROC( C, 1 ) ) );
+}
+PlotOHLC (Sp1,Sp1,Sp2,Sp2,"Cloud",IIf(Sp1>Sp2,ParamColor("Span1 Color", ColorRGB(0,255,0)),ParamColor("Span2 Color",ColorRGB(255,104,32))),styleCloud);
+
+_SECTION_END(); 
+
+/////////////////////////////////////Kpl Swing
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//kpl swing formula here
+//---- heikin ashi
+HaClose = (O+H+L+C)/4; 
+HaOpen = AMA( Ref( HaClose, -1 ), .40); 
+HaHigh = Max( H, Max( HaClose, HaOpen ) ); 
+HaLow = Min( L, Min( HaClose, HaOpen ) ); 
+xDiff = (HaHigh - Halow) * IIf(StrFind(Name(),"JPY"),100,10000);
+// Plot(EMA(HaClose,9),"",colorWhite, styleLine);
+// Plot(EMA(HaClose,18),"",colorBlack, styleLine);
+_SECTION_BEGIN("KPL Swing");
+no=Param( "Swing", 10, 1, 55 );
+tsl_col=ParamColor( "Color", colorCycle );
+
+res=HHV(H,no);
+sup=LLV(L,no);
+avd=IIf(C>Ref(res,-1),1,IIf(C<Ref(sup,-1),-1,0));
+avn=ValueWhen(avd!=0,avd,1);
+tsl=IIf(avn==1,sup,res);
+
+Plot(tsl, _DEFAULT_NAME(), tsl_col, styleStaircase); // or styleaArea
+
+_SECTION_END();
+
+
+
+
+
+////////////////////details of stock at the title
+
+_SECTION_BEGIN("Price");
+SetChartOptions(0,chartShowArrows|chartShowDates);
+_N(Title = StrFormat("{{NAME}} - {{INTERVAL}} {{DATE}} Open %g, Hi %g, Lo %g, Close %g (%.1f%%) {{VALUES}}", O, H, L, C, SelectedValue( ROC( C, 1 ) ) ));
+
+_SECTION_END();
+
+
+
+/////////////////////weekly high low
+
+_SECTION_BEGIN("weekly-H-L");
+Hclose=HHV(H,5);
+Lclose= LLV(L,5);
+DH = EncodeColor(colorDarkBlue) + "weekly-H-L = " + Hclose + "\n";
+DL = EncodeColor(colorDarkRed) + "weekly-H-L = " + Lclose + "\n";
+_N(Title = StrFormat("{{NAME}} ({{INTERVAL}}), {{DATE}} ; {{OHLCX}}, V=%1.0f\n {{VALUES}}\n\n", V) + DH + DL);
+
+_SECTION_END(); 
+
+/////////////////Stock near days high and low scanner
+TimeFrameSet(inHourly);
+H1 = HHV(H, 1) ;
+
+H2= (H1-C)< .001*C;
+
+L1 = LLV(L,1) ;
+
+
+L2 = (C-L1) < .001*C ;
+
+TimeFrameRestore() ;
+
+SetOption("NoDefaultColumns", True);
+
+AddTextColumn(Name(), "Symbol");
+AddColumn(DateTime(), "Date", formatDateTime);
+AddColumn(C, "CMP", 1.2);
+
+
+
+Filter = H2 OR L2 ;
+
+Buy = H2 ;
+Sell = L2 ;
+
+
+///////////////////////////candle stick reader
+
+
+_SECTION_BEGIN("Candle Identification");
+O1 = Ref(O,-1);O2 = Ref(O,-2);
+H1 = Ref(H,-1);H2 = Ref(H,-2);
+L1 = Ref(L,-1);L2 = Ref(L,-2);
+C1 = Ref(C,-1);C2 = Ref(C,-2);
+function CandlePattern(P)
+   {
+   global PatternName;
+   if(P == 0) { PatternName = "NearDoji"; Pv = (abs(O-C)<= ((H-L)*0.1)); }
+   else if(P == 1) { PatternName = "BlackCandle"; Pv = (O>C); }
+   else if(P == 2) { PatternName = "LongBlackCandle"; Pv = (O>C AND
+(O-C)/(.001+H-L)>.6); }
+   else if(P == 3) { PatternName = "SmallBlackCandle"; Pv = ((O>C) AND
+((H-L)>(3*(O-C)))); }
+   else if(P == 4) { PatternName = "WhiteCandle"; Pv = (C>O); }
+   else if(P == 5) { PatternName = "LongWhiteCandle"; Pv = ((C>O) AND
+((C-O)/(.001+H-L)>.6)); }
+   else if(P == 6) { PatternName = "SmallWhiteCandle"; Pv = ((C>O) AND
+((H-L)>(3*(C-O)))); }
+   else if(P == 7) { PatternName = "BlackMaubozu"; Pv = (O>C AND H==O AND
+C==L); }
+   else if(P == 8) { PatternName = "WhiteMaubozu"; Pv = (C>O AND H==C AND
+O==L); }
+   else if(P == 9) { PatternName = "BlackClosingMarubozu"; Pv = (O>C AND
+C==L); }
+   else if(P == 10) { PatternName = "WhiteClosingMarubozu"; Pv = (C>O AND
+C==H); }
+   else if(P == 11) { PatternName = "BlackOpeningMarubozu"; Pv = (O>C AND
+O==H); }
+   else if(P == 12) { PatternName = "WhiteOpeningMarubozu"; Pv = (C>O AND
+O==L); }
+   else if(P == 13) { PatternName = "HangingMan"; Pv = (((H-L)>4*(O-C)) AND
+((C-L)/(.001+H-L)>= 0.75) AND ((O-L)/(.001+H-L)>= 0.75)); }
+   else if(P == 14) { PatternName = "Hammer"; Pv = (((H-L)>3*(O-C)) AND
+((C-L)/(.001+H-L)>0.6) AND ((O-L)/(.001+H-L)>0.6)); }
+   else if(P == 15) { PatternName = "InvertedHammer"; Pv = (((H-L)>3*(O-C))
+AND ((H-C)/(.001+H-L)>0.6) AND ((H-O)/(.001+H-L)>0.6)); }
+   else if(P == 16) { PatternName = "ShootingStar"; Pv = (((H-L)>4*(O-C))
+AND ((H-C)/(.001+H-L)>= 0.75) AND ((H-O)/(.001+H-L)>= 0.75)); }
+   else if(P == 17) { PatternName = "BlackSpinningTop"; Pv = ((O>C) AND
+((H-L)>(3*(O-C))) AND (((H-O)/(.001+H-L))<.4) AND
+(((C-L)/(.001+H-L))<.4)); }
+   else if(P == 18) { PatternName = "WhiteSpinningTop"; Pv = ((C>O) AND
+((H-L)>(3*(C-O))) AND (((H-C)/(.001+H-L))<.4) AND
+(((O-L)/(.001+H-L))<.4)); }
+   else if(P == 19) { PatternName = "BearishAbandonedBaby"; Pv = ((C1 == O1)
+AND (C2>O2) AND (O>C) AND (L1>H2) AND (L1>H)); }
+   else if(P == 20) { PatternName = "BearishEveningDojiStar"; Pv = ((C2>O2)
+AND ((C2-O2)/(.001+H2-L2)>.6) AND (C2<O1) AND (C1>O1) AND
+((H1-L1)>(3*(C1-O1))) AND (O>C) AND (O<O1)); }
+   else if(P == 21) { PatternName = "DarkCloudCover"; Pv = (C1>O1 AND
+((C1+O1)/2)>C AND O>C AND O>C1 AND C>O1 AND (O-C)/(.001+(H-L)>0.6)); }
+   else if(P == 22) { PatternName = "BearishEngulfing"; Pv = ((C1>O1) AND
+(O>C) AND (O>= C1) AND (O1>= C) AND ((O-C)>(C1-O1))); }
+   else if(P == 23) { PatternName = "ThreeOutsideDownPattern"; Pv = ((C2>O2)
+AND (O1>C1) AND (O1>= C2) AND (O2>= C1) AND ((O1-C1)>(C2-O2)) AND (O>C) AND
+(C<C1)); }
+   else if(P == 24) { PatternName = "BullishAbandonedBaby"; Pv = ((C1 == O1)
+AND (O2>C2) AND (C>O) AND (L2>H1) AND (L>H1)); }
+   else if(P == 25) { PatternName = "BullishMorningDojiStar"; Pv = ((O2>C2)
+AND ((O2-C2)/(.001+H2-L2)>.6) AND (C2>O1) AND (O1>C1) AND
+((H1-L1)>(3*(C1-O1))) AND (C>O) AND (O>O1)); }
+   else if(P == 26) { PatternName = "BullishEngulfing"; Pv = ((O1>C1) AND
+(C>O) AND (C>= O1) AND (C1>= O) AND ((C-O)>(O1-C1))); }
+   else if(P == 27) { PatternName = "ThreeOutsideUpPattern"; Pv = ((O2>C2)
+AND (C1>O1) AND (C1>= O2) AND (C2>= O1) AND ((C1-O1)>(O2-C2)) AND (C>O) AND
+(C>C1)); }
+   else if(P == 28) { PatternName = "BullishHarami"; Pv = ((O1>C1) AND (C>O)
+AND (C<= O1) AND (C1<= O) AND ((C-O)<(O1-C1))); }
+   else if(P == 29) { PatternName = "ThreeInsideUpPattern"; Pv = ((O2>C2)
+AND (C1>O1) AND (C1<= O2) AND (C2<= O1) AND ((C1-O1)<(O2-C2)) AND (C>O) AND
+(C>C1) AND (O>O1)); }
+   else if(P == 30) { PatternName = "PiercingLine"; Pv = ((C1<O1) AND
+(((O1+C1)/2)<C) AND (O<C) AND (O<C1) AND (C<O1) AND
+((C-O)/(.001+(H-L))>0.6)); }
+   else if(P == 31) { PatternName = "BearishHarami"; Pv = ((C1>O1) AND (O>C)
+AND (O<= C1) AND (O1<= C) AND ((O-C)<(C1-O1))); }
+   else if(P == 32) { PatternName = "ThreeInsideDownPattern"; Pv = ((C2>O2)
+AND (O1>C1) AND (O1<= C2) AND (O2<= C1) AND ((O1-C1)<(C2-O2)) AND (O>C) AND
+(C<C1) AND (O<O1)); }
+   else if(P == 33) { PatternName = "ThreeWhiteSoldiers"; Pv = (C>O*1.01)
+AND (C1>O1*1.01) AND (C2>O2*1.01) AND (C>C1) AND (C1>C2) AND (O<C1) AND
+(O>O1) AND (O1<C2) AND (O1>O2) AND (((H-C)/(H-L))<.2) AND
+(((H1-C1)/(H1-L1))<.2) AND (((H2-C2)/(H2-L2))<.2); }
+   else if(P == 34) { PatternName = "DarkCloudCover"; Pv = (C1>O1*1.01) AND
+(O>C) AND (O>H1) AND (C>O1) AND (((C1+O1)/2)>C) AND (C>O1) AND
+(MA(C,13)-Ref(MA(C,13),-4)>0); }
+   else if(P == 35) { PatternName = "ThreeBlackCrows"; Pv = (O>C*1.01) AND
+(O1>C1*1.01) AND (O2>C2*1.01) AND (C<C1) AND (C1<C2) AND (O>C1) AND (O<O1)
+AND (O1>C2) AND (O1<O2) AND (((C-L)/(H-L))<.2) AND (((C1-L1)/(H1-L1))<.2)
+AND (((C2-L2)/(H2-L2))<.2); }
+   else if(P == 36) { PatternName = "doji"; Pv = (O == C); }
+   else if(P == 37) { PatternName = "GapUp"; Pv = GapUp(); }
+   else if(P == 38) { PatternName = "GapDown"; Pv = GapDown(); }
+   else if(P == 39) { PatternName = "BigGapUp"; Pv = L>1.01*H1; }
+   else if(P == 40) { PatternName = "BigGapDown"; Pv = H<0.99*L1; }
+   else if(P == 41) { PatternName = "HugeGapUp"; Pv = L>1.02*H1; }
+   else if(P == 42) { PatternName = "HugeGapDown"; Pv = H<0.98*L1; }
+   else if(P == 43) { PatternName = "DoubleGapUp"; Pv = GapUp() AND
+Ref(GapUp(),-1); }
+   else if(P == 44) { PatternName = "DoubleGapDown"; Pv = GapDown() AND
+Ref(GapDown(),-1); }
+   return Pv;
+   }
+
+PatternNameList = "";
+for(Cp=0; Cp<=44; Cp++)
+	{
+	VarSet("Pattern"+NumToStr(Cp,1.0),CandlePattern(cP));
+	PatternNameList = PatternNameList +PatternName+","; 
+	}
+
+BI = BarIndex();
+SelectedBar = SelectedValue(BI) -BI[0];
+//Selectedbar = Status("lastvisiblebar")-1;
+PStr="";
+for(Cp=0; Cp<=44; Cp++)
+	{
+	Temp = VarGet("Pattern"+NumToStr(Cp,1.0));
+	if(temp[SelectedBar]) Pstr=Pstr+"#"+NumToStr(Cp,1.0)+" - "+StrExtract(PatternNameList,Cp)+"\n";
+	}
+
+
+FS=Param("Font Size",11,11,100,1);
+GfxSelectFont("Times New Roman", FS, 700, True ); 
+GfxSetBkMode( colorWhite );  
+GfxSetTextColor( ParamColor("Color",colorWhite) ); 
+Hor=Param("Horizontal Position",237,1,1200,1);
+Ver=Param("Vertical Position",50,1,830,1); 
+GfxTextOut("Candle Reader= "+Pstr, Hor , Ver );
+
+
+
+
+_SECTION_END();

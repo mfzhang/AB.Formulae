@@ -1,0 +1,137 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Cycle Highlighter
+//  Author/Uploader: Andy Davidson -
+//  E-mail:          
+//  Date/Time Added: 2006-10-11 04:09:26
+//  Origin:          
+//  Keywords:        Cycle, Cyclic, Millard, Hurst
+//  Level:           medium
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=738
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=738
+//
+//------------------------------------------------------------------------------
+//
+//  Derived from Millard's "Tribute to J M Hurst" book, using centred MAs to
+//  visualise the cyclic components and a 'best fit' sine wave (red) to
+//  extrapolate to the right-hand edge.
+//
+//  The sine wave is anchored at the most recent trough or peak in the cycle
+//  highlighter line. The red and blue spikes show the start point of each plot
+//  as far as the correlation goes. Change the "Best fit # recent cycles"
+//  parameter to move these. In the title, the first correlation number (blue)
+//  is the correlation coefficient between the cycle highlighter and the fitted
+//  sine wave in the best fit 'window' and the red number in brackets is the
+//  correlation between the *price* and the sine wave over the projected end
+//  period (from where the cycle highlighter stops to the right-edge).
+//
+//------------------------------------------------------------------------------
+
+function TriMA(array,periods)
+  {
+   pds = (periods+1)/2;
+   pds = IIf(frac(pds)==0, pds, pds+1);
+   return MA( MA(array,pds), pds);
+  }
+
+function CycleHighlighter(Periods,Price)
+  {
+   P1 = int(Periods*1.5);  //due to lag characteristics of Tri MA
+   P1 = LastValue(IIf(frac(P1/2)==0,P1+1,P1));
+   P2 = int(p1/2);
+   P2 = LastValue(IIf(frac(P2/2)==0,P2+1,P2));
+   MA1 = TriMA(Price,P1);
+   MA2 = TriMA(Price,P2);
+   PC1 = (P1-1)/2;  //Centre MAs
+   PC2 = (P2-1)/2;
+   CMA1 = Ref(MA1,PC1);
+   CMA2 = Ref(MA2,PC2);
+   Cyhi = CMA2-CMA1;
+   global Revcount;
+   global end;
+   Revcount = LastValue( BarIndex() ) - BarIndex();
+   end = revcount<PC1;
+   return IIf(end, ValueWhen(revcount==PC1,Cyhi,1), Cyhi);
+  }
+
+function AnchoredSine(BaseCycle,LookbackCycles,Method,Periods,Shift)  //input should be a cycle function from the cycle highlighter
+  {
+	global BCpk;
+	global BCtr;
+	global BCStart;
+	global sineamplitude;
+	//define "best fit" window from BC peaks and troughs over # of lookbackcycles
+	BCpk = HHVBars(Basecycle,5)==2 AND BaseCycle<Ref(Basecycle,-1) AND end==0;
+	BCtr = LLVBars(Basecycle,5)==2 AND BaseCycle>Ref(Basecycle,-1) AND end==0;
+	BCStart = IIf(ValueWhen(BCpk OR BCtr,BCpk,1), ValueWhen(BCpk,BarIndex(),1+Lookbackcycles), ValueWhen(BCtr,BarIndex(),1+Lookbackcycles) ) ;
+	BCStart = BarIndex()==LastValue( ValueWhen(end==0,BCStart,1) );
+	
+	//derive *recent* average wavelength of Base Cycle (over # of lookbackcycles) from peaks and troughs
+	BCpkpds = LastValue( ValueWhen(BCpk,BarIndex(),1) - ValueWhen(BCpk,BarIndex(),1+LookbackCycles) ) / LookbackCycles;
+	BCtrpds = LastValue( ValueWhen(BCtr,BarIndex(),1) - ValueWhen(BCtr,BarIndex(),1+LookbackCycles) ) / LookbackCycles;
+	BCpds = (BCpkpds+BCtrpds)/2;
+	
+	Periods = IIf(Method==0, Periods, BCpds);	
+
+	//now determine suitable amplitude from StDev of Base Cycle during "best fit" window
+	sineamplitude = LastValue( StDev( BaseCycle, LastValue(BarsSince(BCStart)) ) *1.5 );
+	
+	//now determine where sine wave is anchored to BaseCycle
+	//i.e., most recent of a BaseCycle Peak or Trough
+	pkOffset = LastValue( ValueWhen(BCpk,BarIndex(),1) )-2;  
+	trOffset = LastValue( ValueWhen(BCtr,BarIndex(),1) )-2;
+	//Offset = (pkOffset+trOffset)/2;
+	if ( LastValue( ValueWhen(BCpk OR BCtr,BCpk,1) ) )     //RECENT ANCHOR POINT IS A PEAK
+ 	 {	sine = sin( (Cum(1)-pkOffset+Periods/4-Shift)/Periods * 6.283185 ); }
+	if ( LastValue( ValueWhen(BCpk OR BCtr,BCtr,1) ) )     //RECENT ANCHOR POINT IS A TROUGH
+ 	 {	sine = sin( (Cum(1)-trOffset+Periods*3/4-Shift)/Periods * 6.283185 ); }	
+	return sine*sineamplitude;
+  }
+
+
+Pds = Param("Base Cycle Wavelength", 60, 3, 1000, 2); 
+Price = IIf(ParamToggle("Price Field", "Mid Price | Close", 0)==0, (H+L)/2 , C);
+CycNo = Param("Best fit # recent cycles", 3, 1, 10);
+Method = ParamToggle("Sine Wavelength", "As Base Cycle | Best Fit", 0);
+Shift = Param("Manual Shift", 0, -100, 100);
+
+BaseCycle = CycleHighlighter(Pds,Price);
+Refsine = AnchoredSine(BaseCycle,CycNo,Method,Pds,Shift);
+
+//Find start of Sine Cycle
+Sinepk = HHVBars(Refsine,5)==2 AND Refsine<Ref(Refsine,-1);
+Sinetr = LLVBars(Refsine,5)==2 AND Refsine>Ref(Refsine,-1); 
+SineStart = IIf(ValueWhen(BCpk OR BCtr,BCpk,1), ValueWhen(Sinepk,BarIndex(),1+CycNo), ValueWhen(Sinetr,BarIndex(),1+CycNo) ) ;
+SineStart = BarIndex()==LastValue( ValueWhen(end==0,SineStart,1) );
+sinamp = IIf(LastValue(ValueWhen(BCpk OR BCtr,BCpk,1)), sineamplitude, -sineamplitude);
+
+//Predicted date & time of next peak or trough (for title)
+SineWavelength = LastValue( ValueWhen(sinepk OR sinetr,BarIndex(),1) - ValueWhen(sinepk OR sinetr,BarIndex(),3) );
+NextPk = Max( 0, SineWavelength - LastValue(BarsSince(sinepk)) - 2 );
+NextTr = Max( 0, sineWavelength - LastValue(BarsSince(sinetr)) - 2 );
+Bars = IIf(Nextpk<Nexttr,nextPk,nextTr);
+Type = WriteIf(Nextpk<NextTr,"peak","trough");
+
+//Correlation between Sine and base Cycle over "lookback" window
+LookbackBars = LastValue( Max(BarsSince(BCStart),BarsSince(sineStart))-BarsSince(end==0) );
+CorSineBC = LastValue( ValueWhen(end==0,Correlation(BaseCycle,RefSine,Lookbackbars),1) );
+//Correlation between Sine and Price in "end" period
+EndBars = LastValue( BarsSince(end==0) );
+CorEnd = LastValue( Correlation(Price,RefSine,EndBars) );
+//Overall correlation
+Cor = ( (CorSineBC*Lookbackbars)+(CorEnd*Endbars) ) / (Lookbackbars+Endbars);
+
+Title = EncodeColor(colorGreen) + "CYCLE HIGHLIGHTER\n" + EncodeColor(colorGrey50) + "Base Cycle Wavelength = " 
+		+ EncodeColor(colorBlue) + NumToStr(Pds,1.0) + " bars\n" + EncodeColor(colorGrey50) 
+		+ "Sine Wavelength = " + NumToStr(sineWavelength,1.0) + "bars\n" 
+		+ "correlated " + EncodeColor(colorBlue) + "over " + WriteVal(CycNo,1.0) + WriteIf(CycNo>1," base cycles"," base cycle") + EncodeColor(colorGrey50)
+       + "\nprojected next: " + EncodeColor(colorDarkRed) + Type + " in " + NumToStr(bars,1.0) + WriteIf(Bars>1," bars"," bar") + EncodeColor(colorGrey50) 
+		+ "\ncorrelation = " + EncodeColor(colorBlue) + NumToStr(CorSineBC,1.2) + EncodeColor(colorRed) + " (" + NumToStr(CorEnd,1.2) + ")"; 
+
+Plotcolour = IIf(end, colorLightGrey, ParamColor("Colour",colorBlue) );
+Plot(Refsine,"",colorRed,styleNoLabel);
+Plot( BaseCycle, "Cycle Highlighter", Plotcolour,  ParamStyle("Style",styleThick) | styleNoLabel); 
+Plot( 0, "", colorLightGrey,styleNoLabel);
+Plot(BCstart*sinamp,"",colorBlue,styleNoLabel);
+Plot(sineStart*sinamp,"",colorRed,styleNoLabel);

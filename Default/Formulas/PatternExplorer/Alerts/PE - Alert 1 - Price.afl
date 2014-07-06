@@ -1,0 +1,56 @@
+//|-----------------------------------------------------------------------------------------
+//|PatternExplorer.com - Alert 1 Price based
+//|Copyright © 2007, PatternExplorer.com
+//|http://www.PatternExplorer.com
+//|e-mail: support@PatternExplorer.com
+//|-----------------------------------------------------------------------------------------
+FormulaName = "PE - Alert 1 - Price";
+
+SetChartOptions( 0, chartShowDates | chartShowArrows | chartLogarithmic | chartWrapTitle );
+#pragma nocache
+#include_once  <\PEInc\PatternExplorer_f0.afl>
+#Include_once "C:\Program Files (x86)\AmiBroker5\Formulas\PatternExplorer\#Defaults & Mods\PE - Defaults.afl"
+#Include_once "C:\Program Files (x86)\AmiBroker5\Formulas\PatternExplorer\#Defaults & Mods\PE - Mods.afl"
+AddCustomCodeBeforePE();
+/*******************************************************************************************/
+AddAlertParam( def_AudioAlert = 1, def_EmailAlert, def_BarComplete );
+_SECTION_BEGIN( "Main Parameters" );
+Switch2 = ParamToggle( "Points/Percent", "Points,Percent", 1 );
+Centering = ParamToggle( "Range Centering", "Off,On", 1 );
+Offset = Param( "Maximum Deviation", 0.5, 0.0, 5, 0.01 );
+SuRangeColor = ParamColor( "Support Range", colorGreen );
+ReRangeColor = ParamColor( "Resistance Range", colorRed );
+_SECTION_END();
+/*******************************************************************************************/
+#include_once  <\PEInc\Lib\PatternExplorer_f02.afl>
+#include_once  <\PEInc\PatternExplorer_1.afl>
+AddAlert( Buy_1, Audio, Email, "Close in Support Range", 1, BarComplete, def_BuySound1 );
+AddAlert( Buy_2, Audio, Email, "Resistance broken", 1, BarComplete, def_BuySound2 );
+AddAlert( Sell_1, Audio, Email, "Support broken", 2, BarComplete, def_SellSound1 );
+AddAlert( Sell_2, Audio, Email, "Close in Resistance Range", 2, BarComplete, def_SellSound2 );
+/*******************************************************************************************/
+Buy = def_Buy AND ( Buy_1 OR Buy_2 );
+Sell = def_Sell AND ( Sell_1 OR sell_2 );
+/*******************************************************************************************/
+Plot( IIf( Lx, SuAL_L, Null ), "", SuRangeColor, styleNoRescale, 0, 0, Shift );
+Plot( IIf( Lx, SuAL_H, Null ), "", SuRangeColor, styleNoRescale, 0, 0, Shift );
+Plot( IIf( Lx, ReAL_L, Null ), "", ReRangeColor, styleNoRescale, 0, 0, Shift );
+Plot( IIf( Lx, ReAL_H, Null ), "", ReRangeColor, styleNoRescale, 0, 0, Shift );
+/*******************************************************************************************/
+ToolTip = def_ToolTip;
+
+AddCustomCodeAfterPE();
+
+Title = "PatternExplorer.com - Alert 1" + default_priceTitle
+        + EncodeColor( SuRangeColor ) + ", Support: " + WriteVal( LastValue( Study( "SU", GetChartID() ) ), digits2 )
+        + " (" + WriteVal( SuAL_L , digits2 ) + "-" + WriteVal( SuAL_H, digits2 ) + "), "
+        + EncodeColor( ReRangeColor ) + "Resistance: " + WriteVal( LastValue( Study( "RE", GetChartID() ) ), digits2 )
+        + " (" + WriteVal( ReAL_L, digits2 ) + "-" + WriteVal( ReAL_H, digits2 ) + "), "
+        + EncodeColor( def_Text2 ) + "" + "Max. Deviation: " + WriteVal( Offset, 1.2 )
+        + WriteIf( switch2, " %, ", " points, " ) + EncodeColor( def_Text1 ) + "Activated Alerts:"
+        + WriteIf( Audio AND NOT Email, " Audio ",
+                   WriteIf( Email AND NOT Audio, " Email ",
+                            WriteIf( Email AND Audio, " Audio & Email ", " None " ) ) )
+        + WriteIf( Nd > 0, "\n", "" )
+        + EncodeColor( colorRed ) + WriteIf( Nd == 1, "SU not defined ",
+                                             WriteIf( Nd == 2, "RE not defined", WriteIf( Nd == 3, "SU & RE not defined - No Alerts ", "" ) ) );

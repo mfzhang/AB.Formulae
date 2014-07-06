@@ -1,0 +1,72 @@
+/* Regression Analysis - Graph a Straight Line
+** AFL Implementation by Frank Snay
+** The Program is designed to graph a user defined length, straight regression 
+** analysis line.  Percentage lines, also user defined, are drawn above and
+** below the regression analysis line.  
+** A user defined "DaysBack" draws the line back (think AFL code ref() ) from 
+** the current end of the data for those who want to see a graphed, historical
+** line from previous days.  Setting "DaysBack" to zero ends the graph on the
+** current last database day.
+** Candlestick code displayed, with the green box with white fill being a day where
+** the close exceeds the open, and a red box with black fill being a day where the
+** open exceeds the close. (Tj - any way to make the fill the same color as the boxes?)
+** Use Automatic scaling, Grid: Middle + ShowDates 
+** THE FOLLOWING ARE USER INPUTS FOR THE DESIRED RESULTS:
+** User Input - Number of Days for Regression Analysis Line Study  */
+periods =63;
+/*  User Input - Upper and Lower Line seperation in percentage */
+Percent = 10;
+/* User Input - Number of days BACK for Historical Test */
+DaysBack = 0; //Keep at 0 for current regression analysis line
+
+/*  Compute the number of bars in datafile  */
+RABars = 0; //initialize
+TotalBars = cum(1); //how many bars in database
+FinalBar = lastvalue(TotalBars);//number value of last bar
+EndDay = FinalBar - DaysBack;//for other than 0 DaysBack
+StartDay = EndDay - periods+1;//starting point for line
+Master1 = iif(TotalBars >= StartDay and TotalBars <= EndDay,1,0);//defined period
+RABars = iif(Master1,ref(RABars,-1)+1,0); // daily counter in defined period
+RABarKntr = iif(Master1,sum(RABars,periods),0); //Sum of daily counts
+
+/*  Regression Analysis Computations  */
+TempMeanX = iif(RABarKntr == periods,sum(RABarKntr,periods),0);  // Sum of individual day counters
+MeanX1 = hhv(TempMeanX,TotalBars)/periods;  //  Final number divided by number of days
+MeanX = lastvalue(MeanX1); 
+TempMeanY =  iif(RABarKntr == periods, sum(c,periods),0);
+MeanY1 = hhv(TempMeanY,TotalBars)/periods ;  //  Final sum  divided by number of days
+MeanY = lastvalue(MeanY1);  
+Slope1 = iif(TotalBars == EndDay,linregslope(c,periods),0);
+Slope2 = iif(hhv(Slope1,FinalBar)>= 0,hhv(slope1,FinalBar),llv(Slope1,FinalBar));
+slope = lastvalue(Slope2);
+Intercept = MeanY -Slope * MeanX;
+
+/*  Linear Regression Line = Intercept plus the Slope times RABarKntr  */
+LRLine = Intercept + Slope * RABarKntr; 
+
+/*  Convert Percent to decimal */
+Percent1 = Percent/100;
+
+/* Add half to LRLine to get upper, subtract half to get lower */
+UpperLRLine = LRLine * (1+(Percent1)/2);
+LowerLRLine = LRLine * (1-(Percent1)/2);
+
+/*  Following 3 lines - graph ONLY days in the period */
+UpperLRLine = iif(RABarKntr >= 1,LRLine*(1+Percent1/2),-1e10);
+LowerLRLine = iif(RABarKntr>= 1, LRLine *(1-Percent1/2),-1e10);
+LRLine = iif(RABarKntr >= 1, LRLine,-1e10);
+
+/*  Graph the output  */
+// candlestick chart drawn here
+maxgraph=4;
+graph0 = close;
+graph0style = 64;
+graph0barcolor = iif(c>=o,5,4); //Green or Red candlestick graphs
+graph0color =2;
+graph1style = graph2style = graph3style = 1;
+graph1color = graph2color = graph3color  = 7;
+graph1 =LRLine;
+graph2 =UpperLRLine;
+graph3 =LowerLRLine;
+
+

@@ -1,0 +1,42 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    MACD optimize
+//  Author/Uploader: Grayesso 
+//  E-mail:          grayesso@rambler.ru
+//  Date/Time Added: 2003-12-10 14:12:39
+//  Origin:          
+//  Keywords:        
+//  Level:           advanced
+//  Flags:           showemail,function
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=313
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=313
+//
+//------------------------------------------------------------------------------
+//
+//  MACD (12,26,9 - 5,34,5 <==> by default - by Bill Williams
+//
+//------------------------------------------------------------------------------
+
+/* Project:       AmiBroker
+** File:          MACD_optimize.afl
+** Title:         MACD Optimize for Automatic Analysis (English)
+** Date:          Dec 10th, 2003
+** Written by:    Grayesso (grayesso dog rambler dot ru)
+*/ 
+
+/*After entering the formula just click on Optimize button in "Automatic Analysis" window. AmiBroker will start testing all possible combinations of optimization variables and report the results in the list. After optimization is done the list of result is presented sorted by the Net % profit. As you can sort the results by any column in the result list it is easy to get the optimal values of parameters for the lowest drawdown, lowest number of trades, largest profit factor, lowest market exposure and highest risk adjusted annual % return. The last three columns of result list present the values of optimization variables for given test.
+
+
+When you decide which combination of parameters suits your needs the best all you need to do is to replace the default values in optimize function calls with the optimal values. At current stage you need to type them by hand in the formula edit window (the second parameter of optimize function call). */
+
+/* MACD (12,26,9 - 5,34,5 <==> by default - by Bill Williams */
+
+/* variable = optimize( "Description", default, min, max, step ) */
+
+
+fa = Optimize( "MACD Fast", 5, 5, 12, 1 );
+sa = Optimize("MACD Slow", 34, 26, 34, 1 );
+sig = Optimize( "Signal average", 5, 5, 9, 1 );
+
+Buy = Cross( MACD( fa, sa ) , Signal( fa, sa, sig ) );
+Sell = Cross( Signal( fa, sa, sig ), MACD( fa, sa ) );

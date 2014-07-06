@@ -1,0 +1,24 @@
+/* Regularized EMA and momentum
+**
+** Note: AmiBroker 4.34 or higher required
+*/
+function REMA( array, alpha, lambda )
+{
+  // initialize first two elements by simple MA
+  result[ 0 ] = array[ 0 ];
+  result[ 1 ] = (array[ 0 ] + array[ 1 ])/2;
+  Coeff0 = alpha/(1 + lambda);
+  Coeff1 = (1 + 2 * lambda - alpha )/( 1 + lambda );
+  Coeff2 = - lambda / ( 1 + lambda );
+  for( i = 2; i < BarCount; i++ )
+  {
+   result[ i ] = Coeff0 * array[ i ] +
+              Coeff1 * result[ i - 1 ] +
+              Coeff2 * result[ i - 2 ];
+  }
+  return result;
+}
+re = REMA( Close, 0.05, 1.8 ); // calling user-defined REMA function
+RegMom = ( re - Ref( re, -1 ) ) / re; // regularized momentum
+Plot( RegMom, "Regularized momentum", colorGreen, styleThick );
+Plot( MACD(12, 26 ), "MACD(12,26)", colorRed, styleOwnScale);

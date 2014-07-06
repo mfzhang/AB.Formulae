@@ -1,0 +1,30 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Chaikin's Volatility
+//  Author/Uploader: Tomasz Janeczko 
+//  E-mail:          tj@amibroker.com
+//  Date/Time Added: 2001-06-16 08:09:22
+//  Origin:          Originally developed by Marc Chaikin
+//  Keywords:        volatility
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=7
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=7
+//
+//------------------------------------------------------------------------------
+//
+//  Chaikin's Volatility indicator compares the spread between a security's
+//  high and low prices. This is done by first calculating a moving average of
+//  the difference between the daily high and low prices and then calculating
+//  the rate of change of that moving average. For more information please
+//  check AmiBroker Tips newsletter <a
+//  href="http://www.amibroker.com/newsletter/03-2000.html">Issue 3/2000</a>
+//
+//------------------------------------------------------------------------------
+
+/*
+** Chaikin's Volatility
+** AFL Implementation by Tomasz Janeczko
+*/
+
+graph0 = roc( ema( high-low, 10), 10);

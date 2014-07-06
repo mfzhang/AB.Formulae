@@ -1,0 +1,157 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    ZigZag filter rewrited from scratch in AFL
+//  Author/Uploader: Tintin92 
+//  E-mail:          
+//  Date/Time Added: 2004-12-28 17:42:50
+//  Origin:          
+//  Keywords:        
+//  Level:           medium
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=417
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=417
+//
+//------------------------------------------------------------------------------
+//
+//  ZigZag filter rewrited from scratch in AFL
+//
+//------------------------------------------------------------------------------
+
+
+_SECTION_BEGIN("Reversal");
+Reversal = Param( _DEFAULT_NAME(), 01.0,0.01,20,0.01);
+_SECTION_END();
+
+ZigZArray = Avg;
+ZigZArray = Null;
+
+ValFromPro=0;
+ValToPro=0;
+ValRead=0;
+
+BarFromPro=0;
+BarToPro=0;
+BarRead=0;
+
+ProcessUndef = 10;
+ProcessIncrease = 11;
+ProcessDecrease = 12;
+
+Process = ProcessUndef;
+ValFromPro=Avg[0];
+ValToPro=Avg[0];
+BarFromPro=0;
+BarToPro=0;
+BarRead=0;
+
+function FillLine( startbar, startval, endbar, endval )
+{
+	for( j = startbar; j <= endbar; j++ )
+	{
+		ZigZArray[ j ] = startval + (( j - startbar) * (endval-startval)/( endbar - startbar ));
+	}
+}
+
+function TrtUndef( )
+{
+	if ( ValRead > ( ((100 + Reversal)/100 ) * ValFromPro ) )///If rupture Increase
+	{
+		Process = ProcessIncrease;
+		ValToPro=ValRead;
+		BarToPro=BarRead;
+	}
+	else
+	{
+		if ( ValRead < ( ((100- Reversal)/100 ) * ValFromPro ) )  // If rupture Decrease
+		{
+			Process = ProcessDecrease;
+			ValToPro=ValRead;
+			BarToPro=BarRead;
+		}
+		else
+		{
+			Process = ProcessUndef;
+		}
+	}
+}
+
+function TrtIncrease( )
+{
+	if ( ValRead > ValToPro )  // Still Increase
+	{
+		Process = ProcessIncrease;
+		ValToPro=ValRead;
+		BarToPro=BarRead;
+	}
+	else   // Break Increase Process
+	{
+		if ( ValRead <  ( ((100- Reversal)/100 ) * ValToPro ) )   // If break Decrease
+		{
+			Process = ProcessDecrease;
+			ValFromPro=ValToPro;
+			BarFromPro=BarToPro;
+			ValToPro=ValRead;
+			BarToPro=BarRead;
+		}
+	}
+}
+
+function TrtDecrease( )
+{
+	if ( ValRead < ValToPro )  // Still Decrease
+	{
+		Process = ProcessDecrease;
+		ValToPro=ValRead;
+		BarToPro=BarRead;
+	}
+	else  // Break Decrease Process
+	{
+		if ( ValRead >  ( ( (100+ Reversal)/100 ) * ValToPro ) ) // If break Decrease
+		{
+   		   Process = ProcessIncrease;
+			ValFromPro=ValToPro;
+			BarFromPro=BarToPro;
+			ValToPro=ValRead;
+			BarToPro=BarRead;
+		}
+	}
+}
+
+
+for( i = 1; i < BarCount; i++ )
+{
+	ValRead = Avg[i];
+	BarRead = i;
+
+	if ( Process == ProcessUndef )
+	{
+		TrtUndef();
+	}
+	else
+	{
+		if ( Process == ProcessIncrease )
+		{
+			TrtIncrease();
+		}
+		else
+		{
+			TrtDecrease();
+		}
+	}
+
+	if ( BarToPro == BarRead )
+		FillLine( BarFromPro, ValFromPro, BarToPro, ValToPro );
+	else
+		FillLine( BarToPro, ValToPro, BarRead, ValRead );
+}
+
+
+_SECTION_BEGIN("avg");
+SetChartOptions(0,chartShowArrows);
+Plot( Avg, _DEFAULT_NAME(), ParamColor("Color", colorBlack ), ParamStyle("Style", styleLine + styleDots, maskPrice ) ); 
+_SECTION_END();
+
+ _SECTION_BEGIN("ZigZArray");
+Plot( ZigZArray, _DEFAULT_NAME(), ParamColor("Color", colorRed ), ParamStyle("Style", styleLine + styleThick) ); 
+_SECTION_END();
+

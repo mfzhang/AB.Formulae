@@ -1,0 +1,82 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Gann Five Day pullback
+//  Author/Uploader: Steve Wiser 
+//  E-mail:          slwiserr@erols.com
+//  Date/Time Added: 2001-07-05 19:24:18
+//  Origin:          
+//  Keywords:        
+//  Level:           basic
+//  Flags:           system,exploration
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=63
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=63
+//
+//------------------------------------------------------------------------------
+//
+//  Uses Gann Five day pull back for buy signal.
+//
+//------------------------------------------------------------------------------
+
+/* Elliott Oscillator Indicator*/
+var0=Ma(A,5)-Ma(A,34);
+graph0=var0;
+graph0Style=6;
+graph1=0;
+graph1Color=5;
+
+
+Fivelow= ( Ref(L,-3)<Ref(L,-4) AND Ref(L,-4)<Ref(L,-5) AND Ref(L,-2)<Ref(L,-3))AND (Ref(L,-1)<Ref(L,-2)) AND (L<Ref(L,-1));
+
+var1=
+((Ma(var0,5)>0 
+AND 
+Ma(C,3)<Ma(C,10))
+AND
+ LinRegSlope(C, 38)>.25) 
+AND
+
+(Fivelow
+ OR
+ (Ref(C,-2)==Inside() AND Ref(L,-1)<Ref(L,-2)AND L<Ref(L,-1))
+OR
+ (Ref(L,-3)<Ref(L,-4)AND Ref(C,-1)==Inside()AND L<Ref(L,-1))
+OR
+(Ref(L,-2)<Ref(L,-3))AND (Ref(L,-1)<Ref(L,-2)AND Inside()));
+
+Buy=var1;
+Sell=0;
+
+Filter=Buy;
+
+
+Filter= (Buy==1)  ;
+numcolumns = 7;
+column0 =ref(C+0.065,-1);
+column0format = 1.2;
+column0name = "Trigger Price";
+column1 = C;
+column1name = "Close       ";
+column1format = 1.2;
+column2 = ma(v,17);
+column2name = "17 Ma Vol   ";
+column2format = 1.0;
+column3 = ma(C,17)/ma(c,50);
+column3name = "% 17/50 ";
+column3format = 1.2;
+column3format = 1.2;
+column4= ma(c,17);
+column4name="17 C ma";
+column4format = 1.2;
+column4= ma(c,50);
+column4name="50 C ma";
+column4format = 1.2;
+Column5=var0;
+column5Name="Elliott Ocs";
+Column5Format=1.2;
+Column6=LinRegSlope(var0,5);
+Column6Name="LRS Elliott";
+Column6format=1.2;
+
+/*  End of Exploration Code. */
+
+

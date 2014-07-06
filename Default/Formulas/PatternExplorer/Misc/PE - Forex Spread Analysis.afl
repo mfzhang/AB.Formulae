@@ -1,0 +1,62 @@
+//|-----------------------------------------------------------------------------------------
+//|PatternExplorer.com - Forex Spread Analysis
+//|Copyright © 2007, PatternExplorer.com
+//|http://www.PatternExplorer.com
+//|e-mail: support@PatternExplorer.com
+//|-----------------------------------------------------------------------------------------
+FormulaName = "PE - Forex Spread Analysis";
+
+#pragma nocache
+#include_once  <\PEInc\PatternExplorer_f0.afl>
+#Include_once "C:\Program Files (x86)\AmiBroker5\Formulas\PatternExplorer\#Defaults & Mods\PE - Defaults.afl"
+#Include_once "C:\Program Files (x86)\AmiBroker5\Formulas\PatternExplorer\#Defaults & Mods\PE - Mods.afl"
+/*******************************************************************************************/
+AddCustomCodeBeforePE();
+/*******************************************************************************************/
+period = Param( "Period", 100, 5, 200, 5 );
+HLRange =
+    IIf( StrRight( Name(), 3 ) == "JPY",
+         100 * MA( H - L, period ),
+         10000 * MA( H - L, period ) );
+/*******************************************************************************************/
+//The spreads below are based on www.FXCM.com, 28 March 2006
+//Modify it for your broker if neccessary AND make a copy of it.
+/*******************************************************************************************/
+Spread =
+    IIf( Name() == "AUDUSD", 4,
+         IIf( Name() == "AUDNZD", 13,
+              IIf( Name() == "AUDJPY", 8,
+                   IIf( Name() == "AUDCAD", 10,
+
+                        IIf( Name() == "CADJPY", 10,
+                             IIf( Name() == "CHFJPY", 9,
+
+                                  IIf( Name() == "EURUSD", 3,
+                                       IIf( Name() == "EURJPY", 4,
+                                            IIf( Name() == "EURCHF", 7,
+                                                 IIf( Name() == "EURGBP", 3,
+                                                      IIf( Name() == "EURAUD", 15,
+                                                           IIf( Name() == "EURCAD", 10,
+
+                                                                IIf( Name() == "GBPUSD", 5,
+                                                                     IIf( Name() == "GBPJPY", 9,
+                                                                          IIf( Name() == "GBPAUD", 15,
+                                                                               IIf( Name() == "GBPCHF", 15,
+
+                                                                                    IIf( Name() == "USDJPY", 4,
+                                                                                         IIf( Name() == "USDCHF", 5,
+                                                                                              IIf( Name() == "USDCAD", 5,
+
+                                                                                                   IIf( Name() == "NZDUSD", 4,
+                                                                                                        IIf( Name() == "NZDJPY", 10,
+
+                                                                                                             10000 ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) );
+
+/*******************************************************************************************/
+Filter = NOT GroupID() == 253;
+AddColumn( HLRange, "MA ( H - L , " + WriteVal( period, 1.0 ) + " )", 1.0 );
+AddColumn( Spread, "Spread", 1.0 );
+AddColumn( 100*( Spread / HLRange ), "Spread / MA - HL - % " );
+/*******************************************************************************************/
+AddCustomCodeAfterPE();
+/*******************************************************************************************/

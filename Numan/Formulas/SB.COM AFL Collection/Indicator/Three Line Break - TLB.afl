@@ -1,0 +1,93 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Three Line Break - TLB
+//  Author/Uploader: Laurent 
+//  E-mail:          
+//  Date/Time Added: 2005-08-18 16:18:00
+//  Origin:          
+//  Keywords:        Three line break TLB 3lb 3-lb
+//  Level:           medium
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=550
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=550
+//
+//------------------------------------------------------------------------------
+//
+//  same family as Kagi and Renko.
+//
+//------------------------------------------------------------------------------
+
+// Three Line Break or TLB
+// 3 line Break  Chart
+// Laurent 14 Aug 2005 ver 1
+// Custom Indicator, date axis does not apply
+// i compare my TLB chart with broker and another software
+// visual result in almost the same, but the 3 have small difference
+
+ SetBarsRequired(10000,10000);
+
+// initialize first element
+NumBar = 0;
+LastHigh=Close[1];
+LastLow=Close[1];
+LastStartHigh=Close[1];
+LastStartLow=Close[1];
+
+// Loop to produce the TLB values 
+
+for( i=1; i<BarCount-1; i++ )
+{
+if (numbar > 3 )
+{
+	M1=Max(TLBCB[numbar],TLBCE[numbar]);
+	M2=Max(TLBCB[numbar-1],TLBCE[numbar-1]);
+	M3=Max(TLBCB[numbar-2],TLBCE[numbar-2]);
+	m4=Max(m1,m2);
+	LastHigh=Max(m4,m3);
+
+	M1=Min(TLBCB[numbar],TLBCE[numbar]);
+	M2=Min(TLBCB[numbar-1],TLBCE[numbar-1]);
+	M3=Min(TLBCB[numbar-2],TLBCE[numbar-2]);
+	m4=Min(m1,m2);
+	LastLow=Min(m4,m3);
+}
+
+if( Close[i]> Lasthigh)
+	{
+	numbar++;
+	TLBCB[numbar]=LastStartHigh; // TLBCB Three Line Break Chart Begin (of bar)
+	TLBCE[numbar]=Close[i]; // TLBCB Three Line Break Chart End (of bar)
+	LastStartlow=LastHigh;
+	LastHigh=Close[i];
+	LastStartHigh=Close[i];
+	}
+
+if( Close[i]< LastLow)
+	{
+	numbar++;
+	TLBCB[numbar]=LastStartLow;
+	TLBCE[numbar]=Close[i];
+	LastStartHigh=LastStartLow;
+	Lastlow=Close[i];
+	LastStartlow=Close[i];
+	}
+
+} // for
+
+// move the chart to right end of chart space, ie last brick on last bar position
+delta =  BarCount-1 - numbar;
+
+TLBCB = Ref( TLBCB, -delta );
+TLBCE = Ref( TLBCE, -delta );
+
+rO = TLBCB;
+rC = TLBCE;
+rH = Max(rC,rO);
+rL = Min(rC,rO);
+
+// plot chart
+PlotOHLC( rO, rH, rL, rC, "TLB" , colorBlack, styleCandle);
+GraphXSpace=1;
+
+Title = Name() + " - {{INTERVAL}} {{DATE}} - TLB Chart : ";
+

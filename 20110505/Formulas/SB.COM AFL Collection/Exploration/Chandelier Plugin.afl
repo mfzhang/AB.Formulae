@@ -1,0 +1,96 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Chandelier Plugin
+//  Author/Uploader: Geoff Mulhall 
+//  E-mail:          geoffmulhall@optusnet.com.au
+//  Date/Time Added: 2004-11-01 18:04:31
+//  Origin:          Chuck Le Beau's System Traders Club
+//  Keywords:        
+//  Level:           semi-advanced
+//  Flags:           system,exploration,indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=395
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=395
+//
+//------------------------------------------------------------------------------
+//
+//  CHANDELIER EXIT Geoff Mulhall 24 Oct 2004
+//
+//  -----------------------------------------
+//
+//  The plugin is downloadable from
+//
+//  http://finance.groups.yahoo.com/group/amibroker/files/
+//
+//  OR
+//
+//  http://www.amibroker.org/3rdparty/
+//
+//  Look for chandelier.zip
+//
+//  Vers 1.02 - Improvements to problem data handling. Thks to James Kung
+//
+//  The chandelier exit is described at Chuck Le Beau's System Traders Club.
+//  Refer :
+//
+//  http://traderclub.com/cgi-bin/discus/show.cgi?107/107
+//
+//  If you are not familiar with the Chandelier Exit please refer to that site
+//  before continuing.
+//
+//  The plugin provided here is a true Chandelier Exit ie it is always hung
+//  from the highest high or highest close not as in the compromise version
+//  below which readers may have seen else where ie
+//
+//  Chandelier = HHV(High - 3 * ATR(15),10); // Long Trade
+//
+//  Chandelier = LLV(Low + 3 * ATR(15),10); // Short Trade
+//
+//  As you will see from the PNG file attached the plugin provides a single
+//  function which can be used for both short and long trades. This is achieved
+//  by flipping whenever the close pierces the exit.
+//
+//  To plot a Chandelier exit hung from the close code as follows -
+//
+//  Plot(ChandelierCl(ATR15),3),"ChandelierCl",colorBlue,styleLine);
+//
+//  To plot a Chandelier exit hung from the high or low code as follows -
+//
+//  Plot(ChandelierHL(ATR(15),3),"ChandelierHL",colorRed,styleLine);
+//
+//  Note both functions accept two parameters
+//
+//  1. The ATR array - in this case a 15 period - in this example ATR(15) and
+//
+//  2. The ATR multiplier - in this example 3
+//
+//  A trading system can be built using the functions provided as follows
+//
+//  Buy = Close > Ref( ChandelierCl(ATR(15),3), -1);
+//
+//  Sell = Close < Ref( ChandelierCl(ATR(15),3), -1);
+//
+//  Note the ref function is required due to the way the exit switches between
+//  a long and short trade.
+//
+//  To install the the plugin
+//
+//  1. Uzip the contents of Chandelier.zip to a temp directory
+//
+//  2. Shut down Amibroker
+//
+//  3. Copy the file Chandelier.dll to C:\Program Files\Amibroker\Plugins
+//
+//  4. Restart Amibroker (You will get a warning message that a new plugin has
+//  been installed).
+//
+//------------------------------------------------------------------------------
+
+/* Chandelier Exit */
+/* Geoff Mulhall Oct 2004 */
+/* Requires chandelier plugin installed */
+
+GraphXSpace = 5;
+
+Plot(Close,"",colorBlack,styleCandle);
+Plot(ChandelierCl(ATR(15),2.5),"",colorRed,styleLine);
+Plot(ChandelierHL(ATR(15),2.5),"",colorBlue,styleLine);

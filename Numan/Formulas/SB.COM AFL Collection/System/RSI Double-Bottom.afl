@@ -1,0 +1,99 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    RSI Double-Bottom
+//  Author/Uploader: Jim Varney 
+//  E-mail:          jvarn359@ya_&nospam&_hoo.com
+//  Date/Time Added: 2002-09-08 13:36:15
+//  Origin:          
+//  Keywords:        RSI, Double Bottom, Divergence
+//  Level:           basic
+//  Flags:           system
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=220
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=220
+//
+//------------------------------------------------------------------------------
+//
+//  Rising double bottom in RSI is a fairly reliable buy
+//
+//  signal (given a reasonably healthy market). Using a backtest database of 50
+//  stocks (137,500 bars) diversified across
+//
+//  industries, beta, net return, and capitalization, the backtest gives the
+//  following results:
+//
+//  Percent profitable: 77.0%
+//
+//  Ratio avg win/avg loss: 1.23
+//
+//  Risk adjusted ann. return: 24.63%
+//
+//  Profit factor: 4.12
+//
+//  Total number of trades: 217
+//
+//  Number winning trades: 167
+//
+//  Number losing trades: 50
+//
+//  The AFL needs more work to be a robust system. It can generate large losses
+//  if the double bottom is the start of a long downtrend, so be careful.
+//
+//------------------------------------------------------------------------------
+
+/* 
+RSI DOUBLE-BOTTOM 
+AmiBroker exploration by Jim Varney  jvarn359@ya^NOSPAM^hoo.com
+
+The RSI Double-Top exploration is based on the theory that a rising double bottom in RSI (the second bottom is higher than the first) is bullish, while a falling double top in RSI is bearish.
+
+Using A backtest database of 50 stocks (137,500 bars) diversified across industries, beta, net return, and capitalization, the backtest gives the following results:
+
+[Trade settings: Long only, buy at open next day, sell at open next day. No stops.]
+
+Percent profitable: 77.0%
+Ratio avg win/avg loss: 1.23 
+Risk adjusted ann. return: 24.63% 
+Profit factor: 4.12 
+Total number of trades: 217   
+Number winning trades: 167   
+Number losing trades: 50 
+
+Setting a stop-Loss Of 20% reduces the percent profitable to 66% but reduces the drawdown as well.
+*/ 
+
+// ------- RSI Double-Top AFL -------------------------
+
+// get 50-day average volume and compare today's volume
+Vfifty = MA(V, 50);
+Volidx = V/Vfifty;
+
+// set the RSI period
+myRSI = RSI(8);
+
+// scan for a rising RSI double bottom in a 21-day window
+Monthlow = LLV(myRSI, 21);
+Lastlow = LLV(myRSI, 8);
+Higherlow = Monthlow < Lastlow;
+rsimin = (Lastlow < 30) AND Higherlow AND myRSI < 50;
+
+// scan for a falling RSI double top in a 21-day window
+Monthhigh = HHV(myRSI, 21);
+Lasthigh = HHV(myRSI, 8);
+Lowerhigh = Monthhigh > Lasthigh;
+rsimax = (Lasthigh > 70) AND Lowerhigh AND myRSI > 60;
+
+Filter = (C > 2) AND (Vfifty > 10000);
+
+Buy = Filter AND RSImin;
+
+Sell = RSImax;
+
+Buy = ExRem( Buy, Sell );
+Sell = ExRem( Sell, Buy );
+
+
+AddColumn( C, "Price", format = 1.2);
+AddColumn( V, "Vol", format = 1.0);
+AddColumn( Volidx, "Vol/50day Vol", format = 1.1);
+AddColumn( Buy, "Buy", format = 1.0 );
+AddColumn( Sell, "Sell", format = 1.0 );

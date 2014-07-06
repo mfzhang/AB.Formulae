@@ -1,0 +1,3 @@
+Plot( Zig( PVI(), 5 ), "Zig of PVI", colorBlack );
+Plot( PVI(), "PVI", colorRed );
+GraphXSpace=3;

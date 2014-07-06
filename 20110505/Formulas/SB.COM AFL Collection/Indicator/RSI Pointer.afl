@@ -1,0 +1,31 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    RSI Pointer
+//  Author/Uploader: Duke Duncan 
+//  E-mail:          dukedunk15@aol.com
+//  Date/Time Added: 2002-01-20 13:50:21
+//  Origin:          
+//  Keywords:        stochastic rsi tsi moving average ma  stochastics
+//  Level:           semi-advanced
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=151
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=151
+//
+//------------------------------------------------------------------------------
+//
+//  This is a nice indicator. It combines moving averages, Stochastic D, and
+//  RSI. It is inverted and a single peak into the 30/70 range indicates buy or
+//  sell. It leads the market and is easy to manipulate. An easy way to alter
+//  it for different time frames is just to change the "Period" variable.
+//
+//------------------------------------------------------------------------------
+
+/* RSI Pointer - Determines specific buy and sell points */
+
+//Determines the Time length to be calculated
+Period = 25;
+
+//Graphs the oscillator
+Graph0= -(10000*( ( RSI( period ) - LLV( RSI( period ) , period ) ) / ( ( HHV( RSI(period ) , period ) )
+ - LLV(RSI( period ), period ) ) )* (Ma(close, 20) - Ma(close, 25))/ ((ma(close, 20) *100)));
+

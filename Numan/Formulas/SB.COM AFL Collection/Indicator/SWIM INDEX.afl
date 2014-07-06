@@ -1,0 +1,64 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    SWIM INDEX
+//  Author/Uploader: Kailash K Pareek ( Johnny ) 
+//  E-mail:          
+//  Date/Time Added: 2001-10-11 09:31:20
+//  Origin:          --------
+//  Keywords:        SWIM INDEX
+//  Level:           semi-advanced
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=122
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=122
+//
+//------------------------------------------------------------------------------
+//
+//  SWIM INDEX coded by KAILASH K PAREEK - INDIA .
+//
+//  As the name of indicator explains it self, It measures the
+//
+//  swim of Price. Day Trader may find it very useful as it gives
+//
+//  trend reversal in next 2-3 trading.
+//
+//  INTERPATION:
+//
+//  Expect trend reversal or at least consolidation when SI
+//
+//  Spikes higher, (for Peak) OR lower, (for bottom), than
+//
+//  Relative spikes and turns back. I have found couple of times
+//
+//  The thing called "HING" which appears 1-2 day before the
+//
+//  Price reversal and common in Stochastic Oscillator.
+//
+//------------------------------------------------------------------------------
+
+/* SWIM INDEX 
+ coded by KAILASH K PAREEK - INDIA .
+
+As the name of indicator explains it self, It measures the
+swim of Price. Day Trader may find it very useful as it gives
+trend reversal in next 2-3 trading.
+
+INTERPATION: 
+
+Expect trend reversal or at least consolidation when SI 
+Spikes higher, (for Peak) OR lower, (for bottom), than 
+Relative spikes and turns back. I have found couple of times
+The thing called "HING" which appears 1-2 day before the
+Price reversal and common in Stochastic Oscillator.
+
+
+*/
+
+C1 = Ref ( C , -1 ) ;
+O1 = Ref ( O, -1 ) ;
+K   = HHV ( ( H - C1 ) OR ( L - C1 ) , 1 ) ;
+L   =  C1 * 0.20;
+R  =  ATR ( 1 );
+
+SI  =  ( ( C-C1+0.5*(C-O)+0.25*(C1-O1))/R)*(K/L);
+
+Graph0 = SI;

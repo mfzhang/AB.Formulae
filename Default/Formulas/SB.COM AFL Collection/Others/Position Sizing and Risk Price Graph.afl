@@ -1,0 +1,15 @@
+//Position Sizing AND Risk Price Graph
+
+//The Position Sizing Price Graph Bar allows one to automatically view how many shares should be purchased based upon a 1% Risk Management Rule while using Average True Range as a basis for stop losses.  This is covered in Van Tharp's book, "Trade Your Way to Financial Freedom."  The formulas work best with even 1000s so it is best to enter the value as 25,000 instead of 25,355.  AND, the magic numbers for stop losses may NOT be Average True Range times Three.  Much of that depends on your holding period.  Also, the formula below is set for the conservative risk management of 1% Equity loss but that can easily be changed to 2%.  The summary of the figures show up in the Title of the price graph.
+
+MyPort = 100000;//Enter Portfolio Value
+
+MyATR=ATR(14);//Enter ATR Average or use the 14 Day Moving Average of ATR 
+
+MidRange=(H+L)/2;//Figure Used In Title for Middle of Trading Range 
+
+col = IIf( Close > Ref( Close, -1 ), colorGreen, colorRed );
+
+Plot( Close, "Price", col, styleBar );
+
+Title = Name() + " " + Date() + " Price: " + C + " Open: " + O + " High: " + H + " Low: " + L + " M:" + MidRange + " " + WriteVal(ROC( Close, 1) ) + "%" + "\n" + EncodeColor(colorBlue) + "ATR " + WriteVal (MyATR,format=1.2) + "   3 * ATR = " + WriteVal (MyATR*3,format=1.2 )+ "\n" + "SL " + WriteVal ( Close - (MyATR*3),(format=1.2)) + " Risk " + WriteVal ( (MyATR*3/Close)*100,format=1.2 ) + " %" + "\n" + "Shares " + WriteVal ((MyPort*0.01)/(MyATR*3),(format=1.2))+ "\n"+ "€"+WriteVal(C*((MyPort*0.01)/(MyATR*3)),(format=1.0))+ " of" +" "+ WriteVal ((MyPort)/1000,format=1.0)+"K";

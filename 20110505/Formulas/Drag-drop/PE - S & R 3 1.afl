@@ -1,0 +1,48 @@
+//|-----------------------------------------------------------------------------------------
+//|PatternExplorer.com - Volume
+//|Copyright © 2007, PatternExplorer.com
+//|http://www.PatternExplorer.com
+//|e-mail: support@PatternExplorer.com
+//|-----------------------------------------------------------------------------------------
+FormulaName = "PE - Volume";
+
+SetChartOptions( 0, chartShowDates | chartWrapTitle );
+#pragma nocache
+#include_once  <\PEInc\PatternExplorer_f0.afl>
+#Include_once "C:\Program Files (x86)\AmiBroker5\Formulas\PatternExplorer\#Defaults & Mods\PE - Defaults.afl"
+#Include_once "C:\Program Files (x86)\AmiBroker5\Formulas\PatternExplorer\#Defaults & Mods\PE - Mods.afl"
+/*******************************************************************************************/
+AddCustomCodeBeforePE();
+/*******************************************************************************************/
+_SECTION_BEGIN( "Volume" );
+Type = ParamList( "Color Mode", "Simple,Standard,Extended", 2 );
+UpColor = ParamColor( "Up Color", colorGreen );
+DnColor = ParamColor( "Down Color", colorRed );
+NeutralColor = ParamColor( "Neutral Color", def_Color6 );
+style =  ParamStyle( "Style", styleHistogram | styleOwnScale | styleThick, maskHistogram  );
+/*******************************************************************************************/
+
+if ( Type == "Simple" )
+    Plot( Volume, _DEFAULT_NAME(), NeutralColor, style );
+
+/*******************************************************************************************/
+if ( Type == "Standard" )
+    Plot( Volume, _DEFAULT_NAME(), IIf( C > O, UpColor, DnColor ), style );
+
+/*******************************************************************************************/
+if ( Type == "Extended" )
+    Plot( Volume, _DEFAULT_NAME(), IIf( C > Ref( C, -1 ) AND V > Ref( V, -1 ), UpColor, IIf( C < Ref( C, -1 ) AND V > Ref( V, -1 ), DnColor, NeutralColor ) ), style );
+
+_SECTION_END();
+
+/*******************************************************************************************/
+AddGradientBackground( def_BGColorswitch, def_BgTopcolor, def_BgBottomcolor, def_titlebkcolor );
+
+/*******************************************************************************************/
+ToolTip = def_ToolTip;
+
+/*******************************************************************************************/
+AddCustomCodeAfterPE();
+
+/*******************************************************************************************/
+Title = "PatternExplorer.com" + " - " +  Name() + " - " + EncodeColor( colorOrange ) + "Volume = " + WriteVal( Volume ) + " ";

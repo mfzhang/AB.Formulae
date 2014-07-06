@@ -1,0 +1,133 @@
+_SECTION_BEGIN( "MACD Bull Bear EMA" );
+r1 = Param( "Fast avg", 12, 2, 200, 1 );
+r2 = Param( "Slow avg", 26, 2, 200, 1 );
+r3 = Param( "Signal avg", 9, 2, 200, 1 );
+Plot( ml = MACD( r1, r2 ), StrFormat( _SECTION_NAME() + "(%g,%g)", r1, r2 ), ParamColor( "MACD color", colorRed ), ParamStyle( "MACD style" ) );
+Plot( sl = Signal( r1, r2, r3 ), "Signal" + _PARAM_VALUES(), ParamColor( "Signal color", colorBlue ), ParamStyle( "Signal style" ) );
+Plot( ml - sl, "MACD Histogram", ParamColor( "Histogram color", colorGold ), styleNoTitle | ParamStyle( "Histogram style", styleHistogram | styleNoLabel, maskHistogram ) );
+
+/*Bear Power*/
+BearLookback = Param ( "EMA Lookback(Bear)", 13 );
+BearPower = Low - EMA( Close, BearLookback );
+Plot ( BearPower, "", ParamColor ( "Bear Color", colorRed ), styleHistogram );
+
+/*Bull Power*/
+BullLookback = Param ( "EMA Lookback(Bull)", 13 );
+BullPower = High - EMA( Close, BullLookback );
+Plot ( BullPower, "", ParamColor ( "Bull Color", colorCustom11 ), styleHistogram );
+
+Title = Name() + " - " + Date() + " | Bull(" + WriteVal ( BullLookback, 3.0 ) + ") = " + WriteVal ( BullPower, 5.3 ) +
+        " ;  Bear(" + WriteVal ( BearLookback, 3.0 ) + ")= " + WriteVal ( BearPower, 5.3 ) +
+        " ;  Histogram(MACD)=" + WriteVal( ml - sl, 3.3 ) +
+        " ;  MACD(" + WriteVal ( r1, 0 ) + "," + WriteVal( r2, 1.0 ) + ")=" + WriteVal( ml, 3.3 ) +
+        " ;  Signal(" + WriteVal ( r1, 0 ) + "," + WriteVal( r2, 1.0 ) + "," + WriteVal( r3, 1.0 ) + ")=" + WriteVal( sL, 3.3 ) ;
+GraphXSpace = 5;
+_SECTION_END();
+
+_SECTION_BEGIN( "NMN MACD Comentary" );
+/* Project:       AmiBroker
+** File:          macd.afl
+** Title:         MACD Guru Commentary Example (English)
+** Requirements:  AFL 1.1   (AmiBroker 3.0) or above
+** Date:          Feb 9th, 1999
+** Written by:    Tomasz Janeczko
+*/
+
+Buy = Cross( MACD(), Signal() );
+Sell = Cross( Signal(), MACD() );
+
+"Review of "
++ FullName() + " (" + Name() + ")" + "\nas of " + Date();
+
+
+"\nCurrent Statistics\n";
+"Close: "
++ WriteVal( Close );
+"Change: "
++ WriteVal( Close - Ref( Close, -1 ) ) ;
+"MACD Value: "
++ WriteVal( MACD() );
+"Signal Line: "
++ WriteVal( Signal() );
+
+"\nThe MACD can provide buy/sell indications in three ways, signal line
+crossovers, overbought/oversold conditions, AND divergences.\n";
+
+"Crossovers:\n";
+"Currently the MACD is "
++
+WriteIf( MACD() > Signal(), "bullish", "bearish" ) +
+" since it is trading " +
+WriteIf( MACD() > Signal(), "above", "below" ) +
+" its signal line.";
+
+
+"The MACD crossed "
++
+WriteIf( MACD() > Signal(), "above", "below" ) +
+" its signal line " +
+WriteVal( Min( BarsSince( Cross( MACD(), Signal() ) ), BarsSince( Cross(
+                   Signal(), MACD() ) ) ), 0.0 ) +
+" period(s) ago.";
+
+bars = LastValue( Min( BarsSince( Cross( MACD(), Signal() ) ), BarsSince( Cross(
+                           Signal(), MACD() ) ) ) );
+
+prevclose = Ref( Close, -bars );
+
+"Since the MACD crossed its moving average, "
++
+Name() + "'s price has " +
+WriteIf( Close > prevclose, "increased ", "decreased " ) +
+WriteVal( 100*( Close - prevclose ) / prevclose ) + "%";
+
+"And has ranged from a high of "
++
+WriteVal( HHV( High, bars + 1 ), 6.3 ) +
+" to a low of " +
+WriteVal( LLV( Low, bars + 1 ), 6.3 );
+
+"\nOverbought/Oversold\n";
+Osc = OscP( 12, 26 );
+Osc1 = Ref( Osc, -1 );
+Osc5 = Ref( Osc, -5 );
+
+WriteIf( Osc <= -3 AND ( Osc - Osc5 ) == -Sum( abs( Osc - Osc1 ), 5 ),
+         "The MACD is in an oversold range. Prices may continue to move lower for some
+         time.  Wait for prices to move higher before considering any long positions.",
+         WriteIf( Osc >= 3 AND ( Osc - Osc5 ) ==  Sum( abs( Osc - Osc1 ), 5 ),
+                  "The MACD is in an overbought range.  Prices may continue to move higher for
+                  some time.  Wait for prices to move lower before considering any Short
+                  positions.",
+                  "The MACD is not in an Overbought/Oversold range." ) );
+
+"\nDivergence\n";
+temp = Trough( Low, 2, 1 ) < 0.96 * Ref( Trough( Low, 2, 1 ), -1 ) AND ValueWhen(
+           Trough( Low, 2, 1 ) != Ref( Trough( Low, 2, 1 ), -1 ), MACD(), 1 ) >= 0.90 *
+       ValueWhen( Trough( Low, 2, 1 ) != Ref( Trough( Low, 2, 1 ), -1 ), MACD(), 2 ) AND
+       MACD() < 0;
+
+temp2 = Peak(  High, 2, 1 ) > 1.04 * Ref( Peak( High, 2, 1 ), -1 ) AND ValueWhen(
+            Peak( High, 2, 1 ) != Ref( Peak( High, 2, 1 ), -1 ), MACD(), 1 ) <= 0.90 *
+        ValueWhen( Peak(  High, 2, 1 ) != Ref( Peak(  High, 2, 1 ), -1 ), MACD(), 2 ) AND
+        MACD() > 0;
+
+WriteIf( HHV( temp, 5 ) == 1, "A bullish divergence occurred " + WriteVal(
+             BarsSince( temp ), 1.0 ) +
+         " period(s) ago. Wait for upward price movement for confirmation before
+         considering any long positions.",
+         WriteIf( HHV( temp2, 5 ) == 1,
+                  "A bearish divergence occurred " +
+                  WriteVal( BarsSince( temp2 ), 1.0 ) +
+                  " period(s) ago.  Wait for downward price movement for confirmation before
+                  considering any Short positions.",
+                  "There have been no divergence signals within the last 5 periods." ) );
+
+"\n\nThis commentary is not a recommendation to buy or sell, but rather a
+guideline to interpreting the specified indicators.  This information should
+only be used by investors who are aware of the risk inherent in securities
+trading.  The author accepts no liability whatsoever for any loss arising from
+any use of this expert OR its contents.";
+_SECTION_END();
+
+// End ---------------------------------------------------------------------------------------------------------------------

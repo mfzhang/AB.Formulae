@@ -1,0 +1,101 @@
+/*ADX/DMI Indicator
+
+How to enter a trade?
+ADX line must be above 25 this means that there is a wide direction movement trend.
+When DI + Crossed DI- bullish you have to enter in the same candle stick this means TO BUY.
+When DI- crosses DI`+ bearish you have to enter the trade in the same canble stick this means TO SELL
+ADX is a closed indicator and works between 0 and 100.But is not so probable to see ADX above 60.
+ADX under 20 shows a weak trend or flat market, and ADX above 40 means a strong trend.
+ADX Line doesn’t show trends, but only the strength of actual trend.
+
+TRIGGERS
+· Buy Trigger : +DI crosses up -DI
+· Sell Trigger : - DI crosses up +DI
+· ADX Under 25 says: DO NOT ENTER A TRADE
+*/
+
+_SECTION_BEGIN("ADX DMI Indicator");
+SetChartBkColor(16);
+
+range = Prefs( 49 );
+_N( ranstr = "("+WriteVal( range, 1.0 )+")" );
+Plot( ADX(range), "ADX" + ranstr, -9, 5 );
+Plot( PDI(range), "+DI" + ranstr, -16 );
+Plot( MDI(range), "-DI" + ranstr, -8 );
+Plot( 25 , "", colorgreen,styledashed);
+
+
+//--Indicator-End-- -- do NOT remove this line!
+//
+// DMI/ADX Commentary
+// Copyright (C)2002 amibroker.com
+
+Ad = Graph0;
+pd = Graph1;
+md = Graph2;
+ep = IIf( pd > md,
+ValueWhen( Cross( pd, md ), Low ),
+ValueWhen( Cross( md, pd ), High ) );
+
+good = IIf( pd > md,
+High > ep,
+Low < ep );
+
+bs = IIf( pd > md,
+BarsSince( Cross( pd, md ) ),
+BarsSince( Cross( md, pd ) ) );
+
+"Directional movement:";
+"Plus directional movement index line (+DI) is currently "+
+WriteIf( pd > md,"above", "below")+
+" minus directional movement index (-DI)";
+
+"It crossed "+
+WriteIf( pd > md, "above", "below" )
++ " " +
+WriteVal( bs, 1.0 ) + " bars ago.\n";
+
+
+"Welles Wilder (the author of Directional Movement indicator) suggests buying when the +DI rises above the -DI and selling when the +DI falls below the -DI.";
+
+WriteIf( bs < 4,
+"\nSince the crossover happened just recently, this may be a good opportunity to enter " +
+WriteIf( pd > md, "long" , "short" ) +
+" trade (or close already open "+
+WriteIf( pd > md, "short", "long")+
+" trade (if any)\n",
+"\nCrossover happened more than 3 bars ago, so it is too late to act on this signal.\n")+
+
+WriteIf( bs < 4,
+"Wilder, however, suggest to qualify simple +DI/-DI crossover with 'extreme point rule'. When the +DI rises above the -DI, the extreme price is the high price on the day the lines cross. When the +DI falls below the -DI, the extreme price is the low price on the day the lines cross. The extreme point is then used as a trigger point at which you should implement the trade.\n","")+
+WriteIf( bs < 4, "Current extreme point value is " +
+WriteVal( ep ) + "." +
+WriteIf( good, " Since today's " +
+WriteIf( pd > md,
+"high ("+WriteVal( High ) +") is higher",
+"low ("+WriteVal(Low)+") is lower" ) +
+" than extreme point so the rule is fulfilled and " +
+WriteIf( pd > md, "buy","sell")+
+" signal is confirmed.\n",
+"Until now this rule is NOT fulfilled, so it is suggested to wait for the confirmation.\n"),"");
+
+falling = ROC( Ad, 2 ) < 0;
+
+strength = IIf( Ad < 15 OR ( Ad < 25 AND falling ), 0,
+IIf( Ad < 25 OR ( Ad < 35 AND falling ), 1,
+2 ) );
+
+"Trend strength:";
+
+"The ADX is currently " + WriteVal( Ad ) + " and "
++WriteIf( falling, "falling.", "rising." );
+
+"This suggests that the trend is "+
+WriteIf( strength == 0,
+"rather weak or very weak. Important: when trend is weak directional movement system generates signal too frequently and whipsaws can 'eat' all your profits.",
+WriteIf( strength == 2,
+"rather strong.",
+"medium in its strength."));
+
+"\nThis commentary is not a recommendation to buy or sell. Use at your own risk.";
+_SECTION_END();

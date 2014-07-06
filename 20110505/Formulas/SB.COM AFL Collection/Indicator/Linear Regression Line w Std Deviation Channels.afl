@@ -1,0 +1,91 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Linear Regression Line w/ Std Deviation Channels
+//  Author/Uploader: Patrick Hargus 
+//  E-mail:          
+//  Date/Time Added: 2005-03-07 00:58:06
+//  Origin:          Based on the Linear Regression Indicator found in TC2000 and the AB Lin Regression Drawing Tool.
+//  Keywords:        linnear regression, standard deviation
+//  Level:           medium
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=438
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=438
+//
+//------------------------------------------------------------------------------
+//
+//  Plot a linear regression line of any price field available on a chart for a
+//  period determined by the user. 2 Channels are plotted above and below based
+//  on standard deviations of the linear regression line as determined by the
+//  user. A look back feature is also provided for examining how the indicator
+//  would have appeared on a chart X periods in the past. Designed for AB
+//  versions 4.63 and above using drag and drop feature with user variable
+//  Params.
+//
+//  Various explorations based on crossovers, excursions and returns within the
+//  SD channels are easily added.
+//
+//------------------------------------------------------------------------------
+
+//  Linear Regression Line with 2 Standard Deviation Channels Plotted Above and Below 
+//  Written by Patrick Hargus, with critical hints from Marcin Gorzynski, Amibroker.com Technical Support 
+//      Designed for use with AB 4.63 beta and above, using drag and drop feature.  
+//  Permits plotting a linear regression line of any price field available on the chart for a period determined by the user.  
+//     2 Channels, based on a standard deviation each determined by the user, are plotted above and below the linear regression line. 
+// 		A look back feature is also provided for examining how the indicator would have appeared on a chart X periods in the past.    
+
+
+P = ParamField("Price field",-1);
+Daysback = Param("Period for Liner Regression Line",21,1,240,1);
+shift = Param("Look back period",0,0,240,1); 
+
+
+//  =============================== Math Formula =============================================================
+
+x = Cum(1);
+lastx = LastValue( x ) - shift; 
+aa = LastValue( Ref(LinRegIntercept( p, Daysback), -shift) ); 
+bb = LastValue( Ref(LinRegSlope( p, Daysback ), -shift) ); 
+y = Aa + bb * ( x - (Lastx - DaysBack +1 ) ); 
+
+
+// ==================Plot the Linear Regression Line ==========================================================
+
+
+LRColor = ParamColor("LR Color", colorCycle ); 
+LRStyle = ParamStyle("LR Style");
+
+LRLine =  IIf( x > (lastx - Daysback) AND BarIndex() < Lastx, y, Null );
+Plot( LRLine , "LinReg", LRCOLOR, LRSTYLE ); //  styleDots ); 
+
+// ==========================  Plot 1st SD Channel ===============================================================
+
+SDP = Param("Standard Deviation", 1.5, 0, 6, 0.1);
+SD = SDP/2;
+
+width = LastValue( Ref(SD*StDev(p, Daysback),-shift) );   // THIS IS WHERE THE WIDTH OF THE CHANELS IS SET  
+SDU = IIf( x > (lastx - Daysback) AND BarIndex() < Lastx, y+width , Null ) ;
+SDL = IIf( x > (lastx - Daysback) AND BarIndex() < Lastx, y-width , Null ) ;
+
+SDColor = ParamColor("SD Color", colorCycle ); 
+SDStyle = ParamStyle("SD Style");
+
+Plot( SDU , "Upper Lin Reg", SDColor,SDStyle ); 
+Plot( SDL , "Lower Lin Reg", SDColor,SDStyle ); 
+
+//  ==========================  Plot 2d SD Channel ===============================================================
+
+SDP2 = Param("2d Standard Deviation", 2.0, 0, 6, 0.1);
+SD2 = SDP2/2;
+
+width2 = LastValue( Ref(SD2*StDev(p, Daysback),-shift) );   // THIS IS WHERE THE WIDTH OF THE CHANELS IS SET  
+SDU2 = IIf( x > (lastx - Daysback) AND BarIndex() < Lastx, y+width2 , Null ) ;
+SDL2 = IIf( x > (lastx - Daysback) AND BarIndex() < Lastx, y-width2 , Null ) ;
+
+SDColor2 = ParamColor("2 SD Color", colorCycle ); 
+SDStyle2 = ParamStyle("2 SD Style");
+
+Plot( SDU2 , "Upper Lin Reg", SDColor2,SDStyle2 ); 
+Plot( SDL2 , "Lower Lin Reg", SDColor2,SDStyle2 ); 
+
+// ============================ End Indicator Code ==============================================================
+

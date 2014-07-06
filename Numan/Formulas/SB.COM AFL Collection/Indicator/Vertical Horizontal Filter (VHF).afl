@@ -1,0 +1,44 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Vertical Horizontal Filter (VHF)
+//  Author/Uploader: Jayson 
+//  E-mail:          jcasavant@adelphia.net
+//  Date/Time Added: 2002-11-03 03:05:47
+//  Origin:          Adam White
+//  Keywords:        trend
+//  Level:           basic
+//  Flags:           indicator,commentary
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=229
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=229
+//
+//------------------------------------------------------------------------------
+//
+//  A trend Measuring Indicator
+//
+//------------------------------------------------------------------------------
+
+pds=18; 
+smooth=6;
+hcp=HHV(C,pds);
+lcp=LLV(C,pds);
+mcp=C-Ref(C,-1);
+sav=Sum(abs(mcp),pds);  
+
+Vhf=(Hcp-Lcp)/sav;
+Plot(EMA(vhf,smooth),"Vertical Horizontal Filter",colorBlue,4); 
+
+Title=WriteIf(Vhf>Ref(Vhf,-1)AND Ref(Vhf,-1)>Ref(Vhf,-2),EncodeColor(colorGreen)+" VHF is currently rising.",EncodeColor(colorYellow)+" VHF is Falling."); 
+
+
+//VHF Commentary
+
+WriteIf(Vhf>Ref(Vhf,-1)AND Ref(Vhf,-1)>Ref(Vhf,-2),"\n VHF has been rising over the last 3 days. A rising VHF may indicate a trend is developing or strengthening"," \n VHF has been falling over the last 3 days. A falling VHF may indicate a Congestion phase is developing OR that the current trend is coming to and end"); 
+
+"\n Developed by Adam White VHF is used to measure the degree of trendiness of a stock. It can be used in 3 ways....";
+
+"\n 1) VHF Levels Above or below a given Level indicate the degree of trend. The higher the reading the stronger the trend.";
+
+"\n 2) Direction of VHF can help to determine whether a trending or congestive phase is developing. A rising VHF means a trend is in place OR developing while a falling VHF may spell an end to that trend";
+
+"\n 3) VHF is Contrarian. Expect congestion to follow an exceptionally High reading. A very Low reading may lead to A new trend." ; 
+                          

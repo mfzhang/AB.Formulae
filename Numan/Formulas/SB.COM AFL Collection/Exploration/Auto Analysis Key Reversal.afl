@@ -1,0 +1,24 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Auto Analysis Key Reversal
+//  Author/Uploader: Larry Lovrencic 
+//  E-mail:          lvl@firstpacific.net
+//  Date/Time Added: 2001-09-04 01:51:44
+//  Origin:          
+//  Keywords:        key reversal automatic analysis
+//  Level:           basic
+//  Flags:           exploration
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=109
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=109
+//
+//------------------------------------------------------------------------------
+//
+//  Find Key Reversals using automatic analysis
+//
+//------------------------------------------------------------------------------
+
+/*Key Reversals Automatic Analysis
+by Larry Lovrencic*/
+
+buy=O<ref(C,-1) AND L<ref(L,-1) AND C>ref(H,-1);
+sell=O>ref(C,-1) AND H>ref(H,-1) AND C<ref(L,-1);

@@ -1,0 +1,52 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    The Relative Slope
+//  Author/Uploader: Dimitris Tsokakis 
+//  E-mail:          tsokakis@oneway.gr
+//  Date/Time Added: 2001-07-02 11:46:37
+//  Origin:          
+//  Keywords:        
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=43
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=43
+//
+//------------------------------------------------------------------------------
+//
+//  Definition: For a variable X, the difference of two cascade values of X,
+//
+//  devided by their sum.
+//
+//  For scaling purposes,this quotient may be multiplied by a numerical
+//  coefficient.
+//
+//  Example:
+//
+//  The Relative Slope of exponential moving average of "typical price"
+//
+//  A variable independent of specific stock values, usually in the range
+//
+//  -10<RS<10
+//
+//  with peaks and troughs almost eliminating the lag between close and
+//
+//  smoothing average.
+//
+//  As an indicator, it presents excellent divergences with close graph,
+//  anticipating
+//
+//  trend reversals.
+//
+//  It is also valuable for classification of stocks, according to their
+//  maximum and minimum
+//
+//  RS values.
+//
+//------------------------------------------------------------------------------
+
+/*Relative Slope*/
+/*by Dimitris Tsokakis*/
+K=EMA((H+L+C)/3,10);
+S1=2*(K-REF(K,-1))/(K+REF(K,-1));
+RS=100*EMA(S1,3);
+GRAPH0=RS;

@@ -1,0 +1,83 @@
+_SECTION_BEGIN("Woodie's Price Panel With Pivots");
+////////////////////////////////////
+//
+// CCI Price Panel For Amibroker
+// Coded by Crasher_FL
+// Modified by Dennis
+//
+////////////////////////////////////
+
+SetChartBkColor(ParamColor("Outer panel color ",colorPaleBlue)); // color of outer border
+
+SetChartBkGradientFill( ParamColor("Inner panel color upper half",
+colorPaleBlue),ParamColor("Inner panel color lower half", 
+
+colorPaleBlue)); // color of inner panel
+
+Titledisplay= ParamToggle("Display pivot stats","No|Yes",1);
+
+barcolor = IIf(C > Open, colorBlack, IIf(C == Open, colorBlack, colorBlack));
+
+Plot( C, "Close", barcolor, styleNoTitle | ParamStyle("Price Style") |
+GetPriceStyle() );
+
+EMA34 = EMA(C,34);
+
+LSMA = LinearReg(C,25);
+
+PI = atan(1.00) * 4;
+
+periods = 30;
+
+HighHigh = HHV(H, periods);
+
+LowLow = LLV(L, periods);
+
+range = 25 / (HighHigh - LowLow) * LowLow;
+
+x1_EMA34 = 0;
+
+x2_EMA34 = 2;
+
+y1_EMA34 = 0;
+
+y2_EMA34 = (Ref(EMA34, -2) - EMA34) / Avg * range;
+
+c_EMA34 = sqrt((x2_EMA34 - x1_EMA34)*(x2_EMA34 - x1_EMA34) + (y2_EMA34 -
+y1_EMA34)*(y2_EMA34 - y1_EMA34));
+
+angle_EMA34 = round(180 * acos((x2_EMA34 - x1_EMA34)/c_EMA34) / PI);
+
+TitleAngleEMA34 = EncodeColor(colorWhite) + "\nEMA34 angle = ";
+
+angle_EMA34 = IIf(y2_EMA34 > 0, - angle_EMA34, angle_EMA34);
+
+Cziparam= Param("CZI angle parameter",5,0,360); 
+
+Color_ema_eangle= IIf(angle_ema34>=Cziparam,ParamColor("EMA34 trending
+up",colorTurquoise),IIf(angle_ema34<=-1*Cziparam,ParamColor("EMA34 trending
+down",colorDarkRed),ParamColor("EMA34 NOT trending",colorYellow)));
+
+Plot(EMA34,"EMA 34",Color_ema_eangle,styleLine | styleThick | styleNoLabel );
+
+
+Plot(lsma,"LSMA 25",IIf(C > lsma, ParamColor("Close > LSMA",colorLime),
+
+IIf(C == lsma, ParamColor("Close = LSMA",colorTeal),ParamColor("Close < LSMA",colorRed))), styleLine | styleThick |styleNoLabel);
+
+//**************************************//
+
+Buy = angle_ema34>=Cziparam;
+Sell = angle_ema34<=-1*Cziparam;
+Buy = ExRem(Buy, Sell);
+Sell = ExRem(Sell, Buy);
+
+PlotShapes(Buy*shapeUpArrow,colorLime,0,Graph0);
+PlotShapes(Sell*shapeDownArrow,colorRed,0,Graph0);
+
+
+
+
+
+//---- pivot points
+DayH = TimeFrameGetPrice("H", inDaily, -1);// yesterdays high 

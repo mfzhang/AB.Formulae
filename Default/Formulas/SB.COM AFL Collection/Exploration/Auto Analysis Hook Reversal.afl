@@ -1,0 +1,24 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Auto Analysis Hook Reversal
+//  Author/Uploader: Larry Lovrencic 
+//  E-mail:          lvl@firstpacific.net
+//  Date/Time Added: 2001-09-04 01:50:18
+//  Origin:          
+//  Keywords:        hoor reversal automatic analysis
+//  Level:           basic
+//  Flags:           exploration
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=108
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=108
+//
+//------------------------------------------------------------------------------
+//
+//  Find Hook Reversals using automatic analysis
+//
+//------------------------------------------------------------------------------
+
+/*Hook Reversals Automatic Analysis
+by Larry Lovrencic*/
+
+buy=O<(L+0.2*(H-L)) AND C>(H-0.2*(H-L)) AND H<ref(H,-1) AND L>ref(L,-1);
+sell=O>(L+0.8*(H-L)) AND C<(H-0.8*(H-L)) AND H<ref(H,-1) AND L>ref(L,-1);

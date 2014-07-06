@@ -1,0 +1,251 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    nth ( 1 - 8 ) Order Polynomial Fit
+//  Author/Uploader: Fred Tonetti 
+//  E-mail:          
+//  Date/Time Added: 2006-10-03 18:18:42
+//  Origin:          
+//  Keywords:        nth Order Polynomial Fit Trendline Gauss
+//  Level:           medium
+//  Flags:           showemail,function
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=731
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=731
+//
+//------------------------------------------------------------------------------
+//
+//  nth ( 1 - 8 ) Order Polynomial Fit of data using Gaussian Elimination for
+//  simultaneous solution of multiple linear equations. It can extrapolate
+//  forward and/or backwards
+//
+//------------------------------------------------------------------------------
+
+
+// *********************************************************
+// *
+// * VBS Function for Gaussian Elimination
+// *
+// *     Called by PolyFit ( AFL )
+// *
+// *********************************************************
+
+EnableScript("VBScript");
+
+<%
+function Gaussian_Elimination (GE_Order, GE_N, GE_SumXn, GE_SumYXn)
+    Dim b(10, 10)
+    Dim w(10)
+    Dim Coeff(10)
+
+    for i = 1 To 10
+        Coeff(i) = 0
+    next
+
+    n = GE_Order + 1
+
+    for i = 1 to n
+        for j = 1 to  n
+            if i = 1 AND j = 1 then
+                b(i, j) = cDBL(GE_N)
+            else
+                b(i, j) = cDbl(GE_SumXn(i + j - 2))
+            end if
+        next      
+        w(i) = cDbl(GE_SumYXn(i))
+    next
+
+    n1 = n - 1
+    for i = 1 to n1
+        big = cDbl(abs(b(i, i)))
+        q = i
+        i1 = i + 1
+
+        for j = i1 to n
+            ab = cDbl(abs(b(j, i)))
+            if (ab >= big) then
+                big = ab
+                q = j
+            end if
+        next
+
+        if (big <> 0.0) then
+            if (q <> i) then
+                for j = 1 to n
+                    Temp = cDbl(b(q, j))
+                    b(q, j) = b(i, j)
+                    b(i, j) = Temp
+                next
+                Temp = w(i)
+                w(i) = w(q)
+                w(q) = Temp
+            end if
+        end if
+
+        for j = i1 to n
+            t = cDbl(b(j, i) / b(i, i))
+            for k = i1 to n
+                b(j, k) = b(j, k) - t * b(i, k)
+            next         
+            w(j) = w(j) - t * w(i)
+        next      
+    next
+
+    if (b(n, n) <> 0.0) then
+
+        Coeff(n) = w(n) / b(n, n)
+        i = n - 1
+
+        while i > 0
+            SumY = cDbl(0)
+            i1 = i + 1
+            for j = i1 to n
+                SumY = SumY + b(i, j) * Coeff(j)
+            next
+            Coeff(i) = (w(i) - SumY) / b(i, i)
+            i = i - 1
+        wend   
+
+        Gaussian_Elimination = Coeff
+
+    end if
+end function
+%>
+
+// *********************************************************
+// *
+// * AFL Function for nth Order Polynomial Fit
+// *     Calls Gaussian_Elimination ( VBS )
+// *
+// *     Y      = The array to Fit 
+// *     BegBar = Beg Bar in range to fit
+// *     EndBar = End Bar in range to fit
+// *     Order  = 1 - 8 = Order of Poly Fit (Integer)
+// *     ExtraB = Number of Bars to Extrapolate (Backward)
+// *     ExtraF = Number of Bars to Extrapolate (Forward)
+// *
+// *********************************************************
+ 
+function PolyFit(GE_Y, GE_BegBar, GE_EndBar, GE_Order, GE_ExtraB, GE_ExtraF)
+{
+    BI        = BarIndex();
+
+    GE_N      = GE_EndBar - GE_BegBar + 1;
+    GE_XBegin = -(GE_N - 1) / 2;
+    GE_X      = IIf(BI < GE_BegBar, 0, IIf(BI > GE_EndBar, 0, (GE_XBegin + BI - GE_BegBar)));
+
+    GE_X_Max  = LastValue(Highest(GE_X));
+
+    GE_X      = GE_X / GE_X_Max;
+
+    X1 = GE_X;
+    AddColumn(X1, "X1", 1.9);
+
+    GE_Y      = IIf(BI < GE_BegBar, 0, IIf(BI > GE_EndBar, 0, GE_Y));
+
+    GE_SumXn  = Cum(0);
+                                 GE_SumXn[1]   = LastValue(Cum(GE_X)); 
+    GE_X2     = GE_X * GE_X;     GE_SumXn[2]   = LastValue(Cum(GE_X2));
+    GE_X3     = GE_X * GE_X2;    GE_SumXn[3]   = LastValue(Cum(GE_X3)); 
+    GE_X4     = GE_X * GE_X3;    GE_SumXn[4]   = LastValue(Cum(GE_X4)); 
+    GE_X5     = GE_X * GE_X4;    GE_SumXn[5]   = LastValue(Cum(GE_X5)); 
+    GE_X6     = GE_X * GE_X5;    GE_SumXn[6]   = LastValue(Cum(GE_X6)); 
+    GE_X7     = GE_X * GE_X6;    GE_SumXn[7]   = LastValue(Cum(GE_X7)); 
+    GE_X8     = GE_X * GE_X7;    GE_SumXn[8]   = LastValue(Cum(GE_X8)); 
+    GE_X9     = GE_X * GE_X8;    GE_SumXn[9]   = LastValue(Cum(GE_X9)); 
+    GE_X10    = GE_X * GE_X9;    GE_SumXn[10]  = LastValue(Cum(GE_X10)); 
+    GE_X11    = GE_X * GE_X10;   GE_SumXn[11]  = LastValue(Cum(GE_X11)); 
+    GE_X12    = GE_X * GE_X11;   GE_SumXn[12]  = LastValue(Cum(GE_X12)); 
+    GE_X13    = GE_X * GE_X12;   GE_SumXn[13]  = LastValue(Cum(GE_X13)); 
+    GE_X14    = GE_X * GE_X13;   GE_SumXn[14]  = LastValue(Cum(GE_X14)); 
+    GE_X15    = GE_X * GE_X14;   GE_SumXn[15]  = LastValue(Cum(GE_X15)); 
+    GE_X16    = GE_X * GE_X15;   GE_SumXn[16]  = LastValue(Cum(GE_X16)); 
+
+    GE_SumYXn = Cum(0);
+                                 GE_SumYXn[1]  = LastValue(Cum(GE_Y));
+    GE_YX     = GE_Y    * GE_X;  GE_SumYXn[2]  = LastValue(Cum(GE_YX));
+    GE_YX2    = GE_YX   * GE_X;  GE_SumYXn[3]  = LastValue(Cum(GE_YX2)); 
+    GE_YX3    = GE_YX2  * GE_X;  GE_SumYXn[4]  = LastValue(Cum(GE_YX3));
+    GE_YX4    = GE_YX3  * GE_X;  GE_SumYXn[5]  = LastValue(Cum(GE_YX4));
+    GE_YX5    = GE_YX4  * GE_X;  GE_SumYXn[6]  = LastValue(Cum(GE_YX5));
+    GE_YX6    = GE_YX5  * GE_X;  GE_SumYXn[7]  = LastValue(Cum(GE_YX6));
+    GE_YX7    = GE_YX6  * GE_X;  GE_SumYXn[8]  = LastValue(Cum(GE_YX7));
+    GE_YX8    = GE_YX7  * GE_X;  GE_SumYXn[9]  = LastValue(Cum(GE_YX8));
+
+    GE_Coeff  = Cum(0);
+
+    GE_VBS    = GetScriptObject();
+    GE_Coeff  = GE_VBS.Gaussian_Elimination(GE_Order, GE_N, GE_SumXn, GE_SumYXn);
+
+    for (i = 1; i <= GE_Order + 1; i++)
+        printf(NumToStr(i, 1.0) + " = " + NumToStr(GE_Coeff[i], 1.9) + "\n");
+
+    GE_X   = IIf(BI < GE_BegBar - GE_ExtraB - GE_ExtraF, 0, IIf(BI > GE_EndBar, 0, (GE_XBegin + BI - GE_BegBar + GE_ExtraF) / GE_X_Max));
+
+    GE_X2  = GE_X   * GE_X; GE_X3  = GE_X2  * GE_X; GE_X4  = GE_X3  * GE_X; GE_X5  = GE_X4  * GE_X; GE_X6  = GE_X5  * GE_X;
+    GE_X7  = GE_X6  * GE_X; GE_X8  = GE_X7  * GE_X; GE_X9  = GE_X8  * GE_X; GE_X10 = GE_X9  * GE_X; GE_X11 = GE_X10 * GE_X; 
+    GE_X12 = GE_X11 * GE_X; GE_X13 = GE_X12 * GE_X; GE_X14 = GE_X13 * GE_X; GE_X15 = GE_X14 * GE_X; GE_X16 = GE_X15 * GE_X; 
+
+    GE_Yn = IIf(BI < GE_BegBar - GE_ExtraB - GE_ExtraF, -1e10, IIf(BI > GE_EndBar, -1e10, 
+            GE_Coeff[1]  + 
+            GE_Coeff[2]  * GE_X   + GE_Coeff[3]  * GE_X2  + GE_Coeff[4]  * GE_X3  + GE_Coeff[5]  * GE_X4  + GE_Coeff[6]  * GE_X5  +
+            GE_Coeff[7]  * GE_X6  + GE_Coeff[8]  * GE_X7  + GE_Coeff[9]  * GE_X8));
+
+    return GE_Yn;
+}
+
+// *********************************************************
+// *
+// * Demo AFL to use PolyFit
+// *
+// *********************************************************
+
+Filter = 1;
+
+BI        = BarIndex();
+PF_BegBar = BeginValue(BI);
+PF_EndBar = EndValue(BI);
+PF_Y      = (H + L) / 2;
+PF_Order  = Param("nth Order",             3, 1,  8, 1);
+PF_ExtraB = Param("Extrapolate Backwards", 0, 0, 50, 1);
+PF_ExtraF = Param("Extrapolate Forwards",  0, 0, 50, 1);
+
+Yn = PolyFit(PF_Y, PF_BegBar, PF_EndBar, PF_Order, PF_ExtraB, PF_ExtraF);
+
+GraphXSpace = 10;
+
+Plot(Yn, "nth Order Polynomial Fit - " + NumToStr(PF_Order, 1.0), IIf(BI > PF_EndBar - PF_ExtraF, colorWhite, IIf(BI < PF_BegBar - PF_ExtraF, colorWhite, colorBrightGreen)), styleThick, Null, Null, PF_ExtraF);
+PlotOHLC(O, H, L, C, "Close", colorLightGrey, styleCandle);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

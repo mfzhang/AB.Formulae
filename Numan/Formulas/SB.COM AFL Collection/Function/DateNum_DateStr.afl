@@ -1,0 +1,69 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    DateNum_DateStr
+//  Author/Uploader: Stephane Carrasset 
+//  E-mail:          s.carrasset@laposte.net
+//  Date/Time Added: 2004-12-18 12:21:49
+//  Origin:          
+//  Keywords:        
+//  Level:           basic
+//  Flags:           commentary,function
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=415
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=415
+//
+//------------------------------------------------------------------------------
+//
+//  Function changes DateNum ex:1040928 en String ddmmyyyy ex:28/09/2004 ( only
+//  > 2000 year )
+//
+//  Returns in Interpretation every date when occurs an Events.
+//
+//  Example of StrFormat; StrToNum; NumToStr; printf;
+//
+//  StaticVarSetText;
+//
+//------------------------------------------------------------------------------
+
+_SECTION_BEGIN("StrFormat_printf");
+// Transforme DateNum ex:1040928 en String ddmmyyyy ex:28/09/2004
+result="";
+function sDate ( nDate ) //
+{
+//if you want string without separators you have to specify this in your
+//NumToStr call http://www.amibroker.com/f?numtostr
+//string=NumToStr(SelectedValue(nDate),1,False);
+
+//You can use StrFormat for more control http://www.amibroker.com/f?strformat
+string=StrFormat("%0.9g",nDate);
+
+//extract string part
+aa=StrLeft(string,3);
+mm=StrMid(string,3,2);
+dd=StrRight(string,2);
+
+//transform year en num
+aa1=StrToNum(aa)+1900; // ONLY CORRECT AFTER 2000
+
+//return string
+result= dd + "/" + mm + "/" + NumToStr(aa1,1,False);
+return result;
+}
+
+curList=""; // initialize the string List
+Event= Cross(MFI(14) ,50 );
+zDate=DateNum();
+//SetBarsRequired(10000,10000);
+for(i=0;i<BarCount;i++)
+{
+if(Event[i])
+{
+//Print to Interpretation the Date when events occurs
+printf("Cross:" + sDate(zDate[i])+"\n" ); 
+// Store a curList for others use
+curList=curList+sDate(zDate[i])+"\n";
+// Store the curList in a static text
+StaticVarSetText("MyList",curList);
+}
+}
+
+//curList=StaticVarGetText("MyList"); // can be used in an other EDITOR

@@ -1,0 +1,121 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Bollinger Band Gap
+//  Author/Uploader: klaushengher 
+//  E-mail:          
+//  Date/Time Added: 2003-06-15 12:43:31
+//  Origin:          
+//  Keywords:        
+//  Level:           advanced
+//  Flags:           exploration
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=287
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=287
+//
+//------------------------------------------------------------------------------
+//
+//  BbandGap - How to Make Money Shorting Stocks in Up and Down Markets
+//
+//------------------------------------------------------------------------------
+
+/* BbandGap. Written by Klaus Hengher
+   based on Tools and Tactics for the Master Day Trader
+   
+   Velez, Capra (Pristine)
+
+BbandGap - How to Make Money Shorting Stocks in Up and Down Markets
+The Set Up
+
+1) The stock must first puncture and close outside (above) the upper Bollinger
+   Band. The closer the closing price is to the high of the day, the better.
+   And the bigger the day's advance, the better. As a general rule, you will
+   want this day's bar to be at least $2 or more in length from high to low.
+   This is not always necessary, but it's better to have it.
+
+2) On the following day, the stock must 'gap' down below the prior day's close.
+   This 'gap down' is crucial as it serves as the most important criteria of
+   the entire strategy. If the stock does not open for trading below the prior
+   day's close by at least 50 cents (preferably more), no action should be
+   taken. We need weakness right at the open. Example: If on Tuesday the stock
+   closed at $40, we want to see the stock open for trading on Wednesday no
+   higher than $39.50. It must open down!
+   Note: In many cases, this gap down will be caused by either an exceptionally
+   weak market open or a negative news item on the company, such as a brokerage
+   downgrade.
+   But in either case, the gap down signifies major selling (profit taking),
+   and the pros who short will be loving it. Keep in mind that both the above
+   criteria must be met before action is taken.
+
+The Action
+
+Once the above Set Up Criteria is met, the trader will do the following:
+
+1) Sell the stock short (at the market if you have the luxury of being able to 
+   kill the trade instantly in the event the stock gets too far away from you). 
+   With order entry systems like The Executioner(r), the trader will be able to
+   instantly cancel the open order, if need be. If the trader lacks this
+   'instant canceling' capability, he is better off placing a limit sell order.
+
+2) Once the short has been filled, place a protective stop 1/8 above the high
+   of the prior day. This is our insurance policy against disaster. If the
+   stock rises above the high of the prior day, that is our sign that the
+   shorts are being squeezed, and the major advance has more steam left, as
+   those short will be forced to buy at higher prices to curtail their losses.
+
+3) Hold for two to three days or more, protecting your profits on the way down
+   with some form of trailing stop methodology. Note: Some traders may want to
+   move their protective stop 1/8 above each prior day's high. This is called
+   'tracking the prior highs.' Others may want to 'book profits' in the
+   following manner: 'Once up $1, move stop to break-even. Once up $2, protect
+   1/2 of the gain, and once up $3 or more, protect 2/3 of the gain.
+   Note: The idea is to ride the short for maximum profits. But of course if
+   the trader is shorting a weak stock in the context of a bullish market
+   environment, booking the profits sooner rather than later is preferred, even
+   if it means missing additional gains.
+}
+*/
+fClose = Ref(C,-1);
+fHigh = Ref(H,-1);
+fLow = Ref(L,-1);
+fAdvDrop = fClose - Ref(C,-2);
+fAtr = Ref(ATR(8),-1);
+diffHl = fHigh-fLow;
+fStoch = Ref(StochD(14),-1);
+fBBandTop=Ref(BBandTop(C,20,2),-1);
+fOpenCond = fClose - 0.5 * fAtr;
+fOpen = Ref(O,0);
+fStopLoss = fHigh + 0.5 * fAtr;
+
+bbTopSell =
+// The stock must first puncture and close outside (above) the upper Bollinger Band
+IIf( fClose > fBBandTop                    AND
+// The closer the closing price is to the high of the day, the better.
+     fClose > (fLow + 0.75 * diffHL )      AND
+// And the bigger the day's advance, the better
+     fAdvDrop > (1.5 * fAtr)               AND
+// On the following day, the stock must 'gap' down below the prior day's close.
+// This 'gap down' is crucial as it serves as the most important criteria of
+// the entire strategy.
+     fOpen < fOpenCond                     AND
+// Overbought condition added
+     fStoch > 80, 1, 0 );
+
+/* Exploration Columns for Sorting */
+
+NumColumns = 10;
+
+Column0 = fOpen;
+Column1 = fOpenCond;
+Column2 = fStopLoss;
+
+Column0Name = "Open";
+Column1Name = "OpenCond";
+Column2Name = "StopLoss";
+
+Column0Format = 1.2;
+Column1Format = 1.2;
+Column2Format = 1.2;
+
+Filter = bbTopSell == 1;
+
+Buy = 0;
+Sell = bbTopSell>0;

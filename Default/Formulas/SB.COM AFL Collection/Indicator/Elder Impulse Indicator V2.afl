@@ -1,0 +1,175 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Elder Impulse Indicator V2
+//  Author/Uploader: Lal 
+//  E-mail:          
+//  Date/Time Added: 2006-02-09 17:33:09
+//  Origin:          Elder's Come Into My Trading Room
+//  Keywords:        Elder Impulse
+//  Level:           medium
+//  Flags:           exploration,indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=585
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=585
+//
+//------------------------------------------------------------------------------
+//
+//  Elder's Impulse Indicator with exploration
+//
+//------------------------------------------------------------------------------
+
+_SECTION_BEGIN("Elder Impulse");
+/**************************************************************************
+Name		:	Elder Impulse Indicator
+Coded by	:	Lal
+Date		:	28.10.2005
+Note		: 	Please refer to Elder's "Come Into my Trading Room"
+			for full details 
+
+
+Update	:	19.Jan.2006
+		Added Option to allow bars to be Colored as per Impulse
+
+		Added explorer section to display Impulse Status
+		along with Weekly AND Monthly Trends.
+
+		20. Jan.2006
+		Added ability to flexibly locate Weekly and Monthly 
+		Ribbons
+
+		9.Feb.2006
+		Added option for use of TEMA and JMA 
+		Added option to allow standard MACD params 
+******************************************************************************/
+
+EnableTextOutput(False);
+
+// User-defined parameter for EMA periods
+
+EMA_Type		= Param("EMA-1, TEMA-2, JMA-3", 2, 1, 3, 1);
+EMA_prds 		= Param("EMA_periods", 7, 1, 30, 1);
+Std_MACD		= Param("Standard MACD? No-0, Yes-1", 1, 0, 1, 1);
+Plot_fashion	= Param("Bar+Arrows-1, Impulse  Bars-2", 2, 1, 2, 1);
+
+
+// Allow user to define Weekly and Monthly Ribbon Location and Height
+WR_P1 = Param("Weekly Ribbon Location", -10.5, -1000, 1000, 0.1);
+WR_P2 = Param("Weekly Ribbon Height", 366.5, -0.001, 500, 0.1);
+
+MR_P1 = Param("Monthly Ribbon Location", 5.2, -1000, 1000, 0.1);
+MR_P2 = Param("Monthly Ribbon Height", 199, -0.001, 500, 0.1);
+
+
+// Compute EMA and MACD Histogram
+if(EMA_Type == 1)
+{
+	DayEMA	= EMA(Close, EMA_prds);
+}
+if (EMA_Type == 2)
+{
+	DayEMA	= TEMA(Close, EMA_prds);
+}
+
+if(EMA_Type == 3)
+{
+	// Line below to be used with Jurik JMA
+	// DayEMA = JurikJMA(C, EMA_Prds);
+}
+
+Histogram	= MACD() - Signal();
+
+// Determine if we have an Impulse UP, DOWN or None
+Impulse_Up		=	DayEMA > Ref(DayEMA, -1) AND Histogram > Ref(Histogram, -1);
+Impulse_Down	=	DayEMA < Ref(DayEMA, -1) AND Histogram < Ref(Histogram, -1);   
+Impulse_None		=	(NOT Impulse_UP) AND (NOT Impulse_Down);
+
+// Compute Weekly MACD and determine whether rising or falling
+// Note: uses "non-standard"  parameters!
+TimeFrameSet(inWeekly);
+
+if (Std_MACD == 0)
+{
+MACD_val		=	MACD(5, 8);
+Signal_val		=	Signal(5, 8, 5);
+}
+else
+{
+MACD_val		=	MACD(12, 26);
+Signal_val		=	Signal(12, 26, 9);
+}
+
+Hist_in_w		=	MACD_val - Signal_val;
+
+wh_rising = Hist_in_w > Ref(Hist_in_w, -1);
+wh_falling = Hist_in_w < Ref(Hist_in_w, -1);
+
+TimeFrameRestore();
+
+// Now get Monthly MACD Histogram....
+TimeFrameSet(inMonthly);
+MACD_val		=	MACD(5, 8);
+Signal_val		=	Signal(5, 8, 5);
+Hist_in_m		=	MACD_val - Signal_val;
+
+mh_rising = Hist_in_m > Ref(Hist_in_m, -1);
+mh_falling = Hist_in_m < Ref(Hist_in_m, -1);
+
+TimeFrameRestore();
+
+wh_rising 		= TimeFrameExpand( wh_rising, inWeekly, expandLast ); 
+wh_falling 		= TimeFrameExpand( wh_falling, inWeekly, expandLast); 
+mh_rising 	= TimeFrameExpand(mh_rising, inMonthly, expandLast);
+mh_falling 	= TimeFrameExpand(mh_falling, inMonthly, expandLast);
+
+kol 	= IIf( wh_rising, colorGreen,  IIf(wh_falling, colorRed, colorLightGrey));
+mkol 	= IIf( mh_rising, colorBlue,  IIf(mh_falling, colorYellow, colorLightGrey));
+
+// Plot them all!
+if (Plot_fashion == 1)
+{
+	Plot(Close, "Close", colorTeal, styleBar);
+	PlotShapes(shapeUpArrow * Impulse_Up, colorBlue, 0, Low, -12);
+	PlotShapes(shapeDownArrow * Impulse_Down, colorRed, 0, High, -12);
+	PlotShapes(shapeSmallCircle * Impulse_None, colorWhite, 0, High, 5);
+}
+else
+{
+	bar_kol	=	IIf(impulse_UP, colorBlue, IIf(impulse_Down, colorRed, colorWhite));
+	Plot(C, "Close", bar_kol, styleBar);
+}
+
+Plot(10, "ribbon", kol, styleOwnScale|styleArea|styleNoLabel, WR_P1, WR_P2);	// Weekly trend
+Plot(10, "ribbon", mkol, styleOwnScale|styleArea|styleNoLabel, MR_P1, MR_P2);	// Monthly Trend
+
+// Explorer Section
+// Determine if Impulse status is bullish, neutral or bearish.  Display as Text Column.
+Impulse_State		=	WriteIf(Impulse_Up, "Bulllish", WriteIf(Impulse_Down, "Bearish", "Neutral"));
+
+// Set the background color for Impulse Status Column
+Impulse_Col		=	IIf(Impulse_Up, colorGreen, IIf(Impulse_Down, colorRed, colorLightGrey));
+
+// Determine Weekly Trend. Display as Text Column
+Weekly_Trend		=	WriteIf(wh_rising, "Rising", WriteIf(wh_falling, "Falling", "Flat!"));
+Weekly_Col		=	IIf(wh_rising, colorGreen, IIf(wh_falling, colorRed, colorLightGrey));
+
+// Determine Monthly Trend. Display as Text Column
+Monthly_Trend	=	WriteIf(mh_rising, "Rising", WriteIf(mh_falling, "Falling", "Flat!"));
+Monthly_Col		=	IIf(mh_rising, colorGreen, IIf(mh_falling, colorRed, colorLightGrey));
+
+// Determine how many bars has the current state existed
+bars_in_bull	=	Min(BarsSince(impulse_none), BarsSince(impulse_down));
+bars_in_bear	=	Min(BarsSince(impulse_up), BarsSince(impulse_none));
+bars_in_neut	=	Min(BarsSince(impulse_down), BarsSince(impulse_up));
+
+// Set a single variable to show number of bars in current state depending upon 
+// actual Impulse Status - Bullish, Bearish or Neutral
+bars_in_state	=	IIf(Impulse_Up, bars_in_bull, IIf(Impulse_down, bars_in_bear, bars_in_neut));
+
+// Columns for display in Explorer 
+AddTextColumn(Impulse_State, "Impulse Status", 1, colorWhite, Impulse_Col);
+AddColumn(bars_in_state, "Bars in this state", 1, colorWhite, Impulse_col);
+AddTextColumn(Weekly_Trend, "Weekly Trend", 1, colorWhite, Weekly_Col);
+AddTextColumn(Monthly_Trend, "Monthly Trend", 1, colorWhite, Monthly_Col);
+
+Filter = 1;
+
+_SECTION_END();

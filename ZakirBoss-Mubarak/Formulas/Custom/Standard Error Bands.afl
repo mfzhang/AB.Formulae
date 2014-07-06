@@ -1,0 +1,88 @@
+EnableScript("vbscript");
+
+<%
+
+function STEBandTop(V,n,d)
+dim result()
+redim result(UBound(V))
+q=EP(V,n)
+r=DV(V,n,d)
+
+for i=0 to UBound(V)
+result(i)=q(i)+r(i)
+next
+STEBandTop=result
+end function
+
+function STEBandBot(V,n,d)
+dim result()
+redim result(UBound(V))
+q=EP(V,n)
+r=DV(V,n,d)
+
+for i=0 to UBound(V)
+result(i)=q(i)-r(i)
+next
+STEBandBot=result
+end function
+
+function EP(V,n)
+Dim endpoint()
+redim endpoint(UBound(V))
+for i=0 to n-1
+x=x+(i+1)
+y=y+V(i)
+x2=x2+(i+1)^2
+xy=xy+(i+1)*V(i)
+endpoint(i)=V(i)
+next
+
+ya=y/n
+xa=x/n
+
+for i=n to UBound(V)
+x=x+n
+y=y+V(i)-V(i-n)
+x2=x2+(i+1)^2-(i-n+1)^2
+xy=xy+(i+1)*V(i)-(i-n+1)*V(i-n)
+ya=(ya*n+V(i)-V(i-n))/n
+xa=x/n
+t=(n*xy-x*y)/(n*x2-x^2)
+endpoint(i)=ya+t*(i-xa)
+next
+EP=endpoint
+end function
+
+function DV(V,n,d)
+Dim dev()
+redim dev(UBound(V))
+for i=0 to n-1
+x=x+(i+1)
+y=y+V(i)
+y2=y2+V(i)^2
+x2=x2+(i+1)^2
+xy=xy+(i+1)*V(i)
+dev(i)=0
+next
+
+for i=n to UBound(V)
+x=x+n
+y=y+V(i)-V(i-n)
+y2=y2+V(i)^2-V(i-n)^2
+x2=x2+(i+1)^2-(i-n+1)^2
+xy=xy+(i+1)*V(i)-(i-n+1)*V(i-n)
+t=xy-x*y/n
+dev(i)=d*sqr(((y2-y^2/n)-t^2/(x2-x^2/n))/(n-2))
+next
+DV=dev
+end function
+
+%>
+
+script=GetScriptObject();
+Graph0=script.STEBandTop(C,30,2);
+Graph1=C;
+Graph2=script.STEBandBot(C,30,2);
+Graph0Style = 1;
+Graph1Style = 1;
+Graph2Style = 1;

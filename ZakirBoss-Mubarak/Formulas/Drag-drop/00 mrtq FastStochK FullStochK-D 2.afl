@@ -1,0 +1,102 @@
+_SECTION_BEGIN("FastStoch FullStochK");
+/*FastStoch%KFullStoch%K%D
+Originally Developed by George C. Lane
+Modified by Abdulkareem
+For reference, see;
+http://stockcharts.com/education/What/IndicatorAnalysis/indic_stochasticOscillator.html
+or,
+http://www.aspenres.com/Website/comstock/help/aspenStochastics.html
+Values about at OR above the Red line show overbought,
+AND about at OR below the Green line show oversold.
+where x is the first parameter, y is the second parameter
+and (in the case of Full stochastics), z is the third parameter.
+ In the case of Fast and Slow Stochastics,
+ x is typically 14 and y is usually set to 3.
+ The formula could be plotted with three lines,
+ Hence 14-3-3  or 14-5-3 or 14-3-5
+%K (fast)
+%K (full) = y-day SMA of %K (fast) 
+%D (full) = z-day SMA of %K (full)
+or just the usual 2 lines,
+%K (full) = y-day SMA of %K (fast) 
+%D (full) = z-day SMA of %K (full)
+*/
+pds = Param("Periods",10,2,20); /*Periods */
+/*pds = Optimize("pds",13,2,20,1); */
+
+slw = Param("Slow StochK",3,1,14); ; /*Slowing for Full Stoch%K*/
+/*slw = Optimize("slw",3,1,14,1); */
+
+slwd = Param("Slow StochD",3,1,14); /*Slowing for Full Stoch%D*/
+/*slwd = Optimize("slwd",3,1,14,1); */
+
+ob = Param("Overbought",83,65,88); /*Overbought */
+/*ob = Optimize("ob",83,65,88,1); */
+
+os = Param("Oversold",24,20,50); /*Oversold */
+/*os = Optimize("os",24,20,50,1); */
+
+FSK = 100*(C-LLV(L,pds))/(HHV(H,pds)-LLV(L,pds)); // FASTSTOCHK
+
+FLSK = MA( FSK, slw ); // FULLSTOCHK
+
+FLSD = MA( FLSK, slwd ); // FULLSTOCHD
+
+
+Midlimit=Param("Mid Limit",50,30,100);
+
+
+
+MaxGraph = 6;
+Graph0 = FSK;
+Graph0Color = ParamColor("Fast K",colorDarkGrey);
+Graph1 = FLSK;
+Graph1Color = ParamColor("Full K",colorOrange);
+Graph2 = FLSD;
+Graph2Color =  ParamColor("Full D",colorWhite);
+Graph0Style = ParamStyle("FastStoch K",styleThick|stylehidden ,maskAll);
+Graph1Style = ParamStyle("FullStoch K",styleThick,maskAll);
+Graph2Style = ParamStyle("FullStoch D",styleThick,maskAll);
+Graph3 = FLSD;
+Graph3BarColor =
+IIf (Graph3 > ob, colorRed,
+IIf (Graph3 < os, colorBrightGreen, colorGrey40));
+Graph4 = ob;
+Graph4Color = 4;
+Graph5 = os;
+Graph5Color = colorBrightGreen;
+Graph3Style =ParamStyle("BAR 1",styleHistogram | styleThick,maskHistogram );
+Graph4Style = Graph5Style =1;// ParamStyle("style");
+
+Plot(Midlimit,"",ParamColor("Mid color",colorDarkBlue),ParamStyle("MidStyle",styleLine|styleDashed,maskAll));
+
+Title = Name()+" - "+FullName()+
+EncodeColor(Graph0Color)+"   FastStochK="+
+StrFormat("%1.4g ",fsk)+EncodeColor(Graph1Color)+
+"  FullStochK="+StrFormat("%1.4g ",flsk)+
+EncodeColor(Graph2Color)+"  FullStochD="+
+StrFormat("%1.4g ",flsd);
+
+whengoup = FLSD < os AND Cross(FSK,os) AND FLSK >= Ref(FLSK,-1) AND FLSD >= Ref(FLSD,-1) OR  Cross(FLSD,os) AND //...next line
+FSK >= Ref(FSK,-1) AND FLSK >= Ref(FLSK,-1) ;
+
+whengodown = IIf(BarsSince(Cross(os,FSK))==1 AND FLSK < os ,1,0) OR Cross(os,FSK) AND FLSK < Ref(FLSK,-1) OR FLSK < ob //...next line
+AND FLSK > os AND FLSK <= Ref(FLSK,-1) OR FSK > ob AND FLSK > ob AND FLSD > ob AND FSK < Ref(FSK,-1) AND FLSK < Ref(FLSK,-1) //...next line
+AND FLSD <= Ref(FLSD,-1) OR FSK > ob AND FLSK > ob AND FLSD > ob AND Cross(ob,FLSK);
+
+Buy = whengoup;
+Sell = whengodown;
+
+Buy = ExRem(Buy,Sell);
+Sell = ExRem(Sell,Buy);
+
+PlotShapes (IIf(Buy, shapeSmallCircle, shapeNone) ,colorBrightGreen, layer = 0, yposition = -5, offset = 1 );
+//PlotShapes (IIf(Sell, shapeSmallCircle, shapeNone) ,colorRed, layer = 0, yposition = 101, offset = 1 );
+
+_N(Title="");
+_SECTION_END();
+
+_SECTION_BEGIN("Graphics");
+GrpPrm=Param("Graphic Space",-2,-10,10);
+GraphXSpace=GrpPrm;
+_SECTION_END();

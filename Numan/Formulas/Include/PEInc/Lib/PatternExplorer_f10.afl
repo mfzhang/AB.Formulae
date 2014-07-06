@@ -1,0 +1,55 @@
+//|-----------------------------------------------------------------------------------------
+//|PatternExplorer.com - PatternExplorer_f10
+//|Copyright © 2007, PatternExplorer.com
+//|http://www.PatternExplorer.com
+//|e-mail: support@PatternExplorer.com
+//|-----------------------------------------------------------------------------------------
+IV_periods = 50;
+Middle_price = L + ( ( H - L ) / 2 );
+IV = ( ( H / Middle_price ) - 1 ) * 100;
+IV_AVG = MA( IV, IV_periods );
+per = LastValue( Sensitivity * LastValue( 0.3 * IV_AVG ) );
+x = Cum( 1 );
+Range = 0.01;
+PS = TroughBars( L, per, 1 ) == 0;
+xa = LastValue( ValueWhen( PS, x, 1 ) );
+Ya = LastValue( ValueWhen( PS, L, 1 ) );
+PR = PeakBars( H, per, 1 ) == 0;
+xb = LastValue( ValueWhen( PR, x, 1 ) );
+Yb = LastValue( ValueWhen( PR, H, 1 ) );
+UP = xb > xa;
+DN = xa > xb;
+SwingLow = IIf( UP, Ya, Yb );
+SwingHigh = IIf( UP, Yb, Ya );
+Level_1 = IIf( L1_switch, IIf( UP, yb - ( yb - ya ) * ( Level_1p / 100 ), IIf( DN, ya + ( yb - ya ) * ( Level_1p / 100 ), -1e10 ) ), -1e10 );
+Level_2 = IIf( L2_switch, IIf( UP, yb - ( yb - ya ) * ( Level_2p / 100 ), IIf( DN, ya + ( yb - ya ) * ( Level_2p / 100 ), -1e10 ) ), -1e10 );
+Level_3 = IIf( L3_switch, IIf( UP, yb - ( yb - ya ) * ( Level_3p / 100 ), IIf( DN, ya + ( yb - ya ) * ( Level_3p / 100 ), -1e10 ) ), -1e10 );
+Level_4 = IIf( L4_switch, IIf( UP, yb - ( yb - ya ) * ( Level_4p / 100 ), IIf( DN, ya + ( yb - ya ) * ( Level_4p / 100 ), -1e10 ) ), -1e10 );
+Level_5 = IIf( L5_switch, IIf( UP, yb - ( yb - ya ) * ( Level_5p / 100 ), IIf( DN, ya + ( yb - ya ) * ( Level_5p / 100 ), -1e10 ) ), -1e10 );
+Level_6 = IIf( L6_switch, IIf( UP, yb - ( yb - ya ) * ( Level_6p / 100 ), IIf( DN, ya + ( yb - ya ) * ( Level_6p / 100 ), -1e10 ) ), -1e10 );
+Level_7 = IIf( L7_switch, IIf( UP, yb - ( yb - ya ) * ( Level_7p / 100 ), IIf( DN, ya + ( yb - ya ) * ( Level_7p / 100 ), -1e10 ) ), -1e10 );
+CurrentRT_EXT = IIf( UP, -100 * ( yb - C ) / ( yb - ya ), 100 * ( C - ya ) / ( yb - ya ) );
+MaxRT_EXT = IIf( UP, -100 * ( yb - L ) / ( yb - ya ), 100 * ( H - ya ) / ( yb - ya ) );
+InZone = C<yb & C>ya;
+Distance = 0.5 * ATR( 14 );
+Sup_break = Cross( Ya, C ) & X > Xa;
+Sup_pricejustabove = L < Ya + Distance & L > Ya & X > Xa;
+Sup_confirmed = L <= Ya & C > Ya & X > Xa;
+Res_break = Cross( C, Yb ) & X > Xb;
+Res_pricejustbelow = H > Yb - Distance & H<Yb & X>Xb;
+Res_confirmed = H >= Yb & C<Yb & X>Xb;
+SupSignals = Sup_break | Sup_pricejustabove | Sup_confirmed;
+ResSignals = Res_break | Res_pricejustbelow | Res_confirmed;
+BS = Sup_confirmed OR Res_break;
+SS = Res_confirmed OR Sup_break;
+AnZ = ya == 0  OR  yb == 0  OR  Level_1 == 0  OR  Level_2 == 0  OR  Level_3 == 0  OR  Level_4 == 0  OR  Level_5 == 0;
+xab = IIf( xb > xa, xb, xa );
+SLcol = IIf( Colorstyle, SwingLow_color, IIf( LastValue( C ) < ya, Color_RL, Color_SL ) );
+SHcol = IIf( Colorstyle, SwingHigh_color, IIf( LastValue( C ) < yb, Color_RL, Color_SL ) );
+L1col = IIf( Colorstyle, L1_color, IIf( LastValue( C ) < Level_1, Color_RL, Color_SL ) );
+L2col = IIf( Colorstyle, L2_color, IIf( LastValue( C ) < Level_2, Color_RL, Color_SL ) );
+L3col = IIf( Colorstyle, L3_color, IIf( LastValue( C ) < Level_3, Color_RL, Color_SL ) );
+L4col = IIf( Colorstyle, L4_color, IIf( LastValue( C ) < Level_4, Color_RL, Color_SL ) );
+L5col = IIf( Colorstyle, L5_color, IIf( LastValue( C ) < Level_5, Color_RL, Color_SL ) );
+L6col = IIf( Colorstyle, L6_color, IIf( LastValue( C ) < Level_6, Color_RL, Color_SL ) );
+L7col = IIf( Colorstyle, L7_color, IIf( LastValue( C ) < Level_7, Color_RL, Color_SL ) );

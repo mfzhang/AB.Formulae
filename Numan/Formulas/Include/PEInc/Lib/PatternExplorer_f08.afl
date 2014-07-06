@@ -1,0 +1,62 @@
+//|-----------------------------------------------------------------------------------------
+//|PatternExplorer.com - PatternExplorer_f08
+//|Copyright © 2007, PatternExplorer.com
+//|http://www.PatternExplorer.com
+//|e-mail: support@PatternExplorer.com
+//|-----------------------------------------------------------------------------------------
+RS = L;
+Tickers = C;
+
+if ( GroupID() == 253 AND StrLeft( Name(), 2 ) == "~i" )
+{
+    iRS = L;
+    iFT = C;
+    sRS = Null;
+    sFT = Null;
+}
+else
+    if ( GroupID() == 253 AND StrLeft( Name(), 2 ) == "~s" )
+    {
+        iRS = Null;
+        iFT = Null;
+        sRS = L;
+        sFT = C;
+    }
+    else
+    {
+        iRS = Foreign( "~i" + WriteVal( IndustryID(), 1.0 ) + " - " + IndustryID( 1 ), "L" );
+        iFT = Foreign( "~i" + WriteVal( IndustryID(), 1.0 ) + " - " + IndustryID( 1 ), "C" );
+        sRS = Foreign( "~s" + WriteVal( SectorID(), 1.0 ) + " - " + SectorID( 1 ), "L" );
+        sFT = Foreign( "~s" + WriteVal( SectorID(), 1.0 ) + " - " + SectorID( 1 ), "C" );
+    }
+
+iRSavg = iRS / iFT;
+
+sRSavg = sRS / sFT;
+SymF =  IIf( StrLeft( Name(), 1 ) == "~", StrLeft( Name(), 2 ) == "~s" OR StrLeft( Name(), 2 ) == "~i", 1 );
+SymFSI =  IIf( StrLeft( Name(), 1 ) == "~", StrLeft( Name(), 3 ) != "~s0" AND StrLeft( Name(), 3 ) != "~i0", Null );
+
+if ( GroupID() == 253 )
+{
+    if ( StrFind( Name(), "~s" ) )
+    {
+        sector = Name();
+        industry = "";
+    }
+    else
+        if ( StrFind( Name(), "~i" ) )
+        {
+            sector = "";
+            industry = Name();
+        }
+        else
+        {
+            sector = "";
+            industry = "";
+        }
+}
+else
+{
+    sector = SectorID( 1 );
+    industry = IndustryID( 1 );
+}

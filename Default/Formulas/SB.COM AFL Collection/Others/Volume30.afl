@@ -1,0 +1,3 @@
+Filter = Volume > 1.3 * EMA( Volume, 15 );
+AddColumn(Close,"Close",1.4);
+AddColumn(Volume,"Volume",1.0);

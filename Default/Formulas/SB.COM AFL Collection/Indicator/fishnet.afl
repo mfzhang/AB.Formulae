@@ -1,0 +1,26 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    fishnet
+//  Author/Uploader: wolfgang mrazek 
+//  E-mail:          wolfgangm@yahoo.com
+//  Date/Time Added: 2004-03-29 04:23:35
+//  Origin:          Sweden
+//  Keywords:        fishnet ma
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=346
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=346
+//
+//------------------------------------------------------------------------------
+//
+//  This is a simle fishnet. I'm surprised that no one else has added this but
+//  maybe coz it's so simple... This one looks very "sticky" in chart. Maybe
+//  you can show a better one?
+//
+//------------------------------------------------------------------------------
+
+for (i=1; i<150;i++) {
+
+Plot(MA(Close,i),"",colorBrightGreen,styleLine);
+
+}

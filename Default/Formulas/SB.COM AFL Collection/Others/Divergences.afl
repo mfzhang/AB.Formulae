@@ -1,0 +1,93 @@
+MaxGraph=5;
+/*BULLISH STOCHASTIC DIVERGENCE, DD==30*/
+ST33=StochD();
+TR1=LLVBars(ST33,4);
+TR2=IIf(ST33<30 AND TR1>0 AND Ref(TR1,-1)==0,Ref(ST33,-1),0);
+TRC=IIf(TR2>0,C,0);
+vs=ValueWhen(tr2, Ref(st33,-1), 1);
+dvs=vs-Ref(vs,-1);
+vc=ValueWhen(trc, LLV(C,3), 1);
+dvc=vc-Ref(vc,-1);
+diver=IIf(dvs>0 AND dvc<0,30,0);
+DAS=BarsSince(Ref(TR2,-1)>0);
+DD=IIf(DAS<20 AND C>=Ref(C,-1),DIVER,0);
+Graph0=DD;
+Graph0BarColor=4;
+STBULL=DD==30;
+
+/*BULLISH RELATIVE SLOPE DIVERGENCE, DDDR==20*/
+D1=10;
+KUP=EMA((H+L+C)/3,D1)+EMA(H-L,D1);
+KDOWN=EMA((H+L+C)/3,D1)-EMA(H-L,D1);
+K=EMA((H+L+C)/3,D1);
+S1=2*(K-Ref(K,-1))/(K+Ref(K,-1));
+T33=10+100*EMA(S1,3);
+R1=LLVBars(T33,4);
+R2=IIf(T33<9 AND R1>0 AND Ref(R1,-1)==0,Ref(T33,-1),0);
+RC=IIf(R2>0,C,0);
+vsR=ValueWhen(r2, Ref(t33,-1), 1);
+dvsR=vsR-Ref(vsR,-1);
+vcR=ValueWhen(rc, LLV(C,3), 1);
+dvcR=vcR-Ref(vcR,-1);
+diverR=IIf(dvsR>0 AND dvcR<0,20,0);
+DASR=BarsSince(Ref(R2,-1)>0);
+dddR=IIf(DASR<20 ,DIVERR,0);
+Graph1=DDDR;
+Graph1BarColor=7;
+RSBULL=DDDR==20;
+
+/*BEARISH STOCHASTIC DIVERGENCE, BDDD==90*/
+
+BTR1=HHVBars(ST33,4);
+BTR2=IIf(ST33>70 AND BTR1>0 AND Ref(BTR1,-1)==0,Ref(ST33,-1),0);
+BTRC=IIf(BTR2>0,C,0);
+Bvs=ValueWhen(Btr2, Ref(st33,-1), 1);
+Bdvs=Bvs-Ref(Bvs,-1);
+Bvc=ValueWhen(Btrc, HHV(H,3), 1);
+Bdvc=Bvc-Ref(Bvc,-1);
+Bdiver=IIf(Bdvs<0 AND Bdvc>0,90,0);
+BDAS=BarsSince(Ref(BTR2,-1)>0);
+Bddd=IIf(BDAS<20 AND C<=Ref(C,-1),BDIVER,0);
+Graph2=BDDD;
+Graph2BarColor=4;
+STBEAR=BDDD==90;
+
+/*BEARISH RELATIVE SLOPE DIVERGENCE, EDDDR==80*/
+
+ER1=HHVBars(T33,4);
+ER2=IIf(T33>11 AND ER1>0 AND Ref(ER1,-1)==0,Ref(T33,-1),0);
+ERC=IIf(ER2>0,C,0);
+EvsR=ValueWhen(Er2, Ref(t33,-1), 1);
+EdvsR=EvsR-Ref(EvsR,-1);
+EvcR=ValueWhen(Erc, HHV(H,3), 1);
+EdvcR=EvcR-Ref(EvcR,-1);
+EdiverR=IIf(EdvsR<0 AND EdvcR>0,80,0);
+EDASR=BarsSince(Ref(ER2,-1)>0);
+EdddR=IIf(EDASR<20,EDIVERR,0);
+Graph3=EDDDR;
+Graph3Style=2;
+Graph3BarColor=7;
+Graph4=45;
+Graph4Style=8;
+RSBEAR=EDDDR==80;
+
+Filter= STBULL OR STBEAR OR RSBULL OR RSBEAR;
+NumColumns=4;
+Column0=RSBEAR;
+Column0Name="RS BEAR";
+Column1=STBEAR;
+Column1Name="ST BEAR";
+Column2=RSBULL;
+Column2Name="RS BULL";
+Column3= STBULL;
+Column3Name="ST BULL";
+Column0Format=1.0;Column1Format=1.0;
+Column2Format=1.0;Column3Format=1.0;
+Cover=RSBULL;
+Buy=STBULL;
+Short=RSBEAR;
+Sell=STBEAR;
+/*The only purpose of BUY, SELL, SHORT and COVER is
+to see the indicating arrows and are not suggestions to
+take some action. */
+

@@ -1,0 +1,42 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    MACD Histogram - Change in Direction
+//  Author/Uploader: crash 
+//  E-mail:          crashandburn59@hotmail.com
+//  Date/Time Added: 2006-05-03 07:33:26
+//  Origin:          
+//  Keywords:        
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=618
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=618
+//
+//------------------------------------------------------------------------------
+//
+//  This indicator shows the value of tomorrow's Closing Price in order for the
+//  slope of the MACD Histogram to change Direction. (ie. changing from a
+//  positive slope to a negative slope or changing from a negative slope to a
+//  positive slope)
+//
+//------------------------------------------------------------------------------
+
+_SECTION_BEGIN("MACD");
+GraphXSpace = 8;
+r1 = Param( "Fast avg", 12, 2, 200, 1 );
+r2 = Param( "Slow avg", 26, 2, 200, 1 );
+r3 = Param( "Signal avg", 9, 2, 200, 1 );
+
+mm = MACD(r1, r2);
+ms = Signal(r1, r2, r3);
+
+f1 = ((r3+1)*MM-2*MS)/(r3-1);
+f2 = EMA(C,r1)*(r1-1)/(r1+1);
+f3 = EMA(C,r2)*(r2-1)/(r2+1);
+f4 = 2/(r1+1) - 2/(r2+1);
+
+dcv = (f1-f2+f3)/ f4;
+
+Plot(dcv,"",4);
+PlotOHLC(O,H,L,C,"",1,styleCandle);
+Title = Name() + "  -  " + FullName() + "  -  " + Date() + "  -  Close = " + WriteVal(C,0.3) + "  -  DCV = " + WriteVal(dcv,0.3);
+_SECTION_END();

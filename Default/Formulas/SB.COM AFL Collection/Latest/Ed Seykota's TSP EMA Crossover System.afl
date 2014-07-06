@@ -1,0 +1,163 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Ed Seykota's TSP: EMA Crossover System
+//  Author/Uploader: Mark H. 
+//  E-mail:          
+//  Date/Time Added: 2006-09-15 11:12:58
+//  Origin:          
+//  Keywords:        Seykota EMA Crossover
+//  Level:           basic
+//  Flags:           system
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=708
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=708
+//
+//------------------------------------------------------------------------------
+//
+//  This is the code for the EMA Crossover System of Ed Seykota's Trading
+//  System Project at
+//
+//  http://www.seykota.com/tribe/TSP/index.htm.
+//
+//  I have tested it and got identical results to the dime compared to those at
+//  Seykota's website. I can't get it identical to cents due to rounding
+//  errors.
+//
+//------------------------------------------------------------------------------
+
+/*==============================================================================
+	Global Settings
+==============================================================================*/
+SetOption("InitialEquity", 1000000);
+SetOption("MinShares", 50);
+SetOption("NoDefaultColumns", True );
+SetOption("CommissionMode", 2); //$$ per trade
+SetOption("CommissionAmount", 0); // commission is accounted for in skid
+SetOption("MarginRequirement", 10);
+SetOption("UsePrevBarEquityForPosSizing", True);
+SetOption("UseCustomBacktestProc", True );
+
+SetTradeDelays( 1, 1, 1, 1 );
+
+/*==============================================================================
+	User-defined Functions
+==============================================================================*/
+function EMA0(A, p)
+{
+	r[0] = a[0];
+	ep = 2/(p+1);
+	for(i = 1; i < BarCount; i++)
+	{
+		r[i] = r[i-1] + (a[i] - r[i-1]) * ep;
+	}
+	return r;
+}
+
+function OptimizeNot(a1, a2, a3, a4, a5)
+{
+	return a2;
+}
+
+/*==============================================================================
+	Entry and Exit Rules
+==============================================================================*/
+tr = Max(H-L, Max(abs(H-Ref(C, -1)), abs(Ref(C, -1)-L)));
+tr[0] = H[0] - L[0];
+
+fast = EMA0(C, Optimize("FastEMA", 15, 20, 140, 5));
+slow = EMA0(C, Optimize("SlowEMA", 150, 150, 1000, 10));
+Buy = Cross(fast, slow);
+Sell = Cross(slow, fast);
+Buy[1] = 0; // to avoid false signal at the beginning
+//ApplyStop(stopTypeLoss, stopModePoint, ATR_multi*Ref(ATR0, -1), True, True );
+
+/*==============================================================================
+	Skid of Executions
+==============================================================================*/
+BuyPrice = (H+O)/2;
+SellPrice = (L+O)/2;
+
+/*==============================================================================
+	Position Sizing
+==============================================================================*/
+ATR_multi = OptimizeNot("ATP Multi", 5, 1, 9, 1);
+ATR0 = EMA0(tr, 20);
+
+Risk_Per_Share = Ref(ATR0, -1) * ATR_multi;
+Heat = OptimizeNot("Heat", 0.10, 0.01, 0.50, 0.01);
+
+PosSizeFactor = Heat / Risk_Per_Share; 
+// the real position size value is calculated within CBT
+SetPositionSize(PosSizeFactor, spsValue);
+
+/*==============================================================================
+	Automatic Analysis Action Options
+==============================================================================*/
+AAAction = Status("action");
+if(AAAction == actionIndicator)
+{
+	Plot(fast, "FastEMA", colorRed);
+	Plot(slow, "SlowEMA", colorYellow);
+}
+else if(AAAction == actionExplore)
+{
+	Filter = 1;
+	AddColumn( DateTime(), "Date", formatDateTime ); 
+	//AddColumn(DayOfWeek(), "DayOfWeek", 1);
+	AddColumn(O, "Open");
+	AddColumn(H, "High");
+	AddColumn(L, "Low");
+	AddColumn(C, "Close");
+	//AddColumn(Avg, "AVG");
+	AddColumn(fast, "FastEMA", 1.3);
+	AddColumn(slow, "SlowEMA", 1.3);
+	AddColumn(ATR0, "ATR", 1.3);
+	//AddColumn(Risk_Per_Share, "Risk/Share");
+	AddColumn(IIf(Buy, 111, IIf(Sell, 222, 0)) , "Buy1Sell2", 1);
+	AddColumn(PosSize, "PosSize%Eq");
+	AddColumn(Equity() , "Equity");
+}	
+else if(AAAction == actionPortfolio)
+{
+	bo = GetBacktesterObject();
+	bo.PreProcess(); // Initialize backtester
+	for( bar=0; bar < BarCount; bar++)
+	{
+		eq =  bo.Equity;
+		for ( sig=bo.GetFirstSignal(bar); sig; sig=bo.GetNextSignal(bar) )
+		{
+			if (sig.isExit())
+			{
+            	if(bo.ExitTrade(bar,sig.symbol,sig.Price))
+				{ 
+					_TRACE("EXIT: " + sig.symbol + "@" + sig.Price);
+				}
+			}
+		}
+
+        // update stats after closing trades
+     	bo.UpdateStats(bar, 1 );
+       
+     	for ( sig=bo.GetFirstSignal(bar); sig; sig=bo.GetNextSignal(bar)) 
+     	{ 
+			if (sig.isEntry()) 
+			{ 
+				// sig.PosSize is passed from Phase I.
+				ps = Round(( eq * sig.PosSize)/250)*250 * sig.Price; 
+
+				if(bo.EnterTrade(bar, sig.symbol, True, sig.Price, ps, sig.PosScore,sig.RoundLotSize)) 
+				{
+					_TRACE("ENTRY: " + sig.symbol + " @" + sig.Price + " PosScore=" + sig.PosScore + " PosSize=" + ps);
+            	}
+			}
+		}
+
+		//bo.HandleStops(bar); // MUST BE PLACED HERE TO WORK FOR N-BAR STOPS (not before enter/exit trades)
+		bo.UpdateStats(bar,1); // MAE/MFE is updated when timeinbar is set to 1.
+		bo.UpdateStats(bar,2);
+   	}
+	bo.PostProcess(); // Finalize backtester
+		
+}
+/*==============================================================================
+	End of Formula
+==============================================================================*/

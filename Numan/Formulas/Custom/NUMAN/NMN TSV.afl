@@ -1,0 +1,5 @@
+// Time segment value
+
+TSV=(Sum( IIf( C > Ref(C,-1), V * ( C-Ref(C,-1) ), IIf( C < Ref(C,-1),-V * ( C-Ref(C,-1) ), 0 ) ), Param("TSV Period", 18, 7,100,1)));
+
+Plot(TSV,"TSV",ParamColor("TSV Color",colorAqua));

@@ -1,0 +1,22 @@
+"MAV's Brain Storm";
+
+_SECTION_BEGIN("RSI");
+Plot (EMA (RSI(7),5), "SmoothRSI", colorRed);
+Plot (EMA (RSI(21),5), "Signal", colorBlue);
+Plot (50, "", colorBlack, styleDashed, styleNoLabel);
+Plot (30, "", colorDarkGreen,  styleNoLabel);
+Plot (70, "", colorDarkGreen,  styleNoLabel);
+
+Buy=Cross( EMA (RSI(7),5), EMA (RSI(21),5)) AND EMA(V,20) >=50000;
+
+Filter =EMA (V, 20) >=50000;
+
+AddColumn(Close,"Close",1.2);
+AddColumn(Volume,"Volume",1.0);
+AddColumn( RSI(), "RSI", 1.2 );
+AddColumn( ROC( Close, 15 ), "ROC(15)", 1.2 );
+AddColumn( MFI(), "MFI", 1.2 );
+AddColumn( OBV(), "OBV", 1.2 );
+AddColumn( CCI(), "CCI", 1.2 );
+AddColumn( Ultimate(), "Ultimate", 1.4 );
+_SECTION_END();

@@ -1,0 +1,32 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Weighted Index
+//  Author/Uploader: Gerard 
+//  E-mail:          gerard_kellett@optusnet.com.au
+//  Date/Time Added: 2005-09-08 04:06:39
+//  Origin:          
+//  Keywords:        Weighted Index AddToComposite
+//  Level:           basic
+//  Flags:           exploration
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=553
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=553
+//
+//------------------------------------------------------------------------------
+//
+//  Creates a weighted index based on a group of tickers using the
+//  AddToComposite function.
+//
+//------------------------------------------------------------------------------
+
+//Select a group of tickers i.e. Apply to/Use Filter/Define - choose a watchlist
+//Click on Scan to create your new index
+AddToComposite((Close*Volume),  "~GMarketIndx", "Avg",atcFlagResetValues = 1);
+
+AddToComposite(Open*((Close*Volume)/Foreign("~GMarketIndx", "Avg")),"~GMarketIndx", "O",atcFlagResetValues = 1);  
+AddToComposite(High*((Close*Volume)/Foreign("~GMarketIndx","Avg")),"~GMarketIndx", "H",atcFlagResetValues = 1);   
+AddToComposite(Low*((Close*Volume)/Foreign("~GMarketIndx","Avg")),"~GMarketIndx", "L",atcFlagResetValues = 1);   
+AddToComposite(Close *((Close*Volume)/Foreign("~GMarketIndx","Avg")),"~GMarketIndx", "C",atcFlagResetValues = 1); 
+AddToComposite(Volume*((Close*Volume)/Foreign("~GMarketIndx","Avg")),"~GMarketIndx", "V",atcFlagResetValues = 1);   
+			
+Buy = 0; // required by scan mode
+	

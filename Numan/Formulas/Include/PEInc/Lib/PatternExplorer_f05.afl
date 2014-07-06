@@ -1,0 +1,50 @@
+//|-----------------------------------------------------------------------------------------
+//|PatternExplorer.com - PatternExplorer_f05
+//|Copyright © 2007, PatternExplorer.com
+//|http://www.PatternExplorer.com
+//|e-mail: support@PatternExplorer.com
+//|-----------------------------------------------------------------------------------------
+Taio = PeTaio( period1, period2 );
+Taio1up = Taio > TrendLevel & Taio > Ref( Taio, -1 );
+Taio1dn = Taio < ( -TrendLevel ) & Taio < Ref( Taio, -1 );
+
+for ( i = 0; i < 10; i++ )
+{
+    if ( StrExtract( List1, i ) == BuySig )
+        BuySignal = i;
+
+    if ( StrExtract( List2, i ) == SellSig )
+        SellSignal = i;
+
+    if ( StrExtract( List1sig2, i ) == ShortSig )
+        ShortSignal = i;
+
+    if ( StrExtract( List2sig2, i ) == CoverSig )
+        CoverSignal = i;
+}
+
+expandmode = IIf( Taio2expandMode, expandLast, expandFirst );
+
+Taio2 = TaioTF2( Multiplier, expandmode );
+Taio2upsig = Taio2upflip AND NOT Ref( Taio2upflip, -1 );
+Taio2dnsig = Taio2dnflip AND NOT Ref( Taio2dnflip, -1 );
+Taio2up = Taio2 >= Ref( Taio2, -multiplier );
+Taio2dn = Taio2 <= Ref( Taio2, -multiplier );
+Top = Ref( Taio, -1 ) == HHV( Taio, 3 );
+TopL = Top AND Ref( Taio, -1 ) > OBOSLevel;
+Valley = Ref( Taio, -1 ) == LLV( Taio, 3 );
+ValleyL = Valley AND Ref( Taio, -1 ) < -OBOSLevel;
+TpVa = IIf( TopL, -1, IIf( ValleyL, 1, 0 ) );
+ZLCn = Cross( 0, Taio );
+ZLCp = Cross( Taio, 0 );
+ZLC = IIf( ZLCp, 1, IIf( ZLCn, -1, Null ) );
+threshold = 5;
+ZLbn = Ref( Taio, -1 ) < threshold AND Ref( Taio, -1 ) > -threshold AND Top;
+ZLbp = Ref( Taio, -1 ) > -threshold AND Ref( Taio, -1 ) < threshold AND Valley;
+ZLB = IIf( ZLBp, 1, IIf( ZLBn, -1, Null ) );
+Overbought = Taio2 > OBOSLevelTF2 AND Taio > OBOSLevel AND IIf( TF2drop, Taio2 < Ref( Taio2, -1 ), 1 );
+Oversold =  Taio2 < -OBOSLevelTF2 AND Taio < -OBOSLevel AND IIf( TF2drop, Taio2 > Ref( Taio2, -1 ), 1 );
+OBOS = IIf( Oversold, 1, IIf( Overbought, -1, Null ) );
+UpperLevelreached = Cross( Taio, TrendLevel );
+LowerLevelreached = Cross( -TrendLevel, Taio );
+TrendLevelreached = IIf( UpperLevelreached, 1, IIf( LowerLevelreached, -1, Null ) );

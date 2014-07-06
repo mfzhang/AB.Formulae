@@ -1,0 +1,216 @@
+// AMA System by Karthikmarar
+// Two adjustable parameter "Buy sensitivity" and "Buy Finetune" provided to adjust entry points.
+// Two adjustable parameter "Sell sensitivity" and "Sell Finetune" provided to adjust Exit points.
+
+_SECTION_BEGIN("Background_Setting"); 
+SetChartBkGradientFill( ParamColor("BgTop", colorBlack), 
+ParamColor("BgBottom", colorBlack),ParamColor("titleblock",colorTeal )); 
+_SECTION_END();
+
+_SECTION_BEGIN("KAMA System");
+
+SetChartOptions(0,chartShowArrows|chartShowDates);
+Title = ("KAMA SYSTEM - " + Name()+"  " + Date() +"  "+Interval(2) +"  "+ EncodeColor(colorLime)+",Open "+Open +" ,High "+H+" ,Low "+L+" ,Close "+C+"
+"+"{{VALUES}}");
+
+
+//{{VALUES}}"+ O+ H+ L+C);
+
+
+//_N(Title =StrFormat("{{Name}} - {{Interval}} {{Date}} Open %g, Hi %g, Lo %g, Close %g (%.1f%%) {{VALUES}}", O, H, L, C, SelectedValue( ROC( C, 1 ) ) ));
+
+
+// Buy adjustments
+bs=Param("BUY Sensitivity",3,2,20,1);
+bf=Param("BUY Finetune",2,0.1,20,0.1);
+// Sell Adjustments
+ss=Param("SELL Sensitivity",3,2,20,1);
+sf=Param("SELL Finetune",1,0.1,20,0.1);
+//stock selection parameters
+MyCL = Param( "CL", 10, 10, 100, 10 );
+MyVK = Param( "VK", 30, 10, 100, 10 );
+MyTL = Param( "TL", 300, 100, 1000, 100 );
+//stock selection
+//TLM = EMA(C*V/100000,100) ;
+//include = C> MyCL AND V/1000> MyVK AND C*V/100000 > MyTL AND TLM > 0.333 * MyTL ; 
+
+// common
+fast = 2/(2+1);
+slow = 2/(30+1);
+//BUY part
+dirb=abs(Close-Ref(Close,-bs));
+volb=Sum(abs(Close-Ref(Close,-1)),bs);
+ERb=dirb/volb;
+scb =( ERb*(fast-slow)+slow)^2; 
+xb = AMA( C, scb ); 
+flb=bf*StDev(xb-Ref(xb,-1),20);
+j=xb-Ref(xb,-3);
+
+
+//SELL part
+dirs=abs(Close-Ref(Close,-ss));
+vols=Sum(abs(Close-Ref(Close,-1)),ss);
+ERs=dirs/vols;
+scs =( ERs*(fast-slow)+slow)^2; 
+xs = AMA( C, scs ); 
+fls=sf*StDev(xs-Ref(xs,-1),20);
+k=Ref(Xs,-3)-Xs;
+
+Buy=Cross(j,flb) ;
+Sell=Cross(k,fls);
+mycolor=IIf(C>xb,colorLime,colorRed);
+Plot( C, "Close", mycolor,styleNoTitle | styleBar|styleThick   ); 
+Plot(xb,"KAMA-BUY",colorYellow,1);
+Plot(xs,"KAMA-SELL",colorOrange,1);
+Buy = ExRem(Buy,Sell);
+Sell = ExRem(Sell,Buy);
+
+shape = Buy * shapeUpArrow +Sell * shapeDownArrow ;
+
+PlotShapes( shape, IIf( Buy, colorGreen, colorYellow ),0, IIf( Buy, Low, High ) );
+
+GraphXSpace = 5;
+dist = 1.5*ATR(20); 
+
+for( i = 0; i < BarCount; i++ ) 
+{ 
+if( Buy[i] ) PlotText( "Buy\n@" + C[ i ], i, L[ i ]-dist[i], colorLime ); 
+if( Sell[i] ) PlotText( "sell\n@" + C[ i ], i, L[ i ]+dist[i], colorRed ); 
+} 
+Filter= Buy OR Sell;
+
+PositionScore=100/C;
+PositionSize = - 20;
+SetBarsRequired(10000, 10000);
+SetFormulaName("KAMA System");
+
+_SECTION_END();
+
+_SECTION_BEGIN("IIR2");
+// IIR2.afl
+//
+// Documentation to describe what the function does.
+// Second order smoother
+// the function statement
+function IIR2( input, f0, f1, f2 )
+// the function body
+{
+result[ 0 ] = input[ 0 ];
+result[ 1 ] = input[ 1 ];
+for( i = 2; i < BarCount; i++ )
+{
+result[i] = f0 * input[i] + f1 * result[i-1] + f2 * result[i-2];
+}
+// the function returns a single value and exits.
+return result;
+}
+// The routine that calls the function.
+SmoothedClose = IIR2(Close, 0.2, 1.4, -0.6 );
+//Plot( Close, "Price", 2, styleCandle );
+Plot( SmoothedClose, "function example", colorRed );
+//Figure 8.1 IIR2
+_SECTION_END();
+
+_SECTION_BEGIN("GSMA");
+SetBarsRequired(100000,0);
+PI = 3.1415926;
+
+function jIIR2( input, f0, f1, f2 ) 
+{ 
+    result[ 0 ] = input[ 0 ]; 
+    result[ 1 ] = input[ 1 ]; 
+
+    for( i = 2; i < BarCount; i++ ) 
+    { 
+       result[ i ] = f0 * input[ i ] + 
+                     f1 * result[ i - 1 ] + 
+                     f2 * result[ i - 2 ]; 
+    } 
+
+   return result; 
+} 
+
+function GSMA( input, Period )
+{
+  N = 0;
+  an = 2 * PI / Period;
+  c0 = b0 = 1;
+  c1 = b1 = b2 = a1 = a2 = gamma1 = 0;
+  beta1 = 2.415 * ( 1- cos( an ) );
+  alpha = -beta1 + sqrt( beta1 ^ 2 + 2 * beta1 );
+  alpha1 = ( cos( an ) + sin( an ) - 1 )/cos( an );
+   {
+    fo = alpha ^ 2;
+    f1 = 2 * ( 1- alpha ); f2 = -( 1 - alpha )*( 1 - alpha );
+  }
+  
+
+  return jIIR2( input, fo,f1,f2);
+}
+period=Param("period",13,1,40,1);
+
+//Plot( Close, "Price", colorBlack, styleCandle ); 
+Plot( GSMA( C,period), "GSMA", colorLime );
+
+//  Linear Regression Line with 2 Standard Deviation Channels Plotted Above and Below 
+//  Written by Patrick Hargus, with critical hints from Marcin Gorzynski, Amibroker.com Technical Support 
+//      Designed for use with AB 4.63 beta and above, using drag and drop feature.  
+//  Permits plotting a linear regression line of any price field available on the chart for a period determined by the user.  
+//     2 Channels, based on a standard deviation each determined by the user, are plotted above and below the linear regression line. 
+// 		A look back feature is also provided for examining how the indicator would have appeared on a chart X periods in the past.    
+
+
+P = ParamField("Price field",-1);
+Daysback = Param("Period for Liner Regression Line",21,1,240,1);
+shift = Param("Look back period",0,0,240,1); 
+
+
+//  =============================== Math Formula =============================================================
+
+x = Cum(1);
+lastx = LastValue( x ) - shift; 
+aa = LastValue( Ref(LinRegIntercept( p, Daysback), -shift) ); 
+bb = LastValue( Ref(LinRegSlope( p, Daysback ), -shift) ); 
+y = Aa + bb * ( x - (Lastx - DaysBack +1 ) ); 
+
+
+// ==================Plot the Linear Regression Line ==========================================================
+
+
+LRColor = ParamColor("LR Color", colorCycle ); 
+LRStyle = ParamStyle("LR Style");
+
+LRLine =  IIf( x > (lastx - Daysback) AND BarIndex() < Lastx, y, Null );
+Plot( LRLine , "LinReg", LRCOLOR, LRSTYLE ); //  styleDots ); 
+
+// ==========================  Plot 1st SD Channel ===============================================================
+
+SDP = Param("Standard Deviation", 1.5, 0, 6, 0.1);
+SD = SDP/2;
+
+width = LastValue( Ref(SD*StDev(p, Daysback),-shift) );   // THIS IS WHERE THE WIDTH OF THE CHANELS IS SET  
+SDU = IIf( x > (lastx - Daysback) AND BarIndex() < Lastx, y+width , Null ) ;
+SDL = IIf( x > (lastx - Daysback) AND BarIndex() < Lastx, y-width , Null ) ;
+
+SDColor = ParamColor("SD Color", colorCycle ); 
+SDStyle = ParamStyle("SD Style");
+
+Plot( SDU , "Upper Lin Reg", SDColor,SDStyle ); 
+Plot( SDL , "Lower Lin Reg", SDColor,SDStyle ); 
+
+//  ==========================  Plot 2d SD Channel ===============================================================
+
+SDP2 = Param("2d Standard Deviation", 2.0, 0, 6, 0.1);
+SD2 = SDP2/2;
+
+width2 = LastValue( Ref(SD2*StDev(p, Daysback),-shift) );   // THIS IS WHERE THE WIDTH OF THE CHANELS IS SET  
+SDU2 = IIf( x > (lastx - Daysback) AND BarIndex() < Lastx, y+width2 , Null ) ;
+SDL2 = IIf( x > (lastx - Daysback) AND BarIndex() < Lastx, y-width2 , Null ) ;
+
+SDColor2 = ParamColor("2 SD Color", colorCycle ); 
+SDStyle2 = ParamStyle("2 SD Style");
+
+Plot( SDU2 , "Upper Lin Reg", SDColor2,SDStyle2 ); 
+Plot( SDL2 , "Lower Lin Reg", SDColor2,SDStyle2 ); 
+
+// ============================ End Indicator Code ==============================================================

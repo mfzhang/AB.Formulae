@@ -1,0 +1,128 @@
+// Gartley 222 Pattern Indicator Plot
+//
+// Ported by Daniel Ervi from code originally posted for Wealth-Lab by Mark Conway.
+// Based on the August 2003 article in Active Trader Magazine.
+//
+// Usage:  Gartley222(VPFactor, Tolerance, Lookback)
+//         VPFactor adjusts swing size percentage (Zig Zag)
+//         Tolerance adjusts percentage tolerance from ideal pattern specification
+//         Lookback adjusts volatility calculation
+
+procedure Gartley222(VPFactor, Tolerance, Lookback)
+{
+  F1 = 0.618;
+  F2 = 0.886;
+  F3 = 1.27;
+  F4 = 1.618;
+
+  // Setup volatility adjusted reversal array
+  VP = 100 * ATR(Lookback) / Close;
+  Reversal = int(VPFactor * VP);
+
+  for(Bar = 50; Bar < BarCount; Bar++) 
+  { 
+    // Build Peak and Trough arrays
+    P1    = Peak(High, Reversal[Bar]);
+    P1Bar = Bar - PeakBars(High, Reversal[Bar]);
+    P2    = Peak(High, Reversal[Bar], 2);
+    P2Bar = Bar - PeakBars(High, Reversal[Bar], 2);
+    T1    = Trough(Low, Reversal[Bar]);
+    T1Bar = Bar - TroughBars(Low, Reversal[Bar]);
+    T2    = Trough(Low, Reversal[Bar], 2);
+    T2Bar = Bar - TroughBars(Low, Reversal[Bar], 2);
+
+    // Test for a bullish 222
+    // Trough X is T2
+    // Peak A is P2
+    // Trough B is T1
+    // Peak C is P1
+    // D is the Buy point
+    D = Low[Bar];
+    PTValid = (P1Bar[Bar] > T1Bar[Bar]) AND (T1Bar[Bar] > P2Bar[Bar]) AND (P2Bar[Bar] > T2Bar[Bar]);
+    HLValid = (P1[Bar] < P2[Bar]) AND (T1[Bar] > T2[Bar]) AND (P1[Bar] > T1[Bar]);
+    InZone  = (D < T1[Bar]) AND (D > T2[Bar]);
+    if(PTValid AND HLValid AND InZone)
+    {
+      XA = P2[Bar] - T2[Bar];
+      AB = P2[Bar] - T1[Bar];
+      BC = P1[Bar] - T1[Bar];
+      CD = P1[Bar] - D;
+      AD = P2[Bar] - D;
+      ABdXA = AB / XA; // AB should be 61.8% of XA
+      C1    = (ABdXA > F1 - Tolerance) AND (ABdXA < F1 + Tolerance);
+      BCdAB = BC / AB; // BC should be 61.8-78.6% of AB
+      C2    = (BCdAB > F1 - Tolerance) AND (BCdAB < F2 + Tolerance);
+      CDdBC = CD / BC; // CD should be 127-161.8% of BC}
+      C3    = (CDdBC > F3 - Tolerance) AND (CDdBC < F4 + Tolerance);
+      ADdXA = AD / XA; // AD should be 78.6% of XA}
+      C4    = (ADdXA > F2 - Tolerance) AND (ADdXA < F2 + Tolerance);
+      if(C1 AND C2 AND C3 AND C4)
+      {
+        // Bullish Gartley found.  Draw pattern.
+        PlotXA = LineArray(T2Bar[Bar], T2[Bar], P2Bar[Bar], P2[Bar]);
+        Plot(PlotXA, "", colorBlue, styleLine + styleThick);
+        PlotAB = LineArray(P2Bar[Bar], P2[Bar], T1Bar[Bar], T1[Bar]);
+        Plot(PlotAB, "", colorBlue, styleLine + styleThick);
+        PlotBC = LineArray(T1Bar[Bar], T1[Bar], P1Bar[Bar], P1[Bar]);
+        Plot(PlotBC, "", colorBlue, styleLine + styleThick);
+        PlotCD = LineArray(P1Bar[Bar], P1[Bar], Bar, D);
+        Plot(PlotCD, "", colorBlue, styleLine + styleThick);
+        PlotBD = LineArray(T1Bar[Bar], T1[Bar], Bar, D);
+        Plot(PlotBD, "", colorDarkBlue, styleSwingDots );
+        PlotXD = LineArray(T2Bar[Bar], T2[Bar], Bar, D);
+        Plot(PlotXD, "", colorDarkBlue, styleSwingDots );
+        PlotXB = LineArray(T2Bar[Bar], T2[Bar], T1Bar[Bar], T1[Bar]);
+        Plot(PlotXB, "", colorDarkBlue, styleSwingDots );
+      }
+    }
+
+    // Test for a bearish 222
+    // Peak X is P2
+    // Trough A is T2
+    // Peak B is P1
+    // Trough C is T1
+    // D is the Buy point
+    D = High[Bar];
+    PTValid = (T1Bar[Bar] > P1Bar[Bar]) AND (P1Bar[Bar] > T2Bar[Bar]) AND (T2Bar[Bar] > P2Bar[Bar]);
+    HLValid = (T1[Bar] > T2[Bar]) AND (P1[Bar] < P2[Bar]) AND (T1[Bar] < P1[Bar]);
+    InZone  = (D > P1[Bar]) AND (D < P2[Bar]);
+    if(PTValid AND HLValid AND InZone)
+    {
+      XA = P2[Bar] - T2[Bar];
+      AB = P1[Bar] - T2[Bar];
+      BC = P1[Bar] - T1[Bar];
+      CD = D - T1[Bar];
+      AD = D - T2[Bar];
+      ABdXA = AB / XA; // AB should be 61.8% of XA
+      C1    = (ABdXA > F1 - Tolerance) AND (ABdXA < F1 + Tolerance);
+      BCdAB = BC / AB; // BC should be 61.8-78.6% of AB
+      C2    = (BCdAB > F1 - Tolerance) AND (BCdAB < F2 + Tolerance);
+      CDdBC = CD / BC; // CD should be 127-161.8% of BC}
+      C3    = (CDdBC > F3 - Tolerance) AND (CDdBC < F4 + Tolerance);
+      ADdXA = AD / XA; // AD should be 78.6% of XA}
+      C4    = (ADdXA > F2 - Tolerance) AND (ADdXA < F2 + Tolerance);
+      if(C1 AND C2 AND C3 AND C4)
+      {
+        // Bearish Gartley found.  Draw pattern.
+        PlotXA = LineArray(P2Bar[Bar], P2[Bar], T2Bar[Bar], T2[Bar]);
+        Plot(PlotXA, "", colorRed, styleLine + styleThick);
+        PlotAB = LineArray(T2Bar[Bar], T2[Bar], P1Bar[Bar], P1[Bar]);
+        Plot(PlotAB, "", colorRed, styleLine + styleThick);
+        PlotBC = LineArray(P1Bar[Bar], P1[Bar], T1Bar[Bar], T1[Bar]);
+        Plot(PlotBC, "", colorRed, styleLine + styleThick);
+        PlotCD = LineArray(T1Bar[Bar], T1[Bar], Bar, D);
+        Plot(PlotCD, "", colorRed, styleLine + styleThick);
+        PlotBD = LineArray(P1Bar[Bar], P1[Bar], Bar, D);
+        Plot(PlotBD, "", colorDarkRed, styleSwingDots );
+        PlotXD = LineArray(P2Bar[Bar], P2[Bar], Bar, D);
+        Plot(PlotXD, "", colorDarkRed, styleSwingDots );
+        PlotXB = LineArray(P2Bar[Bar], P2[Bar], P1Bar[Bar], P1[Bar]);
+        Plot(PlotXB, "", colorDarkRed, styleSwingDots );
+      }
+    }
+  }
+}
+
+Gartley222(1.0, 0.1, 20);
+
+Plot(C,"Close", colorBlueGrey, styleBar);

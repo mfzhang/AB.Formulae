@@ -1,0 +1,118 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Relative Strength Multichart of up to 10 tickers
+//  Author/Uploader: Frederick M Miller 
+//  E-mail:          
+//  Date/Time Added: 2004-02-09 23:46:38
+//  Origin:          Modified Frederick Miller 1/9/04 Modified K Close 8/2/02 support code from Thomas Zmuck/Anthony Faragasso
+//  Keywords:        
+//  Level:           medium
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=335
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=335
+//
+//------------------------------------------------------------------------------
+//
+//  A modified indicator to function like the FastTrack total return charts
+//  normalizing up to 10 tickers for relative strength comparison. This
+//  indicator supports the date pole and date markers.
+//
+//  Tickers are loaded using Parameters or [CNTRL]R
+//
+//  Colors are selected for a black screen, but are easily modified in the
+//  code.
+//
+//------------------------------------------------------------------------------
+
+// Multi - Charts in the FastTrack Total Return Format
+// Normalized to left edge with right axis indicating %return of screen
+// Bracketed values indicate returns from left screen to pole OR
+// between Date markers if in place
+// Use <Cntr>R to set ticker symbols
+// left click to set pole, double left click to set marker 
+// Colors may be changed below:
+// Modified Frederick Miller (rick300m@eartlink.net) 2/9/04
+// Modified K Close 8/2/02  */
+/* support code from Thomas Zmuck/Anthony Faragasso  */
+
+Cl0=colorLightOrange;
+Cl1=colorPink;
+Cl2=colorOrange;
+Cl3=colorGreen ;
+Cl4=colorTurquoise;
+Cl5=colorLime;
+Cl6=colorBlueGrey;
+Cl7=colorYellow;
+Cl8=colorBrightGreen;
+Cl9=colorRed;
+
+//Set Variables
+barvisible = Status("barvisible");
+FVB = barvisible AND NOT Ref( barvisible, -1 );
+CVB = ValueWhen(  FVB,C) ;
+Leftbar=ValueWhen(Ref(barvisible,-1)==0 AND barvisible,DateTime() );
+Rightbar=LastValue(DateTime() );
+DateSpan = EndValue(BarIndex()) - BeginValue(BarIndex());
+Range = DateSpan ;
+StartDate = BeginValue(BarIndex());
+EndDate = EndValue(BarIndex());
+
+//Select Tickers
+Fn0=ParamStr( "Fund0", "$INDU");
+Fn1=ParamStr( "Fund1", "DJSEU");
+Fn2=ParamStr( "Fund2", "DJW-X");
+Fn3=ParamStr( "Fund3", "OTC-C");
+Fn4=ParamStr( "Fund4", "RUT-I");
+Fn5=ParamStr( "Fund5", "STBI-");
+Fn6=ParamStr( "Fund6", "PSE-X");
+Fn7=ParamStr( "Fund7", "");
+Fn8=ParamStr( "Fund8", "");
+Fn9=ParamStr( "Fund9", "");
+
+//Normalized to left edge
+Fa0=Prec(100*(Foreign(Fn0,"C")/ValueWhen(FVB,Foreign(Fn0,"C"))-1),2.2);
+Fa1=Prec(100*(Foreign(Fn1,"C")/ValueWhen(FVB,Foreign(Fn1,"C"))-1),2.2);
+Fa2=Prec(100*(Foreign(Fn2,"C")/ValueWhen(FVB,Foreign(Fn2,"C"))-1),2.2);
+Fa3=Prec(100*(Foreign(Fn3,"C")/ValueWhen(FVB,Foreign(Fn3,"C"))-1),2.2);
+Fa4=Prec(100*(Foreign(Fn4,"C")/ValueWhen(FVB,Foreign(Fn4,"C"))-1),2.2);
+Fa5=Prec(100*(Foreign(Fn5,"C")/ValueWhen(FVB,Foreign(Fn5,"C"))-1),2.2);
+Fa6=Prec(100*(Foreign(Fn6,"C")/ValueWhen(FVB,Foreign(Fn6,"C"))-1),2.2);
+Fa7=Prec(100*(Foreign(Fn7,"C")/ValueWhen(FVB,Foreign(Fn7,"C"))-1),2.2);
+Fa8=Prec(100*(Foreign(Fn8,"C")/ValueWhen(FVB,Foreign(Fn8,"C"))-1),2.2);
+Fa9=Prec(100*(Foreign(Fn9,"C")/ValueWhen(FVB,Foreign(Fn9,"C"))-1),2.2);
+
+//Plot Normalized Graphs
+Plot(Fa0,Fn0,Cl0,4);
+Plot(Fa1,Fn1,Cl1,4);
+Plot(Fa2,Fn2,Cl2,4);
+Plot(Fa3,Fn3,Cl3,4);
+Plot(Fa4,Fn4,Cl4,4);
+Plot(Fa5,Fn5,Cl5,4);
+Plot(Fa6,Fn6,Cl6,4);
+Plot(Fa7,Fn7,Cl7,4);
+Plot(Fa8,Fn8,Cl8,4);
+Plot(Fa9,Fn9,Cl9,4);
+Plot(0,"",colorDarkBlue,styleNoLine+styleDots);
+
+//Calculate % Change between markers
+Fv0=IIf(startdate==0,Fa0,100*(EndValue(Foreign(Fn0,"C")-BeginValue(Foreign(Fn0,"C"))))/BeginValue(Foreign(Fn0,"C")));
+Fv9=IIf(startdate==0,Fa9,100*(EndValue(Foreign(Fn9,"C")-BeginValue(Foreign(Fn9,"C"))))/BeginValue(Foreign(Fn9,"C")));
+Fv8=IIf(startdate==0,Fa8,100*(EndValue(Foreign(Fn8,"C")-BeginValue(Foreign(Fn8,"C"))))/BeginValue(Foreign(Fn8,"C")));
+Fv7=IIf(startdate==0,Fa7,100*(EndValue(Foreign(Fn7,"C")-BeginValue(Foreign(Fn7,"C"))))/BeginValue(Foreign(Fn7,"C")));
+Fv6=IIf(startdate==0,Fa6,100*(EndValue(Foreign(Fn6,"C")-BeginValue(Foreign(Fn6,"C"))))/BeginValue(Foreign(Fn6,"C")));
+Fv5=IIf(startdate==0,Fa5,100*(EndValue(Foreign(Fn5,"C")-BeginValue(Foreign(Fn5,"C"))))/BeginValue(Foreign(Fn5,"C")));
+Fv4=IIf(startdate==0,Fa4,100*(EndValue(Foreign(Fn4,"C")-BeginValue(Foreign(Fn4,"C"))))/BeginValue(Foreign(Fn4,"C")));
+Fv3=IIf(startdate==0,Fa3,100*(EndValue(Foreign(Fn3,"C")-BeginValue(Foreign(Fn3,"C"))))/BeginValue(Foreign(Fn3,"C")));
+Fv2=IIf(startdate==0,Fa2,100*(EndValue(Foreign(Fn2,"C")-BeginValue(Foreign(Fn2,"C"))))/BeginValue(Foreign(Fn2,"C")));
+Fv1=IIf(startdate==0,Fa1,100*(EndValue(Foreign(Fn1,"C")-BeginValue(Foreign(Fn1,"C"))))/BeginValue(Foreign(Fn1,"C")));
+
+
+Title=
+// Left Bar Date
+WriteIf(startdate==0, WriteVal(leftbar,formatDateTime),WriteVal(BeginValue(DateTime()),formatDateTime))+
+//Right Bar Date
+WriteIf(EndValue(DateTime() )==rightbar, "              Normalized Return Chart                  "+Date(),
+"                       "+WriteVal(Range,1)+" days                       "+WriteVal(EndValue(Month()),1.0) +"/" + WriteVal(EndValue(Day()),1.0) + "/20" + StrRight( WriteVal(EndValue(Year()),1.0),2))
+
+//List of Funds
++" \n"+EncodeColor(Cl0)+Fn0+ WriteIf(IsTrue(fa0)," ["+WriteVal(fv0,1.2)+ "]  ","") +EncodeColor(Cl1)+Fn1+WriteIf(IsTrue(fa1)," ["+WriteVal(fv1,1.2)+"]  ","")+EncodeColor(Cl2)+Fn2 + WriteIf(IsTrue(fa2)," ["+WriteVal(fv2,1.2)+"]  ","")+"\n"+EncodeColor(Cl3)+fn3 + WriteIf(IsTrue(fa3)," ["+WriteVal(fv3,1.2)+"]  ","")+EncodeColor(Cl4)+Fn4 + WriteIf(IsTrue(fa4)," ["+WriteVal(fv4,1.2)+"]  ","")+EncodeColor(Cl5)+Fn5 + WriteIf(IsTrue(fa5)," ["+WriteVal(fv5,1.2)+"]  ","")+"\n"+EncodeColor(Cl6)+Fn6 + WriteIf(IsTrue(fa6)," ["+WriteVal(fv6,1.2)+"]  ","")+EncodeColor(Cl7)+Fn7 + WriteIf(IsTrue(fa7)," ["+WriteVal(fv7,1.2)+"]  ","")+EncodeColor(Cl8)+Fn8 + WriteIf(IsTrue(fa8)," ["+WriteVal(fv8,1.2)+"]  ","")+EncodeColor(Cl9)+Fn9 + WriteIf(IsTrue(fa9)," ["+WriteVal(fv9,1.2)+"]  ","");

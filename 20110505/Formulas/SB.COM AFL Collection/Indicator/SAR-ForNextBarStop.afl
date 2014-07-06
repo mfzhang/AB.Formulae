@@ -1,0 +1,159 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    SAR-ForNextBarStop
+//  Author/Uploader: Rick Charon 
+//  E-mail:          rickcharon@yahoo.com
+//  Date/Time Added: 2005-12-14 19:59:23
+//  Origin:          
+//  Keywords:        SAR Stop
+//  Level:           semi-advanced
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=574
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=574
+//
+//------------------------------------------------------------------------------
+//
+//  I want to use SAR indicator to calculate the stop to set for the next
+//  trading day after
+//
+//  the close of today. Because there is as yet no bar for next day, the built
+//  in SAR
+//
+//  indicator can't be used this way. I'm only using this for long positions,
+//  and just to set
+//
+//  the next day's stop. Most of this is code posted by Tomasz Janeczko,
+//  AmiBroker's creator,
+//
+//  at http://www.amibroker.com/library/formula.php?id=268. I altered/added the
+//  little bit
+//
+//  needed for my purposes. If you wanted to use this for shorts also, you need
+//  to add a
+//
+//  little.
+//
+//------------------------------------------------------------------------------
+
+/*	  -***-   c:\data\AmiBroker\Formulas\Systems\SAR-ForNextBarStop.afl  -***-
+
+ * * Tue Dec 13 16:36:41 2005 rpc - 
+ * 
+ * I want to use SAR indicator to calculate the stop to set for the next trading day after
+ * the close of today. Because there is as yet no bar for next day, the built in SAR
+ * indicator can't be used this way. I'm only using this for long positions, and just to set
+ * the next day's stop. Most of this is code posted by Tomasz Janeczko, AmiBroker's creator,
+ * at http://www.amibroker.com/library/formula.php?id=268. I altered/added the little bit
+ * needed for my purposes. If you wanted to use this for shorts also, you need to add a
+ * little.
+ */
+
+StartAF = Param("AccelerationFactor", 0.02, 0.01, 0.10, 0.01);
+MaxAF = Param("MaxAcceleration", 0.2, 0.1, 0.5, 0.1);
+
+
+// Filter = 1;
+// AddColumn(curSAR, "curSAR");
+// AddColumn(plus1SAR, "plus1SAR");
+
+
+
+
+
+longPos = 1;        // assume longPos for initial conditions
+psar = Close;		// initialize
+psarNextBar = Close;
+
+af = StartAF;         // init acelleration factor
+ep = Low[ 0 ];   // init extreme point
+hp = High [ 0 ];
+lp = Low [ 0 ];
+
+
+//   if ( longPos ) {
+//     psar [ i ] = psar [ i-1 ] + af * ( hp - psar [ i-1 ] );
+//   }
+//   else {
+//     psar [ i ] = psar [ i-1 ] + af * ( lp - psar [ i-1 ] );
+//   }
+function getPsar1(idx) {
+  global longPos;
+  global psar;
+  local retVal;
+  if(longPos) {
+    retVal = psar [ idx-1 ] + af * ( hp - psar [ idx-1 ] );
+  } else {
+    retVal = psar [ idx-1 ] + af * ( lp - psar [ idx-1 ] );
+  }
+  return retVal;
+}
+    
+
+for( i = 2; i < BarCount; i++ ) {
+  psar[i] = getPsar1(i);
+  reverse =  0;
+  //check for reversal
+  if ( longPos ) {
+    if ( Low [ i ] < psar [ i ]  ) {
+      longPos = 0; reverse = 1; // reverse position to Short
+      psar [ i ] =  hp;       // SAR is High point in prev trade
+      lp = Low [ i ];
+      af = StartAF;
+    }
+  }
+  else {
+    if ( High [ i ] > psar [ i ]  ) {
+      longPos = 1; reverse = 1;        //reverse position to longPos
+      psar [ i ] =  lp;
+      hp = High [ i ];
+      af = StartAF;
+    }
+  }
+
+  if ( reverse == 0 ) {
+    if ( longPos ) {
+      if ( High [ i ] > hp ) {
+	hp = High [ i ]; 
+	af = af + StartAF; 
+	if( af > MaxAF ) af = MaxAF; 
+      }
+             
+      if( Low[ i - 1 ] < psar[ i ] ) psar[ i ] = Low[ i - 1 ];
+      if( Low[ i - 2 ] < psar[ i ] ) psar[ i ] = Low[ i - 2 ];
+    }
+    else {
+      if ( Low [ i ] < lp ) { 
+	lp = Low [ i ]; 
+	af = af + StartAF; 
+	if( af > MaxAF ) af = MaxAF; 
+      }	
+				
+      if( High[ i - 1 ] > psar[ i ] ) psar[ i ] = High[ i - 1 ];
+      if( High[ i - 2 ] > psar[ i ] ) psar[ i ] = High[ i - 2 ];
+
+    }
+  }
+  //NextBarSar.
+  psarNextBar[i] = getPsar1(i + 1);
+  if( Low[ i ] < psarNextBar[ i ] ) psarNextBar[ i ] = Low[ i ];
+  if( Low[ i - 1 ] < psarNextBar[ i ] ) psarNextBar[ i ] = Low[ i - 1 ];
+
+}
+
+
+//PLOT
+_N(Title = StrFormat("{{NAME}} - {{INTERVAL}} {{DATE}} Open %g, Hi %g, Lo %g, Close %g (%.1f%%) {{VALUES}}", O, H, L, C, SelectedValue( ROC( C, 1 ) ) ));
+
+Plot( C, "Close", ParamColor("Color", colorBlack ), styleNoTitle | ParamStyle("Style") | GetPriceStyle() );
+
+
+
+Plot( Close, "Price", colorBlack, styleCandle );
+Plot( psar, "PSAR", colorRed, styleDots | styleNoLine | styleThick );
+Plot( psarNextBar, "PSARNEXTBAR", colorBlue, styleDots | styleNoLine | styleThick );
+
+
+//EXPLORE
+Filter = 1;
+AddColumn(psar, "psar");
+AddColumn(psarNextBar, "psarNextBar");

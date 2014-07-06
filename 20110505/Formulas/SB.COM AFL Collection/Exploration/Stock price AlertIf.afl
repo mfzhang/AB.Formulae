@@ -1,0 +1,33 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Stock price AlertIf
+//  Author/Uploader: Anthony van Rooyen 
+//  E-mail:          anthonyvan28@hotmail.com
+//  Date/Time Added: 2004-07-28 12:39:53
+//  Origin:          Gold Coast Australia
+//  Keywords:        Name, Alertif
+//  Level:           basic
+//  Flags:           exploration
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=368
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=368
+//
+//------------------------------------------------------------------------------
+//
+//  If you want to be alerted to a stock reaching a certain price in "Alert
+//  Output" under "view" in Amibroker.
+//
+//  Simply add the stock code, were the XYZ is.
+//
+//  To set the price simply add it where $$$ is.
+//
+//  Cut and past if you have lots of stocks that you want to be alerted to.
+//
+//  Then just run the scan.
+//
+//------------------------------------------------------------------------------
+
+
+Buy = Cross(C, $$$) AND Name()=="XYZ";
+
+AlertIf( Buy, "", "Simple text alert", 4 );
+

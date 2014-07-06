@@ -1,0 +1,204 @@
+//|-----------------------------------------------------------------------------------------
+//|PatternExplorer.com - include file 1
+//|Copyright © 2007, PatternExplorer.com
+//|http://www.PatternExplorer.com
+//|e-mail: support@PatternExplorer.com
+//|-----------------------------------------------------------------------------------------
+InIndicator = Status( "Action" ) == 1;
+_SECTION_BEGIN( "Price" );
+Pstyle = ParamToggle( "Heikin Ashi", "On|Off", 1 );
+PE_AB_Style = ParamToggle( "Price Style Source", "PatternExplorer|Amibroker", def_PE_AB_Style );
+pricestyle = IIf( PE_AB_Style, GetPriceStyle(), ParamStyle( "Price Style", def_pricestyle, maskAll ) );
+GraphXSpace = Param( "Vertical Zoom Out", def_GraphXSpace, 0, 200, 0.5 );
+upbar_col = ParamColor( "Up Bar", def_upbar_col );
+dnbar_col = ParamColor( "Dn Bar", def_dnbar_col );
+_SECTION_END();
+_SECTION_BEGIN( "Taio Bars and Ribbons" );
+TAIO_switchvalue = ParamList( "Bar Color Mode", List = "Off,1 - Rising/Falling/Range,2 - Range/Trend,3 - Rising/Falling,4 - Zero based", def_TaioModePC );
+
+for ( i = 0; i < 10; i++ )
+{
+    if ( StrExtract( List, i ) == Taio_switchvalue )
+        TaioColorMode = i;
+}
+
+Ribbons_switchvalue = ParamList( "Ribbon Color Mode", List = "Off,1 - Rising/Falling/Range,2 - Range/Trend,3 - Rising/Falling,4 - Zero based", def_RibbonsMode );
+
+for ( i = 0; i < 10; i++ )
+{
+    if ( StrExtract( List, i ) == Ribbons_switchvalue )
+        RibbonsColorMode = i;
+}
+
+period1 = Param( "Period 1", def_TaioPeriod1, 1, 30, 1 );
+
+period2 = Param( "Period 2", def_TaioPeriod2, 1, 30, 1 );
+upLevel = Param( "Trend Level", def_TrendLevel, 0, 90 );
+dnLevel = upLevel;
+TAIO_up_color = ParamColor( "Taio > Trend Level", def_TAIO_up_color );
+TaioRangeP_color = ParamColor( "Range (>0)", def_TaioRangeP_color );
+TaioRangeN_color = ParamColor( "Range (<0)", def_TaioRangeN_color );
+TAIO_dn_color = ParamColor( "Taio < Trend Level", def_TAIO_dn_color );
+_SECTION_END();
+
+Taio = PeTaio( period1, period2 );
+TaioUp = Taio > upLevel & Taio > Ref( Taio, -1 );
+TaioDn = Taio < dnLevel & Taio < Ref( Taio, -1 );
+pricecolor = TaioColor( TaioColorMode, period1, period2, upLevel, dnLevel, upbar, dnbar, TAIO_up_color, TaioRangeP_color, TaioRangeN_color, TAIO_dn_color, colorWhite, def_defaultcolor );
+Ribbonscolor = TaioColor( RibbonsColorMode, period1, period2, upLevel, dnLevel, upbar, dnbar, TAIO_up_color, TaioRangeP_color, TaioRangeN_color, TAIO_dn_color, colorWhite, def_defaultcolor );
+xDiff = ( HaHigh - Halow ) * IIf( StrFind( Name(), "JPY" ), 100, 10000 );
+barcolor = IIf( HaClose >= HaOpen, upbar_col, dnbar_col );
+
+if ( TaioColorMode == 0 AND Pstyle == 0 )
+{
+    pricecolor = barcolor;
+}
+
+GraphZOrder = 1;
+
+if ( Pstyle == 0 )
+{
+    PlotOHLC( HaOpen, HaHigh, HaLow, HaClose, "Heikin Ashi", pricecolor, styleCandle | styleNoTitle );
+}
+else
+{
+    Plot( C, "Price", pricecolor, pricestyle + styleNoTitle );
+}
+
+
+/*******************************************************************************************/
+_SECTION_BEGIN( "Volume" );
+
+PlotVolume = ParamToggle( "Plot Volume", "Off|On", def_PlotVolume );
+
+Type = ParamList( "Color Mode", "Simple,Standard,Extended", def_VolumeType );
+
+UpColor = ParamColor( "Up Color", def_VolumeUpColor );
+
+DnColor = ParamColor( "Down Color", def_VolumeDnColor );
+
+NeutralColor = ParamColor( "Neutral Color", def_VolumeNeutralColor );
+
+style =  ParamStyle( "Style", styleHistogram | styleThick | styleOwnScale | styleNoTitle | styleNoLabel, maskHistogram );
+
+VolumeHeight = 7.1 - Param( "Volume Height", def_VolumeHeight, 0, 7.1, 0.1 );
+
+/*******************************************************************************************/
+if ( Type == "Simple" AND PlotVolume )
+    Plot( Volume, _DEFAULT_NAME(), NeutralColor, style, VolumeHeight );
+
+/*******************************************************************************************/
+if ( Type == "Standard" AND PlotVolume )
+    Plot( Volume, _DEFAULT_NAME(), IIf( C > O, UpColor, DnColor ), style, VolumeHeight );
+
+/*******************************************************************************************/
+if ( Type == "Extended" AND PlotVolume )
+    Plot( Volume, _DEFAULT_NAME(), IIf( C > Ref( C, -1 ) AND V > Ref( V, -1 ), UpColor, IIf( C < Ref( C, -1 ) AND V > Ref( V, -1 ), DnColor, NeutralColor ) ), style, VolumeHeight );
+
+_SECTION_END();
+
+/*******************************************************************************************/
+
+Plot( IIf( RibbonsColorMode > 0, 1.5, -1e10 ), "", Ribbonscolor, styleOwnScale | styleArea | styleNoLabel, -0.1, 100 );
+
+_SECTION_BEGIN( "Bands and Channels" );
+
+Band_switch = ParamToggle( "On/off", "Off|On", def_Band_switch );
+
+BandTyp = ParamList( "Type", List1 = "1 - Bollinger Bands,2 - Headley Acceleration Bands,3 - Keltner Channel,4 - Price Channel", def_BandTyp - 1 );
+
+P = ParamField( "Price Field" );
+
+Period = Param( "Period", def_BandPeriod, 2, 100, 1 );
+
+Width = Param( "Width", def_BandWidth, 0, 10, 0.1 );
+
+BandStyle = ParamStyle( "Top/Bot", def_BandStyle, maskAll );
+
+MidStyle = ParamStyle( "Middle", def_MidStyle, maskAll );
+
+BandColor = ParamColor( "Band Color", def_BandColor );
+
+MidColor = ParamColor( "Middle Color", def_MidColor );
+
+function HABTop( period, width )
+{
+    BWRatio = ( H - L ) / ( ( H + L ) / 2 );
+    BandTop = MA( H * ( 1 + Width * BWRatio ), Period );
+    return BandTop;
+}
+
+function HABBot( period, width )
+
+{
+    BWRatio = ( H - L ) / ( ( H + L ) / 2 );
+    BandBot = MA( L * ( 1 - Width * BWRatio ), Period );
+    return BandBot;
+}
+
+procedure AddKeltnerChannel( array, periods, width )
+{
+    global KeltnerChannelTop;
+    global KeltnerChannelMid;
+    global KeltnerChannelBot;
+    KeltnerChannelMid = MA( array, Periods );
+    KeltnerChannelTop = KeltnerChannelMid + Width * ATR( Periods );
+    KeltnerChannelBot = KeltnerChannelMid - Width * ATR( Periods );
+}
+
+if ( Band_switch AND BandTyp == "1 - Bollinger Bands" )
+{
+    Plot( BBandTop( P, Period, Width ), "BB Top" + _PARAM_VALUES(), BandColor, BandStyle );
+    Plot( MA( P, Period ), "BB Mid" + _PARAM_VALUES(), MidColor, MidStyle );
+    Plot( BBandBot( P, Period, Width ), "BB Bot" + _PARAM_VALUES(), BandColor, BandStyle );
+}
+
+if ( Band_switch AND BandTyp == "2 - Headley Acceleration Bands" )
+{
+    Plot( HABTop( Period, Width ), "HAB Top" + _PARAM_VALUES(), BandColor, BandStyle );
+    Plot( MA( C, Period ), "HAB Mid" + _PARAM_VALUES(), MidColor, MidStyle );
+    Plot( HABBot( Period, Width ), "HAB Bot" + _PARAM_VALUES(), BandColor, BandStyle );
+}
+
+if ( Band_switch AND BandTyp == "3 - Keltner Channel" )
+{
+    AddKeltnerChannel( P, period, width );
+    Plot( KeltnerChannelTop, "KC Top" + _PARAM_VALUES(), BandColor, BandStyle );
+    Plot( KeltnerChannelMid, "KC Mid" + _PARAM_VALUES(), MidColor, MidStyle );
+    Plot( KeltnerChannelBot, "KC Bot" + _PARAM_VALUES(), BandColor, BandStyle );
+}
+
+if ( Band_switch AND BandTyp == "4 - Price Channel" )
+{
+    AddChannel( H, L, period, 0.5, 0, 0 );
+    Plot( ChannelHigh, "PC Top (" + period + ")", BandColor, BandStyle );
+    Plot( ChannelMiddle, "PC Mid (" + period + ")", MidColor, MidStyle );
+    Plot( ChannelLow, "PC Bot (" + period + ")", BandColor, BandStyle );
+}
+
+_SECTION_END();
+
+_SECTION_BEGIN( "Parabolic Sar" );
+Psar_switch = ParamToggle( "On/off", "Off|On", def_Psar_switch );
+SARmax = Param( "SAR max", 0.2, 0.01, 1, 0.01 );
+SARacc = Param( "SAR acc", 0.02, 0.005, 0.1, 0.005 );
+Psar_up_color = ParamColor( "Rising Points", def_Psar_up_color );
+Psar_dn_color = ParamColor( "Falling Points", def_Psar_dn_color );
+Plot( IIf( Psar_switch, SAR( SARacc, SARmax ), -1e10 ), "Parabolic_Sar", IIf( SAR( SARacc, SARmax ) > H, Psar_dn_color, Psar_up_color ), styleDots + styleNoLine + styleNoRescale + styleNoTitle );
+_SECTION_END();
+AddGradientBackground( def_BGColorswitch, def_BgTopcolor, def_BgBottomcolor, def_titlebkcolor );
+ADDAverage ( "Average 1", def_PeriodAvg1, def_TypeAvg1, def_PriceField1, 0, def_ColorAvg1, def_StyleAvg1, def_SwitchAvg1 );
+PEavg1 = PEaverage;
+PEavg1switch = PEaverage_switch;
+ADDAverage ( "Average 2", def_PeriodAvg2, def_TypeAvg2, def_PriceField2, 0, def_ColorAvg2, def_StyleAvg2, def_SwitchAvg2 );
+PEavg2 = PEaverage;
+PEavg2switch = PEaverage_switch;
+ADDAverage ( "Average 3", def_PeriodAvg3, def_TypeAvg3, def_PriceField3, 0, def_ColorAvg3, def_StyleAvg3, def_SwitchAvg3 );
+PEavg3 = PEaverage;
+PEavg3switch = PEaverage_switch;
+ADDAverage ( "Average 4", def_PeriodAvg4, def_TypeAvg4, def_PriceField4, 0, def_ColorAvg4, def_StyleAvg4, def_SwitchAvg4 );
+PEavg4 = PEaverage;
+PEavg4switch = PEaverage_switch;
+default_priceTitle = def_title +
+                     EncodeColor( def_Color4 ) + WriteIf( Pstyle, "", ", Heikin Ashi On" ) + EncodeColor( colorDefault );
+Version( 4.85 );

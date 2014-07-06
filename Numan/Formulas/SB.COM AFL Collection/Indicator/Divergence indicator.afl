@@ -1,0 +1,88 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Divergence indicator
+//  Author/Uploader: M.Lauronen 
+//  E-mail:          pipseeker@yahoo.com
+//  Date/Time Added: 2004-07-30 11:50:32
+//  Origin:          
+//  Keywords:        
+//  Level:           medium
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=374
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=374
+//
+//------------------------------------------------------------------------------
+//
+//  Here is an indicator which calculates divergencies between the price and
+//  RSI.
+//
+//  You can use another strenght/momentum indicator simple by changing one line
+//  of code.
+//
+//  Remember to tune the 'period' and 'numChg'
+//
+//  Indicator gives you the buy/sell signal when you see green/red vertical
+//  line on the panel.
+//
+//------------------------------------------------------------------------------
+
+// ********************************************
+// INDICATOR	:DIVERGENCE
+// DATE		:07-30-04
+// PROGRAMMER	:M.Lauronen
+// COPYRIGHTS	:Public Domain
+// ********************************************
+
+// --------------------------------------------
+// Recommended AmiBroker indicator settings:
+//		Level 0
+//		Percent
+//		Middle
+//		Scaling: Custom 0 - 100
+// --------------------------------------------
+
+// Adjust the following parameters to suit your needs
+period	= 5;
+numChg = 0.001;
+
+// --------------------------------------------
+// Divergence for LONG
+// --------------------------------------------
+
+trendMom	= RSI(period);
+trendZig	= Zig(L, numChg);
+
+f	= trendZig > Ref(trendZig, -1) AND Ref(trendZig, -1) < Ref(trendZig, -2);
+
+p1	= ValueWhen(f, Ref(trendZig, -1), 1);
+p2	= ValueWhen(f, Ref(trendZig, -1), 2);
+r1	= ValueWhen(f, Ref(trendMom,-1), 1);
+r2 	= ValueWhen(f, Ref(trendMom,-1), 2);
+
+f	= r1 > r2 AND p1 < p2;
+
+sig	= f AND NOT Ref(f, -1) AND trendMom > Ref(trendMom, -1); 
+
+_N(str = "(" + period + ")");
+Plot(trendMom, "RSI" + str, colorWhite);
+Plot(sig * 100, "Sig", colorGreen, styleHistogram + styleThick + styleNoLabel);
+
+// --------------------------------------------
+// Divergence for SHORT
+// --------------------------------------------
+
+trendZig2	= Zig(H, numChg);
+
+f	= trendZig2 < Ref(trendZig2, -1) AND Ref(trendZig2, -1) > Ref(trendZig2, -2);
+
+p1	= ValueWhen(f, Ref(trendZig2, -1), 1);
+p2	= ValueWhen(f, Ref(trendZig2, -1), 2);
+r1	= ValueWhen(f, Ref(trendMom,-1), 1);
+r2 	= ValueWhen(f, Ref(trendMom,-1), 2);
+
+f	= r1 < r2 AND p1 > p2;
+
+sig	= f AND NOT Ref(f, -1) AND trendMom < Ref(trendMom, -1); 
+
+_N(str = "(" + period + ")");
+Plot(sig * 100, "Sig", colorRed, styleHistogram + styleThick + styleNoLabel);

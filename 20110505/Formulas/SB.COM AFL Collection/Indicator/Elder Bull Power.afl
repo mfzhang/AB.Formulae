@@ -1,0 +1,29 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Elder Bull Power
+//  Author/Uploader: Rob Stewart 
+//  E-mail:          stewartr@mediaone.net
+//  Date/Time Added: 2001-08-10 18:59:53
+//  Origin:          Dr. Alexander Elder "Trading For A Living"
+//  Keywords:        "Elder-ray" "Bull Power"
+//  Level:           semi-advanced
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=94
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=94
+//
+//------------------------------------------------------------------------------
+//
+//  Elder-ray combine the best features of trend-following indicators and
+//  oscilators. It includes an exponential moving average, which is a
+//  trend-following indicator. Its Bull Power and Bear Power components are
+//  oscillators.
+//
+//  See also Elder-ray.alf and Elder Bear Power.alf
+//
+//------------------------------------------------------------------------------
+
+graph0style = 2;
+graph1style=2;
+graph0color=12;
+graph1color=5;
+graph0 = High - ema(Close,13);

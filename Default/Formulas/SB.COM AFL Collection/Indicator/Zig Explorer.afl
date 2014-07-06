@@ -1,0 +1,41 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Zig Explorer
+//  Author/Uploader: Michael.S.G. 
+//  E-mail:          OzFalcon@Bden.org
+//  Date/Time Added: 2003-08-05 15:21:45
+//  Origin:          
+//  Keywords:        ZigZag Historical Explore
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=291
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=291
+//
+//------------------------------------------------------------------------------
+//
+//  /* Historical ZigZag Explorer.
+//
+//  *Use the Parameters Popup to "Look Back" in history
+//
+//  &amp; watch the Zig adapt as you progress through.
+//
+//  (Hit "CTRL-R" to bring up the Parameters Dialog.)
+//
+//  OzFalcon.
+//
+//  */
+//
+//------------------------------------------------------------------------------
+
+/* Historical ZigZag Explorer.
+   *Use the Parameters Popup to "Look Back" in history
+    & watch the Zig adapt as you progress through.
+   (Hit "CTRL-R" to bring up the Parameters Dialog.)
+	OzFalcon.
+*/
+adjz = Param("Zig",10,0,15.0,.1);
+adjc = Param("Back",0,0,BarCount,1);
+CAdj = Ref(Close,-adjc);
+Graph1 = CAdj;
+Graph0 = Zig( CAdj, adjz );
+

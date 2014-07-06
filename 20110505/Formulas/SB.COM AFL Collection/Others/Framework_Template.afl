@@ -1,0 +1,110 @@
+_SECTION_BEGIN("Framework_Template");
+/////////////////////////////////////////////////////////////////////
+///////////////Start - Backtest Framework Parameters/////////////////
+/////////////////////////////////////////////////////////////////////
+
+//Init
+	SetBarsRequired(10000,10000); 
+
+// Backtest settings
+	//	Set AA options: 
+	//	Set Apply to = [Use Filter] Market = ASX, Exclude Indexes
+	//	Set Range = 1/1/1997 to 1/1/2007
+
+// Trading Style Parameters
+	//	Set AA options: 
+	//	Set Positions = Long
+	//	Set Periodicity = Daily
+
+// Locked Comparison Parameters
+	SetOption("InitialEquity", 100000 );
+	SetOption("CommissionMode", 2 );
+ 	SetOption("CommissionAmount", 30.00 );
+	BuyPrice = High;
+	SellPrice = Low;
+	ShortPrice = Low;
+	CoverPrice = High;
+	
+// Minimum method parameters
+	SetTradeDelays(1,1,1,1);
+
+// Trading method parameters
+	SetOption("FuturesMode", False ); 
+	SetOption("AllowSameBarExit", False ); 
+	SetOption("AllowPositionShrinking", False );
+	SetOption("ReverseSignalForcesExit", True );
+	SetOption("PriceBoundChecking", True );
+	SetOption("UsePrevBarEquityForPosSizing", False );
+	
+	RoundLotSize = 1;
+	PositionSize = 5000;
+
+// Portfolio Settings
+	SetOption("MaxOpenPositions", 10 ); 
+	//	Set AA options: 
+	//	Set Limit trade size as % of entry bar volume = 10
+	//	Set Disable trade size limit when bar Volume is zero = False
+
+/////////////////////////////////////////////////////////////////////
+///////////////End - Backtest Framework Parameters///////////////////
+/////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////
+///////////////Start - Trading method code///////////////////////////
+/////////////////////////////////////////////////////////////////////
+//
+// System: EMaCross
+//
+/////////////////////////////////////////////////////////////////////
+
+// Optimize Parameters 
+	Short_EMA_Var = Optimize("Short_EMA_Variable",6,1,10,1);
+	Long_EMA_Var = Optimize("Long_EMA_Variable",73,30,100,1);
+
+// Stock Selection
+	//Buy only if PositionSize is 10% or less than 3 months average turnover.
+	Turnover_Filter = (MA((Volume * C),60)*.10) > PositionSize; 
+
+	//Set the order for which stock trades when get mulitple signals in one bar in backtesting
+	PositionScore = 100-RSI(); // prefer stocks that have low RSI;
+
+// Signal
+	Long_EMA = EMA( Close, Long_EMA_Var);
+	Short_EMA = EMA( Close, Short_EMA_Var);
+
+	Buy  = Cross( Short_EMA, Long_EMA ) AND Turnover_Filter; 
+	Sell = Cross( Long_EMA, Short_EMA );
+
+// Cleanup signal
+	Buy = ExRem(Buy,Sell);
+	Sell = ExRem(Sell,Buy);
+	
+
+// Plot Price & Volume
+	SetChartOptions(0,chartShowArrows|chartShowDates);
+	_N(Title = "EMACrossT " + Date() + " Open "+O+" Hi "+H+" Low "+L+" Close "+C+" Volume "+WriteVal(V,1) + "\nBase Index:" + GetBaseIndex() );
+
+	Color = IIf(O > C, colorBlack, colorYellow);
+	Plot( Close, "Price", color, styleCandle);
+ 
+	BarColor = 
+		IIf( V > Ref(V,-1),  colorLightBlue , /* up volume */ 
+		IIf( V < Ref(V,-1),  colorDarkBlue, /* down volume */
+                     colorGreen /*otherwise*/ ));
+	Plot( Volume, "Turnover", BarColor, styleHistogram | styleThick | styleOwnScale);
+
+// Plot Raw signals
+	Plot( Short_EMA, "Short_EMA", colorBlue, styleLine);
+	Plot( Long_EMA, "Long_EMA", colorRed, styleLine);
+	shape = Buy * shapeSmallCircle + Sell * shapeSmallCircle;
+	PlotShapes( shape, IIf( Buy, colorLime , colorRed ),0);
+
+// Display details for live trade explore 
+	Filter = (Buy OR Sell);
+	AddTextColumn(WriteIf(Buy,"Buy","Sell"),"Buy/Sell");
+	AddColumn(PositionScore,"Position");
+
+/////////////////////////////////////////////////////////////////////
+///////////////End - Trading method code/////////////////////////////
+/////////////////////////////////////////////////////////////////////
+_SECTION_END();

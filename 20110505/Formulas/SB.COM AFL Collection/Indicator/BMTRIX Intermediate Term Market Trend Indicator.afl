@@ -1,0 +1,32 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    BMTRIX Intermediate Term Market Trend Indicator
+//  Author/Uploader: Brian Mitchell 
+//  E-mail:          bmitchell@bellsouth.net
+//  Date/Time Added: 2003-09-24 08:48:40
+//  Origin:          
+//  Keywords:        
+//  Level:           basic
+//  Flags:           indicator,commentary
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=299
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=299
+//
+//------------------------------------------------------------------------------
+//
+//  This is a variation of the trix. I'm using a TEMA instead of an EMA like in
+//  the original formula. I use a 45 day version, as it tends to call the
+//  intermediate term trends fairly well. Above 0 is a bull trend, below 0 is a
+//  bear trend.
+//
+//------------------------------------------------------------------------------
+
+period = 45;
+
+C = Foreign("COMPQX", "C");
+Trixline=TEMA(TEMA(TEMA(ROC(C, 1), period), period), period);
+Plot(Trixline, "TRIX", colorBlue, styleHistogram);
+"The bmTRIX is indicating a " +
+WriteIf(Trixline > 0, "bullish", "bearish") +
+" market environment because it is " +
+WriteIf(TrixLine > 0, "above", "below") +
+" the zero line.\n";

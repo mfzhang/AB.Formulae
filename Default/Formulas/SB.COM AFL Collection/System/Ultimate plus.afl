@@ -1,0 +1,40 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Ultimate plus
+//  Author/Uploader: D o j i  * ABU REHAB 
+//  E-mail:          d.o.j.i@hotmail.com
+//  Date/Time Added: 2006-04-11 13:39:56
+//  Origin:          
+//  Keywords:        
+//  Level:           basic
+//  Flags:           system
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=613
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=613
+//
+//------------------------------------------------------------------------------
+//
+//  Ultimate plus wthe line to sell and buy
+//
+//  under 30 is buy
+//
+//  up 65 is sell
+//
+//------------------------------------------------------------------------------
+
+_SECTION_BEGIN("D o j i - Ultimate plus");
+r1 = Param("Fast avg", 7, 2, 200, 1 );
+r2 = Param("Med avg", 14, 2, 200, 1 );
+r3 = Param("Slow avg", 28, 2, 200, 1 );
+Plot( Ultimate( r1, r2, r3 ), _DEFAULT_NAME(), ParamColor("Color", colorCycle ), ParamStyle("Style"));
+Plot(30, "", colorGreen);
+Plot(50, "", colorRed);
+Plot(65, "", colorBlue);
+Plot(70, "", colorRed);
+
+
+if( Status("action") == actionCommentary )
+{
+  printf( "(Interpretation is not available yet)" );
+}
+
+_SECTION_END();

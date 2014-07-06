@@ -1,0 +1,65 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Bollinger band normalization
+//  Author/Uploader: Vic Huebner 
+//  E-mail:          atlantic@engineer.com
+//  Date/Time Added: 2002-06-03 14:44:50
+//  Origin:          Bollinger on Bollinger Bands - McGraw Hill
+//  Keywords:        Bollinger,normalize,volatility
+//  Level:           medium
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=196
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=196
+//
+//------------------------------------------------------------------------------
+//
+//  The position of various indicators within Bollinger bands are used as the
+//  start of a trading system. Trends and oscillations can be easily seen. Most
+//  of the usual indicators can be back-tested for profitability.
+//
+//------------------------------------------------------------------------------
+
+//In "Bollinger on Bollinger Bands", John Bollinger described a method of normalizing indicators on any stock regardless of volatility. The method simply computes the percentage position within Bollinger bands. Touching the lower band is zero, while touching the upper band is 100%.
+//In the graph, indicator Lines are drawn at the 0, 50, AND 100% positions. Bollinger bands are shown in white, the indicator is shown in red, and the relative range position is shown in yellow. The multipliers are used to display all items in a single window.
+//Graph0 depicts the indicator of current interest. Simply uncomment to view a different indicator.
+MaxGraph=8;
+Graph0=100000*(C+O+H+L)/Sum(C,20); //Bollinger believes all 4 items are better
+//Graph0=50000*(BBandTop(C,40,2)-BBandBot(C,40,2))*C/BBandTop(C,40,2); //Volatility change - Reversal indicator?
+
+//Graph0=100*MFI(14); //MoneyFlowIndex - G. Quong & A. Soudek
+//Graph0=100*RSI(14);
+//Graph0=1000*MACD(12,26);
+//Graph0=1000*Signal(12,26,9);
+//Graph0=1000*V*Signal(12,26,9)/(Sum(V,12)/12); //VolWeighted MACD - B. Dormeier
+//Graph0=100*ROC(EMA(C,7),21); //Smoothed RateOfChange - 
+//Graph0=-500*ADX(14); 
+//Graph0=.0001*AccDist(); //Acc-distribution - Larry Williams
+//Graph0=10000*EMA((2*C-H-L)*Sum(V,12)/((H-L)*V*12),10); //Intraday intensity - David Bostian
+//Graph0=100*(C-Ref(C,-1)*V*12)/Sum(V,12); //Force index - Dr. Elder
+
+//Compute the Bollinger bands (40 bars & 2.0 SD).
+Graph1=BBandTop(Graph0,40,2);
+Graph2=BBandBot(Graph0,40,2);
+
+//Compute the relative position within the bands.
+Graph3=10000*(Graph0-Graph2)/(Graph1-Graph2);
+//A Zig-Zag line is used to better view the trend changes. Smaller ZigChange values mean busier charts and more frequent trading. Other parameters also should be optimized for best results.
+ZigChange=Optimize("Zig",50,40,100,10);
+Graph4=Zig(Graph3+1000,ZigChange);
+Graph5=0;
+Graph6=5000;
+Graph7=10000;
+Graph1Color=Graph2Color=2;
+Graph0Style=Graph1Style=Graph2Style=Graph4Style=Graph5Style=Graph6Style=Graph7Style=1;
+Graph3Style=4;
+Graph3Color=7;
+
+//Buy signals are generated for stocks over $4.00 when the Zig line as well as the price is increasing. This is a very simplistic trading system that could be greatly improved.
+Buy=(Graph4>Ref(Graph4,-1)) AND (C>4) AND (EMA(C,20)>=Ref(EMA(C,20),-1));
+//Sell signals are generated when the Zig Line is decreasing or price drops.
+Sell=(Graph4<(Ref(Graph4,-1))) OR (EMA(C,3)<(Ref(EMA(C,3),-1)*.98));
+Buy=ExRem(Buy,Sell);
+Sell=ExRem(Sell,Buy); 
+//It is assumed that transactions are made the next day after a buy/sell signal.
+BuyPrice=ValueWhen(Ref(Buy,-1),Open,0);
+SellPrice=ValueWhen(Ref(Sell,-1),Open,0);

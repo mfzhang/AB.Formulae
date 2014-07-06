@@ -1,0 +1,6 @@
+Long_MA=MA(Close,35);
+Short_MA=MA(Close,5);
+Plot(Long_MA,"",colorRed);//can omit this line
+Plot(Long_MA,"long moving avg",colorRed,styleHistogram);
+Plot(Short_MA,"",colorBlue);//can omit this line
+Plot(Short_MA,"short moving avg",colorBlue,styleHistogram);

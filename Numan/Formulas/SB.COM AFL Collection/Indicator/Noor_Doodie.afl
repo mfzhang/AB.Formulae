@@ -1,0 +1,45 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Noor_Doodie
+//  Author/Uploader: Noor_Doodie 
+//  E-mail:          muhd.noor.sn@gmail.com
+//  Date/Time Added: 2006-02-23 11:59:33
+//  Origin:          
+//  Keywords:        
+//  Level:           medium
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=593
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=593
+//
+//------------------------------------------------------------------------------
+//
+//  Elder's Market Thermometer:
+//
+//  Use this to measure market inertia.
+//
+//------------------------------------------------------------------------------
+
+_SECTION_BEGIN("Market Thermometer");
+
+H1 = Ref(H, -1);
+L1 = Ref(L, -1);
+
+T = IIf(H<H1 AND L>L1, 0, IIf(H-H1>L1-L, H-H1, L1-L));
+
+Val1 = H-H1;
+Val2 = L1-L;
+Val = IIf(Val1>Val2, Val1, Val2) ;
+	
+
+Avgval = Median(Val, 22);
+
+color= IIf (Val < Avgval, colorBlue, IIf(Val >= Avgval AND Val < Avgval * 3, colorViolet, IIf(Val > Avgval * 3, colorOrange, colorViolet)));
+
+
+Plot(T, _DEFAULT_NAME(), color, styleHistogram | styleThick);
+P = ParamField("Price field",-1);
+Periods = Param("Periods", 22, 2, 200, 1, 10 );
+
+Plot( EMA( P, Periods ), "EMA 22", colorGreen, styleThick); 
+
+_SECTION_END();

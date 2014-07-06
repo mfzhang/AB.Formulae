@@ -1,0 +1,34 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Ergodic Oscillator
+//  Author/Uploader: Prakash Shenoi 
+//  E-mail:          
+//  Date/Time Added: 2006-08-10 10:08:00
+//  Origin:          
+//  Keywords:        
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=672
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=672
+//
+//------------------------------------------------------------------------------
+//
+//  Ergodic Oscillator uses a double-smoothed ratio of the difference between
+//  the Close and Open prices and the difference between High and Low. The
+//  default periods of average1 is between 11 and 32 and the default of
+//  average2 ranges between 4 and 13, which can be varied by right clicking the
+//  Param function.
+//
+//------------------------------------------------------------------------------
+
+/*Ergodic Oscillator */
+
+/*Coded by Prakash Shenoi */
+
+x=Param(" Average 1",11,2,32);
+y=Param(" Average 2",4,3,12);
+erg=(EMA(EMA(C-O,x),y)/EMA(EMA(H-L,x),y))*100;
+Sg=EMA(erg,5);
+Plot (erg,"Ergodic Oscillator ",styleLine,1);
+Plot (Sg,"Signal",colorRed,styleLine,1);
+GraphXSpace=3; 

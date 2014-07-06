@@ -1,0 +1,35 @@
+//Right Click select pram "parameters" AND you will have pretty
+//much any variable you need.....
+
+ _SECTION_BEGIN("FibCFO");  
+Line1=Param("Zero Line",0,-50,50,1);
+Line2=Param("pos line",21,-50,50,1);
+Line3=Param("neg line",-21,-50,50,1);
+ 
+pds1=Param("CMO3",3,2,10,1);
+CMOa=Sum( IIf( C > Ref( C, -1 ) , ( C - Ref( C ,-1 ) )
+,0 ) ,pds1 ) ;
+CMOb=Sum( IIf( C < Ref( C ,-1 ) , ( Ref( C ,-1 ) - C )
+,0 ) ,pds1 );
+CMO=100 * (( CMOa-CMOb) / ( CMOa+CMOb));
+pds2=Param("CMO5",5,2,15,1);
+CMOc=Sum( IIf( C > Ref( C, -1 ) , ( C - Ref( C ,-1 ) )
+,0 ) ,pds2 ) ;
+CMOd=Sum( IIf( C < Ref( C ,-1 ) , ( Ref( C ,-1 ) - C )
+,0 ) ,pds2 );
+CMO1=100 * (( CMOc-CMOd) / ( CMOc+CMOd));
+pds3=Param("CMO8",8,5,20,1);
+CMOe=Sum( IIf( C > Ref( C, -1 ) , ( C - Ref( C ,-1 ) )
+,0 ) ,pds3 ) ;
+CMOf=Sum( IIf( C < Ref( C ,-1 ) , ( Ref( C ,-1 ) - C )
+,0 ) ,pds3 );
+CMO2=100 * (( CMOe-CMOf) / ( CMOe+CMOf));
+FIBCMO=(CMO+CMO1+CMO2)/3;
+Plot(FIBCMO, "FIB CMO", ParamColor( "FIB CMO Color",
+colorRed ) );
+Plot(Line1,"0", ParamColor( "0 Line Color", colorBlack
+),styleDots );
+Plot(Line2,"+21", ParamColor( "+21 Line Color",
+colorBlack ),styleThick );
+Plot(Line3,"-21", ParamColor( "-21 Line Color",
+colorBlack ),styleThick ); 

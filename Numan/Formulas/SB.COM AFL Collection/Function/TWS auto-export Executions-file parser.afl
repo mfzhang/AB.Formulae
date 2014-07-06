@@ -1,0 +1,131 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    TWS auto-export Executions-file parser
+//  Author/Uploader: Herman van den Bergen 
+//  E-mail:          
+//  Date/Time Added: 2005-04-10 18:00:26
+//  Origin:          
+//  Keywords:        TWS trade-executions converter and trade-plotter
+//  Level:           advanced
+//  Flags:           function
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=457
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=457
+//
+//------------------------------------------------------------------------------
+//
+//  Intended for real-time traders using the Interactive Brokers TWS. This
+//  function converts the auto-exported trade executions file from the TWS to
+//  csv format, creates an AmiBroker compatible format for further processing,
+//  and plots real trades at execution prices on your chart. This is
+//  experimental code provided for experienced afl programmers only.
+//
+//------------------------------------------------------------------------------
+
+// Important: This is experimental, as-is, code for you to play with and improve. 
+// Converts and Plots trades listed in the auto-exported TWS Trade-Executions file.
+// This code is intended for Real-Time trading, I use it in the 3-min timeframe.
+// Configure your TWS to auto-export the trade-executions list (TWSTrades.txt) each Minute.
+// Change the destination path/name for your csv output file for your setup.
+// One array is returned by the function: negative prices are Shorts, pos prices are Long.
+// Note that you must have real executed trades exported to plot them
+// The program doesn't concatenate trading days yet but creates timestamped csv files.
+// The trade list is copied to StaticVarSetText("TWSTrades") for further processing or 
+// display in the interpretation window. Coded by Herman van den Bergen - 10APR2005.
+
+function PlotTWSExecutions()
+	{
+	InputPath = "C:\\Jts\\TWSTrades.txt";
+	OutPutFilename = "TWSTrades"+NumToStr(Now(3),1.0,False)+".csv";
+	OutputPath = "C:\\Program Files\\AmiBroker\\TWSTrades\\"+OutPutFilename;
+	fdelete( OutPutPath );
+	fh1 = fopen( InputPath, "r"); 
+	fh2 = fopen( OutputPath, "a");
+
+	if( fh1 AND fh2 ) 
+		{ 
+		TradeList= ""; TradeNum = 0;
+  		while( ! feof( fh1 ) ) 
+   		{ 
+      	Line1 = fgets( fh1 );
+			Line2 = "";
+			Len = StrLen(Line1);
+			for(p=0; p<=Len; p++)
+				{
+				Char = StrMid(Line1,p,1);
+				if( Char == ";" ) Char = ",";
+				Line2 = Line2 + Char;
+				} 
+
+			if( Line2 != "" )
+				{
+				TradeNum++;
+				fputs( Line2, fh2);
+				Ticker 	= StrExtract(Line2,0);
+				Action 	= StrExtract(Line2,1); if( Action=="SLD" ) ActionNum = -1; else if(Action=="BOT") ActionNum=1; 
+				Shares	= StrExtract(Line2,2); SharesS	= StrToNum(Shares);
+				Price		= StrExtract(Line2,3); PriceNum	= StrToNum(Price);
+				TimeStr	= StrExtract(Line2,4);
+				DateStr	= StrExtract(Line2,5);
+				ABDateNum = 10000*(StrToNum(StrLeft(DateStr,4))-1900)+
+									100*StrToNum(StrMid(DateStr,4,2))+
+										 StrToNum(StrRight(DateStr,2)); 
+				ABDateNumStr = NumToStr(ABDateNum ,1.0,False);
+				TradeNumStr = NumToStr(TradeNum,1.0,False);
+
+				ABTime = "";TimeOffSet = 040000;	// Adjust to your location
+				for(t=0; t<=StrLen(TimeStr); t++)
+					{
+					Char = StrMid(TimeStr,t,1);
+					if( Char == ":" ) Char="";
+					ABTime = ABTime + Char;
+					}
+
+				ABTimeNum = StrToNum(ABTime)-TimeOffSet;
+				VarSet("TradeTime"+TradeNum, ABTimeNum);
+				VarSet("TradePrice"+TradeNum, ActionNum * PriceNum);
+				VarSet("TradeDate"+TradeNum, ABDateNum);
+				ABTimeStr = NumToStr(ABTimeNum,1.0,False);
+
+				DateStr	= StrExtract(Line2,5);
+				Trade = TradeNumStr+" ,"+ABTimeStr+", "+ABDateNumStr+" "+Action + ", "+ SharesS+", "+Price +"\n";
+				TradeList= TradeList + Ticker + ", "+ Trade;
+				}
+ 			}
+		StaticVarSetText("TWSTrades",TradeList);
+		fclose(fh1);
+		fclose(fh2);
+		} 
+	else TradeList = "TradeList could not be converted";
+
+	FirstVisibleBar = Status( "FirstVisibleBar");
+	Lastvisiblebar = Status("LastVisibleBar");
+	TN = TimeNum();
+	PriceArray = Null;
+	TradeNum = 1;
+	TTS = VarGet("TradeTime"+TradeNum);
+	DN=DateNum();
+
+	for( b = Firstvisiblebar; b < Lastvisiblebar; b++)
+		{
+		TDN = VarGet("TradeDate"+TradeNum);
+		if( TDN == DN[b] )
+			{
+			TTSs = NumToStr(TTS,1.0,False);
+			while( TTS > TN[b-1] AND TTS <= TN[b] )
+				{
+				PriceNum = VarGet("TradePrice"+TradeNum);
+				if( PriceNum <0 ) ActionNum = -1; else ActionNum = 1;
+				PriceArray[b] = PriceNum;
+				TTS = VarGet("TradeTime"+(++TradeNum));
+				}
+			}
+		}
+	return PriceArray;
+	}
+
+TWSTradePrices= PlotTWSExecutions();
+Tradecolor = IIf(TWSTradePrices<0,4,5);
+Plot(C,"",1,128);
+PlotShapes(IIf(TWSTradePrices,shapeSmallCircle,shapeNone),TradeColor,0,abs(TWSTradePrices),0);
+
+TWSTradeList = StaticVarGetText("TWSTrades");

@@ -1,0 +1,45 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    CCT Coppock Curve
+//  Author/Uploader: Peter Gialames 
+//  E-mail:          investor@bluescafe.com
+//  Date/Time Added: 2001-07-20 12:09:23
+//  Origin:          Originally developed by Steve Karnish, http://www.cedarcreektrading.com
+//  Keywords:        
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=77
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=77
+//
+//------------------------------------------------------------------------------
+//
+//  The CCT Coppock Curve is a formula that was introduced in
+//  Barron&amp;#8217;s in 1962. It was devised by a San Antonio, TX
+//  &amp;#8211;based technician named Edwin Sedgwick Coppock. Since then, the
+//  Coppock momentum oscillator has been adopted and adapted by technicians
+//  around the world.
+//
+//------------------------------------------------------------------------------
+
+/* CCT Coppock Curve
+**
+** Originally developed by Steve Karnish 
+** http://www.cedarcreektrading.com
+**
+** AFL translation by Peter Gialames
+**
+** Set scaling: Automatic
+** Grid: Middle, Level 0
+*/
+
+graph0=(ROC(CLOSE,14 )*10 + ROC(CLOSE,11)*10 +   
+ROC(Ref(CLOSE,-1),14)*9 +   ROC(Ref(CLOSE,-1),11)*9 +  
+ROC(Ref(CLOSE,-2),14)*8 +   ROC(Ref(CLOSE,-2),11)*8 +  
+ROC(Ref(CLOSE,-3),14)*7 +   ROC(Ref(CLOSE,-3),11)*7 +  
+ROC(Ref(CLOSE,-4),14)*6 +   ROC(Ref(CLOSE,-4),11)*6 +  
+ROC(Ref(CLOSE,-5),14)*5 +   ROC(Ref(CLOSE,-5),11)*5 +  
+ROC(Ref(CLOSE,-6),14)*4 +   ROC(Ref(CLOSE,-6),11)*4 +  
+ROC(Ref(CLOSE,-7),14)*3 +   ROC(Ref(CLOSE,-7),11)*3 +  
+ROC(Ref(CLOSE,-8),14)*2 +   ROC(Ref(CLOSE,-8),11)*2 +  
+ROC(Ref(CLOSE,-9),14) +   ROC(Ref(CLOSE,-9),11))/2;
+

@@ -1,0 +1,131 @@
+/*
+|-----------------------------------------------------------------------------------------
+|PatternExplorer.com - Sector industry trend analysis
+|Copyright © 2007, PatternExplorer.com
+|http://www.PatternExplorer.com
+|e-mail: support@PatternExplorer.com
+|FormulaID = SiTrend
+|-----------------------------------------------------------------------------------------
+*/
+FormulaName = "PE - SI Trend";
+
+SetChartOptions( 1, chartShowDates + chartWrapTitle );
+#pragma nocache
+#include_once  <\PEInc\PatternExplorer_f0.afl>
+#Include_once "C:\Program Files (x86)\AmiBroker5\Formulas\PatternExplorer\#Defaults & Mods\PE - Defaults.afl"
+#Include_once "C:\Program Files (x86)\AmiBroker5\Formulas\PatternExplorer\#Defaults & Mods\PE - Mods.afl"
+/*******************************************************************************************/
+AddCustomCodeBeforePE();
+/*******************************************************************************************/
+
+_SECTION_BEGIN( "Styles" );
+SectorPlotStyle = ParamToggle( "Sector Plot Style", "Mountain,Line with small Shadow", 1 );
+width = Param( "Width", 2.5, 0, 5, 0.5 );
+_SECTION_END();
+
+/*******************************************************************************************/
+
+_SECTION_BEGIN( "Colors" );
+Sectorcolor = ParamColor( "Sector", def_Sectorcolor_Trend );
+IndustryColorUP = ParamColor( "Industry Trend up", def_IndustrycolorUP );
+IndustryConsolidation_color  = ParamColor( "Industry Consolidation", colorLightBlue );
+IndustryColorDN = ParamColor( "Industry Trend dn", colorRed );
+_SECTION_END();
+
+/*******************************************************************************************/
+
+AddGradientBackground( def_BGColorswitch, def_BgTopcolor, def_BgBottomcolor, def_titlebkcolor );
+
+/*******************************************************************************************/
+
+Plot( 0, "", 0, stylehidden + styleNoLabel );
+Plot( 2, "", IIf( ifBu_p > 40 &ifBu_p < 60, IndustryConsolidation_color, IIf( ifBu_p <= 40, IndustryColorDN, IndustryColorUP ) ), styleArea + styleNoLabel, 0, 100 );
+Plot( iFBu_p, "bullish-%", IndustryColorUP, styleThick );
+Plot( iFBe_p, "bearish-%", IndustryColorDN, styleThick );
+
+/*******************************************************************************************/
+
+if ( SectorPlotStyle == 1 )
+{
+    PlotOHLC( sFBu_p - width, sFBu_p + width, sFBu_p - width, sFBu_p, "bearish-%", sectorcolor, styleCloud );
+}
+else
+    if ( SectorPlotStyle == 0 )
+    {
+        PlotOHLC( 0, sFBu_p, 0, sFBu_p, "", sectorcolor, styleCloud );
+    }
+
+/*******************************************************************************************/
+
+Longfilter =  iFBu_p >= 50 AND sFBu_p >= 50 AND C > PeGMA( C, 20 );
+
+Shortfilter = iFBu_p <= 50 AND sFBu_p <= 50 AND C < PeGMA( C, 20 );
+
+/*******************************************************************************************/
+
+SectorBuy = Cross( sFBu_p, 50 );
+
+SectorSell = Cross( 50, sFBu_p );
+
+IndustryBuy = Cross( iFBu_p, 50 );
+
+IndustrySell = Cross( 50, iFBu_p );
+
+/*******************************************************************************************/
+/*
+PlotShapes(SectorSell*shapeDownArrow, colorTurquoise, 0, sFBe_p-width, -20);
+PlotShapes(SectorBuy*shapeUpArrow, colorBlue, 0, sFBu_p-width, -20);
+PlotShapes(IndustryBuy*shapeUpArrow, 5, 0, iFBu_p, -20);
+PlotShapes(IndustrySell*shapeDownArrow, 4, 0, iFBe_p, -20);
+*/
+/*******************************************************************************************/
+
+if ( inAA )
+{
+    _SECTION_BEGIN( "Automatic Analysis" );
+    FilterUndefined = ParamToggle( "Hide undefined Sectors and Industries", "No,Yes", 1 );
+    FilterCond = ParamToggle( "Display only Sectors and Industries", "No,Yes", 0 );
+    _SECTION_END();
+
+    /*******************************************************************************************/
+
+    if ( FilterCond == 0 )
+    {
+        Filter = def_Filter AND SymF AND IIf( FilterUndefined, IIf( StrLeft( Name(), 1 ) != "~", SectorID() > 0 AND IndustryID() > 0, SymFSI ), 1 );
+        Addefaultcolumns();
+        AddColumn( IIf( SectorBuy, 66, IIf( SectorSell, 83, Null ) ), "Sector", formatChar, IIf( SectorBuy, colorGreen, IIf( SectorSell, colorRed, colorDefault ) ), colorDefault, width = 50 );
+        AddColumn( IIf( IndustryBuy, 66, IIf( IndustrySell,  83, Null ) ), "Industry", formatChar, IIf( IndustryBuy, colorGreen, IIf( IndustrySell, colorRed, colorDefault ) ), colorDefault, width = 55 );
+        AddColumn( sFBu_p, "Sector Trend", 1, IIf( sFBu_p > 50, colorGreen, colorRed ), colorDefault, width = 100 );
+        AddColumn( iFBu_p, "Industry Trend", 1, IIf( iFBu_p > 50, colorGreen, colorRed ), colorDefault, width = 100 );
+        AddTextColumn( Sector, "Sector Name" );
+        AddTextColumn( Industry, "Industry Name" );
+        AddColumn( sFT, "Tickers in Sector", 1 );
+        AddColumn( iFT, "Tickers in Industry", 1 );
+        AddColumn( GetFnData( "InsiderHoldPercent" ), "Insider Hold Percent" );
+        AddColumn( GetFnData( "InstitutionHoldPercent" ), "Institution Hold Percent" );
+        AddTextColumn( FullName(), "Full Name" );
+    }
+
+    if ( FilterCond == 1 )
+    {
+        Filter = def_Filter AND SymF AND GroupID() == 253 AND IIf( FilterUndefined, SymFSI, 1 );
+        AddColumn( IIf( SectorBuy, 66, IIf( SectorSell,  83, Null ) ), "Sector", formatChar, IIf( SectorBuy, colorGreen, IIf( SectorSell, colorRed, colorDefault ) ), colorDefault, width = 50 );
+        AddColumn( IIf( IndustryBuy,  66, IIf( IndustrySell,  83, Null ) ), "Industry", formatChar, IIf( IndustryBuy, colorGreen, IIf( IndustrySell, colorRed, colorDefault ) ), colorDefault, width = 55 );
+        AddColumn( sFBu_p, "Sector Trend", 1, IIf( sFBu_p > 50, colorGreen, colorRed ), colorDefault, width = 100 );
+        AddColumn( iFBu_p, "Industry Trend", 1, IIf( iFBu_p > 50, colorGreen, colorRed ), colorDefault, width = 100 );
+        AddColumn( sFT, "Tickers in Sector", 1 );
+        AddColumn( iFT, "Tickers in Industry", 1 );
+    }
+}
+
+/*******************************************************************************************/
+
+ToolTip = def_ToolTip;
+
+/*******************************************************************************************/
+AddCustomCodeAfterPE();
+
+/*******************************************************************************************/
+Title = "PatternExplorer.com - Sector Industry Trend Analysis - " + Name() + " - {{INTERVAL}}"
+        + EncodeColor( SectorColor ) + ", Sector " + SectorID( 1 ) + ", contains " + WriteVal( sFT, 1.0 ) + " Symbols, " + WriteVal( sFBu_p, 1.0 ) + "% in UpTrend, "
+        + EncodeColor( IndustryColorUP ) + "Industry " + IndustryID( 1 ) + ", contains " + WriteVal( iFT, 1.0 ) + " Symbols, " + WriteVal( iFBu_p, 1.0 ) + "% in UpTrend, ";

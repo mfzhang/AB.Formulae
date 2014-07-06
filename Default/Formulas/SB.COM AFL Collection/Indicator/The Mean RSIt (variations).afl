@@ -1,0 +1,223 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    The Mean RSIt (variations)
+//  Author/Uploader: Dimitris Tsokakis 
+//  E-mail:          
+//  Date/Time Added: 2002-03-14 07:36:32
+//  Origin:          
+//  Keywords:        
+//  Level:           advanced
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=172
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=172
+//
+//------------------------------------------------------------------------------
+//
+//  Variations of the Mean RSIt used in trading systems design.
+//
+//  Paste the formula in Automatic Analysis window, select All stocks (or a
+//  sector or a group or a watch list), all quotations and scan.
+//
+//  Select View->Refresh All and then Save.
+//
+//  Data should be clean and without missing dates (holes).
+//
+//  To check this, explore the database with the code
+//
+//  Filter=1;
+//
+//  Numcolumns=1;
+//
+//  Column0=Lastvalue(Cum(1));
+//
+//  for the n=1 last quotation.
+//
+//  If you do not miss some data, the numbers in the result list should be
+//  equal.
+//
+//------------------------------------------------------------------------------
+
+/*MEAN RSIT ~10 TO ~40*/
+Var3=MA(MACD(),10);
+Up=IIf(Var3>Ref(Var3,-1),abs(Var3-Ref(Var3,-1)),0);
+Dn=IIf(Var3<Ref(Var3,-1),abs(Var3-Ref(Var3,-1)),0);
+Ut=Wilders(Up,30);
+Dt=Wilders(Dn,30);
+R10SIt=100*(Ut/(Ut+Dt));
+R10SIt10=MA(R10SIt,10);
+AddToComposite(R10SIt10,"~10","V");
+
+Var6=MA(MACD(),15);
+Up=IIf(Var6>Ref(Var6,-1),abs(Var6-Ref(Var6,-1)),0);
+Dn=IIf(Var6<Ref(Var6,-1),abs(Var6-Ref(Var6,-1)),0);
+Ut=Wilders(Up,30);
+Dt=Wilders(Dn,30);
+R15SIt=100*(Ut/(Ut+Dt));
+R15SIt10=MA(R15SIt,10);
+AddToComposite(R15SIt10,"~15","V");
+
+Var4=MA(MACD(),20);
+Up=IIf(Var4>Ref(Var4,-1),abs(Var4-Ref(Var4,-1)),0);
+Dn=IIf(Var4<Ref(Var4,-1),abs(Var4-Ref(Var4,-1)),0);
+Ut=Wilders(Up,30);
+Dt=Wilders(Dn,30);
+R20SIt=100*(Ut/(Ut+Dt));
+R20SIt10=MA(R20SIt,10);
+AddToComposite(R20SIt10,"~20","V");
+
+Var1=MA(MACD(),25);
+Up=IIf(Var1>Ref(Var1,-1),abs(Var1-Ref(Var1,-1)),0);
+Dn=IIf(Var1<Ref(Var1,-1),abs(Var1-Ref(Var1,-1)),0);
+Ut=Wilders(Up,30);
+Dt=Wilders(Dn,30);
+R25SIt=100*(Ut/(Ut+Dt));
+R25SIt10=MA(R25SIt,10);
+AddToComposite(R25SIt10,"~25","V");
+
+Var2=MA(MACD(),30);
+Up=IIf(Var2>Ref(Var2,-1),abs(Var2-Ref(Var2,-1)),0);
+Dn=IIf(Var2<Ref(Var2,-1),abs(Var2-Ref(Var2,-1)),0);
+Ut=Wilders(Up,30);
+Dt=Wilders(Dn,30);
+R30SIt=100*(Ut/(Ut+Dt));
+R30SIt10=MA(R30SIt,10);
+AddToComposite(R30SIt10,"~30","V");
+
+Var5=MA(MACD(),35);
+Up=IIf(Var5>Ref(Var5,-1),abs(Var5-Ref(Var5,-1)),0);
+Dn=IIf(Var5<Ref(Var5,-1),abs(Var5-Ref(Var5,-1)),0);
+Ut=Wilders(Up,30);
+Dt=Wilders(Dn,30);
+R35SIt=100*(Ut/(Ut+Dt));
+R35SIt10=MA(R35SIt,10);
+AddToComposite(R35SIt10,"~35","V");
+
+Var7=MA(MACD(),40);
+Up=IIf(Var7>Ref(Var7,-1),abs(Var7-Ref(Var7,-1)),0);
+Dn=IIf(Var7<Ref(Var7,-1),abs(Var7-Ref(Var7,-1)),0);
+Ut=Wilders(Up,30);
+Dt=Wilders(Dn,30);
+R40SIt=100*(Ut/(Ut+Dt));
+R40SIt10=MA(R40SIt,10);
+AddToComposite(R40SIt10,"~40","V");
+
+/*MEAN RSIT 10,20,30,40 VAR=MACD()*/
+Var=MACD();
+Up=IIf(Var>Ref(Var,-1),abs(Var-Ref(Var,-1)),0);
+Dn=IIf(Var<Ref(Var,-1),abs(Var-Ref(Var,-1)),0);
+Ut=Wilders(Up,30);
+Dt=Wilders(Dn,30);
+RSIt=100*(Ut/(Ut+Dt));
+RSIt10=MA(RSIt,10);
+RSIt20=MA(RSIt,20);
+RSIt30=MA(RSIt,30);
+RSIt40=MA(RSIt,40);
+s1=IIf(RSIt>=0 AND RSIt<=100,RSIt,0);values3 = s1;
+s10=IIf(RSIt10>=0 AND RSIt10<=100,RSIt10,0);values4 = s10;
+s20=IIf(RSIt20>=0 AND RSIt20<=100,RSIt20,0);values5 = s20;
+s30=IIf(RSIt30>=0 AND RSIt30<=100,RSIt30,0);values6 = s30;
+s40=IIf(RSIt40>=0 AND RSIt40<=100,RSIt40,0);values7 = s40;
+AddToComposite(Values3,"~meanrsit","V");
+AddToComposite(Values4,"~meanrsit10","V");
+AddToComposite(Values5,"~meanrsit20","V");
+AddToComposite(Values6,"~meanrsit30","V");
+AddToComposite(Values7,"~meanrsit40","V");
+
+
+/*MEAN RSIT 10,20,30,40 VAR=MA(MACD(),5)*/
+Var=MA(MACD(),5);
+Up=IIf(Var>Ref(Var,-1),abs(Var-Ref(Var,-1)),0);
+Dn=IIf(Var<Ref(Var,-1),abs(Var-Ref(Var,-1)),0);
+Ut=Wilders(Up,30);
+Dt=Wilders(Dn,30);
+RSIt=100*(Ut/(Ut+Dt));
+RSIt10=MA(RSIt,10);
+RSIt20=MA(RSIt,20);
+RSIt30=MA(RSIt,30);
+RSIt40=MA(RSIt,40);
+s1=IIf(RSIt>=0 AND RSIt<=100,RSIt,0);values3 = s1;
+s10=IIf(RSIt10>=0 AND RSIt10<=100,RSIt10,0);values4 = s10;
+s20=IIf(RSIt20>=0 AND RSIt20<=100,RSIt20,0);values5 = s20;
+s30=IIf(RSIt30>=0 AND RSIt30<=100,RSIt30,0);values6 = s30;
+s40=IIf(RSIt40>=0 AND RSIt40<=100,RSIt40,0);values7 = s40;
+AddToComposite(Values3,"~5meanrsit","V");
+AddToComposite(Values4,"~5meanrsit10","V");
+AddToComposite(Values5,"~5meanrsit20","V");
+AddToComposite(Values6,"~5meanrsit30","V");
+AddToComposite(Values7,"~5meanrsit40","V");
+
+/*MEAN RSIT 10,20,30,40 VAR=MA(MACD(),10)*/
+Var=MA(MACD(),10);
+Up=IIf(Var>Ref(Var,-1),abs(Var-Ref(Var,-1)),0);
+Dn=IIf(Var<Ref(Var,-1),abs(Var-Ref(Var,-1)),0);
+Ut=Wilders(Up,30);
+Dt=Wilders(Dn,30);
+RSIt=100*(Ut/(Ut+Dt));
+RSIt10=MA(RSIt,10);
+RSIt20=MA(RSIt,20);
+RSIt30=MA(RSIt,30);
+RSIt40=MA(RSIt,40);
+s1=IIf(RSIt>=0 AND RSIt<=100,RSIt,0);values3 = s1;
+s10=IIf(RSIt10>=0 AND RSIt10<=100,RSIt10,0);values4 = s10;
+s20=IIf(RSIt20>=0 AND RSIt20<=100,RSIt20,0);values5 = s20;
+s30=IIf(RSIt30>=0 AND RSIt30<=100,RSIt30,0);values6 = s30;
+s40=IIf(RSIt40>=0 AND RSIt40<=100,RSIt40,0);values7 = s40;
+AddToComposite(Values3,"~10meanrsit","V");
+AddToComposite(Values4,"~10meanrsit10","V");
+AddToComposite(Values5,"~10meanrsit20","V");
+AddToComposite(Values6,"~10meanrsit30","V");
+AddToComposite(Values7,"~10meanrsit40","V");
+
+/*MEAN RSIT 10,20,30,40 VAR=MA(MA(MACD(),5),5)*/
+Var=MA(MA(MACD(),5),5);
+Up=IIf(Var>Ref(Var,-1),abs(Var-Ref(Var,-1)),0);
+Dn=IIf(Var<Ref(Var,-1),abs(Var-Ref(Var,-1)),0);
+Ut=Wilders(Up,30);
+Dt=Wilders(Dn,30);
+RSIt=100*(Ut/(Ut+Dt));
+RSIt10=MA(RSIt,10);
+RSIt20=MA(RSIt,20);
+RSIt30=MA(RSIt,30);
+RSIt40=MA(RSIt,40);
+s1=IIf(RSIt>=0 AND RSIt<=100,RSIt,0);values3 = s1;
+s10=IIf(RSIt10>=0 AND RSIt10<=100,RSIt10,0);values4 = s10;
+s20=IIf(RSIt20>=0 AND RSIt20<=100,RSIt20,0);values5 = s20;
+s30=IIf(RSIt30>=0 AND RSIt30<=100,RSIt30,0);values6 = s30;
+s40=IIf(RSIt40>=0 AND RSIt40<=100,RSIt40,0);values7 = s40;
+AddToComposite(Values3,"~55meanrsit","V");
+AddToComposite(Values4,"~55meanrsit10","V");
+AddToComposite(Values5,"~55meanrsit20","V");
+AddToComposite(Values6,"~55meanrsit30","V");
+AddToComposite(Values7,"~55meanrsit40","V");
+
+/*MEAN RSIT 10,20,30,40 VAR=MA(MA(MA(MACD(),5),5),5)*/
+Var=MA(MA(MA(MACD(),5),5),5);
+Up=IIf(Var>Ref(Var,-1),abs(Var-Ref(Var,-1)),0);
+Dn=IIf(Var<Ref(Var,-1),abs(Var-Ref(Var,-1)),0);
+Ut=Wilders(Up,30);
+Dt=Wilders(Dn,30);
+RSIt=100*(Ut/(Ut+Dt));
+RSIt10=MA(RSIt,10);
+RSIt20=MA(RSIt,20);
+RSIt30=MA(RSIt,30);
+RSIt40=MA(RSIt,40);
+s1=IIf(RSIt>=0 AND RSIt<=100,RSIt,0);values3 = s1;
+s10=IIf(RSIt10>=0 AND RSIt10<=100,RSIt10,0);values4 = s10;
+s20=IIf(RSIt20>=0 AND RSIt20<=100,RSIt20,0);values5 = s20;
+s30=IIf(RSIt30>=0 AND RSIt30<=100,RSIt30,0);values6 = s30;
+s40=IIf(RSIt40>=0 AND RSIt40<=100,RSIt40,0);values7 = s40;
+AddToComposite(Values3,"~555meanrsit","V");
+AddToComposite(Values4,"~555meanrsit10","V");
+AddToComposite(Values5,"~555meanrsit20","V");
+AddToComposite(Values6,"~555meanrsit30","V");
+AddToComposite(Values7,"~555meanrsit40","V");
+
+/*ADDITIONAL MACD COMPOSITES ~MACDBULL AND ~MACDBEAR*/
+ob=Signal()<MACD();
+os=Signal()>=MACD();
+values8 = os>0;
+values9 = ob>0;
+AddToComposite(Values8,"~macdbear","V");
+AddToComposite(Values9,"~macdbull","V");
+
+Buy=0;

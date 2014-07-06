@@ -1,0 +1,14 @@
+_SECTION_BEGIN("RSI-TSV RSI values");
+SetChartOptions(0,0,chartGrid30|chartGrid70);
+periods = Param( "Periods", 14, 1, 200, 1 );
+Plot( RSI( periods), _DEFAULT_NAME(), ParamColor( "Color", colorCycle ), ParamStyle("Style")| styleOwnScale );
+_SECTION_END();
+
+// Time segment value
+_SECTION_BEGIN("RSI-TSV TSV values");
+
+TSV=(Sum( IIf( C > Ref(C,-1), V * ( C-Ref(C,-1) ), IIf( C < Ref(C,-1),-V * ( C-Ref(C,-1) ), 0 ) ), Param("TSV Period", 18, 7,100,1)));
+
+Plot(TSV,"TSV",ParamColor("TSV Color",colorAqua));
+
+_SECTION_END();

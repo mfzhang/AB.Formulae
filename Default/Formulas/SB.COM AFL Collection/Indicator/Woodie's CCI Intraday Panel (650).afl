@@ -1,0 +1,906 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Woodie's CCI Intraday Panel
+//  Author/Uploader: Dennis Skoblar 
+//  E-mail:          DennisAndLisa@sbcglobal.net
+//  Date/Time Added: 2006-07-26 02:17:25
+//  Origin:          www.woodiescciclub.com
+//  Keywords:        Woodies CCI, CCI
+//  Level:           medium
+//  Flags:           system,exploration,indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=650
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=650
+//
+//------------------------------------------------------------------------------
+//
+//  Here is Woodie's CCI Intraday panel which was originally coded by
+//  Crasher_FL and Wring. It is a modified Daily CCI Panel with the CCI 14, and
+//  CCI 6. It is complete with pattern recognition,backtesting, scanning, and
+//  exploration options. The Pattern Recognition helps find the ZLR, HFE,
+//  GB100(with a 34ema +/- 15 degree nuance), VT,FAMIR,MR and Choppy (Chop mode
+//  being defined as the CCI bars inbetween the 100's for 10 or more bars. The
+//  reset out of chop is when the CCI hooks from extreme at the 200's). . The
+//  pattern recognition is located at the top left corner next to "Signal: ".
+//
+//  1=zlr
+//
+//  2-famir
+//
+//  3=vt
+//
+//  4=gb100
+//
+//  5=momentum reversal
+//
+//  This version has the Mplay Exit Indicator in it. The MPLAY exit is a CCI
+//  hook to the oposite direction followed by another with the price closing in
+//  the oposite direction of the trade. I have coded the MPLAY Indicator with
+//  the CCI panel. It is a series of green and red circles just below the +200
+//  line. The nearest green circle that appears after a pattern (any pattern,
+//  not just the coded ones) is the exit for a long position. The nearest red
+//  circle is the exit after a short pattern. Ignore all the ones inbetween.
+//  The circles appear after every and any occurance of an MPLAY Exit,
+//  regardless if a pattern has appeared or not. Just use the nearest
+//  applicable circle to exit a pattern entered.
+//
+//  I also added the EMA angle colors to the 100's. Turquoise= uptrend,
+//  Red=downtrend, Yellow=not trending. This code was originally in the cci
+//  panel coded by Crasher, I just tweeked it to be displayed in visual format.
+//  It is identical to woodie's modification to the cci panel, which he uses as
+//  a chop inicator as well. If there is a constant color, the trend is in that
+//  direction. If the colors are mixed, then there is a chop.
+//
+//  *** Set background preference to Dark Olive Green
+//
+//  Trade at your own risk, please use your own descretion, for educational
+//  purposes only.
+//
+//  -Dennis
+//
+//------------------------------------------------------------------------------
+
+/////////////////////////////// 
+
+// CCI Woodies Style - Started by Wring 
+
+// Codded/Added by Kris 
+
+// Added by Dennis and Greg 
+
+// Version: 1.027 
+
+// Last Update: 11/24/2005 
+
+// Additions: 
+
+// timer, EMA angle, LSMA angle, trending indicator, pattern recognition (Choppy, HFE, ZLR, FAMIR, VT, GB100) 
+
+// Amibroker 4.70 
+
+/////////////////////////////// 
+
+Version(4.70); 
+
+//MarketHours = TimeNum()>=63000 AND TimeNum()<=125959; 
+
+//MArketClose= TimeNum()>=125959 AND TimeNum()<=130000; 
+
+z = CCI(14); 
+
+z6 = CCI(6); 
+
+CCI50_var = CCI(50); 
+
+LSMA25 = LinearReg(C, 25 ); 
+
+EMA34 = EMA(C,34); 
+
+PI = atan(1.00) * 4; 
+
+periods = 30; 
+
+HighHigh = HHV(H, periods); 
+
+LowLow = LLV(L, periods); 
+
+range = 25 / (HighHigh - LowLow) * LowLow; 
+
+TTMperiod = 6; 
+
+Low_ma = EMA(L, TTMperiod); 
+
+High_ma = EMA(H, TTMperiod); 
+
+Low_third = (High_ma - Low_ma) / 3 + Low_ma; 
+
+High_third = 2 * (High_ma - Low_ma) / 3 + Low_ma; 
+
+tempnum = Now( 4 ) - TimeNum(); 
+
+TimeRem = Interval() - ((int(tempnum[BarCount - 1] / 100) * 60) + (tempnum[BarCount - 1] - int(tempnum[BarCount - 1] / 100) * 100)); 
+
+if (TimeRem[BarCount - 1] < 0) TimeRem = 0; 
+
+TitleTimeRem = EncodeColor(colorLightGrey) + "Time Remaining: "; 
+
+MinuteVar = int(TimeRem / 60); 
+
+SecondsVar = int(frac(TimeRem / 60) * 60); 
+
+if (TimeRem[BarCount - 1] > 60) 
+
+{ 
+
+TitleTimeRem = TitleTimeRem + EncodeColor(colorWhite) + MinuteVar + ":" + WriteIf(SecondsVar > 9, "", "0") + SecondsVar; 
+
+} 
+
+else if (TimeRem[BarCount - 1] > 20) 
+
+{ 
+
+TitleTimeRem = TitleTimeRem + EncodeColor(colorYellow) + MinuteVar + ":" + WriteIf(SecondsVar > 9, "", "0") + SecondsVar; 
+
+} 
+
+else 
+
+{ 
+
+TitleTimeRem = TitleTimeRem + EncodeColor(colorLime) + MinuteVar + ":" + WriteIf(SecondsVar > 9, "", "0") + SecondsVar; 
+
+} 
+
+if(SelectedValue(CCI50_var) < 0) 
+
+{ 
+
+CCI50Title = EncodeColor(colorRed); 
+
+} 
+
+else 
+
+{ 
+
+CCI50Title = EncodeColor(colorLime); 
+
+} 
+
+CCI50Title = CCI50Title + "CCI 50 = " + round(CCI50_var) + ", "; 
+
+stop_range = IIf(O < C, IIf((H - O) < (C - L), C - L, H - O), 
+
+IIf((O - L) < (H - C), H - C, O - L)); 
+
+StopTitle = EncodeColor(colorWhite) + "Stop = " + EncodeColor(colorYellow); 
+
+StopTitle = StopTitle + StrToNum(NumToStr(stop_range, 4.4)); 
+
+x1_EMA34 = 0; 
+
+x2_EMA34 = 1; 
+
+y1_EMA34 = 0; 
+
+y2_EMA34 = (Ref(EMA34, -1) - EMA34) / Avg * range; 
+
+c_EMA34 = sqrt((x2_EMA34 - x1_EMA34)*(x2_EMA34 - x1_EMA34) + (y2_EMA34 - y1_EMA34)*(y2_EMA34 - y1_EMA34)); 
+
+angle_EMA34 = round(180 * acos((x2_EMA34 - x1_EMA34)/c_EMA34) / PI); 
+
+TitleAngleEMA34 = EncodeColor(colorWhite) + "\nEMA34 angle = "; 
+
+angle_EMA34 = IIf(y2_EMA34 > 0, - angle_EMA34, angle_EMA34); 
+
+if(SelectedValue(angle_EMA34) >= 25) 
+
+{ 
+
+TitleAngleEMA34 = TitleAngleEMA34 + EncodeColor(colorTurquoise); 
+
+} 
+
+else if(SelectedValue(angle_EMA34) <= -25) 
+
+{ 
+
+TitleAngleEMA34 = TitleAngleEMA34 + EncodeColor(colorRed); 
+
+} 
+
+else if(SelectedValue(angle_EMA34) >= 5) 
+
+{ 
+
+TitleAngleEMA34 = TitleAngleEMA34 + EncodeColor(colorTurquoise); 
+
+} 
+
+else if(SelectedValue(angle_EMA34) <= -5) 
+
+{ 
+
+TitleAngleEMA34 = TitleAngleEMA34 + EncodeColor(colorRed); 
+
+} 
+
+else 
+
+{ 
+
+TitleAngleEMA34 = TitleAngleEMA34 + EncodeColor(colorYellow); 
+
+} 
+
+TitleAngleEMA34 = TitleAngleEMA34 + angle_EMA34; 
+
+x1_LSMA25 = 0; 
+
+x2_LSMA25 = 1; 
+
+y1_LSMA25 = 0; 
+
+y2_LSMA25 = (Ref(LSMA25, -1) - LSMA25) / Avg * range; 
+
+c_LSMA25 = sqrt((x2_LSMA25 - x1_LSMA25)*(x2_LSMA25 - x1_LSMA25) + (y2_LSMA25 - y1_LSMA25)*(y2_LSMA25 - y1_LSMA25)); 
+
+angle_LSMA25 = round(180 * acos((x2_LSMA25 - x1_LSMA25)/c_LSMA25) / PI); 
+
+TitleAngleLSMA25 = EncodeColor(colorWhite) + "LSMA25 angle = "; 
+
+angle_LSMA25 = IIf(y2_LSMA25 > 0, - angle_LSMA25, angle_LSMA25); 
+
+if(SelectedValue(angle_LSMA25) >= 25) 
+
+{ 
+
+TitleAngleLSMA25 = TitleAngleLSMA25 + EncodeColor(colorTurquoise); 
+
+} 
+
+else if(abs(SelectedValue(angle_LSMA25)) <= -25) 
+
+{ 
+
+TitleAngleLSMA25 = TitleAngleLSMA25 + EncodeColor(colorRed); 
+
+} 
+
+else if(SelectedValue(angle_LSMA25) >= 5) 
+
+{ 
+
+TitleAngleLSMA25 = TitleAngleLSMA25 + EncodeColor(colorTurquoise); 
+
+} 
+
+else if(SelectedValue(angle_LSMA25) <= -5) 
+
+{ 
+
+TitleAngleLSMA25 = TitleAngleLSMA25 + EncodeColor(colorRed); 
+
+} 
+
+else 
+
+{ 
+
+TitleAngleLSMA25 = TitleAngleLSMA25 + EncodeColor(colorYellow); 
+
+} 
+
+TitleAngleLSMA25 = TitleAngleLSMA25 + angle_LSMA25; 
+
+TitleTrending = WriteIf((abs(angle_EMA34) >= 15) AND (abs(angle_EMA34 + angle_LSMA25) >= 50), EncodeColor(colorWhite) + ", SW = " + EncodeColor(colorLime) + "TRENDING", 
+
+WriteIf((abs(angle_EMA34) >= 5) AND (((angle_EMA34 >= 0) AND (angle_LSMA25 >= 0)) OR ((angle_EMA34 <= 0) AND (angle_LSMA25 <= 0))) AND (abs(angle_EMA34 + angle_LSMA25) >= 30), EncodeColor(colorWhite) + ", SW = " + EncodeColor(colorYellow) + "NORMAL", 
+
+EncodeColor(colorWhite) + ", SW = " + EncodeColor(colorRed) + "FLAT")); 
+
+SW = IIf((abs(angle_EMA34) >= 15) AND (abs(angle_EMA34 + angle_LSMA25) >= 50), IIf(angle_LSMA25 > 0, 2, -2), 
+
+IIf((abs(angle_EMA34) >= 5) AND (((angle_EMA34 >= 0) AND (angle_LSMA25 >= 0)) OR ((angle_EMA34 <= 0) AND (angle_LSMA25 <= 0))) AND (abs(angle_EMA34 + angle_LSMA25) >= 30), IIf(angle_LSMA25 > 0, 1, -1), 0)); 
+
+// Colour the bars for Woodies Trend Following 
+
+Plusbars = BarsSince(z < 0); 
+
+Minusbars = BarsSince(z > 0); 
+
+TrendBarCount = 6; 
+
+Color[0] = colorDefault; 
+
+Trend[0] = 0; 
+
+TTMColor[0] = colorDefault; 
+
+for( i = 1; i < BarCount; i++ ) 
+
+{ 
+
+if (C[i] > High_third[i]) 
+
+{ 
+
+TTMColor[i] = colorDarkGreen; 
+
+} 
+
+else if (C[i] < Low_third[i]) 
+
+{ 
+
+TTMColor[i] = colorDarkRed; 
+
+} 
+
+else 
+
+{ 
+
+TTMColor[i] = TTMColor[i - 1]; 
+
+} 
+
+if (Plusbars[i] >= TrendBarCount) 
+
+{ 
+
+Trend[i] = 1; 
+
+} 
+
+else if (Minusbars[i] >= TrendBarCount) 
+
+{ 
+
+Trend[i] = -1; 
+
+} 
+
+else 
+
+{ 
+
+Trend[i] = Trend[i - 1]; 
+
+} 
+
+if (Trend[i] == 1) 
+
+{ 
+
+if (Minusbars[i] == TrendBarCount - 1) 
+
+{ 
+
+Color[i] = colorYellow; 
+
+} 
+
+else if (z[i] < 0) 
+
+{ 
+
+Color[i] = colorBlack; 
+
+} 
+
+else 
+
+{ 
+
+Color[i] = colorLime; 
+
+} 
+
+} 
+
+else if (Trend[i] == -1) 
+
+{ 
+
+if (Plusbars[i] == TrendBarCount - 1) 
+
+{ 
+
+Color[i] = colorYellow; 
+
+} 
+
+else if (z[i] >= 0) 
+
+{ 
+
+Color[i] = colorBlack; 
+
+} 
+
+else 
+
+{ 
+
+Color[i] = colorRed; 
+
+} 
+
+} 
+
+else 
+
+{ 
+
+Color[i] = colorDefault; 
+
+} 
+
+} 
+
+// CCI Line 
+
+Plot(z,"CCI 14", colorBlack, styleLine | styleThick | styleNoLabel ); 
+
+// Turbo CCI 
+
+Plot(z6,"CCI 6", colorDarkYellow, styleLine | styleNoLabel); 
+
+// zero line 25lsma 
+
+Plot(0,"", IIf(C > LSMA25,colorLime,IIf(C<LSMA25,colorRed,colorTeal)), 
+
+styleDots | styleNoLine | styleThick | styleNoLabel); 
+
+// CCI Histogram 
+
+Plot(z,"", Color, styleHistogram | styleThick | styleNoLabel); 
+
+// CCI 50 
+
+//Plot(CCI50_var,"CCI 50", IIf(CCI50_var < 0, colorDarkRed,colorDarkGreen), styleLine | styleNoLabel); 
+
+// Set up color for the 100s, green if 34ema above red if below 
+
+//Color = IIf(C > EMA34, colorGreen, 
+
+// IIf(C == EMA34, colorTeal, colorRed)); 
+
+//Set Color for the SW 
+
+ColorSW = IIf(abs(SW) == 2, colorGreen, 
+
+IIf(abs(SW) == 1, colorYellow, colorRed)); 
+
+Color=colorWhite; 
+
+// Plot the 100s 
+
+//Plot(100,"",Color,styleDashed|styleNoLabel); 
+
+//Plot(-100,"",Color,styleDashed|styleNoLabel); 
+
+ColorANGLE_EMA = IIf(angle_EMA34 >=5, colorTurquoise, 
+
+IIf(angle_EMA34 <=-5, colorRed, colorYellow)); 
+
+//ColorANGLE_EMA1 = IIf(angle_EMA34 >=25, colorTurquoise, 
+
+// IIf(angle_EMA34 <=-25, colorRed, colorBlack)); 
+
+//ColorANGLE_EMA = IIf(abs(angle_EMA34) >=25, colorGreen, 
+
+// IIf(abs(angle_EMA34) >=15, colorYellow, colorRed)); 
+
+Plot(100,"", ColorANGLE_EMA , styleDashed | styleThick | styleNoLabel); 
+
+Plot(-100,"", ColorANGLE_EMA , styleDashed | styleThick | styleNoLabel); 
+
+// Plot the 50s 
+
+Plot(50,"", colorDarkGrey, styleDashed | styleNoLabel); 
+
+Plot(-50,"", colorDarkGrey , styleDashed | styleNoLabel); 
+
+//Plot(50,"", TTMColor, styleDots | styleNoLine | styleNoLabel); 
+
+//Plot(-50,"", TTMColor, styleDots | styleNoLine | styleNoLabel); 
+
+// Plot the 200s 
+
+Plot(200,"", ColorSW, styleThick | styleNoLabel); 
+
+Plot(-200,"", ColorSW, styleThick | styleNoLabel); 
+
+// Plot the grids 
+
+PlotGrid(0); 
+
+PlotGrid(50); 
+
+PlotGrid(-50); 
+
+PlotGrid(-100); 
+
+PlotGrid(100); 
+
+PlotGrid(-200); 
+
+PlotGrid(200); 
+
+// choppy 
+
+A= (HHV(z,10)<=100 AND LLV(z,10)>=-100); 
+
+B= (Ref(z,-1)>200 AND z<200) OR (Ref(z,-1)<-200 AND z>-200); 
+
+bs_a=BarsSince(A); 
+
+bs_b=BarsSince(B); 
+
+bars = IIf( bs_A < Bs_B, bs_a, 0); 
+
+// ZLR Long 
+
+uptrend_a=BarsSince(z<0); 
+
+uptrend_b=BarsSince(z>0); 
+
+Linex_long=Ref(z,-1)>100 AND z<100; 
+
+barsfromline_long=BarsSince(Linex_long); 
+
+CCIhook_long=z>Ref(z,-1) AND Ref(z,-1)>-100 AND Ref(z,-1)<Ref(z,-2) AND Ref(z,-2)>-100 AND z>0; 
+
+SW_trendinglong= sw==1 OR sw==2; 
+
+zlrlong= (Ref(angle_ema34,-2)>=5 AND Ref(angle_ema34,-1)>=5 AND angle_ema34>=5) AND SW_trendinglong AND z<100 AND barsfromline_long<10 AND CCIhook_long AND (uptrend_a>=6 AND z>-100 OR 
+
+(uptrend_b<6 AND LLV(z,uptrend_b)>-100 AND z>-100 AND (Ref(uptrend_a,-6)>=6 AND z>-100 OR Ref(uptrend_a,-5)>=6 AND z>-100 OR Ref(uptrend_a,-4)>=6 AND z>-100 OR Ref(uptrend_a,-3)>=6 AND z>-100 OR 
+
+Ref(uptrend_a,-2)>=6 AND z>-100 OR Ref(uptrend_a,-1)>=6 AND z>-100))); 
+
+PlotShapes(IIf(zlrlong,shapeDigit1,shapeNone),colorLime,0,0,-15); 
+
+// ZLR Short 
+
+downtrend_a=BarsSince(z>0); 
+
+downtrend_b=BarsSince(z<0); 
+
+Linex_short=Ref(z,-1)<=-100 AND z>=-100; 
+
+barsfromline_short=BarsSince(Linex_short); 
+
+CCIhook_short=z<Ref(z,-1) AND Ref(z,-1)<100 AND Ref(z,-1)>Ref(z,-2) AND Ref(z,-2)<100 AND z<0; 
+
+SW_trendingshort= sw==-1 OR sw==-2; 
+
+zlrshort= (Ref(angle_ema34,-2)<=-5 AND Ref(angle_ema34,-1)<=-5 AND angle_ema34<=-5) AND SW_trendingshort AND z>-100 AND barsfromline_short<10 AND CCIhook_short AND (downtrend_a>=6 AND z<100 OR 
+
+(downtrend_b<6 AND HHV(z,downtrend_b)<100 AND z<100 AND (Ref(downtrend_a,-6)>=6 AND z<100 OR Ref(downtrend_a,-5)>=6 AND z<100 OR Ref(downtrend_a,-4)>=6 AND z<100 OR 
+
+Ref(downtrend_a,-3)>=6 AND z<100 OR Ref(downtrend_a,-2)>=6 AND z<100 OR Ref(downtrend_a,-1)>=6 AND z<100))); 
+
+PlotShapes(IIf(zlrshort,shapeDigit1+ shapePositionAbove,shapeNone),colorRed,0,0,-15); 
+
+// Famir Short 
+
+Famir_downtrend_a=BarsSince(z<0); 
+
+Famir_downtrend_b=BarsSince(z>0); 
+
+FamirLinex_short=Ref(z,-1)>=100 AND z<100; 
+
+Famir_barsfromline_short=BarsSince(FamirLinex_short); 
+
+Famir_pivotshort= (Ref(z,-2)<Ref(z,-1)AND Ref(z,-1)<=55 AND Ref(z,-2)<=55) OR (Ref(z,-3)<Ref(z,-1)AND Ref(z,-1)<=55 AND Ref(z,-2)<=55 AND Ref(z,-3)<=55) 
+
+OR (Ref(z,-4)<Ref(z,-1) AND Ref(z,-1)<=55 AND Ref(z,-2)<=55 AND Ref(z,-3)<=55); 
+
+Famirhook_short=Famir_pivotshort AND z<Ref(LLV(z,Famir_barsfromline_short),-1) AND (z>=-55 AND z<=55) AND C<Lsma25; 
+
+Famirshort=  Famir_barsfromline_short<10 AND Famirhook_short AND (Famir_downtrend_a>=6 OR 
+
+(Famir_downtrend_b<6 AND (Ref(Famir_downtrend_a,-6)>=6 OR Ref(Famir_downtrend_a,-5)>=6 OR Ref(Famir_downtrend_a,-4)>=6 OR 
+
+Ref(Famir_downtrend_a,-3)>=6 OR Ref(Famir_downtrend_a,-2)>=6 OR Ref(Famir_downtrend_a,-1)>=6))) AND C<LSMA25; 
+
+PlotShapes(IIf(famirShort,shapeDigit2+ shapePositionAbove,shapeNone),colorRed,0,0,-15); 
+
+// Famir Long 
+
+Famir_uptrend_a=BarsSince(z<0); 
+
+Famir_uptrend_b=BarsSince(z>0); 
+
+FamirLinex_long=Ref(z,-1)<=-100 AND z>-100; 
+
+Famir_barsfromline_long=BarsSince(FamirLinex_long); 
+
+Famir_pivotlong= (Ref(z,-2)>Ref(z,-1)AND Ref(z,-1)>=-55 AND Ref(z,-2)>=-55) OR (Ref(z,-3)>Ref(z,-1) AND Ref(z,-1)>=-55 AND Ref(z,-2)>=-55 AND Ref(z,-3)>=-55) 
+
+OR (Ref(z,-4)>Ref(z,-1) AND Ref(z,-1)>=-55 AND Ref(z,-2)>=-55 AND Ref(z,-3)>=-55); 
+
+Famirhook_long=Famir_pivotlong AND z>Ref(HHV(z,Famir_barsfromline_long),-1) AND (z>=-55 AND z<=55) AND C>Lsma25; 
+
+Famirlong= Famir_barsfromline_long<10 AND Famirhook_long AND (Famir_uptrend_a<6 OR 
+
+(Famir_uptrend_b>=6 AND(Ref(Famir_uptrend_a,-6)<6 OR Ref(Famir_uptrend_a,-5)<6 OR Ref(Famir_uptrend_a,-4)<6 OR Ref(Famir_uptrend_a,-3)<6 OR 
+
+Ref(Famir_uptrend_a,-3)<6 OR Ref(Famir_uptrend_a,-2)<6 OR Ref(Famir_uptrend_a,-1)<6))) AND C>LSMA25; 
+
+PlotShapes(IIf(famirlong,shapeDigit2,shapeNone),colorLime,0,0,-15); 
+
+// HFE 
+
+HFEshort=(Ref(z,-1)>200 AND z<200); 
+
+HFElong=(Ref(z,-1)<-200 AND z>-200); 
+
+HFE= (Ref(z,-1)>200 AND z<200) OR (Ref(z,-1)<-200 AND z>-200); 
+
+PlotShapes(IIf(Ref(z,-1)>200 AND z<200,shapeDownTriangle,shapeNone),IIf(Ref(z,-1)>200 AND z<200,colorYellow,shapeNone),0,200,-20); 
+
+PlotShapes(IIf(Ref(z,-1)<-200 AND z>-200,shapeUpTriangle,shapeNone),IIf(Ref(z,-1)<-200 AND z>-200,colorYellow,shapeNone),0,-200,-20); 
+
+// VT Long 
+
+vtLinex_long=Ref(z,-1)<=-200 AND z>-200; 
+
+vt_barsfromline_long=BarsSince(vtLinex_long); 
+
+vtlong_A = z<-200; 
+
+vtlong_B = Ref(z,-1)<=Ref(z,-2) OR 
+
+Ref(z,-2)<=Ref(z,-3) OR 
+
+Ref(z,-3)<=Ref(z,-4) OR 
+
+Ref(z,-4)<=Ref(z,-5) OR 
+
+Ref(z,-5)<=Ref(z,-6) OR 
+
+Ref(z,-6)<=Ref(z,-7) OR 
+
+Ref(z,-7)<=Ref(z,-8); 
+
+vtlong_bs_A = BarsSince(vtlong_A); 
+
+vtlong_bs_B = BarsSince(vtlong_b); 
+
+Vtlong_bars = vtlong_bs_A>=5 AND vtlong_bs_B<=0; 
+
+vt_pivotlong= Vtlong_bars; 
+
+swinghibars=BarsSince(z>Ref(HHV(z,vt_barsfromline_long),-1)); 
+
+vthook_long= vt_pivotlong AND z>Ref(HHV(z,vt_barsfromline_long),-1); 
+
+vtlong= vt_barsfromline_long<=11 AND (Ref(HHV(z,vt_barsfromline_long),-1)<0 OR HHV(z,vt_barsfromline_long)<=0) AND vthook_long AND C>Lsma25 AND Ref(swinghibars>=2,-1) AND z>-100; 
+
+PlotShapes(IIf(vtlong,shapeDigit3,shapeNone),colorLime,0,Min(z,0),-45); 
+
+// VT Short 
+
+vtLinex_short=Ref(z,-1)>=200 AND z<200; 
+
+vt_barsfromline_short=BarsSince(vtLinex_short); 
+
+vtshort_A = z>200 ; 
+
+vtshort_B =Ref(z,-1)>=Ref(z,-2) OR 
+
+Ref(z,-2)>=Ref(z,-3) OR 
+
+Ref(z,-3)>=Ref(z,-4) OR 
+
+Ref(z,-4)>=Ref(z,-5) OR 
+
+Ref(z,-5)>=Ref(z,-6) OR 
+
+Ref(z,-6)>=Ref(z,-7) OR 
+
+Ref(z,-7)>=Ref(z,-8); 
+
+vtshort_bs_A = BarsSince(vtshort_A); 
+
+vtshort_bs_B = BarsSince(vtshort_b); 
+
+Vtshort_bars = vtshort_bs_A>=5 AND vtshort_bs_B<=0; 
+
+vt_pivotshort= Vtshort_bars; 
+
+swinglowbars= BarsSince(z<Ref(LLV(z,vt_barsfromline_short),-1)); 
+
+vthook_short= vt_pivotshort AND z<Ref(LLV(z,vt_barsfromline_short),-1); 
+
+vtshort= vt_barsfromline_short<=11 AND (Ref(LLV(z,vt_barsfromline_short),-1)>0 OR LLV(z,vt_barsfromline_short)>0) AND vthook_short AND C<Lsma25 AND Ref(swinglowbars>=2,-1) AND z<100; 
+
+PlotShapes(IIf(vtshort,shapeDigit3+ shapePositionAbove,shapeNone),colorRed,0,Max(z,0),-45); 
+
+// GB 100 Long 
+
+uptrend_a=BarsSince(z<0); 
+
+uptrend_b=BarsSince(z>0); 
+
+Linex_longGB=Ref(z,-1)>100 AND z<100; 
+
+barsfromline_longGB=BarsSince(Linex_longGB); 
+
+CCIhook_longGB= Ref(z,-1)<-100 AND z>-100; 
+
+GB100long= barsfromline_longGB<20 AND angle_EMA34>=5 AND CCIhook_longGB AND (uptrend_b<6 AND(Ref(uptrend_a,-6)>=6 OR Ref(uptrend_a,-5)>=6 OR Ref(uptrend_a,-4)>=6 OR Ref(uptrend_a,-3)>=6 OR 
+
+Ref(uptrend_a,-2)>=6 OR Ref(uptrend_a,-1)>=6)); 
+
+PlotShapes(IIf(GB100long,shapeDigit4,shapeNone),colorLime,0,0,-60); 
+
+// GB100 Short 
+
+downtrend_a=BarsSince(z>0); 
+
+downtrend_b=BarsSince(z<0); 
+
+Linex_shortGB=Ref(z,-1)<-100 AND z>-100; 
+
+barsfromline_shortGB=BarsSince(Linex_shortGB); 
+
+CCIhook_shortGB=Ref(z,-1)>100 AND z<100; 
+
+GB100short= barsfromline_shortGB<20 AND angle_EMA34<=-5 AND CCIhook_shortGB AND 
+
+(downtrend_b<6 AND (Ref(downtrend_a,-6)>=6 OR Ref(downtrend_a,-5)>=6 OR Ref(downtrend_a,-4)>=6 OR 
+
+Ref(downtrend_a,-3)>=6 OR Ref(downtrend_a,-2)>=6 OR Ref(downtrend_a,-1)>=6)); 
+
+PlotShapes(IIf(GB100short,shapeDigit4+ shapePositionAbove,shapeNone),colorRed,0,0,-60); 
+
+// MR Long 
+
+MRuptrend_a=BarsSince(z<0); 
+
+MRuptrend_b=BarsSince(z>0); 
+
+MRLinex_long=Ref(z,-1)>100 AND z<100; 
+
+MRbarsfromline_long=BarsSince(MRLinex_long); 
+
+MRCCIhook_long=z>Ref(z,-1) AND Ref(z,-1)<=Ref(z,-2) AND Ref(z,-2)<Ref(z,-3) AND z>-100 AND z<100; 
+
+MRlong= (Ref(angle_ema34,-2)>=5 AND Ref(angle_ema34,-1)>=5 AND angle_ema34>=5) AND Ref(z,-1)<=0 AND MRbarsfromline_long<10 AND MRCCIhook_long AND (MRuptrend_a>=6 AND z>-100 OR 
+
+(MRuptrend_b<6 AND LLV(z,MRuptrend_b)>-100 AND z>-100 AND (Ref(MRuptrend_a,-6)>=6 AND z>-100 OR Ref(MRuptrend_a,-5)>=6 AND z>-100 OR Ref(MRuptrend_a,-4)>=6 AND z>-100 OR Ref(MRuptrend_a,-3)>=6 AND z>-100 OR 
+
+Ref(MRuptrend_a,-2)>=6 AND z>-100 OR Ref(MRuptrend_a,-1)>=6 AND z>100))); 
+
+PlotShapes(IIf(MRlong,shapeDigit5,shapeNone),colorLime,0,0,-50); 
+
+// MR Short 
+
+MRdowntrend_a=BarsSince(z>0); 
+
+MRdowntrend_b=BarsSince(z<0); 
+
+MRLinex_short=Ref(z,-1)<=-100 AND z>=-100; 
+
+MRbarsfromline_short=BarsSince(MRLinex_short); 
+
+MRCCIhook_short=z<Ref(z,-1) AND Ref(z,-1)>=Ref(z,-2) AND Ref(z,-2)>Ref(z,-3) AND z<100 AND z>-100; 
+
+MRshort= (Ref(angle_ema34,-2)<=-5 AND Ref(angle_ema34,-1)<=-5 AND angle_ema34<=-5) AND Ref(z,-1)>=0 AND MRbarsfromline_short<10 AND MRCCIhook_short AND (MRdowntrend_a>=6 AND z<100 OR 
+
+(MRdowntrend_b<6 AND HHV(z,MRdowntrend_b)<100 AND z<100 AND (Ref(MRdowntrend_a,-6)>=6 AND z<100 OR Ref(MRdowntrend_a,-5)>=6 AND z<100 OR Ref(MRdowntrend_a,-4)>=6 AND z<100 OR 
+
+Ref(MRdowntrend_a,-3)>=6 AND z<100 OR Ref(MRdowntrend_a,-2)>=6 AND z<100 OR Ref(MRdowntrend_a,-1)>=6 AND z<100))); 
+
+PlotShapes(IIf(MRshort,shapeDigit5+ shapePositionAbove,shapeNone),colorRed,0,0,-50);
+
+// Columns for exploration 
+
+Filter =(zlrlong OR famirlong OR Vtlong OR gb100long OR mrlong  OR hfe OR zlrshort OR famirshort OR vtshort OR gb100short OR mrlong OR (A OR bars)) AND 1 ; 
+
+Buy = (zlrlong OR famirlong OR Vtlong OR gb100long OR mrlong);// AND MarketHours; 
+
+Sell= (z<Ref(z,-1) AND Ref(z,-1)<Ref(z,-2) AND C<O);// OR MArketClose; ; 
+
+Short = (zlrshort OR famirshort OR Vtshort OR gb100short OR mrshort); //AND MarketHours; 
+
+Cover = (z>Ref(z,-1) AND Ref(z,-1)>Ref(z,-2) AND C>O);// OR MArketClose; 
+
+AddColumn( IIf(zlrlong,1,IIf(zlrshort,-1,0)) ,"ZLR",1.0,colorWhite,IIf(zlrlong,colorGreen,IIf(zlrshort,colorRed,colorBlack))); 
+
+AddColumn(IIf(famirlong,1,IIf(famirShort,-1,0)),"Famir",1.0,colorWhite,IIf(famirlong,colorGreen,IIf(famirShort,colorRed,colorBlack))); 
+
+AddColumn(IIf(vtlong,1,IIf(vtShort,-1,0)),"Vegas",1.0,colorWhite,IIf(vtlong,colorGreen,IIf(vtShort,colorRed,colorBlack))); 
+
+AddColumn(IIf(gb100long,1,IIf(gb100Short,-1,0)),"GB100",1.0,colorWhite,IIf(gb100long,colorGreen,IIf(gb100Short,colorRed,colorBlack))); 
+
+AddColumn( IIf(mrlong,1,IIf(mrShort,-1,0)) ,"MR",1.0,colorWhite,IIf(mrlong,colorGreen,IIf(mrShort,colorRed,colorBlack))); 
+
+AddColumn(IIf(hfelong,1,IIf(hfeshort,-1,0)),"HFE",1.0,colorWhite,IIf(hfelong,colorGreen,IIf(hfeshort,colorRed,colorBlack))); 
+
+AddColumn(IIf(A OR bars,1,IIf(A OR bars,-1,0)),"Choppy",1.0,colorWhite,IIf(A OR bars,colorDarkYellow,IIf(A OR bars,colorDarkYellow,colorBlack))); 
+
+//Plot Sell Arrows 
+
+//Sell1=ExRem(Sell,Buy); 
+
+//Cover1=ExRem(Cover,Short); 
+
+//PlotShapes(IIf(Sell1,shapeDownArrow,shapeNone),colorLime,0,200,10); 
+
+//PlotShapes(IIf(Cover1,shapeDownArrow,shapeNone),colorRed,0,200,10); 
+
+//Signal Title 
+
+Signaltitle= WriteIf(zlrlong,EncodeColor(colorYellow) + "ZLR ", 
+
+WriteIf(zlrshort,EncodeColor(colorYellow) + "ZLR ", WriteIf(MRShort,EncodeColor(colorYellow) + "MR ", 
+
+WriteIf(MRlong,EncodeColor(colorYellow) + "MR ", 
+
+WriteIf(Famirshort,EncodeColor(colorYellow) + "FAMIR ", 
+
+WriteIf(Famirlong,EncodeColor(colorYellow) + "FAMIR ",WriteIf(HFE,EncodeColor(colorYellow) + "HFE ",WriteIf(VTlong,EncodeColor(colorYellow) + "VT ", 
+
+WriteIf(VTshort,EncodeColor(colorYellow) + "VT ",WriteIf(GB100long,EncodeColor(colorYellow) + "GB100 ", 
+
+WriteIf(Gb100short,EncodeColor(colorYellow) + "GB100 "," "))))))))))); 
+
+//Choppy Title 
+
+ChoppyTitle= WriteIf(A,EncodeColor(colorYellow) + "CHOPPY",WriteIf(bars,EncodeColor(colorYellow) + "CHOPPY","")); 
+
+//Exit Title 
+
+//Exittitle=WriteIf(Sell1,EncodeColor(colorLime) + "MLAY EXIT LONG",WriteIf(Cover1,EncodeColor(colorRed) + "MPLAY EXIT SHORT","")); 
+
+//Distance from EMA34
+
+//Ctoema=round(C-EMA34);
+
+//Ctitle= WriteIf(Ctoema>0," points above EMA,",WriteIf(Ctoema<0," points below EMA,"," on EMA,"));
+
+//Number of trending bars
+
+//anglelimit= ( angle_ema34<5 AND angle_ema34>-5)  OR (angle_ema34<5 AND angle_ema34>-5);
+
+//angletitle= BarsSince(anglelimit);
+
+// Price Panel
+
+Lastprice=Ref(C,-1);
+
+Lastpricetitlehi= WriteIf(H>Ref(H,-1),EncodeColor(colorLime) + Ref(H,-1) + "  " + H , EncodeColor(colorBlack)+ Ref(H,-1) + "  " + H);
+
+Lastpricetitlelo= WriteIf(L<Ref(L,-1),EncodeColor(colorRed) + Ref(L,-1) + "  " + L , EncodeColor(colorBlack)+ Ref(L,-1) + "  " + L);
+
+//Title 
+
+Title = "" + Name() + ", " + Interval(2) + ", " + Date() + "\n" + 
+
+//EncodeColor(colorBlack) + "CCI 14 = " + round(z) + EncodeColor(colorWhite) + ", " + EncodeColor(colorDarkYellow) + 
+
+//"CCI 6 = " + round(z6) + EncodeColor(colorWhite) + ", " + 
+
+TitleTimeRem + EncodeColor(colorWhite) + 
+
+TitleAngleEMA34 +// EncodeColor(colorWhite) + ", " + TitleAngleLSMA25 + 
+
+TitleTrending + "\n" + Lastpricetitlehi + "\n" + EncodeColor(colorSkyblue) + C + "\n" + Lastpricetitlelo + "\n" +
+
+EncodeColor(colorWhite)+"Signal = "+Signaltitle + ChoppyTitle; //+ EncodeColor(colorWhite) + Ctoema + Ctitle +  EncodeColor(colorWhite) + " " + angletitle + " " + "bars trending, " + "  " + " "+Exittitle; 
+
+//Mplay Exit 
+
+MplayExitLong= z<Ref(z,-1) AND Ref(z,-1)<Ref(z,-2) AND C<O; 
+
+MplayExitShort= z>Ref(z,-1) AND Ref(z,-1)>Ref(z,-2) AND C>O; 
+
+PlotShapes(IIf(MplayExitLong,shapeSmallCircle,shapeNone),colorLime,0,200,-10); 
+
+PlotShapes(IIf(MplayExitShort,shapeSmallCircle,shapeNone),colorRed,0,200,-10); 

@@ -1,0 +1,34 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    30 Week Hi Indicator - Display
+//  Author/Uploader: Geoff Mulhall 
+//  E-mail:          geoffmulhall@optusnet.com.au
+//  Date/Time Added: 2003-05-03 22:17:05
+//  Origin:          
+//  Keywords:        
+//  Level:           semi-advanced
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=277
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=277
+//
+//------------------------------------------------------------------------------
+//
+//  Refer 30 Week High Indicator - Calculate
+//
+//  The attached indicator builder afl ( _i.afl file ) plots the indicator
+//  calculated by the ( _s.afl file ).
+//
+//------------------------------------------------------------------------------
+
+// 300 Week Highs Indicator
+// Set Scaling to automatic
+// Set Gridlines - Level 0, Show dates, Middle
+// Plot on a weekly chart only
+
+GraphXSpace = 10;
+
+Plot(Foreign("~Idx30Wk_Close_HL","C",1),"Close_HL",colorRed,styleLine);    
+Plot(Foreign("~Idx30Wk_Abs_HL","C",1),"Abs_HL",colorBlue,styleLine); 
+
+   
+         

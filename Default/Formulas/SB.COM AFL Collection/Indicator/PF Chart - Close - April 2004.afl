@@ -1,0 +1,141 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    PF Chart - Close - April 2004
+//  Author/Uploader: Graham Kavanagh 
+//  E-mail:          gkavanagh@e-wire.net.au
+//  Date/Time Added: 2004-04-19 09:03:31
+//  Origin:          Previous PF Sep 2003
+//  Keywords:        P&F Point Figure PF PnF
+//  Level:           semi-advanced
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=348
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=348
+//
+//------------------------------------------------------------------------------
+//
+//  P&amp;F chart based on closing price.
+//
+//  Dates and bar numbers added for reference when the columns started and
+//  ended. Load file into IB.
+//
+//  Box size based on ATR of close price. Reverse = 3.
+//
+//------------------------------------------------------------------------------
+
+// P&F chart based on closing price
+// Date & Bar Number of start & end of columns
+// Graham Kavanagh  17 Apr 2004
+// Interpretation window data included
+// 1:1 Line drawn when column selected with slope=boxsize
+// Box size based on ATR of closing price 
+
+Version(4.53);
+
+SetBarsRequired(100000,100000);
+
+range = Min(260,BarCount/2);
+box = LastValue( round(ATR(range)*100)/100 );
+Reverse = 3  ;      // reversal requirement
+
+CX = round(C/box);
+CF = ceil(Cx);
+CR = floor(Cx);
+
+Bar = BarIndex();
+BarDate = DateNum();
+BarTurn = 0;
+BarEnd = 0;
+
+
+// initialize first element
+j = 0;
+PFC[j] = CF[0];
+PFO[j] = CF[0]+1;
+
+down = 1;                  // By default the first bar is a down bar.
+up = 0;
+
+// perform the loop that produces PF Chart
+for( i = 1; i < BarCount; i++ )
+{
+ if( CF[i] <= PFC[j]-1 && down)         //continue down
+ {
+  PFC[j] = CF[i];
+  PFO[j] = CF[i]+1;
+  BarEnd[j] = Bar[i];
+ }
+ else
+ {
+  if( CR[i] >= PFC[j] + Reverse && down)  //Change direction to up
+  {
+   j++;
+   up = 1;
+   down = 0;
+   PFC[j] = CR[i];
+   PFO[j] = CR[i] - 1;
+   BarTurn[j] = Bar[i];
+   BarEnd[j] = Bar[i];
+  }
+ }
+ if( CR[i] >= PFC[j] + 1 && up)         //Continue up
+ {
+  PFC[j] = CR[i];
+  PFO[j] = CR[i] - 1;
+  BarEnd[j] = Bar[i];
+ }
+ else
+ {
+  if( CF[i] <= PFC[j] - Reverse && up)   //Change direction to down
+  {
+   j++;
+   up = 0;
+   down = 1;
+   PFC[j] = CR[i];
+   PFO[j] = CR[i]+1;
+   BarTurn[j] = Bar[i];
+   BarEnd[j] = Bar[i];
+  }
+ }
+}
+
+delta = BarCount-1 - j;
+
+BarTurns = Ref( BarTurn, -delta);
+BarEnds = Ref( BarEnd, -delta);
+
+PFO = Ref( PFO, -delta );
+PFC = Ref( PFC, -delta );
+H = IIf( Ref(PFC,-1)>Ref(PFO,-1), Ref(HHV(PFC,1),-1)-1, Max(PFO,PFC) )*box + box/2;
+L = IIf( Ref(PFC,-1)<Ref(PFO,-1), Ref(LLV(PFC,1),-1)+1, Min(PFO,PFC) )*box - box/2;
+O = IIf( Ref(PFC,-1)>Ref(PFO,-1), Ref(HHV(PFC,1),-1)-1, IIf( Ref(PFc,-1)<Ref(PFO,-1), Ref(LLV(PFC,1),-1)+1, PFO ) )*box;
+
+// the difference between Open AND Close is set to box size
+// the sign decides if X or O are plotted
+C = O + box * IIf( PFC > PFO, 1, -1 );
+
+top = H - box/2;
+bot = L + box/2;
+
+
+GraphXSpace = 5;
+
+_N( 
+Title = Name() + " " + Date() + ": PF System, H: $" + Top + ", L: $" + Bot + ", Box $" + Box + " Reversal " + Reverse + "\n" + "NewCol bar " + BarTurns + " date " + WriteVal( ValueWhen(BarIndex()==SelectedValue(BarTurns),DateTime()),formatDateTime)  + " ColEnd bar " + BarEnds + " date " + WriteVal( ValueWhen(BarIndex()==SelectedValue(BarEnds),DateTime()),formatDateTime) 
+  );
+
+Plot(C, "P&F Close", IIf( PFC > PFO, colorBlue, colorRed ), styleCandle + stylePointAndFigure);
+
+
+LineUp = LineArray( SelectedValue(BarIndex()), SelectedValue(L), SelectedValue(BarIndex())+1, SelectedValue(L)+box, 1, 0 );
+Linedown = LineArray( SelectedValue(BarIndex()), SelectedValue(H), SelectedValue(BarIndex())+1, SelectedValue(H)-box, 1, 0 );
+Plot(IIf(SelectedValue(PFC<PFO),Lineup,Null), "Line", colorGreen, styleLine + styleNoLabel + styleNoRescale);
+Plot(IIf(SelectedValue(PFC>PFO),Linedown,Null), "Line", colorBrown, styleLine + styleNoLabel + styleNoRescale);
+
+//--Indicator-End-- 
+Name() +", "+FullName();
+"";
+"Direction  = " + WriteIf(pfc>pfo,"Up","Down");
+"Move Today = " + WriteIf(BarIndex()==SelectedValue(BarEnds),"Yes" + WriteIf(BarIndex()==SelectedValue(BarTurns),", New Column", ", Continuation"),"No");
+"";
+"Column Start \n   BarIndex() = " + BarTurns + "\n   Date() = " + WriteVal( ValueWhen(BarIndex()==SelectedValue(BarTurns), DateTime()), formatDateTime) ;
+"Column End \n   BarIndex() = " + BarEnds + "\n   Date() = " + WriteVal( ValueWhen(BarIndex()==SelectedValue(BarEnds),DateTime()),formatDateTime)   ;

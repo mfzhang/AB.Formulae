@@ -1,0 +1,66 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Double Smoothed Stochastic from W.Bressert
+//  Author/Uploader: Tom Supera 
+//  E-mail:          tom_supera@utanet.at
+//  Date/Time Added: 2001-07-20 15:39:11
+//  Origin:          
+//  Keywords:        
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=78
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=78
+//
+//------------------------------------------------------------------------------
+//
+//  This is an Overbought/Oversold Indicator.
+//
+//  It works very well, but never use this indicator alone.
+//
+//  you always need a trend indicator.
+//
+//  Values about 80 shows overbought, under 20 shows oversold.
+//
+//  Formula:
+//
+//  title = "127-3 DSS" + " " + fullname() + " " + Date( ) ;
+//
+//  Slw = 4; Pds = 4;
+//
+//  Overbought = 80; Oversold = 20;
+//
+//  A = Ema((CLOSE-LLV(LOW,Pds))/(HHV(H,pds)-LLV(L,Pds)),Slw)*100;
+//
+//  DSS = ema((A-LLV(A,pds))/(HHV(A,Pds)-LLV(A,Pds)),Slw)*100;
+//
+//  maxgraph = 5;
+//
+//  graph0 = DSS; graph0color = 2; graph2 = DSS;
+//
+//  graph2barcolor = IIF (graph2 > overbought, 4,
+//
+//  IIF (graph2 < oversold,5,6));
+//
+//  buy = cross (DSS, 20);
+//
+//  sell = cross (80,DSS);
+//
+//------------------------------------------------------------------------------
+
+title = "127-3 DSS" + "   "  +  fullname() + "   "  +  Date( ) ;
+
+Slw = 4;  Pds = 4;
+
+A = Ema((CLOSE-LLV(LOW,Pds))/(HHV(H,pds)-LLV(L,Pds)),Slw)*100;
+
+DSS = ema((A-LLV(A,pds))/(HHV(A,Pds)-LLV(A,Pds)),Slw)*100;
+
+maxgraph = 10;
+graph0 = DSS; graph0color = 2;    graph2 = DSS; 
+Overbought = 80;  Oversold =  20; 
+
+graph2barcolor = IIF (graph2 > overbought, 4, 
+                                   IIF (graph2 < oversold,5,6));
+
+buy = cross (DSS, 20);
+sell = cross (80,DSS);

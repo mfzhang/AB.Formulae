@@ -1,0 +1,222 @@
+/*
+========================================================================
+Source: http://www.amibroker.com/library/detail.php?id=794&hilite=fputs
+========================================================================
+I present here a smart solution to overcome the slowness of "FOR cycles" and build high quality and fast-refresh swing charts in Amibroker. (read more about the trick below)
+
+ABOUT PRICE SWING CHARTS
+KAGI SWING Charts also knowns as PRICE SWING CHARTS are built in time-independent squared charts, where reversals are drawn only when price decline from any top (or rise from any bottom) by a quantity (in cents, or dollar) greater than the base swing, which is a parameter.
+
+Price swing charts are essential to the swing trader, and they should be used in conjuction with time-swing charts (Gann Swing charts) and bar charts, candle charts and close only charts. These other charts will be provided too, and added to the AFL library.
+
+REVERSAL THRESHOLD
+The "reversal" parameter under which swings will not be drawn should be chosen big enough so that the swing chart show a good deal of past price action, conveniently condensed in small space. Furthermore, you should regulate the parameter big enough so that you don't see too much sideways action. The swing chart should move vertically most of the time. Also, it should not show smaller swings you are not interested to trade.
+
+Of course the reversal parameter depends on the timeframe you are observing. 
+
+A properly selected parameter will render a swing chart that will convey to you all the necessary information about past price action, similarly to, and for some aspect better than, selecting a greter timeframe in your bar chart.
+
+HOW TO USE THE PRICE SWING CHART
+the code I am providing will allow you to mark the 25,33,50,66,75% retracement of all the swings. In order to see them select "Price Style DOTS" from the menu or press the equivalent hot-key. Select any other style to remove the marks.
+
+Formula prints (1) level of the swing (2) move from previous level (3) date and time (4) Day of week DY and (5) DUration as measured in bars.
+
+With little practice you should become able to read the strenght and weakness of the markets from 
+
+(a) position of tops and bottoms with respect to old tops and bottoms
+(b) amplitude of the swing. For example, in 5m soybeans markets, standard declines are 3c, 10c and 12c. Therefore if a mkt declines in excess of 3c is weaker because it was noy supported at 3c, and if it declines just less than 12c is stronger becasue it is meeting support that prevents it to decline 12 full cents. If it declines more than 12c is weaker. and so on...
+(c) the retracement marks can be used by the same token: if it retraces little more than 50% is weaker than if it held just above 50% mark and so on.
+(d) retracement mark can be used very effectively (at least in the Soy market) to project the price diagonally: e.g. see how many times the swing ends when its 50% retraments lies near or exactly on an old top or bottom.
+(e) Point (d) can also be used to gauge the mkt in the same way we discussed in (c).
+
+Use Price style dots to plot the duration of the swing in histogram and study how the duration can sometime help to spot a reversal.
+
+THE TRICK
+In order to realize a real swing chart Amibroker requires the use of the FOR cycle, which results in slowness sometimes not acceptable. Although I cannot guarantee that this code will completely eliminate the problem (if you have price arrays too large) you should find it very beneficial.
+
+The array is created only when needed (or each minute at the lastest) and afterward stored on a text file. When Amibroker refreshed, the data are loaded from the file and the FOR cycle is skipped, resulting in a great speed (at least for me). Swing array is forced- to be recalculated when you change the paramter. 1 minute update are more than enough for a Price Swing Chartm which -- remember -- convey to you the information of a greater timeframe and therefore does not need to be updated so frequently.
+
+For Gann swing charts I have adopted anouther solution to speed up the refresh, becasue they need to be updated quite frequently.
+
+NEVER STOP STUDYING!
+*/
+//toggle switch for fast refresh
+FastRefresh=ParamToggle("FastRefresh","Enabled",0);
+
+//points reversal
+Reverse = Param ("Points Reversal",07,1,50,1,0);
+
+//files where the swing chart is temporarely store, you may change the path and file Name
+// C:\\Users\\smnuman\\Downloads\\StockBangladesh\\AB.chart.Indicators\\Temp\\
+fh=fopen("C:\\Users\\smnuman\\Downloads\\StockBangladesh\\AB.chart.Indicators\\Temp\\tempKAGIswing.txt","r");
+
+//Minutes of current time used to trigger time-driven refresh
+Minutes=round(frac(Now(4)/1000)*100);
+
+//Minutes of time when last refresh occurred
+Lastrefresh=StaticVarGet("lastrefresh");
+
+// This code under IF is executed only when the swing chart needs to be recalculated
+if (FastRefresh OR fh==0 OR reverse!=StaticVarGet("reverse") OR Minutes!=Lastrefresh)
+	{
+		StaticVarSet("lastrefresh", Minutes);
+		StaticVarSet("reverse", Reverse);
+		fclose(fh);
+	    
+		j 			= 0;
+		Swing[j] 	= C[0];
+		dt[0]		= LastValue(Highest(ValueWhen(BarIndex()==0,DateTime())));
+		dw[0]		= LastValue(Highest(ValueWhen(BarIndex()==0,DayOfWeek())));
+		br[0]		=0;
+
+		down 		= 1;    
+		up 			= 0;
+		swap 		= 0;
+
+    		
+    
+
+	for( i = 1; i < BarCount; i++ )
+		{
+ 		if( down AND (High[i] - Swing[j]) <= Reverse AND (Low[i] < Swing[j])) 
+ 				{
+				Swing[j] = Low[i];
+				dt[j]		= LastValue(Highest(ValueWhen(BarIndex()==i,DateTime())));
+				dw[j]		= LastValue(Highest(ValueWhen(BarIndex()==i,DayOfWeek())));
+				br[j]		=i;	
+				}
+ 			
+ 		else if( down AND (High[i] - Swing[j]) > Reverse) 
+  			{
+   			j++;
+   			Swing[j] 	= High[i];
+			dt[j]		= LastValue(Highest(ValueWhen(BarIndex()==i,DateTime())));	
+			dw[j]		= LastValue(Highest(ValueWhen(BarIndex()==i,DayOfWeek())));
+			br[j]		=i;
+			swap = 1;
+ 			}
+ 		
+ 		if( up AND (Swing[j]- Low[i]) <= Reverse AND (High[i] > Swing[j]) )        
+	
+			{
+			Swing[j] = High[i];
+			dt[j]		= LastValue(Highest(ValueWhen(BarIndex()==i,DateTime())));	
+			dw[j]		= LastValue(Highest(ValueWhen(BarIndex()==i,DayOfWeek())));
+			br[j]		=i;
+			}
+ 		
+ 		else if(  up AND (Swing[j]- Low[i]) > Reverse)   
+  			{
+   			j++;
+   			Swing[j] = Low[i];
+			dt[j]		= LastValue(Highest(ValueWhen(BarIndex()==i,DateTime())));	
+			dw[j]		= LastValue(Highest(ValueWhen(BarIndex()==i,DayOfWeek())));
+			br[j]		=i;
+   			swap 		=1;
+			}
+ 		
+		if( swap )
+ 			{
+  			swap = 0;
+  			if( up )
+  				{
+   				up = 0;
+   				down = 1;
+  				}
+  			else
+  				{
+   				up = 1;
+   				down = 0;
+  				}
+ 			}
+		}
+
+    
+   	//calculations
+    	duration 	= IIf(BarIndex()==0,Null,br-Ref(br,-1));
+    	amp 		= IIf(BarIndex()==0,Null,swing - Ref(swing,-1));
+     
+    	//SHIFT
+    	delta = BarCount- j-1;      
+    
+    	Swing = Ref( Swing, -delta);
+    	Amp	= Ref(amp,-delta);
+    	dt		= Ref(dt,-delta);
+    	dw		= Ref(dw,-delta);
+    	duration= Ref(duration,-delta);
+  
+	fh=fopen("C:\\Users\\smnuman\\Downloads\\StockBangladesh\\AB.chart.Indicators\\Temp\\tempKAGIswing.txt","w");
+	fputs(NumToStr(j)+"\n",fh);
+
+	//save
+	for (i=BarCount-j-1;i<BarCount;i++)
+		{
+		fputs(NumToStr(Swing[i])+"\n",fh);
+		fputs(NumToStr(amp[i])+"\n",fh);
+		fputs(NumToStr(dt[i])+"\n",fh);
+		fputs(NumToStr(dw[i])+"\n",fh);
+		fputs(NumToStr(duration[i])+"\n",fh);
+		}
+	fclose(fh);
+	fh=fopen("C:\\Users\\smnuman\\Downloads\\StockBangladesh\\AB.chart.Indicators\\Temp\\tempKAGIswing.txt","r");
+	
+}
+
+//load
+swing=Null;
+amp=Null;
+dt=Null;
+dw=Null;
+dr=Null;
+
+j=StrToNum(fgets(fh));
+for (i=BarCount-j-1;i<BarCount;i++)
+		{
+		Swing[i]	=StrToNum(fgets(fh));
+		amp[i]		=StrToNum(fgets(fh));
+		dt[i]		=StrToNum(fgets(fh));		
+		dw[i]		=StrToNum(fgets(fh));
+		duration[i]	=StrToNum(fgets(fh));
+		}
+fclose(fh);
+
+
+
+//plot
+SetChartBkColor (colorBlack);
+
+
+PlotOHLC
+(Ref(swing,-1),Ref(swing,-1),swing,IIf(Ref(swing,-1),swing,Null),"",colorRed,styleBar);
+
+_N(Title=StrFormat("\n"+reverse+"-point swing
+chart"+"\nAT>"+SelectedValue(Swing)));
+_N(Title=Title+StrFormat("\nSW>"+SelectedValue(amp)
++"\nON>"+DateTimeToStr(SelectedValue(dt))));
+_N(Title=Title+StrFormat("\nDY>"+SelectedValue(dw)+"\nDU>"+SelectedValue(duration)));
+
+
+// Use the keyboard shortcut to enable "Price Style Dots" to execute the following code
+if (GetPriceStyle()==styleDots)
+	{
+	amp33=Ref(swing-0.33*amp,0);
+	amp66=Ref(swing-0.66*amp,0);
+	amp25=Ref(swing-0.25*amp,0);
+	amp75=Ref(swing-0.75*amp,0);
+	amp50=Ref(swing-0.50*amp,0);
+
+
+	PlotOHLC(Null,amp33,amp33,amp33,"",colorGreen,styleBar);
+	PlotOHLC(Null,amp66,amp66,amp66,"",colorGreen,styleBar);
+	PlotOHLC(Null,amp25,amp25,amp25,"",colorLightBlue,styleBar);
+	PlotOHLC(Null,amp75,amp75,amp75,"",colorLightBlue,styleBar);
+	PlotOHLC(Null,amp50,amp50,amp50,"",colorYellow,styleBar);
+
+	first = Status("firstvisiblebarindex");
+	last = Status("lastvisiblebarindex");
+	Vrange 	= BarIndex()>first AND BarIndex()<last;	
+	Maxdr		= LastValue(Cum(duration * Vrange));
+	scale		= Maxdr;
+
+	Plot(duration,"",IIf(amp>0,colorBlue,colorOrange),styleHistogram|styleOwnScale,0,scale);
+	}

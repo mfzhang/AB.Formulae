@@ -1,0 +1,65 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    TRIX
+//  Author/Uploader: Charlie Ehm 
+//  E-mail:          charliehm@peoplepc.com
+//  Date/Time Added: 2002-07-12 19:17:38
+//  Origin:          Steve Achelis, "Technical Analysis from A to Z", (2nd ed.), pp 342-4.
+//  Keywords:        TRIX, indicator, trading rules
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=204
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=204
+//
+//------------------------------------------------------------------------------
+//
+//  A home-brew version of Amibroker's built-in TRIX indicator, plus minimal
+//  trading rules.
+//
+//------------------------------------------------------------------------------
+
+/* my TRIX (= the indicator, plus minimal trading rules) */
+
+/* I'm guessing that Amibroker's built-in TRIX indicator uses ema's to calculate the variable I'm calling "change" and then divides that by 1000, not 100 as does Achelis, and then uses a one-period MA of "change" to plot the TRIX line. My plot values end up being slightly different Amibroker's, as you'll see by applying TRIX's both at the same time, but the differences  aren't large enough to create trading signal differences in most cases. Charlie Ehm. 7/12/02. */ 
+
+/*------PART ONE (code for plotting the indicator)------------------------*/
+period=9;              //<--this default can be changed 
+
+today= (EMA(EMA(EMA(Close,period),period),period));
+yesterday= Ref(today,-1);
+change= ((today-yesterday)/today)*1000;
+
+Graph0=MA(Change,1);  
+Graph0Style=1;         //<-- an optional specification
+Graph0Color=5;         //<-- an optional specification 
+         
+Title=" "              //<-- creates a leading a space
++ Name()               //<-- ticker
++ " - TRIX ("          //<-- does more formatting and names the indicator
++ WriteVal(period,1.0) //<-- gives the period used for the TRIX line
++ ")   ";              //<-- more formatting
+                       //<-- I skipped providing the current day's value
+
+
+/*-----PART TWO (a template for using TRIX in trading rules) ---------- */
+period=Optimize("period",9,3,13,2);       //<--step could be dropped to 1                                        
+
+today= (EMA(EMA(EMA(Close,period),period),period));
+yesterday= Ref(today,-1);                 //<--this value should be tested
+change= ((today-yesterday)/today)*1000;
+
+threshold_in= Optimize("in",0,0,2,0.5);   //<--max & step can be changed
+threshold_out=Optimize("out",0,-2,0,0.5); //<--min & step can be changed
+
+Buy= Trix(period) > threshold_in;         
+Sell=Trix(period) < threshold_out;        //<--to test for symmetricality
+
+
+/* 
+  NOTES: 
+  #1 Optimize "period" and "threshold_ XX" in separate steps, if processing a lot
+     of tickers, by commenting out one of them and using its default value a 
+     normal variable statement. 
+  #2 Short rules needed to be created, etc. Parts ONE and TWO just get the ball
+     rolling toward what might become useful tools. 
+*/

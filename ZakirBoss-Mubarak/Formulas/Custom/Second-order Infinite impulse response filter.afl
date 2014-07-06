@@ -1,0 +1,22 @@
+// the following function is 2nd order smoother
+// Input is the data array
+// f0, f1, f2 are filter coefficients
+// you can try 0.2, 1.4, -0.6 
+
+function IIR2( input, f0, f1, f2 )
+{
+  result[ 0 ] = input[ 0 ];
+  result[ 1 ] = input[ 1 ]; 
+
+  for( i = 2; i < BarCount; i++ )
+  {
+    result[ i ] = f0 * input[ i ] + 
+    f1 * result[ i - 1 ] + 
+    f2 * result[ i - 2 ]; 
+  }
+
+  return result;
+}
+
+Plot( Close, "Price", colorBlack, styleCandle );
+Plot( IIR2( Close, 0.2, 1.4, -0.6 ), "function example", colorRed ); 

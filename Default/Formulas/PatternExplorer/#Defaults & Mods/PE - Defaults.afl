@@ -1,0 +1,508 @@
+/*
+-------------------------------------------------------------------------------------------------------------------------------------
+PatternExplorer.com - Settings file - Dark template
+Version:1.2   08-Juni-2007
+Copyright © 2007, PatternExplorer.com
+http://www.PatternExplorer.com
+e-mail: support@PatternExplorer.com
+-------------------------------------------------------------------------------------------------------------------------------------
+*/
+
+//	-------------------------------------------------------------------------------------------------------------------------------------
+//	SECTION 1 - Composite indicator settings
+//	-------------------------------------------------------------------------------------------------------------------------------------
+def_CompSymbol = "^DJI";
+//-------------------------------------------------------------------------------------------------------------------------------------
+
+
+//	-------------------------------------------------------------------------------------------------------------------------------------
+//	SECTION 2 - Performance Chart settings
+//	-------------------------------------------------------------------------------------------------------------------------------------
+def_Symbol_1 = "^GSPC";
+def_Symbol_2 = "^iix";
+def_Symbol_3 = "^btk";
+def_Symbol_4 = "^soxx";
+def_Color_Selected_Symbol = colorYellow;
+//-------------------------------------------------------------------------------------------------------------------------------------
+
+
+//	-------------------------------------------------------------------------------------------------------------------------------------
+//	SECTION 3 - Text and other default colors
+//	-------------------------------------------------------------------------------------------------------------------------------------
+def_Text1 = colorAqua;
+def_Text2 = colorLightBlue;
+def_Text3 = colorLime;
+def_Text4 = colorYellow;
+def_Text5 = colorRed;
+def_Text6 = colorRed;
+def_Text7 = colorRed;
+
+def_Color1 = colorLime;
+def_Color2 = colorRed;
+def_Color3 = colorYellow;
+def_Color4 = colorLightBlue;
+def_Color5 = colorYellow;
+def_Color6 = colorLightBlue;
+def_Color7 = colorBlue;
+def_Color8 = colorRed;
+def_Color9 = colorPink;
+def_Color10 = colorRose;
+def_Color11 = colorWhite;
+def_Color12 = colorGrey50;
+def_Color13 = colorOrange;
+def_Color14 = colorTurquoise;
+//	-------------------------------------------------------------------------------------------------------------------------------------
+
+
+//	-------------------------------------------------------------------------------------------------------------------------------------
+//	SECTION 4 - General price settings
+//	-------------------------------------------------------------------------------------------------------------------------------------
+def_PE_AB_Style = 1; //PatternExplorer style:0 //Amibroker style: 1
+def_pricestyle = styleBar + styleThick; //can be used at PatternExplorer mode
+upbar = C >= O;
+dnbar = C < O;//use upbar = C>O; dnbar = C<O; to display dojis (with def_defaultcolor)
+//	upbar = C>Ref(C, -1); dnbar = C<Ref(C, -1); //use this line instead the line above to base the color on the difference to previous close
+
+def_upbar_col = colorLightBlue;//Up bar color
+def_dnbar_col = colorLightOrange;//Down bar color
+def_defaultcolor = def_upbar_col;
+
+if ( ( GetPriceStyle() == styleCandle AND def_PE_AB_Style == 1 ) OR ( def_pricestyle < 128 AND def_PE_AB_Style == 0 ) )
+{
+    def_upbar_col = colorWhite;//Candlestick outline
+    def_dnbar_col = colorWhite;//Candlestick outline
+    def_defaultcolor = def_upbar_col;
+}
+
+def_GraphXSpace = 2;//increase/decrease to shrink the chart vertically
+
+//	Volume - overlayed at price
+def_PlotVolume = 0;//overlay it on all price charts:1
+//specific rules could be defined in section 23
+def_VolumeUpColor = colorGreen;
+def_VolumeDnColor = colorRed;
+def_VolumeNeutralColor = colorLightBlue;
+def_VolumeHeight = 4;
+//	-------------------------------------------------------------------------------------------------------------------------------------
+
+
+//	-------------------------------------------------------------------------------------------------------------------------------------
+//	SECTION 5 - Taio settings
+//	-------------------------------------------------------------------------------------------------------------------------------------
+def_TaioPeriod1 = 5;
+def_TaioPeriod2 = 6;
+def_TrendLevel = 50;
+def_TAIO_up_color = colorGreen;
+def_TaioRangeP_color = colorPaleGreen;
+def_TaioRangeN_color = colorPink;
+def_TAIO_dn_color = colorRed;
+def_TaioTF2Up_Color = colorTurquoise;
+def_TaioTF2Dn_Color = colorLightOrange;
+def_TaioModePC = 0;//Off:0 //Rising/Falling/Range:1 //Range/Trend:2  //Rising/Falling:3  //Zero based:4
+def_RibbonsMode = 1;//Off:0 //Rising/Falling/Range:1 //Range/Trend:2  //Rising/Falling:3  //Zero based:4
+def_TaioModeInd = 1;//Rising/Falling/Range:1, Range/Trend:2, Rising/Falling:3, Zero based:4, Single Color:5
+def_SecondTF2Switch = 1;//Off:0 //On:1 - switch to display the 2nd TF in the indicator
+def_Taio2TFMultiplier = 4;
+//	-------------------------------------------------------------------------------------------------------------------------------------
+
+
+//	-------------------------------------------------------------------------------------------------------------------------------------
+//	SECTION 6 - Bands and Channels settings
+//	-------------------------------------------------------------------------------------------------------------------------------------
+def_Band_switch = 0;//Off:0 //On:1
+def_BandTyp = 4;//Bollinger Bands:1 //Headley Acceleration Bands:2 //Keltner Channel:3 //Price Channel:4
+def_BandPeriod = 20;
+def_BandWidth = 2;
+def_BandStyle = styleLine;
+def_MidStyle = styleLine;
+def_BandColor = colorYellow;
+def_MidColor = colorBlueGrey;
+//	-------------------------------------------------------------------------------------------------------------------------------------
+
+
+//	-------------------------------------------------------------------------------------------------------------------------------------
+//	SECTION 7 - Parabolic Sar settings
+//	-------------------------------------------------------------------------------------------------------------------------------------
+def_Psar_switch = 0;//Off:0 //On:1
+def_Psar_up_color = colorBrightGreen;
+def_Psar_dn_color = colorRed;
+//	-------------------------------------------------------------------------------------------------------------------------------------
+
+
+//	-------------------------------------------------------------------------------------------------------------------------------------
+//	SECTION 8 - Gradient background settings
+//	-------------------------------------------------------------------------------------------------------------------------------------
+def_BGColorswitch = 1;
+def_BgTopcolor = colorBlack;
+def_BgBottomcolor = colorBlack;
+def_titlebkcolor = colorBlack;
+//	-------------------------------------------------------------------------------------------------------------------------------------
+
+
+//	-------------------------------------------------------------------------------------------------------------------------------------
+//	SECTION 9 - Averages - settings
+//	-------------------------------------------------------------------------------------------------------------------------------------
+def_PeriodAvg1 = 5;
+def_TypeAvg1 = 1;
+def_PriceField1 = 3;
+def_ColorAvg1 = colorYellow;
+def_StyleAvg1 = styleLine;
+def_SwitchAvg1 = 0;//Switch Off:0, On:1
+def_PeriodAvg2 = 10;
+def_TypeAvg2 = 1;
+def_PriceField2 = 3;
+def_ColorAvg2 = colorRed;
+def_StyleAvg2 = styleLine;
+def_SwitchAvg2 = 0;//Switch Off:0, On:1
+def_PeriodAvg3 = 20;
+def_TypeAvg3 = 1;
+def_PriceField3 = 3;
+def_ColorAvg3 = colorLightBlue;
+def_StyleAvg3 = styleLine;
+def_SwitchAvg3 = 0;//Switch Off:0, On:1
+def_PeriodAvg4 = 50;
+def_TypeAvg4 = 2;
+def_PriceField4 = 3;
+def_ColorAvg4 = colorLime;
+def_StyleAvg4 = styleLine;
+def_SwitchAvg4 = 0;//Switch Off:0, On:1
+
+//	Avg Types:
+//	GMA:1, SMA:2, EMA:3, WMA:4, DEMA:5
+//	TEMA:6, Wilders:7, LINEAR REGRESSION:8, TIME SERIES FORECAST:9, KAMA:10
+//	The following price fields are available: Open:0, High:1, Low:2, Close:3, Average(H+L+C)/3 :4
+//	-------------------------------------------------------------------------------------------------------------------------------------
+
+
+//	-------------------------------------------------------------------------------------------------------------------------------------
+//	SECTION 10 - Different Tools: Shadows/Cloud/Shapes/Lines - settings
+//	-------------------------------------------------------------------------------------------------------------------------------------
+
+//	Alert 2 - Indicator ----------------------------------------------
+def_IndicatorColor = colorYellow;
+
+//	Guppy MMA --------------------------------------------------------
+def_GuppyLineStyle = styleLine;
+def_GuppyLineStyle = styleLine;
+def_GuppyLineColor1 = colorBlue;
+def_GuppyLineColor2 = colorRed;
+
+//	Ichimoku Chart ---------------------------------------------------
+def_Cloud1color = colorSeaGreen;
+def_Cloud2color = colorBlue;
+def_StandardLine = colorWhite;
+
+//	Rainbow Chart ----------------------------------------------------
+def_LinesORShadows = 1;//Lines:0, Shadows:1
+
+//	Pattern Recognition ----------------------------------------------
+def_Shadowcolor = ColorRGB( 56, 63, 118 );
+def_Plot_P1P2_Shapes = 1;//Hide shapes:0, Plot shapes:1
+def_Parallellinesswitch = 1;
+def_PatternPriceBasisCPR = 1;//Close: 0 //High & Low: 1
+
+//	SI Relative Strength ---------------------------------------------
+def_Sectorcolor = ColorRGB( 182, 182, 190 );
+def_Industrycolor = colorRed;
+
+//	SI Trend ---------------------------------------------------------
+def_Sectorcolor_Trend = ColorRGB( 182, 182, 190 );
+def_IndustrycolorUP = colorBrightGreen;
+//	-------------------------------------------------------------------------------------------------------------------------------------
+
+//	Fibonacci Recognition --------------------------------------------
+def_Color_SL = colorLime;
+def_Color_RL = colorRed;
+def_SwingLow_color = colorLime;
+def_SwingHigh_color = colorRed;
+def_L1_color = colorTurquoise;
+def_L2_color = colorYellow;
+def_L3_color = colorTurquoise;
+def_L4_color = colorTurquoise;
+def_L5_color = colorBlue;
+def_L6_color = colorTurquoise;
+def_L7_color = colorGold;
+
+//	Macd Modified ----------------------------------------------------
+def_MACDcolor = colorRed;
+def_Signalcolor = colorLightBlue;
+def_Histocolor = colorLightGrey;
+
+//	Schaff Trend Cycle -----------------------------------------------
+def_STCcolor = colorLime;
+def_STC_TF2color = colorYellow;
+
+//	Heikin Ashi Indicator --------------------------------------------
+def_colorHeikinAshi = colorBrightGreen;
+def_colorHeikinAshiDiffco = colorLightGrey;
+
+//	Pivot Tool -------------------------------------------------------
+def_PivotTyp = 1;//Regular:1 //Woodies FIB:2 //Woodies:3",
+def_PivotLineMode = 1;//Entire line:0 // Not entire line:1
+def_LineMode = 1;//Entire line:0 // Not entire line:1
+def_ShadowSwitch = 0;//Off:0 //On:1
+def_Titledisplay = 0;//Horizontal:0 //Vertikal:1
+def_R12Shadow = ColorRGB( 188, 129, 139 );
+def_ResistanceColor = colorRed;
+def_RPcolor = colorLime;
+def_FPcolor = ColorRGB( 242, 26, 139 );
+def_SupportColor = colorGreen;
+def_S12Shadow = ColorRGB( 108, 162, 115 );
+def_BackgroundColor = def_BgTopcolor;
+
+//	Fractals --------------------------------------------------------
+def_PatternPriceBasisFractals = 1;//Close: 0 //High & Low: 1
+//	-------------------------------------------------------------------------------------------------------------------------------------
+
+
+//	-------------------------------------------------------------------------------------------------------------------------------------
+//	SECTION 11 - Beta indicator - settings
+//	-------------------------------------------------------------------------------------------------------------------------------------
+//	BetaValue = BETA(Symbol = "^DJI", period = 21);
+//	Remove the double slashes to add the beta value.
+//	-------------------------------------------------------------------------------------------------------------------------------------
+
+
+//	-------------------------------------------------------------------------------------------------------------------------------------
+//	SECTION 12 - Columns settings
+//	-------------------------------------------------------------------------------------------------------------------------------------
+def_Filter = 1; //if desired, you can define any default filter which would be activated on all tools.
+//	Note: the filter definition above will be overwritten when the variable def_Filter is also defined in the PE - Mods file
+procedure Addefaultcolumns()
+{
+    AddColumn( C, "Close", 0, IIf( C > Ref( C, -1 ), colorGreen, IIf( C < Ref( C, -1 ), colorRed, colorBlue ) ) );
+    AddColumn( ROC( C, 1 ), "Change %", 0, IIf( C > Ref( C, -1 ), colorGreen, IIf( C < Ref( C, -1 ), colorRed, colorBlue ) ) );
+    AddColumn( V, "Volume", 1.0, IIf( V > Ref( V, -1 )AND C > Ref( C, -1 ), colorGreen, IIf( V > Ref( V, -1 )AND C < Ref( C, -1 ), colorRed, colorBlue ) ), colorDefault );
+}
+
+if ( InAA )
+    AddCandleColumn();
+
+//	AddColumn(BetaValue, "BETA");
+//	Remove the double slashes // in previous line to show the beta column.
+//	Also remove the // in section 11 and define a base symbol which is available in your database. */
+//	-------------------------------------------------------------------------------------------------------------------------------------
+
+
+//	-------------------------------------------------------------------------------------------------------------------------------------
+//	SECTION 13 - Shapes
+//	-------------------------------------------------------------------------------------------------------------------------------------
+def_BuyShape = shapeUpArrow;
+
+def_SellShape = shapeDownArrow;
+
+def_ShortShape = shapeHollowDownArrow;
+
+def_CoverShape = shapeHollowUpArrow;
+
+def_BuyShapeColor = colorLime;
+
+def_SellShapeColor = colorRed;
+
+def_ShortShapeColor = colorRed;
+
+def_CoverShapeColor = colorLime;
+
+def_BuyShapeOffset = 12;
+
+def_SellShapeOffset = 12;
+
+def_ShortShapeOffset = 12;
+
+def_CoverShapeOffset = 12;
+
+//	-------------------------------------------------------------------------------------------------------------------------------------
+
+
+//	-------------------------------------------------------------------------------------------------------------------------------------
+//	SECTION 14 - Alert Settings
+//	-------------------------------------------------------------------------------------------------------------------------------------
+def_AudioAlert = 0;
+
+def_EmailAlert = 0;
+
+def_BarComplete = 0;
+
+//	-------------------------------------------------------------------------------------------------------------------------------------
+
+
+//	-------------------------------------------------------------------------------------------------------------------------------------
+//	SECTION 15 - Audio Alert Text
+//	-------------------------------------------------------------------------------------------------------------------------------------
+def_AudioAlertText = ", Close =" + WriteVal( C );
+
+//	-------------------------------------------------------------------------------------------------------------------------------------
+
+
+//	-------------------------------------------------------------------------------------------------------------------------------------
+//	SECTION 16 - Email Alert Text
+//	-------------------------------------------------------------------------------------------------------------------------------------
+def_EmailAlertText = ", Close =" + WriteVal( C );
+
+//	-------------------------------------------------------------------------------------------------------------------------------------
+
+
+//	-------------------------------------------------------------------------------------------------------------------------------------
+//	SECTION 17 - Sound files
+//	-------------------------------------------------------------------------------------------------------------------------------------
+/*	55 different sounds available:
+
+	alert0,1,2,3,4,5,6,7,8,9,10,11
+	advisor, Argh, Blip, BOOT-111-loud, cashmin, cellRingLong, congrats, Cymbols, done, drums,
+	dtmf, electronicRing, ENTER, findlist, hoho, im, imrcv, imsend, MarginCall, message, MinCompanyEquity,
+	newemail, online, PositionClosed, postiue, PriceAlert, requoted, ring, secalert, Siren,
+	SOUND3, SOUND4, SOUND7, SOUND9, SOUND24, SOUND30, SOUND38, SOUND43, SOUND50,
+	SOUND54, SOUND240, talkend, updalert
+*/
+
+Dir = "SOUND C:\\Windows\\Media\\Sounds\\";//Path to the Sound directory
+
+def_BuySound1 = Dir + "alert1.wav";
+
+def_BuySound2 = Dir + "Blip.wav";
+
+def_BuySound3 = Dir + "findlist.wav";
+
+def_SellSound1 = Dir + "PriceAlert.wav";
+
+def_SellSound2 = Dir + "requoted.wav";
+
+def_SellSound3 = Dir + "ring.wav";
+
+def_ShortSound1 = Dir + "secalert.wav";
+
+def_ShortSound2 = Dir + "PriceAlert.wav";
+
+def_ShortSound3 = Dir + "chimes.wav";
+
+def_CoverSound1 = Dir + "updalert.wav";
+
+def_CoverSound2 = Dir + "electronicRing.wav";
+
+def_CoverSound3 = Dir + "Cymbols.wav";
+
+def_BuySetupSound1 = Dir + "message.wav";
+
+def_BuySetupSound2 = Dir + "alert3.wav";
+
+def_BuySetupSound3 = Dir + "alert5.wav";
+
+def_ShortSetupSound1 = Dir + "alert6.wav";
+
+def_ShortSetupSound2 = Dir + "alert7.wav";
+
+def_ShortSetupSound3 = Dir + "alert8.wav";
+
+def_Sound1 = Dir + "alert9.wav";
+
+def_Sound2 = Dir + "alert10.wav";
+
+def_Sound3 = Dir + "alert11.wav";
+
+//	-------------------------------------------------------------------------------------------------------------------------------------
+
+
+//	-------------------------------------------------------------------------------------------------------------------------------------
+//	SECTION 18 - ToolTip Text
+//	-------------------------------------------------------------------------------------------------------------------------------------
+def_ToolTip =
+    StrFormat( "Open = %g \nHigh = %g \nLow = %g \nClose = %g", O, H, L, C ) +
+    "\nVolume = " + WriteVal( V, 1.0 ) +
+    "\n\nX=" + DateTimeToStr( GetCursorXPosition() )
+    + "\nY=" + GetCursorYPosition();
+
+//	-------------------------------------------------------------------------------------------------------------------------------------
+
+
+//	-------------------------------------------------------------------------------------------------------------------------------------
+//	SECTION 19 - Interpretation Text
+//	-------------------------------------------------------------------------------------------------------------------------------------
+if ( Status( "action" ) == actionCommentary )
+{
+//	Define your interpretation text here.
+//	Example:
+//	printf("Taio indicator = " + WriteVal(PeTaio()));
+}
+
+//	-------------------------------------------------------------------------------------------------------------------------------------
+
+
+//	-------------------------------------------------------------------------------------------------------------------------------------
+//	SECTION 20 - Title
+//	-------------------------------------------------------------------------------------------------------------------------------------
+def_title = StrFormat( " - {{NAME}} - {{INTERVAL}} {{DATE}} Open %g, Hi %g, Lo %g, Close %g (%.1f%%) {{VALUES}}", O, H, L, C, SelectedValue( ROC( C, 1 ) ) );
+
+//	-------------------------------------------------------------------------------------------------------------------------------------
+
+
+//	-------------------------------------------------------------------------------------------------------------------------------------
+//	SECTION 21 - default buy, sell, short and cover rules. They are added to the PatternExplorer signals.
+//	-------------------------------------------------------------------------------------------------------------------------------------
+def_Buy = 1;
+
+def_Sell = 1;
+
+def_Short = 1;
+
+def_Cover = 1;
+
+//	-------------------------------------------------------------------------------------------------------------------------------------
+
+
+//	-------------------------------------------------------------------------------------------------------------------------------------
+//	SECTION 22 - Use Param from Chart
+//	-------------------------------------------------------------------------------------------------------------------------------------
+//	NOT all parameters are possible. Currently only sensitivity is possible.
+def_UseFromChart = 1;
+
+//-------------------------------------------------------------------------------------------------------------------------------------
+
+
+//	-------------------------------------------------------------------------------------------------------------------------------------
+//	SECTION 23 - Add custom code before PatternExplorer code.
+//	-------------------------------------------------------------------------------------------------------------------------------------
+//	The following code allows you to add any custom code to any tool. Just use the Formula names as displayed in the workspace.
+
+procedure AddCustomCodeBeforePE()
+{
+    if ( FormulaName == "PE - SI Relative Strength" )
+    {
+        def_Filter = 1;//Filter set to 1 because common filter conditions are mostly not useful in the composite indicators.	   }
+    }
+    else
+        if ( FormulaName == "PE - SI Trend" )
+        {
+            def_Filter = 1;//Filter set to 1 because common filter conditions are mostly not useful in the composite indicators.
+        }
+        else
+            if ( FormulaName == "PE - Candlesticks" )
+            {
+//					AddColumn(MA(C, 5) > MA(C, 20), "MA(C, 5) > MA(C, 20)", 1.0);// Example to add a column before all the PatternExplorer columns, only in the Candlestick tool.
+//					Plot(PeTaio(), "PeTaio", colorBlue, 1+styleOwnScale, -100, 100);//Example to overlay the TAIO indicator over the Price Chart in the Candlestick tool.
+            }
+            else
+            {
+//					do anything
+            }
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------
+
+
+//	-------------------------------------------------------------------------------------------------------------------------------------
+//	SECTION 24 - Add custom code after PatternExplorer code.
+//	-------------------------------------------------------------------------------------------------------------------------------------
+procedure AddCustomCodeAfterPE()
+{
+    if ( FormulaName == "PE - Alert 1 - Price" )
+    {
+//			AddColumn(H == HHV(H, 20), "H == HHV(H, 20)", 1.0);// Example to add a column after PatternExplorer columns in PE - Alert 1 - Price.
+    }
+
+//		AddColumn(RSI() < 30, "RSI() < 30");// Example to add a column after PatternExplorer columns in all tools.
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------
+
+
+//V3 - End of settings - Caution: Never change or remove this line !

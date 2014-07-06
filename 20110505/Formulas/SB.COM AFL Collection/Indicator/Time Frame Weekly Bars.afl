@@ -1,0 +1,47 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Time Frame Weekly Bars
+//  Author/Uploader: Anthony Faragasso 
+//  E-mail:          ajf1111@epix.net
+//  Date/Time Added: 2002-09-21 19:57:33
+//  Origin:          
+//  Keywords:        
+//  Level:           medium
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=223
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=223
+//
+//------------------------------------------------------------------------------
+//
+//  WEEKLY PRICE ARRAY : The close is the close of the last day of the week:
+//
+//  (WeeklyClose) The open is the open of the first day of the week:
+//  (WeeklyOpen) The high is
+//
+//  the highest high of the week : (WeeklyHigh) The low is the lowest low of
+//  the week :
+//
+//  (WeeklyLow ) The volume is the sum of the volume for the Week.
+//
+//------------------------------------------------------------------------------
+
+//Time Frame Weekly Bars
+//Coded by Anthony Faragasso
+//Ver. 1.01, Update#1
+//Credit to Tomasz for some Help 
+
+weekstart = DayOfWeek() < Ref( DayOfWeek(), -1 );
+weekend = DayOfWeek() > Ref( DayOfWeek(),1);
+
+/**Establish weekly Price Arrays**/
+WeeklyOpen=ValueWhen(DayOfWeek()< Ref(DayOfWeek(),-1) ,Open);
+WeeklyHigh = ValueWhen( weekend, HighestSince( weekstart, High ) );
+WeeklyLow = ValueWhen( weekend, LowestSince( weekstart, Low ) );
+WeeklyClose=ValueWhen(DayOfWeek() > Ref( DayOfWeek(),1),Close);
+WeeklyVolume=ValueWhen(DayOfWeek() > Ref(DayOfWeek(),1),Sum(V,5));
+Plot(WEEKLYHIGH,"WkHIGH",colorRed,styleLine);
+Plot(WEEKLYLOW,"WkLOW",colorGreen,styleLine);
+Plot(WEEKLYOPEN,"WkOPEN",colorBlue,styleLine);
+Plot(WEEKLYCLOSE,"WkCLOSE",colorYellow,styleLine);
+Plot(Close,"CLOSE",colorBlack,styleCandle);
+//Plot(weeklyvolume,"WkVOL",colorOrange,styleLine);

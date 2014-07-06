@@ -1,0 +1,203 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Stops Implementation in AFS
+//  Author/Uploader: Marek Chlopek 
+//  E-mail:          mchlopek@post.pl
+//  Date/Time Added: 2001-11-29 16:03:15
+//  Origin:          
+//  Keywords:        Stops, ApplyStop
+//  Level:           medium
+//  Flags:           system,exploration
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=136
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=136
+//
+//------------------------------------------------------------------------------
+//
+//  Please find attached afl script with stops implementation directly as a
+//
+//  afl code without using ApplyStop formula. This implementation gives
+//
+//  possibility to get arrows on the chart.
+//
+//  Also please note this stops have been split into two parts - for long
+//
+//  and short trades.
+//
+//  Also activation level is defined as a level when stop should be
+//
+//  activated. By multiplying stop code you can get (a) stop loss, (b)
+//
+//  static save profit stop (means: static stop activated when you start
+//
+//  getting profit and suddenly market turns around - this stop is used to
+//
+//  at least have money for brokerage fee) and (c) trailing stop.
+//
+//  The reason why I have started to think about stops is my message:
+//
+//  http://groups.yahoo.com/group/amibroker/message/6691
+//
+//  Please note this is draft version and should be still tested.
+//
+//  Any comments, bug reports or improvements are welcome.
+//
+//------------------------------------------------------------------------------
+
+// TEST.AFL v 0.03 28/11/2001
+// Testing Stops
+// Developed by Marek Chlopek
+// Coded Marek Chlopek, November 2001
+// Support from Tomasz Janeczko and Amibroker Mailing List members - THANKS!!!
+
+
+// ****************************************************************************************
+// STATIC EXPLORATION IN AMIBROKER 
+// ****************************************************************************************
+Filter = 1;
+NumColumns = 5;
+Column0 = O; Column0Name = "O"; Column0Format = 1.2;
+Column1 = H; Column1Name = "H"; Column1Format = 1.2;
+Column2 = L; Column2Name = "L"; Column2Format = 1.2;
+Column3 = C; Column3Name = "C"; Column3Format = 1.2;
+Column4 = V; Column4Name = "V"; Column4Format = 1.0;
+
+// END OF "STATIC EXPLORATION IN AMIBROKER" SECTION
+
+
+// ****************************************************************************************
+// TRADING SYSTEM GLOBAL ENTRY FORMULA
+// ****************************************************************************************
+Buy   = Cross(Close, 115);
+Short = Cross(150, Close);
+
+// END OF "TRADING SYSTEM GLOBAL ENTRY FORMULA" SECTION
+
+
+// ****************************************************************************************
+// TRADING SYSTEM LONG STOP FORMULA
+// ****************************************************************************************
+
+BuyStopLoss = 0; // 0 - not a stop loss formula, stop must be activated
+                 // 1 - stop is activated without checking ActiveLevel
+
+// How many bars ago was the last Buy signal?
+BuyBarsSince = BarsSince(Buy == 1);
+
+// Setting stop level
+// As an example BuyStopLevel depends directly on BuyPrice and a constant
+// Could be also: BuyPrice + ATR or any other dynamic formula
+BuyStopLevel = Ref(BuyPrice, -BuyBarsSince) + 3;
+
+// Setting the level to activate stop
+// BuyActivateLevel depends directly on BuyPrice and a constant
+// and I think this is how it should be - BuyActiveLevel should not be dynamically calculated
+// NOTE: When BuyStopLoss = 1, BuyActiveLevel is not important
+BuyActiveLevel = Ref(BuyPrice, -BuyBarsSince) + 22;
+
+// Active is triggered when the highest price since Buy is higher then BuyActiveLevel or
+// is always 1 (True) when BuyStopLoss = 1
+// NOTE: Cross() returns 0 when HHV = BuyActiveLevel 
+BuyActive = Cross(BuyActiveLevel, HHV(High, -BuyBarsSince)) OR BuyStopLoss;
+
+// BuyStop is triggered when Low of the session is lower than BuyStopLevel
+// NOTE: Cross() returns 0 when BuyStopLevel = Low
+BuyStop = Cross(Low, BuyStopLevel);
+
+// BuyActive will be 1 (True) till BuyStop is triggered
+// therefore we will know if BuyStop is activated and should be executed
+BuyActive = Flip(BuyActive, BuyStop);
+
+// When gap on open - use Open otherwise use BuyStopLevel as a SellPrice
+SellPrice = Min(Open, BuyStopLevel);
+
+// Exploration in Amibroker
+AddColumn(BuyStopLoss,    "BuyStopLoss",    format=1.0);
+AddColumn(BuyBarsSince,   "BuyBarsSince",   format=1.0);
+AddColumn(BuyStopLevel,   "BuyStopLevel",   format=1.2);
+AddColumn(BuyActiveLevel, "BuyActiveLevel", format=1.2);
+AddColumn(BuyStop,        "BuyStop",        format=1.0);
+AddColumn(BuyActive,      "BuyActive",      format=1.0);
+
+// END OF "TRADING SYSTEM LONG STOP FORMULA" SECTION
+
+
+// ****************************************************************************************
+// TRADING SYSTEM SHORT STOP FORMULA
+// ****************************************************************************************
+
+ShortStopLoss = 0; // 0 - not a stop loss formula, stop must be activated
+                   // 1 - stop is activated without checking ActiveLevel
+
+// How many bars ago was the last Short signal?
+ShortBarsSince = BarsSince(Short == 1);
+
+// Setting stop level
+// As an example ShortStopLevel depends directly on ShortPrice and a constant
+// Could be also: ShortPrice - ATR or any other dynamic formula
+ShortStopLevel = Ref(ShortPrice, -ShortBarsSince) - 3;
+
+// Setting the level to activate stop
+// ShortActivateLevel depends directly on ShortPrice and a constant
+// and I think this is how it should be - ShortActiveLevel should not be dynamically calculated
+// NOTE: When ShortStopLoss = 1, ShortActiveLevel is not important
+ShortActiveLevel = Ref(ShortPrice, -ShortBarsSince) - 22;
+
+// Active is triggered when the lowest price since Short is lower then ShortActiveLevel or
+// is always 1 (True) when ShortStopLoss = 1
+// NOTE: Cross() returns 0 when LLV = ShortActiveLevel 
+ShortActive = Cross(ShortActiveLevel, LLV(Low, -ShortBarsSince)) OR ShortStopLoss;
+
+// ShortStop is triggered when High of the session is higher than ShortStopLevel
+// NOTE: Cross() returns 0 when ShortStopLevel = High
+ShortStop = Cross(High, ShortStopLevel);
+
+// ShortActive will be 1 (True) till ShortStop is triggered
+// therefore we will know if ShortStop is activated and should be executed
+ShortActive = Flip(ShortActive, ShortStop);
+
+// When gap on open - use Open otherwise use ShortStopLevel as a CoverPrice
+CoverPrice = Max(Open, ShortStopLevel);
+
+// Exploration in Amibroker
+AddColumn(ShortStopLoss,    "ShortStopLoss",    format=1.0);
+AddColumn(ShortBarsSince,   "ShortBarsSince",   format=1.0);
+AddColumn(ShortStopLevel,   "ShortStopLevel",   format=1.2);
+AddColumn(ShortActiveLevel, "ShortActiveLevel", format=1.2);
+AddColumn(ShortStop,        "ShortStop",        format=1.0);
+AddColumn(ShortActive,      "ShortActive",      format=1.0);
+
+// END OF "TRADING SYSTEM SHORT STOP FORMULA" SECTION
+
+
+// ****************************************************************************************
+// TRADING SYSTEM GLOBAL EXIT FORMULA
+// ****************************************************************************************
+
+Sell  = BuyStop OR Short;
+Cover = ShortStop OR Buy;
+
+// Exploration in Amibroker
+AddColumn(Buy,        "Buy",        format=1.0);
+AddColumn(Short,      "Short",      format=1.0);
+AddColumn(Sell,       "Sell",       format=1.0);
+AddColumn(Cover,      "Cover",      format=1.0);
+AddColumn(BuyPrice,   "BuyPrice",   format=1.2);
+AddColumn(ShortPrice, "ShortPrice", format=1.2);
+AddColumn(SellPrice,  "SellPrice",  format=1.2);
+AddColumn(CoverPrice, "CoverPrice", format=1.2);
+
+// END OF "TRADING SYSTEM GLOBAL EXIT FORMULA" SECTION
+
+
+// ****************************************************************************************
+// GRAPHIC PRESENTATION IN AMIBROKER
+// ****************************************************************************************
+// [code for graphic presentation]
+
+// END OF "GRAPHIC PRESENTATION IN AMIBROKER" SECTION
+
+
+// ****************************************************************************************
+// END OF CODE (TEST.AFL)
+// ****************************************************************************************
+/* old style comment - to avoid parser bug */

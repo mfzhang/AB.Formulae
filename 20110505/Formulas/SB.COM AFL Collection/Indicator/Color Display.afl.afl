@@ -1,0 +1,92 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Color Display.afl
+//  Author/Uploader: bill barnard 
+//  E-mail:          
+//  Date/Time Added: 2003-12-15 10:56:15
+//  Origin:          This is an adaptation of AFL code to display colors by Gary A. Serkhoshian, who credited William Peters' earlier work.
+//  Keywords:        color
+//  Level:           medium
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=314
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=314
+//
+//------------------------------------------------------------------------------
+//
+//  Displays Amibroker color choices when run in IB. All colors are shown in a
+//  color bar at the bottom of the plot. a click on one of the colors will
+//  produce histogram and line plots and a title line in the selected color.
+//  The title gives the full name and the number of the color, to aid in
+//  coding. The title also displays Bars per Color to make it easy to zoom in
+//  to one bar per color so one can efficiently arrow right or left through the
+//  color choices.
+//
+//------------------------------------------------------------------------------
+
+                 /*  Color Display */
+numbars = LastValue(Cum(Status("barvisible")));
+X = IIf(numbars >= 56, floor(numbars / 56), 1);
+
+Plot( 20, "", int(Cum(1/X)%56 ), styleOwnScale | styleArea | styleNoLabel,0,100);
+Plot(28*X*sin(Cum(0.112/X)),"", SelectedValue(int(Cum(1/X)%56)),styleOwnScale | styleLine, -X*50, X*40);
+Plot(Cum(1)%(56*X) - 28*X,"num",SelectedValue(int(Cum(1/X)%56)),styleOwnScale | styleHistogram | styleNoLabel, -X*50, X*40);
+
+n = SelectedValue(int(Cum(1/X)%56));
+colorstring = 	      WriteIf(n ==0,   "colorCustom1 - number 0",
+						WriteIf(n ==1,   "colorCustom2 - number 1",
+						WriteIf(n ==2,   "colorCustom3 - number 2",
+						WriteIf(n ==3,   "colorCustom4 - number 3",
+						WriteIf(n ==4,   "colorCustom5 - number 4",
+						WriteIf(n ==5,   "colorCustom6 - number 5",
+						WriteIf(n ==6,   "colorCustom7 - number 6",
+						WriteIf(n ==7,   "colorCustom8 - number 7",
+						WriteIf(n ==8,   "colorCustom9 - number 8",
+						WriteIf(n ==9,   "colorCustom10 - number 9",
+						WriteIf(n ==10, "colorCustom11 - number 10",
+						WriteIf(n ==11, "colorCustom12 - number 11",
+						WriteIf(n ==12, "colorCustom13 - number 12",
+						WriteIf(n ==13, "colorCustom14 - number 13",
+						WriteIf(n ==14, "colorCustom15 - number 14",
+						WriteIf(n ==15, "colorCustom16 - number 15",
+						WriteIf(n ==16, "colorBlack - number 16",
+						WriteIf(n ==17, "colorBrown - number 17",
+						WriteIf(n ==18, "colorDarkOliveGreen - number 18",
+						WriteIf(n ==19, "colorDarkGreen - number 19",
+						WriteIf(n ==20, "colorDarkTeal - number 20",
+						WriteIf(n ==21, "colorDarkBlue - number 21",
+						WriteIf(n ==22, "colorIndigo - number 22",
+						WriteIf(n ==23, "colorDarkGrey - number 23",
+						WriteIf(n ==24, "colorDarkRed - number 24",
+						WriteIf(n ==25, "colorOrange - number 25",
+						WriteIf(n ==26, "colorDarkYellow - number 26",
+						WriteIf(n ==27, "colorGreen - number 27",
+						WriteIf(n ==28, "colorTeal - number 28",
+						WriteIf(n ==29, "colorBlue - number 29",
+						WriteIf(n ==30, "colorBlueGrey - number 30",
+						WriteIf(n ==31, "colorGrey40 - number 31",
+						WriteIf(n ==32, "colorRed - number 32",
+						WriteIf(n ==33, "colorLightOrange - number 33",
+						WriteIf(n ==34, "colorLime - number 34",
+						WriteIf(n ==35, "colorSeaGreen - number 35",
+						WriteIf(n ==36, "colorAqua - number 36",
+						WriteIf(n ==37, "colorLightBlue - number 37",
+						WriteIf(n ==38, "colorViolet - number 38",
+						WriteIf(n ==39, "colorGrey50 - number 39",
+						WriteIf(n ==40, "colorPink - number 40",
+						WriteIf(n ==41, "colorGold - number 41",
+						WriteIf(n ==42, "colorYellow - number 42",
+						WriteIf(n ==43, "colorBrightGreen - number 43",
+						WriteIf(n ==44, "colorTurquoise - number 44",
+						WriteIf(n ==45, "colorSkyblue - number 45",
+						WriteIf(n ==46, "colorPlum - number 46",
+						WriteIf(n ==47, "colorLightGrey - number 47",
+						WriteIf(n ==48, "colorRose - number 48",
+						WriteIf(n ==49, "colorTan - number 49",
+						WriteIf(n ==50, "colorLightYellow - number 50",
+						WriteIf(n ==51, "colorPaleGreen - number 51",
+						WriteIf(n ==52, "colorPaleTurquoise - number 52",
+						WriteIf(n ==53, "colorPaleBlue - number 53",
+						WriteIf(n ==54, "colorLavender - number 54",
+						WriteIf(n ==55, "colorWhite - number 55", 
+						""))))))))))))))))))))))))))))))))))))))))))))))))))))))));
+Title = EncodeColor(n)+"Bars per Color = "+X+ "                  The current selection is  "+ColorString; 

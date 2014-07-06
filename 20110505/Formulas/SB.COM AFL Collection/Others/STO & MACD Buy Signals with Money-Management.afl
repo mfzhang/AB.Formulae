@@ -1,0 +1,80 @@
+// This exploration looks for simple Stochastics and MACD buy signals
+// to inialize long trades.
+// Money-, Risk and Positionmanagment is more important for
+// successful trading than having only good entries and exits.
+// Therefore, I combined these signals with strict trade-,
+// money-management and positionsizing rules. 
+// These trades are usually of very STnature ( 1 - 20 days ) because
+// I used ST Volatility for Money-, Risk-, and positionsizing-managem.
+//  Feel free to alter these settings to your preferred trading-style
+// The exploration can also be customized in terms of  Account size, 
+// personal risk preferences and triggers for STO Indicator.
+// STO and MACD can be replaced by your favourite trading-system
+// However, the volatility based Moneymanagement and
+// positionsizing rules could add a new dimension to your
+// trading system.
+// Standard account size 10 K ( see column6 )
+// Standard risk is 2% of account size for any trade ( see column6)
+// Entries, Stops, Profittargets ( PT) & Positionsizes are calculated on    // ST Volatility ( ATR ). 
+// Entries should give a reasonable entry price within the projected
+// trading range for the following day.
+// Although I had to use Close as basis for the calculations rather than
+// Median Price ( as I did in MetaStock ), it shourk work well.
+// Stops are designed to keep the trade out of the daily noise.
+// Risk and Reward are managed by positionsize, adjusted to the
+// stocks ST volatility.
+// Stops should only be trailed in the direction of the trade using the 
+// SF Stop Indicator
+// Proft-targets are valid as from day of Trade-Entry. With the help of
+// SF Entry,Stop PT indicor, one could "trail" also the PT.
+// My advice is, to take some money of the table, once the initial target
+// as of trade entry has been hit.
+// I recommend strongly, to keep the risk per position at 2% of the 
+// account-size. If you are more agressive, think about taking
+// additional trades rather than increasing the risk / trade.
+// I'll experiment with using Adaptive MA's instead of Ema's and post
+// the result later as an update. 
+// Backtesting : Unfortunately, the complete system cannot be
+// back-tested in AB, because I can't input the algorithms as
+// Systemsettings.
+// Author :Stefan - Georg Fuchs
+// www.tradeshark.de
+// sgfuchs@tradeshark.de
+
+lookback = 14;
+buyrange = 20;
+sellrange = 80;
+stochKworkaround = StochK(14);
+stochDworkaround = EMA( StochK(14), 3);
+
+Buy = StochK(14) < buyrange AND Cross(stochKworkaround, stochDworkaround) OR Cross( MACD(), Signal() ); 
+
+Filter = StochK(14) < buyrange AND Cross(stochKworkaround, stochDworkaround) OR Cross( MACD(), Signal() ); 
+NumColumns=11;
+Column0 =StochK(14) < buyrange AND Cross(stochKworkaround, stochDworkaround);
+Column0Name = "STOBuy";
+Column0Format = 1;
+Column1 = Cross( MACD(), Signal() ); 
+Column1Name = "MACD Buy";
+Column1Format = 1;
+Column2 = Close;
+Column2Name = "Close";
+Column2Format = 1.2;
+Column3 = EMA(Close,5)+(EMA(ATR(1),10)/4);
+Column3Name = "EntrLong";
+Column3Format = 1.2;
+Column4 = EMA(Close,5)-(EMA(ATR(1),10)*1.50);
+Column4Name = "StopLong";
+Column4Format = 1.2;
+Column5 = (EMA(Close,5)+(EMA(ATR(1),10)*2.5));
+Column5Name = "PT";
+Column5Format = 1.2;
+Column6 = ((10000)*2/100)/(EMA(Close,5)+ (EMA(ATR(1),10)/4)-(EMA(Close,5)-(EMA(ATR(1),10)*1.50)));
+Column6Name = "Max Pos";
+Column6Format = 1;
+Column7 = (EMA(Close,5)+(EMA(ATR(1),10)/4)) - (EMA(Close,5)-(EMA(ATR(1),10)*1.50));
+Column7Name = "Risk";
+Column7Format = 1.2;
+Column8 = (EMA(Close,5)+(EMA(ATR(1),10)*2.5)) -  (EMA(Close,5)+(EMA(ATR(1),10)/4));
+Column8Name = "Reward";
+Column8Format = 1.2;

@@ -1,0 +1,51 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Chaikin Money Flow
+//  Author/Uploader: Tomasz Janeczko 
+//  E-mail:          tj@amibroker.com
+//  Date/Time Added: 2001-06-16 08:07:10
+//  Origin:          Originally developed by Marc Chaikin
+//  Keywords:        accumulation,distribution,trend
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=6
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=6
+//
+//------------------------------------------------------------------------------
+//
+//  Chaikin Money Flow Indicator Appeared in the January 94 issue of Stocks
+//  &amp; Commodities magazine Like the popular Chaikin A/D Oscillator
+//  developed by Marc Chaikin, the Chaikin Money Flow indicator is based on the
+//  Accumulation/Distribution line. It is created by summing the values of the
+//  Accumulation/Distribution Line for 21 periods and then dividing by a 21
+//  period sum of the volume. The interpretation of the Chaikin Money Flow
+//  indicator is based on the assumption that market strength is usually
+//  accompanied by prices closing in the upper half of their daily range with
+//  increasing volume. Likewise, market weakness is usually accompanied by
+//  prices closing in the lower half of their daily range with increasing
+//  volume. If prices consistently close in the upper half of their daily
+//  high/low range on increased volume, then the indicator will be positive
+//  (i.e., above the zero line). This indicates that the market is strong.
+//  Conversely, if prices consistently close in the lower half of their daily
+//  high/low range on increased volume, then the indicator will be negative
+//  (i.e., below the zero line). This indicates that the market is weak. The
+//  Chaikin Money Flow indicator provides excellent confirmation signals of
+//  trendline and support/resistance breakouts. For example, if a security's
+//  prices have recently penetrated a downward sloping trendline (signaling a
+//  potential trend reversal), you may want to wait for further confirmation by
+//  allowing the Chaikin Money Flow indicator to cross above the zero line.
+//  This may indicate an overall shift from a downtrend to a new uptrend. A
+//  divergence between the Chaikin Money Flow indicator and prices are also
+//  significant. For example, if the most recent peak of the indicator is lower
+//  than it's prior peak, yet prices are continuing upward, this may indicate
+//  weakness.
+//
+//------------------------------------------------------------------------------
+
+/* 
+Chaikin Money Flow Indicator
+
+
+*/  
+
+Graph0 = sum(((( C-L )-( H-C )) / ( H-L ))*V, 21 ) / sum(V,21); 

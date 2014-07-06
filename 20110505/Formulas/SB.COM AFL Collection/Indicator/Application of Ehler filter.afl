@@ -1,0 +1,51 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Application of Ehler filter
+//  Author/Uploader: goldfreaz 
+//  E-mail:          
+//  Date/Time Added: 2004-01-05 12:58:20
+//  Origin:          
+//  Keywords:        Ehler, FIR
+//  Level:           semi-advanced
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=320
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=320
+//
+//------------------------------------------------------------------------------
+//
+//  Ehler filter using volume, momentum, rate of momentum for weighting.
+//
+//------------------------------------------------------------------------------
+
+// ehler filter based on acclerartion and speed
+// x - input
+// n - length of FIR
+// w - exponential weight of passed acceleration and speed 
+// f - weighting factor between acceleration and speed
+function Ehler1( x, V, n, w,f)
+{y=x;
+// acceleration + speed
+a = x-2*Ref(x,-1) + Ref(x,-2);
+s = f*(x-Ref(x,-1));
+q=AMA(V*(abs(a)+abs(s))/x,w);
+
+for( i = n-1; i < BarCount; i++ )
+ {
+   sy=0;sw=0;  
+ for (j=i-n+1; j<i+1; j++)
+  {sy = sy + q[j]*x[j]; 
+   sw = sw + q[j];
+  }
+ y[i]=sy/sw;
+ }
+return y;
+}
+w=Param("w",0.62,0.05,0.99,0.01);
+n=Param("n",8,1,42,1);
+f=Param("f",-0.3,-10,10,0.1);
+f=10^f;
+eh=Ehler1(C,V,n,w,f);
+Plot( Close, "Price", colorBlack, styleCandle );
+Plot( eh, "Ehler", colorBlack ); 
+Plot( MA(C,n), "MA", colorBlue ); 
+

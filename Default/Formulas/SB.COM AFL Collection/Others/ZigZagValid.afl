@@ -1,0 +1,52 @@
+//z_ZigZagValid
+// ******** CHARTING 
+PercentChange = 6;
+mystartbar = SelectedValue(BarIndex());  // FOR GRAPHING
+
+mystartbardate = LastValue(ValueWhen(mystartbar == BarIndex(), DateNum(),1));
+
+InitialValue = LastValue(ValueWhen(mystartbardate == DateNum(), C , 1 ) ) ;
+Temp1 = IIf(BarIndex() >= mystartbar, InitialValue, Null) ;
+Plot(Temp1, " ", colorBlack,styleLine);
+Plot((1+(LastValue(PercentChange)/100))*(Temp1), " ", colorGreen, styleLine) ;
+Plot((1-(LastValue(PercentChange)/100))*(Temp1), " ", colorRed, styleLine) ;
+
+ZZ = Zig(C,LastValue(PercentChange)) ; 
+PivotLow = Ref(IIf(Ref(ROC(ZZ,1),-1) < 0 AND ROC(ZZ,1) > 0, 1, Null),1);
+PivotHigh = Ref(IIf(Ref(ROC(ZZ,1),-1) > 0 AND ROC(ZZ,1) < 0, 1, Null),1);
+
+PlotShapes( shapeCircle*PivotLow, colorGreen,0, L, -20) ; 
+PlotShapes( shapeCircle*PivotHigh,colorRed,0,H, 20) ;
+
+Buy = IIf(C>(1+(LastValue(PercentChange)/100))*(ValueWhen(PivotLow, C,1))
+AND ROC(ZZ,1) > 0,1,0); 
+Sell = IIf(C<(1-(LastValue(PercentChange)/100))*(ValueWhen(PivotHigh, C,1))
+AND ROC(ZZ,1) < 0,1,0); 
+
+Buy = ExRem(Buy,Sell);
+Sell = ExRem(Sell,Sell);
+
+PlotShapes( shapeUpArrow*Buy, colorGreen,0, L, -20); 
+PlotShapes( shapeDownArrow*Sell, colorRed,0,H, -20) ;
+
+BarColors = 
+IIf(BarsSince(Buy) < BarsSince(Sell) 
+AND BarsSince(Buy)!=0, colorGreen,
+IIf(BarsSince(Sell) < BarsSince(Buy)
+AND BarsSince(Sell)!=0,  colorRed, colorBlue));
+
+Plot(C, " ", BarColors,  styleBar ) ; 
+Plot(ZZ," ", colorViolet ,styleLine|styleThick);
+Plot(ZZ," ", BarColors,styleDots|styleNoLine);
+
+Title = Name() + " " + Date() + WriteIf(PivotLow, " Up Pivt
+","")+WriteIf(PivotHigh," Down Pivot ","")+ WriteIf(Buy, " Buy Point ",
+"") + WriteIf(Sell, " Sell Point ", "") ;
+
+printf ("The Zig Zag indicator identifies pivot points but looks into the future - \n");
+printf ("(beyond the right edge of the chart) to do this. This indicator plots a dot \n");
+printf ("at the pivot point AND an arrow at the bar when the pivot becomes known.. \n");
+printf ("The price bars are colored red for a pivot downtrend, green for a pivot uptrend, \n");
+printf ("AND blue at the known pivot point. Three addional horizontal lines are plotted AND \n");
+printf ("tied to the selected bar - the current Close AND +/- x% from the current Close. \n");
+printf ("The x %  is the same % used in the Zig Zag function \n");

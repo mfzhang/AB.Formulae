@@ -1,0 +1,64 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    LunarPhase
+//  Author/Uploader: Marcelin Tudor 
+//  E-mail:          marcelint@gmail.com
+//  Date/Time Added: 2006-09-03 10:02:09
+//  Origin:          
+//  Keywords:        
+//  Level:           basic
+//  Flags:           exploration
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=682
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=682
+//
+//------------------------------------------------------------------------------
+//
+//  Plot Full Moon and New Moon on your chart. Simply and easy.
+//
+//------------------------------------------------------------------------------
+
+// Input your local time zone
+TZ=Param("Your local Time Zone? [-12 to +12hrs]",2, -12,12,1);
+
+// Lunar cycle
+LunarMonth=29.530589;
+Offset=7.254621;
+
+// Calendar }
+leap=frac(Year( )/4)==0 AND frac(Year()/ 100)!=0 OR frac(Year()/ 400)==0;
+y=Year()*365+ int(Year( )/4)-int( Year()/100) +int(Year( )/400);
+m=
+IIf(Month()==2,31-leap,
+IIf(Month()==3,59,
+IIf(Month()==4,90,
+IIf(Month()==5,120,
+IIf(Month()==6,151,
+IIf(Month()==7,181,
+IIf(Month()==8,212,
+IIf(Month()==9,243,
+IIf(Month()==10,273,
+IIf(Month()==11,304,
+IIf(Month()==12,334, -leap))))))) ))));
+CurrentDay=y+ m+Day()-TZ/ 24-Offset;
+
+// Full Moon }
+FM=frac(CurrentDay/ LunarMonth) ;
+FM=PeakBars( FM, 1, 1)==0;
+
+// New Moon }
+NM=frac((CurrentDay +LunarMonth/ 2)/LunarMonth) ;
+NM=PeakBars( NM, 1,1)==0;
+FullMoon=FM-NM==1;
+NewMoon=FM-NM==-1;
+
+//Plot Moon Phase in own window }
+
+SetChartOptions(0,chartShowArrows|chartShowDates);
+_N(Title = StrFormat("{{NAME}} - {{INTERVAL}} {{DATE}} Open %g, Hi %g, Lo %g, Close %g (%.1f%%) {{VALUES}}", O, H, L, C, SelectedValue( ROC( C, 1 ) ) ));
+Plot( C, "Close", ParamColor("Color", colorBlack ), styleNoTitle | ParamStyle("Style") | GetPriceStyle() ); 
+
+SetChartBkGradientFill( ParamColor("BgTop", colorWhite),ParamColor("BgBottom", colorLightYellow));
+
+shape = IIf(FullMoon,shapeCircle+shapePositionAbove,IIf(NewMoon,shapeCircle+shapePositionAbove,Null));
+
+PlotShapes(shape,IIf(FullMoon,colorYellow,colorBlack),0,H);

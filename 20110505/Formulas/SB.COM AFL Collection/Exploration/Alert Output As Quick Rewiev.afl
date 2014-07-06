@@ -1,0 +1,52 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Alert Output As Quick Rewiev
+//  Author/Uploader: 3N 
+//  E-mail:          
+//  Date/Time Added: 2003-04-14 15:56:13
+//  Origin:          
+//  Keywords:        
+//  Level:           basic
+//  Flags:           exploration
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=270
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=270
+//
+//------------------------------------------------------------------------------
+//
+//  Alert Output As Quick Rewiev
+//
+//------------------------------------------------------------------------------
+
+//=========================   QUICK VIEW [alert]   =============================
+//==============================================================================
+//×××   Period at finding changes at stocks price   ××××××××××××××××××××××××××××
+x      =-90; 
+eDay   =-1; 
+eWeek  =-5; 
+eMonth =-20; 
+eQTR   =-60; 
+eYEAR  =-260; 
+user   =x;
+//×××   HLEDANÁ DÉLKA   ××××××××××××××××××××××××××××××××××××××××××××××××××××××××
+qvCAS = eDay;        // There enter lenght period !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//×××   PODMÍNKY   ×××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××
+qvCE       =C;
+qvHLEDANE  =Ref(C,qvCAS);
+qvBODY     =qvCE-qvHLEDANE;
+qvPROCENTA =100*(qvCE-qvHLEDANE)/qvHLEDANE;
+//×××   EXPLORE   ××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××
+Filter     = C; 
+AddTextColumn(Name(),"Ticker",2, IIf( MarketID()==0,5,4));
+AddColumn(qvHLEDANE,"Prev.Price",1.2);       
+AddColumn(C,"Price",1.2,IIf(C<1,11,IIf(C>=1 AND C<3,12,IIf(C>=3 AND C<20,1,0))));
+;
+AddColumn(qvBODY,"Change in $",1.2,2 ,IIf(qvBODY>=0.001,5,IIf(qvBODY==0,9,4 )));
+AddColumn(qvPROCENTA,"Change in %",1.2,2 ,IIf(qvPROCENTA>=0.001,5,IIf(qvPROCENTA==0,9,4 )));//×××   ALERT   ××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××
+Buy  = qvPROCENTA>0;
+Cover= qvProcenta==0;
+Sell = qvPROCENTA<0;
+AlertIf( Buy,"",WriteVal(qvPROCENTA,1.2),1,1,0 );
+AlertIf( Sell,"",WriteVal(qvPROCENTA,1.2),2,1,0 );
+AlertIf( Cover,"",WriteVal(qvPROCENTA,1.2),0,1,0 );
+//××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××
+         

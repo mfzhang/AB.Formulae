@@ -1,0 +1,100 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    ATR Volatility System
+//  Author/Uploader: Marcelin 
+//  E-mail:          marcelint@xnet.ro
+//  Date/Time Added: 2006-01-14 13:08:22
+//  Origin:          
+//  Keywords:        
+//  Level:           medium
+//  Flags:           system
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=578
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=578
+//
+//------------------------------------------------------------------------------
+//
+//  ATR trading system for short terms tradings. You can use it with Absolute
+//  Strength Index for confirmation of signals.
+//
+//------------------------------------------------------------------------------
+
+_SECTION_BEGIN("NewSystem ATR");
+   /*Writed & composed by Tudor Marcelin - Art Invest*/
+   n=Param( "perioada", 14, 5 , 20, 1 );
+   k=Param( "factor de multiplicare", 1.4, 0.5 , 2.5, 0.1 );
+
+  f=ATR(n);
+    
+/*R rezistenta pentru ziua curenta*/
+    R[0] = C[0]; 
+/*S rezistenta pentru ziua curenta*/ 
+    S[0] = C[0];
+  
+for( i = n+1; i < BarCount; i++ ) 
+{ 
+
+    R[i]=R[i-1];
+    S[i]=S[i-1];
+    if (( S[i-1]<=C[i-1]) AND (C[i-1] <=R[i-1] ) AND (C[i-1]+k*f[i-1])<=RV)
+ 
+        r[i] = C[i-1]+k*f[i-1];
+   
+     if (( S[i-1]<=C[i-1]) AND (C[i-1]<=R[i-1] ) AND  (C[i-1]-k*f[i-1])>=SV)
+
+        s[i]= C[i-1]-k*f[i-1];
+  
+
+
+  
+
+
+    if ( C[i-1] >R[i-1] )
+{
+       r[i] = C[i-1]+k*f[i-1];
+       s[i]= C[i-1]-k*f[i-1];
+       RV=r[i];
+       SV=s[i]; 
+}   
+    if ( C[i-1] <S[i-1] )
+{
+       r[i] = C[i-1]+k*f[i-1];
+       s[i]= C[i-1]-k*f[i-1];
+       RV=r[i];
+       SV=s[i]; 
+
+} 
+
+
+ Buy=Close>R;
+ Sell=Close<S;
+ 
+Cump=IIf(Close>R,1,0);
+Vanz=IIf(Close<S,1,0);
+}
+Plot(Close,"Close",colorBlack,styleCandle);
+Plot(R, "Rez:",colorGreen,styleDots|styleNoLine);
+Plot(S, "Sup:",colorRed,styleDots|styleNoLine);
+
+
+Buy = ExRem( Buy, Sell ); //Elimina semnalele buy consecutive
+Sell = ExRem( Sell, Buy ); //Elimina semnalele sell consecutive
+
+shape = Buy * shapeUpArrow + Sell * shapeDownArrow;
+
+fig=Cump*shapeHollowUpArrow + Vanz*shapeHollowDownArrow;
+
+PlotShapes( fig, IIf( Cump, colorPaleGreen  , colorPink), 0, IIf( Cump, Low, High)); //Pentru a vizualiza semnalele consecutive eliminate de ExRem
+PlotShapes( shape, IIf( Buy, colorGreen, colorRed ), 0, IIf( Buy, Low, High)); 
+
+AlertIf( Buy, "", "Volatility System", 1 );
+AlertIf( Sell, "", "Volatility System",2);
+
+Color = IIf( Vanz OR Sell, colorRed, IIf(Buy,colorGreen,colorLightGrey)); 
+
+Plot( 2, "", Color, styleArea | styleOwnScale | styleNoLabel, -0.1, 50 );
+
+GraphXSpace = 3;
+
+Title=EncodeColor(colorBlue)+"Volatility System"+EncodeColor(colorBlack)+ " Open:"+O+" High:"+H+" Low:"+L+" Close:"+C+EncodeColor(colorGreen)+" Rez:"+R+EncodeColor(colorRed)+" Sup:"+S+EncodeColor(colorBlue)+
+	" \nDate: "+EncodeColor(colorRed)+Date();
+_SECTION_END();

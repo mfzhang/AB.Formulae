@@ -1,0 +1,22 @@
+WildPer = Param("Wilder Time Periods", 14, 1, 100, 1 );
+Value = Param("RSI value", 50, 1, 100, 0.1 );
+Field =  Param("Price Field (0-close, 1-high, 2-low)", 0, 0, 2, 1 );
+Mode = Param("Mode (0-RSI, 1-ReverseRSI)", 1, 0, 1, 1 );
+function RevRSI( value, array, periods )
+{
+   AU = Wilders( Max( array - Ref( array, -1 ), 0 ), periods );
+   AD = Wilders( Max( Ref( array, -1 ) - array, 0 ), periods );
+   x = ( periods - 1 ) * ( AD * value / (100 - value) - AU);
+   return IIf( x >= 0, array+x, array + x * (100 - value)/value );
+}
+array = IIf( Field == 0, Close, IIf( Field == 1, High, Low ) );
+aname = WriteIf( Field == 0, "Close", WriteIf( Field == 1, "High", "Low" ) );
+if( Mode == 0 ) /* RSI */
+{
+   Plot( RSIa( array, WildPer ), "RSI( " + aname + ", " + WildPer + ")", colorRed );
+}
+else
+{
+   Plot( array, aname, colorBlack );
+   Plot( RevRSI( value, array, WildPer ), "ReverseRSI( " + aname + ", " + WildPer + ")", colorBlue, styleThick );
+}

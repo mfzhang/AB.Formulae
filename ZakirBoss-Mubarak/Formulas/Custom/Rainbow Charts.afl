@@ -1,0 +1,33 @@
+/* Rainbow Charts */
+/* July 1997 TASC Traders Tips*/
+/* coded by Anthony Faragasso*/
+
+maxgraph = 15;
+
+graph0 = close;
+graph1 = Ma(C,2);
+graph2 = Ma(Ma(C,2),2);
+graph3 = Ma(Ma(Ma(C,2),2),2);
+graph4 = Ma(Ma(Ma(Ma(C,2),2),2),2);
+graph5 = Ma(Ma(Ma(Ma(Ma(C,2),2),2),2),2);
+graph6 = Ma(Ma(Ma(Ma(Ma(Ma(C,2),2),2),2),2),2);
+graph7 = Ma(Ma(Ma(Ma(Ma(Ma(Ma(C,2),2),2),2),2),2),2);
+graph8 = Ma(Ma(Ma(Ma(Ma(Ma(Ma(Ma(C,2),2),2),2),2),2),2),2);
+graph9 = Ma(Ma(Ma(Ma(Ma(Ma(Ma(Ma(Ma(C,2),2),2),2),2),2),2),2),2);
+graph10 = Ma(Ma(Ma(Ma(Ma(Ma(Ma(Ma(Ma(Ma(C,2),2),2),2),2),2),2),2),2),2);
+
+graph0style =128;
+graph1style=graph2style=graph3style=graph4style=graph5style=graph6style=graph7style=graph8style=graph9style=graph10style = 1;
+graph0color = 2;
+graph1color = 3;
+graph2color = 5;
+graph3color =7;
+graph4color = 6;
+graph5color =15;
+graph6color = 8;
+graph7color =16;
+graph8color = 10;
+graph9color = 11;
+graph10color = 12;
+
+title=name() + "  Rainbow Charts " + " Today's Close : " +"(" +writeval(close,format=1.2)+")" +" Change from Previous : " +"("+writeval(close - ref(close,-1)) +")";

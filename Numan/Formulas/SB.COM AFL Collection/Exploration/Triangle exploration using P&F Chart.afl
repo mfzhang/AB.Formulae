@@ -1,0 +1,162 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Triangle exploration using P&F Chart
+//  Author/Uploader: Graham Kavanagh 
+//  E-mail:          kavemanperth@telstra.com
+//  Date/Time Added: 2002-12-01 01:51:11
+//  Origin:          
+//  Keywords:        Triangle, P&F
+//  Level:           semi-advanced
+//  Flags:           exploration
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=237
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=237
+//
+//------------------------------------------------------------------------------
+//
+//  This is exploration for charts making triangle patterns. The chart is for
+//  the P&amp;F chart using High/Low prices.
+//
+//------------------------------------------------------------------------------
+
+//P&F Chart exploration for triangles
+// Chart based on High/Low prices.
+//The box size is auto calculated
+//Reverse is 3 boxes.
+//The continuation of exploration for breakout of the triangles is located at end of the code. Designed to be run with the charts from first exploration for the triangles placed in a watchlist.
+//Graham Kavanagh 01 Dec 2002
+
+SetBarsRequired(100000,100000);
+
+first=Cum(1);
+period=Min(20,first);
+mean = (HHV(C,period)+LLV(C,period))/2;
+range = (HHV(C,period)-LLV(C,period));
+bigrange=Highest(C)-Lowest(C);
+bigmean=(Highest(C)+Lowest(C))/2;
+Change0 = MA(abs(C-Ref(C,-1)),period);
+Ratio = IIf(range<mean, Max(range/mean,0.5),IIf(range>mean, Min(range/mean,1.1),range/mean));
+Change=Change0*ratio;
+mean=C;
+
+box = IIf(mean<=10,Max(int(change)+round(frac(Change)*10)/10,0.1),
+IIf(mean>10 AND mean<=20,Max(int(Change)+round(frac(Change)*10/5)*5/10,0.5), 
+IIf(mean>20 AND mean<=30,Max(int(Change)+round(frac(Change)/5*10)*5/10,0.5), 
+IIf(mean>30 AND mean<=50,Max(int(Change)+round(frac(Change)/5*10)*5/10,0.5), 
+IIf(mean>50 AND mean<=200,Max(round(Change),1),
+IIf(mean>200 AND mean<=500,Max(round(Change),1),
+IIf(mean>500 AND mean<=1000,Max(round(Change),2),
+IIf(mean>1000 AND mean<=2000,Max(round(Change/10)*10,5),
+Max(round(Change/10)*10,10)))))))));
+box = IIf(box<0.05,0.05,box);
+Box=LastValue(box);
+
+High  = IIf( H<10, Prec(H,1), IIf( H>=10 AND H<50, int(H) + Prec(frac(H)/5,1)*5, int(H)));
+Low   = IIf( L<10, Prec(L,1), IIf( L>=10 AND L<50, int(L) + Prec(frac(L)/5,1)*5, int(L)));
+
+EnableScript("jscript");
+<%
+High = VBArray( AFL( "High" ) ).toArray();
+Low = VBArray( AFL( "Low" ) ).toArray();
+
+PFO = new Array();
+PFC = new Array();
+
+Box = AFL("Box");
+
+// initialize first element
+j = 0;
+
+PFC[j] = Box*Math.floor(Low[0]/Box);
+PFO[j] = PFC[j] + Box;
+down = 1;                  // By default the first bar is a down bar.
+up = 0;
+swap = 0;
+
+// perform the loop that produces PF Chart
+for( i = 1; i < High.length; i++ )
+{
+ Reverse = Box * 3 + Box;                      // reversal requirement
+
+ if( Low[i] <= PFC[j]-Box && down)         //continue down
+ {
+  PFC[j] = Box*Math.floor(Low[i]/Box);
+  PFO[j] = PFC[j] + Box;
+ }
+ else
+ {
+  if( High[i] >= PFC[j] + Reverse && down)  //Change direction to up
+  {
+   j++;
+   swap = 1;
+   PFC[j] = Box*Math.ceil(High[i]/Box);
+   PFO[j] = PFC[j]-Box;
+  }
+ }
+ if( High[i] >= PFC[j] + Box && up)         //Continue up
+ { 
+  PFC[j] = Box*Math.ceil(High[i]/Box);
+  PFO[j] = PFC[j] - Box;
+ }
+ else
+ {
+  if( Low[i] <= PFC[j] - Reverse && up)   //Change direction to down
+  {
+   j++;
+   PFC[j] = Box*Math.floor(Low[i]/Box);
+   PFO[j] = PFC[j] + Box;
+   swap = 1;
+  }
+ }
+ if( swap )
+ {
+  swap = 0;
+  if( up )
+  {
+   up = 0;
+   down = 1;
+  }
+  else
+  {
+   up = 1;
+   down = 0;
+  }
+ }
+}
+delta = High.length - j-1;
+
+AFL.Var("PFO") = PFO;
+AFL.Var("PFC") = PFC;
+AFL.Var("Box") = Box;
+AFL.Var("delta") = delta;
+AFL.Var("Reverse") = Reverse; 
+%>
+
+PFO = Ref( PFO, -delta );
+PFC = Ref( PFC, -delta );
+
+// High-Low range sets the height of the P&F bar 
+H = IIf(Ref(PFC,-1)>Ref(PFO,-1),Ref(HHV(PFC,1),-1)-Box,Max(PFO,PFC));
+L = IIf(Ref(PFC,-1)<Ref(PFO,-1),Ref(LLV(PFC,1),-1)+Box,Min(PFO,PFC));
+O = IIf(Ref(PFC,-1)>Ref(PFO,-1),Ref(HHV(PFC,1),-1)-Box,IIf(Ref(PFC,-1)<Ref(PFO,-1),Ref(LLV(PFC,1),-1)+Box,PFO));
+
+// the difference between Open AND Close should be set to box size 
+// the sign decides if X or O are plotted 
+C = O + Box * IIf( PFC > PFO, 1,-1);
+
+//Exploration for Triangles
+
+Equal = (C>O AND H<Ref(H,-2) AND Ref(H,-2)<Ref(H,-4) AND Ref(L,-1)>Ref(L,-3)) OR (C<O AND L>Ref(L,-2) AND Ref(L,-2)>Ref(L,-4) AND Ref(H,-1)<Ref(H,-3));
+
+Ascend = (C>O AND ( (H<Ref(H,-2) AND Ref(H,-2)==Ref(H,-4)) OR H==Ref(H,-2) ) AND Ref(L,-1)>Ref(L,-3)) OR (C<O AND ( (Ref(H,-1)<Ref(H,-3) AND Ref(H,-3)==Ref(H,-5)) OR Ref(H,-1)==Ref(H,-3) ) AND L>Ref(L,-2) AND Ref(L,-2)>Ref(L,-4));
+
+Descend = (C>O AND ( (Ref(L,-1)>Ref(L,-3) AND Ref(L,-3)==Ref(L,-5)) OR Ref(L,-1)==Ref(L,-3) ) AND H<Ref(H,-2) AND Ref(H,-2)<Ref(H,-4)) OR (C<O AND ( (L>Ref(L,-2) AND Ref(L,-2)==Ref(L,-4)) OR L==Ref(L,-2) ) AND Ref(H,-1)<Ref(H,-3));
+
+Filter = Equal==1 OR Ascend==1 OR Descend==1;
+AddColumn(Equal,"E",1.0);
+AddColumn(Ascend,"A",1.0);
+AddColumn(Descend,"D",1.0);
+/*
+//after the exploration locates the charts with triangle pattern they can be loaded into a watchlist and further exploration carried out for the breakout
+Breakout = H>Ref(H,-2);
+Filter = Breakout==1;
+AddColumn(Breakout,"BO",1.0);

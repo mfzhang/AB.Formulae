@@ -1,0 +1,72 @@
+/*FastStoch%KFullStoch%K%D
+Originally Developed by George C. Lane
+For reference, see;
+http://stockcharts.com/education/What/IndicatorAnalysis/indic_stochasticOscillator.html
+or,
+http://www.aspenres.com/Website/comstock/help/aspenStochastics.html
+Values about at OR above the Red line show overbought,
+AND about at OR below the Green line show oversold.
+where x is the first parameter, y is the second parameter
+and (in the case of Full stochastics), z is the third parameter.
+ In the case of Fast and Slow Stochastics,
+ x is typically 14 and y is usually set to 3.
+ The formula could be plotted with three lines,
+ Hence 14-3-3  or 14-5-3 or 14-3-5
+%K (fast)
+%K (full) = y-day SMA of %K (fast) 
+%D (full) = z-day SMA of %K (full)
+or just the usual 2 lines,
+%K (full) = y-day SMA of %K (fast) 
+%D (full) = z-day SMA of %K (full)
+*/
+pds = 14; /*Periods */
+/*pds = Optimize("pds",13,2,20,1); */
+
+slw = 3; /*Slowing for Full Stoch%K*/
+/*slw = Optimize("slw",3,1,14,1); */
+
+slwd = 3; /*Slowing for Full Stoch%D*/
+/*slwd = Optimize("slwd",3,1,14,1); */
+
+ob = 83; /*Overbought */
+/*ob = Optimize("ob",83,65,88,1); */
+
+os = 24; /*Oversold */
+/*os = Optimize("os",24,20,50,1); */
+
+FSK = 100*(C-LLV(L,pds))/(HHV(H,pds)-LLV(L,pds)); // FASTSTOCHK
+
+FLSK = MA( FSK, slw ); // FULLSTOCHK
+
+FLSD = MA( FLSK, slwd ); // FULLSTOCHD
+
+MaxGraph = 6;
+Graph0 = FSK;
+Graph0Color = 7;
+Graph1 = FLSK;
+Graph1Color = 6;
+Graph2 = FLSD;
+Graph2Color = 23;
+Graph3 = FLSD;
+Graph3BarColor =
+IIf (Graph3 > ob, 13,
+IIf (Graph3 < os,8,14));
+Graph4 = ob;
+Graph4Color = 4;
+Graph5 = os;
+Graph5Color = 43;
+Graph0Style = Graph1Style = Graph2Style = Graph4Style = Graph5Style = 1;
+Graph3Style = 2;
+
+Title = Name()+"   "+FullName()+
+"   FastStoch%K=Yellow  FullStoch%K = Blue  FullStoch%D = Dark Grey";
+
+whengoup = FLSD < os AND Cross(FSK,os) AND FLSK >= Ref(FLSK,-1) AND FLSD >= Ref(FLSD,-1) OR  Cross(FLSD,os) AND FSK >= Ref(FSK,-1) AND FLSK >= Ref(FLSK,-1) ;
+
+whengodown = IIf(BarsSince(Cross(os,FSK))==1 AND FLSK < os ,1,0) OR Cross(os,FSK) AND FLSK < Ref(FLSK,-1) OR FLSK < ob AND FLSK > os AND FLSK <= Ref(FLSK,-1) OR FSK > ob AND FLSK > ob AND FLSD > ob AND FSK < Ref(FSK,-1) AND FLSK < Ref(FLSK,-1) AND FLSD <= Ref(FLSD,-1) OR FSK > ob AND FLSK > ob AND FLSD > ob AND Cross(ob,FLSK);
+
+Buy = whengoup;
+Sell = whengodown;
+
+Buy = ExRem(Buy,Sell);
+Sell = ExRem(Sell,Buy);

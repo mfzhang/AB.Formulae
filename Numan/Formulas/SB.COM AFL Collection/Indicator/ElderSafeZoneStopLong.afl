@@ -1,0 +1,55 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    ElderSafeZoneStopLong
+//  Author/Uploader: Leon Nedbalek 
+//  E-mail:          ned@hawaii.rr.com
+//  Date/Time Added: 2003-12-30 18:30:18
+//  Origin:          From Dr. Alexander Elder's "Come Into My Trading Room"
+//  Keywords:        Elder SafeZone Stop
+//  Level:           medium
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=318
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=318
+//
+//------------------------------------------------------------------------------
+//
+//  According to my tests this provides the same results as the Excel
+//  spreadsheet detailed in the Trading Room book, with one modification.
+//  Instead of giving today's stop using the data from the previous day, it
+//  provides tomorrow's stop using today's end-of-day data. If you need the
+//  stop for today, click on the previous day in the chart. For long positions
+//  only (use the companion file for shorts).
+//
+//------------------------------------------------------------------------------
+
+L1=Ref(L,-1);
+Pd=Param("Period",10,1,50,1);
+DnPen=IIf(L<L1,L1-L,0);
+DnPenSum=Sum(DnPen,Pd);
+DnPenCount=Sum(L<L1,Pd);
+AvgDnPen=DnPenSum/DnPenCount;
+AvgDnPenMult=Param("Multiplier",2,1,4,0.1);
+DaysInTrade=Param("Days in trade",1,1,50,1);
+StopLong=L-(AvgDnPen*AvgDnPenMult);
+SafeZoneStopLong=HHV(StopLong,DaysInTrade);
+
+Graph0=Close; Graph0Style=styleBar|styleThick; Graph0Color=colorWhite;
+Graph1=SafeZoneStopLong; Graph1Style=styleDots|styleNoLine; Graph1Color=colorLightOrange;
+
+Title="\\c55"
++Name() 
++"\\c42  Elder SafeZone \\c43LONG" 
++"\\c42    SafeZoneStop for next trading day after \\c55"
++Date()
++": \\c33"
++WriteVal(SafeZoneStopLong,1.2)
++"\n\\c42    Period: \\c55"
++WriteVal(Pd,1.0)
++"\\c42    AvgDnPen: \\c55"
++WriteVal(AvgDnPen,1.2)
++"\\c42    Multiplier: \\c55"
++WriteVal(AvgDnPenMult,1.1)
++"\\c42    Days in trade (inclusive): \\c55"
++WriteVal(DaysInTrade,1.0);
+
+  

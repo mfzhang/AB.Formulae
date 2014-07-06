@@ -1,0 +1,80 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Follow the Leader
+//  Author/Uploader: Kelly Griffiths 
+//  E-mail:          
+//  Date/Time Added: 2004-10-06 00:45:08
+//  Origin:          Kelly Griffiths (October 5, 2004)
+//  Keywords:        volume institution profit loss stopbars
+//  Level:           basic
+//  Flags:           system
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=386
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=386
+//
+//------------------------------------------------------------------------------
+//
+//  This follows institutional investing by using volume as an indicator.
+//
+//------------------------------------------------------------------------------
+
+/*
+Follow The Leader.
+Kelly Griffiths (4Oct04)
+
+Large volume trades can have a quick impact on the price of a position up or 
+down (supply and demand).  Institutions are typically responsible for
+most large volume trades.  I developed this formula to track the trading 
+activity of institutional investors, so that a small investor can capitalize
+on thier research without doing the research.
+
+Some assumptions are made that are typical of institutional investors.  The
+first assumption is that institutional investors follow trading practices 
+that require them to sell at certain percentage gains or losses.  The next 
+assumption is that institutional investors will not hold on to a stock 
+for more than a given number of days in order to minimize their exposure.
+The final assumption is that institutional investors have done their
+homework and know when to buy, hold or sell.
+
+This formula identifies the days when institutional investors buy or sell
+(SinceLastHit).  It also records the price that was paid on that day 
+(CLast).  It then tracks the profit/loss that the institutional holders 
+have made since their purchase (ChLast).  Using some averages, I came up 
+with some settings to determine what the selling points will be 
+(SellHigh and SellLow) and how many days to hold the position (StopBars). 
+
+My goal is not to present the most optimal solution, although this is not bad
+as it stands.  My intent is to share the fundamental formula so that others
+can integrate it with their own trading systems.
+*/
+
+
+// Settings
+SellHigh = 15;			// Selling percentage for profit
+SellLow = -11;			// Selling percentage for loss
+StopBars = 70;			// Time window to hold position
+BackRef = 150;			// Number of days to look back (identify peaks)
+MaxChLast = 2.8;			// This ensures the profit is not already gone
+RSIMin = 40;				// Minimum RSI for entry
+
+
+// Number of bars since the last volume spike
+SinceLastSpike = BarsSince(V>(MA(V,BackRef)+StDev(V,BackRef)));
+// Closing price since the last volume spike
+CLast = Ref(C,-SinceLastSpike);
+// Profit/loss percentage (multiplied by 100)
+ChLast = ((C-CLast)/CLast)*100;
+
+
+// Trading rules
+PositionScore = RSI();
+Buy = Cross(ChLast,0) AND (ChLast<MaxChLast) AND IIf(RSI()>RSIMin,1,0);
+Sell = Cross(ChLast,SellHigh) OR Cross(SellLow,ChLast);
+ApplyStop(stopTypeNBar,stopModeBars,StopBars);
+
+
+// Exploration 
+Filter = Buy OR Sell;
+AddColumn(IIf(Buy,66,83),"Signal",formatChar);
+AddColumn(SinceLastSpike,"Bars since last spike");
+AddColumn(ChLast,"Change % since last spike");
+AddColumn(RSI(),"Reletive strength");

@@ -1,0 +1,24 @@
+//|-----------------------------------------------------------------------------------------
+//|PatternExplorer.com - PatternExplorer_f11
+//|Copyright © 2007, PatternExplorer.com
+//|http://www.PatternExplorer.com
+//|e-mail: support@PatternExplorer.com
+//|-----------------------------------------------------------------------------------------
+STC1 = STC( TC, MA1, MA2, Avgtype );
+TimeFrameSet( Interval()*TF );
+STC_TF2 = STC( TC_TF2, MA1_TF2, MA2_TF2, Avgtype );
+TimeFrameRestore();
+STC_TF2 = TimeFrameExpand( STC_TF2, TF * Interval(), STC2expandMode );
+WB = Cross( STC1, LowerLevel1 );
+SB = Cross( STC1, UpperLevel1 );
+WS = Cross( UpperLevel1, STC1 );
+SS = Cross( LowerLevel1, STC1 );
+WB_TF2 = Cross( STC_TF2, LowerLevel2 );
+SB_TF2 = Cross( STC_TF2, UpperLevel2 );
+WS_TF2 = Cross( UpperLevel2, STC_TF2 );
+SS_TF2 = Cross( LowerLevel2, STC_TF2 );
+STCValley = STC1 > Ref( STC1, -1 ) & Ref( STC1, -2 ) <= Ref( STC1, -3 ) ;
+STCTop = STC1 < Ref( STC1, -1 ) & Ref( STC1, -2 ) >= Ref( STC1, -3 ) ;
+TC = IIf( WB | SB | WB_TF2 | SB_TF2, colorGreen, IIf( WS | SS | WS_TF2 | SS_TF2, colorRed, Null ) );
+BC = IIf( WB | SB | WB_TF2 | SB_TF2, colorGreen, IIf( WS | SS | WS_TF2 | SS_TF2, colorRed, Null ) );
+BC = colorDefault;

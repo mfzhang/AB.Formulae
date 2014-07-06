@@ -1,0 +1,32 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    EMA Crossover Price
+//  Author/Uploader: Tommy Beard 
+//  E-mail:          tab321@yahoo.com
+//  Date/Time Added: 2005-08-12 14:11:35
+//  Origin:          
+//  Keywords:        Indicator, Trading System, EMA, MA, Crossovers
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=546
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=546
+//
+//------------------------------------------------------------------------------
+//
+//  The Title of this Graph shows the Price needed to generate an EMA
+//  Crossover. It is useful in predicting an Entry or Exit Price if you use EMA
+//  Crossovers. The default EMAs are 5 and 10 Periods. The layout is simple and
+//  can easily be worked into your own favorite graphs.
+//
+//------------------------------------------------------------------------------
+
+//The Title of the graph will show the price required to generate a crossover of the EMAs.  For instance, if you want to buy a stock if the 5 Day EMA crosses above the 10 Day EMA, you will know what price is needed to make that happen on the next day by the figure that is displayed in the Title.  Take the Formula and the AFL and work it into your own favorite graphs.
+
+Plot(Close, "Price", colorBlack, styleBar);
+Plot(EMA(Close,5),"5-EMA",colorWhite,styleLine);
+Plot(EMA(Close,10),"10-EMA",colorRed,styleLine);
+
+//Formula for EMA Crossover Price
+XR=(EMA(Close,5) * (2 / 6 - 1) - EMA(Close,10) * (2 / 11 - 1)) / (2 / 6 - 2 / 11);
+
+Title = Name() + " " + Date() + EncodeColor( colorBlue ) + "  Close: " + C + EncodeColor( colorBlack ) + "   Open: " + O + "   High: " + H + "   Low: " + L + EncodeColor( colorBlue )+  "\n" + EncodeColor(colorDarkGreen) + WriteVal (XR, format=1.2 ) + " Price Required for EMA Crossover";

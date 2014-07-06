@@ -1,0 +1,32 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Elder-ray
+//  Author/Uploader: Rob Stewart 
+//  E-mail:          stewartr@mediaone.net
+//  Date/Time Added: 2001-08-10 19:11:45
+//  Origin:          Dr. Alexander Elder "Trading For A Living"
+//  Keywords:        "Elder-ray"
+//  Level:           semi-advanced
+//  Flags:           commentary
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=97
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=97
+//
+//------------------------------------------------------------------------------
+//
+//  Elder-ray combine the best features of trend-following indicators and
+//  oscilators. It includes an exponential moving average, which is a
+//  trend-following indicator. Its Bull Power and Bear Power components are
+//  oscillators.
+//
+//  See also Elder Bear Power.alf and Elder Bull Power.alf
+//
+//------------------------------------------------------------------------------
+
+Commentary file only - describes how to setup the Elder-ray portion of Dr. Alexander Elder's 
+Elder-ray indicator.
+
+Setup a price bar graph with an EMA 13.
+Also load the other 2 indicators; Elder Bull Power and Elder Bear Power.
+
+You trade in the direction of the slope of the EMA (the trend), and use Bear/Bull power
+to determine entry and exit points for your trades in the direction of the trend.

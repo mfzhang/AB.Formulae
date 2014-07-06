@@ -1,0 +1,50 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Heikin-Ashi HaDiffCO
+//  Author/Uploader: Brian 
+//  E-mail:          brianrichard99@hotmail.com
+//  Date/Time Added: 2006-03-30 18:54:54
+//  Origin:          Originally saw a version of this indicator in an issue of S&C magazine.
+//  Keywords:        HaDiffCO, Heikin-Ashi, Heikin Ashi
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=610
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=610
+//
+//------------------------------------------------------------------------------
+//
+//  This is a modified version of the "Heikin-Ashi HaDiffCO," which is a
+//  "leading signal" oscillator. May be used with Bollinger or other bands to
+//  determine buy/cover or sell/short areas. I did not find much value in using
+//  the HaDiffCO with the Heikin-Ashi candlesticks. The HaDiffCO works well in
+//  any timeframe. Please post worthwhile modifications (some form of smoothing
+//  without drag, perhaps?) to this indicator if you come up with any. Thanks
+//  in advance.
+//
+//------------------------------------------------------------------------------
+
+_SECTION_BEGIN("D_Opt HaDiffCO");
+/* HaDiffCo for use with Heikin-Ashi Modified Candlestick Chart */
+HaClose=(O+H+L+C)/4;
+HaOpen=AMA(Ref(HaClose,-1),0.5);
+HaHigh=Max(H,Max(HaClose,HaOpen));
+HaLow=Min(L,Min(HaClose,HaOpen));
+HaDiffCO = HaClose-HaOpen;
+Per = Param("MA Periods",8,3,50,1);
+Plot(HaDiffCO,"HaDiffCO",colorWhite);
+Plot(WMA(HaDiffCO,5),"HaDiffCO",colorRed, styleDots);
+Plot(MA(HaDiffCO,per),"MA("+per+")",colorBlue,styleDots);
+// Plot Arrows
+Buy = Cross(WMA(HaDiffCO,5),MA(HaDiffCO,per));
+Short = Cross(MA(HaDiffCO,per),WMA(HaDiffCO,5));
+Title = "HaDiffCO";
+_SECTION_END();
+_SECTION_BEGIN("Bollinger Bands");
+P = ParamField("Price field",-1);
+Periods = Param("Periods", 15, 2, 100, 1 );
+Width = Param("Width", 2, 0, 10, 0.05 );
+Color = ParamColor("Color", colorCycle );
+Style = ParamStyle("Style");
+Plot( BBandTop( P, Periods, Width ), "BBTop" + _PARAM_VALUES(), Color, Style ); 
+Plot( BBandBot( P, Periods, Width ), "BBBot" + _PARAM_VALUES(), Color, Style ); 
+_SECTION_END();

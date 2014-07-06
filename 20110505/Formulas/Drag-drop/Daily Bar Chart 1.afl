@@ -1,0 +1,32 @@
+// Daily Bar Chart
+_SECTION_BEGIN("Elder Daily Chart with Envelope");
+SetChartOptions(0,chartShowArrows|chartShowDates);
+Plot( EMA(C,13),"EMA(13)",colorRed,styleLine);
+PlotForeign(GetBaseIndex(),IndustryID(1),colorWhite,styleLine|styleLeftAxisScale);
+ LookBkPd = 100 ;
+ AvgPd = 22 ;
+ ExternalBarPct = 15 ;
+ ConvergePct = 2 ;
+ Middle = EMA( C,AvgPd ) ;
+ Rng = HHV( H,LookBkPd ) - LLV( L,LookBkPd ) ;
+ X = Rng ;
+ deltaX = X/2 ;
+ do
+ {
+ Over = H > Middle + X ;
+ Under = L < Middle - X ;
+ OuterPct = 100*( Sum( Over, LookBkPd ) + Sum( Under, LookBkPd )
+ )/LookBkPd ;
+ OP = LastValue(OuterPct) ;
+ X=X+sign( OP - ExternalBarPct )*deltaX ;
+ deltaX = deltaX/2 ;
+ }while ( abs( OP - ExternalBarPct ) > ConvergePct ) ;
+ Plot( Middle, "MA", colorYellow, styleLine|styleNoTitle ) ;
+ Plot( Middle+X, "MA", colorSkyblue, styleDashed|styleNoTitle ) ;
+ Plot( Middle-X, "MA", colorSkyblue, styleDashed|styleNoTitle ) ;
+_N(Title = StrFormat("{{NAME}} - {{INTERVAL}} {{DATE}} Open %g, Hi %g, Lo %g, Close %g (%.1f%%) {{VALUES}}", O, H, L, C, SelectedValue( ROC( C, 1 ) ) ));
+Plot( C, "Close", ParamColor("Color", colorCustom9 ), styleBar | ParamStyle("Style") | GetPriceStyle() ); 
+_SECTION_END();
+
+// ----------------------------------------------------------------------------------------------------------------------
+

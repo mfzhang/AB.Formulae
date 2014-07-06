@@ -1,0 +1,72 @@
+//|-----------------------------------------------------------------------------------------
+//|PatternExplorer.com - PatternExplorer_f12
+//|Copyright © 2007, PatternExplorer.com
+//|http://www.PatternExplorer.com
+//|e-mail: support@PatternExplorer.com
+//|-----------------------------------------------------------------------------------------
+
+if ( inAA )
+{
+    _SECTION_BEGIN( "Automatic Analysis" );
+    Widecolumns = ParamToggle( "Wide columns", "No,Yes", 1 );
+    _SECTION_END();
+}
+
+for ( i = 0; i < 10; i++ )
+{
+    if ( StrExtract( List, i ) == Taio_switchvalue )
+        Color_Mode1 = i + 1;
+}
+
+Taio = PeTaio( period1, period2 );
+
+Taio1up = Taio > Level & Taio > Ref( Taio, -1 );
+Taio1dn = Taio < ( -Level ) & Taio < Ref( Taio, -1 );
+
+for ( i = 0; i < 10; i++ )
+{
+    if ( StrExtract( List1, i ) == BuySig )
+        BuySignal = i;
+
+    if ( StrExtract( List2, i ) == SellSig )
+        SellSignal = i;
+}
+
+upbar_col = 7;
+
+dnbar_col = 7;
+Taio1_color = TaioColor( Color_Mode1, period1, period2, Level, Level, upbar, dnbar, up_color1, RangeP_color1, RangeN_color1, dn_color1, singlecolor1, def_defaultcolor );
+RibbonsColor = Taio1_color;
+expandmode = IIf( Taio2expandMode, expandLast, expandFirst );
+Taio2 = TaioTF2( Multiplier, expandmode );
+Taio2up = Taio2 >= Ref( Taio2, -multiplier );
+Taio2dn = Taio2 <= Ref( Taio2, -multiplier );
+Taio2upsig = Taio2upflip AND NOT Ref( Taio2upflip, -1 );
+Taio2dnsig = Taio2dnflip AND NOT Ref( Taio2dnflip, -1 );
+Taio2_color =
+    IIf( Color_Mode2 == 0 & Taio2up, up_color2,
+         IIf( Color_Mode2 == 0 & Taio2dn, dn_color2,
+              IIf( Color_Mode2 == 1 & Taio2 > 0, up_color2,
+                   IIf( Color_Mode2 == 1 & Taio2 < 0, dn_color2, 7
+                      ) ) ) );
+TimeFrameRestore();
+Overbought = Taio > Level;
+Oversold = Taio < ( -Level );
+Top = Ref( Taio, -1 ) == HHV( Taio, 3 );
+TopL = Top AND Ref( Taio, -1 ) >  Level;
+Valley = Ref( Taio, -1 ) == LLV( Taio, 3 );
+ValleyL = Valley AND Ref( Taio, -1 ) < -Level;
+TpVa = IIf( TopL, -1, IIf( ValleyL, 1, 0 ) );
+ZLCn = Cross( 0, Taio );
+ZLCp = Cross( Taio, 0 );
+ZLC = IIf( ZLCp, 1, IIf( ZLCn, -1, Null ) );
+threshold = 3;
+ZLbn = Ref( Taio, -1 ) < threshold AND Ref( Taio, -1 ) > -threshold AND Top;
+ZLbp = Ref( Taio, -1 ) > -threshold AND Ref( Taio, -1 ) < threshold AND Valley;
+ZLB = IIf( ZLBp, 1, IIf( ZLBn, -1, Null ) );
+Overbought = Taio2 > 80 AND Taio > 80;
+Oversold = Taio2 < -80 AND Taio < -80;
+OBOS = IIf( Oversold, 1, IIf( Overbought, -1, Null ) );
+UpperLevelreached = Cross( Taio, Level );
+LowerLevelreached = Cross( -Level, Taio );
+TrendLevelreached = IIf( UpperLevelreached, 1, IIf( LowerLevelreached, -1, Null ) );

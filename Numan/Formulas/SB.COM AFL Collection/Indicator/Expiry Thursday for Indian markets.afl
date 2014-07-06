@@ -1,0 +1,33 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Expiry Thursday for Indian markets
+//  Author/Uploader: Ajay Joglekar 
+//  E-mail:          
+//  Date/Time Added: 2005-05-14 15:39:52
+//  Origin:          Need to mark the expiry day of options every month in the indian market has prompted me to write this AFL which I felt like sharing.
+//  Keywords:        India Option Expiry Thursday TripleWitching
+//  Level:           semi-advanced
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=461
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=461
+//
+//------------------------------------------------------------------------------
+//
+//  This indicator will give a white arrow pointing the last thursday of every
+//  month. This is the monthly expiry day in the indian markets.It is useful to
+//  note changes in prices of futures and options.
+//
+//------------------------------------------------------------------------------
+
+ function Lastthursday()
+{
+ Daysinmonth=IIf(Month()==1 OR Month()==3 OR Month()==5 OR Month()==7 OR Month()==8 OR Month()==10 OR Month()==12,31,30);
+ Daysinmonthfeb=IIf(Year()%4 == 0 AND Year()%100!=0,29,28);
+ Daysinmonthfinal=IIf(Month()==2,Daysinmonthfeb,Daysinmonth);
+ returnvalue=IIf(Daysinmonthfinal-Day()<7 AND DayOfWeek()==4,1,0);
+ return returnvalue;
+}
+Graph0=Close;
+shape=IIf(Lastthursday(),shapeDownArrow,shapeNone);
+PlotShapes(shape,colorWhite,0,Graph0,-24);
+

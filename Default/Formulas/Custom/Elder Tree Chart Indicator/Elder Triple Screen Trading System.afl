@@ -1,0 +1,96 @@
+// Elder Triple Screen Trading System.
+// Coded by Dennis Skoblar 7/05/2005.
+// Derrived from "Trading For A Living" and "Come Into My Trading Room" by Alexander Elder.
+
+// This scan finds candidates by the Weekly MACD Historgam slope, and the Daily 2 Period Force Index dipping above OR below it's Zero Line. Plot a Weekly 26 Period EMA to 
+// help confirm the weekly direction. It should be rising along with an uptick on the Weekly MACD Histogram to go long. However, Elder writes that divergences in the MACD 
+// Histogram override the EMA. The Daily 2 Period Force Index will be below it's Zero Line. Look for the stock to pullback to around it's Daily 13 Period EMA. Also use the
+// Daily 22 Period EMA to confirm the direction of the daily trend. Do the opposite for shorts. Use the Long/Short EMA Weekly Direction Tabs as filters to cull through the
+// scan to only display the Weekly EMA going in the intended trading direction. Use the Long/Short Elder Ray Tabs (BullPower AND BearPower) to fine tune the entry signals. 
+// This tab is best used when in agreement with the Long/Short EMA Weekly Direction Tabs. A 50 Period EMA > 100000 is used to Filter Volume. A minimum of a 5 point run in 
+// one Month is used as a Filter for a stock's range. This scan is best used as an Exploration. 
+
+TimeFrameSet( inWeekly );
+WeeklyMACD = MACD(12,26) - Signal(12,26,9);
+WeekHistRising = Ref(WeeklyMACD, -1) < Ref(WeeklyMACD, 0);
+WeekHistFalling = Ref(WeeklyMACD, -1) > Ref(WeeklyMACD, 0);
+FIWeekly =  EMA(V*(C-Ref(C,-1)),13);
+WeeklyForceIndexLong = FIWeekly > 0;
+WeeklyForceIndexShort = FIWeekly < 0;
+TimeFrameRestore();
+
+// Weekly criteria
+MACDLongW = WeekHistRising;
+MACDShortW= WeekHistFalling;
+FILongW = WeeklyForceIndexLong;
+FIShortW = WeeklyForceIndexShort;
+
+// Daily criteria
+FIDaily = EMA(V*(C-Ref(C,-1)),2);
+FILongD = FIDaily < 0;
+FIShortD = FIDaily > 0;
+VFilter = EMA(V,50) > 100000;
+TenTwentyFilter = HHV(H,20)-LLV(L,20); // How much price has gone in one month (>=10 points preferable)
+FiftyDayHVFilter = round(StDev(log(C/Ref(C,-1)),50)*100*sqrt(256)); // One year volotility (>=40 preferable)
+bullpower= High - EMA(Close,13); 
+bearpower= Low - EMA(Close,13); 
+
+// Scan criteria
+ElderLong = TimeFrameExpand(MACDLongW, inWeekly) AND FILongD AND
+TimeFrameExpand(FILongW, inWeekly);
+ElderShort = TimeFrameExpand(MACDShortW, inWeekly) AND FISHortD AND
+TimeFrameExpand(FIShortW, inWeekly);
+
+// Columns for exploration
+
+NumColumns = 12;
+
+Column0 = FullName();     
+Column0Name = "Ticker name";
+
+Column1 = " ";
+Column1Name =" ";
+
+Column2 = ElderLong;
+Column2Name = "Long";
+
+Column3 = ElderLong AND EMA(C,130) > Ref(EMA(C,130),-5);
+Column3Name = "Long EMA Weekly Direction";
+
+Column4 = Column3 AND (bearpower < 0 AND bullpower > 0);
+Column4Name = "Long Elder Ray Filter";
+
+Column5 = " ";
+Column5Name =" ";
+
+Column6 = ElderShort;
+Column6Name = "Short";
+
+Column7 = ElderShort AND EMA(C,130) < Ref(EMA(C,130),-5);
+Column7Name = "Short EMA Weekly Direction";
+
+Column8 = Column7 AND (bearpower < 0 AND bullpower > 0);
+Column8Name = "Short Elder Ray Filter";
+
+Column9 = " ";
+Column9Name =" ";
+
+Column10 = TenTwentyFilter;
+Column10Name = "One Month Point Range";
+
+Column11 = FiftyDayHVFilter;
+Column11Name = "Historical Volotility 50 Day";
+
+AddTextColumn( IndustryID(1), "Industry" );
+
+AddTextColumn( MarketID(1), "Market" );
+
+// Filters
+Filter = VFilter AND (ElderLong OR ElderShort);
+Buy = ElderLong;
+Sell = 0;
+Short = ElderShort;
+Cover = 0;
+
+// ----------------------------------------------------------------------------------------------------------------------
+

@@ -1,0 +1,8 @@
+Graph1Style = 2;
+Graph1Color=25;
+Graph1 = Low - EMA(Close,13);
+Graph0Style = 2;
+Graph1Style=2;
+Graph0Color=12;
+Graph1Color=5;
+Graph0 = High - EMA(Close,13);

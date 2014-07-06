@@ -1,0 +1,35 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    QStick
+//  Author/Uploader: Lee 
+//  E-mail:          lee@bcgfx.com
+//  Date/Time Added: 2005-01-23 14:18:13
+//  Origin:          Indicator by Tushar Chande
+//  Keywords:        Qstick, indicator, candles, momentum
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=419
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=419
+//
+//------------------------------------------------------------------------------
+//
+//  QStick from Tushar Chande. This indicator measures intraday momentum by
+//
+//  using the distance between the open and close of price over "n periods".
+//
+//  It is set at the default ( 8 ) periods that Chande suggest.
+//
+//------------------------------------------------------------------------------
+
+/* QStick from Tushar Chande. This indicator measures intraday momentum by 
+   using the distance between the open and close of price over "n periods".
+   It is set at the default ( 8 ) periods that Chande suggest. */
+
+MaxGraph=3;
+
+Graph0=MA( C-O,8);
+
+// The '0' line.
+Graph1=0;
+Graph1Style=5;
+Graph1Style=styleNoLabel;

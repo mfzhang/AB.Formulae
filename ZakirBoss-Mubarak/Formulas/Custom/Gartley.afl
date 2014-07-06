@@ -1,0 +1,313 @@
+/*                     HARMONIC PATTERN DETECTION                        
+
+
+Automatic Detection of Harmonic Patterns - Gartley, Bat, Butterfly and Crab. 
+
+Zig Zag is not used in this AFL. It is based on fractals
+
+Contact - joy.edakad@gmail.com
+
+*/
+
+
+
+_SECTION_BEGIN("Price");
+SetChartOptions(0,chartShowArrows|chartShowDates);
+_N(Title = StrFormat("{{NAME}} - {{INTERVAL}} {{DATE}} Open %g, Hi %g, Lo %g, Close %g (%.1f%%) {{VALUES}}", O, H, L, C, SelectedValue( ROC( C, 1 ) ) ));
+Plot( C, "Close", ParamColor("Color", colorBlack ), styleNoTitle | ParamStyle("Style") | GetPriceStyle() ); 
+_SECTION_END();
+
+_SECTION_BEGIN("Gartley");
+
+GBmin = Param("Swing B Min.",0.55,0.3,1,0.01);
+GBmax = Param("Swing B Max.",0.72,0.4,1,0.01);
+GCmin = Param("Swing C Min.",0.38,0.3,1.27,0.01);
+GCmax = Param("Swing C Max.",1.0,0.4,1.27,0.01);
+GDmin = Param("Swing D Min.(XA)",0.55,0.3,1,0.01);
+GDmax = Param("Swing D Max.(XA)",1.0,0.4,1.0,0.01);
+
+_SECTION_END();
+
+_SECTION_BEGIN("Bat");
+
+BatBmin = Param("Swing B Min.",0.38,0.3,1,0.01);
+BatBmax = Param("Swing B Max.",0.55,0.4,1,0.01);
+BatCmin = Param("Swing C Min.",0.38,0.3,1.62,0.01);
+BatCmax = Param("Swing C Max.",1.27,0.4,1.62,0.01);
+BatDmin = Param("Swing D Min.(XA)",0.5,0.3,1,0.01);
+BatDmax = Param("Swing D Max.(XA)",1.0,0.4,1.0,0.01);
+
+_SECTION_END();
+
+_SECTION_BEGIN("Butterfly");
+
+BtBmin = Param("Swing B Min.",0.55,0.3,1,0.01);
+BtBmax = Param("Swing B Max.",0.9,0.4,1,0.01);
+BtCmin = Param("Swing C Min.",0.38,0.3,1.62,0.01);
+BtCmax = Param("Swing C Max.",1.27,0.4,1.62,0.01);
+BtDmin = Param("Swing D Min.(XA)",1,1,1.8,0.01);
+BtDmax = Param("Swing D Max.(XA)",1.38,1,1.8,0.01);
+
+_SECTION_END();
+
+_SECTION_BEGIN("Crab");
+
+CBmin = Param("Swing B Min.",0.38,0.3,1,0.01);
+CBmax = Param("Swing B Max.",0.65,0.4,1,0.01);
+CCmin = Param("Swing C Min.",0.38,0.3,1.62,0.01);
+CCmax = Param("Swing C Max.",1.270,0.4,1.62,0.01);
+CDmin = Param("Swing D Min.(XA)",1.25,1,1.8,0.01);
+CDmax = Param("Swing D Max.(XA)",1.8,1,2,0.01);
+
+_SECTION_END();
+
+_SECTION_BEGIN("Patterns");
+
+strength = Param("Strength",5,2,15,1);
+bu = ParamToggle("Bullish Pattern","Off|On",1);
+be = ParamToggle("Bearish Pattern","Off|On",1);
+
+bi = Cum(1)-1;
+
+function GetTop(bars) 
+	{
+		Top = H == HHV(H,2*bars) AND Ref(HHV(H,bars),bars) < H;
+		Top = Top AND LastValue(bi)-ValueWhen(Top,bi) > bars;
+		return Top;
+	}
+
+function GetValley(bars)
+	{
+		Valley = L == LLV(L,2*bars) AND Ref(LLV(L,bars),bars) > L;
+		Valley = Valley AND LastValue(bi)-ValueWhen(Valley,bi) > bars;
+		return Valley;
+	}
+
+
+// Build fractals array
+
+P1 = GetTop(strength);
+V1 = GetValley(Strength);
+
+P1 = IIf(P1,IIf(ValueWhen(P1,bi,2) < ValueWhen(V1,bi),P1,IIf(ValueWhen(P1,H,2) > H,False,P1)),P1);
+//P1 = IIf(P1 AND ValueWhen(P1,bi,0) > bi,IIf(ValueWhen(P1,bi,0) < ValueWhen(V1,bi,0),IIf(ValueWhen(P1,H,0) >= H,False,P1),P1),P1);
+P1 = IIf(P1 AND ValueWhen(P1,bi,0) > bi AND NOT(ValueWhen(V1,bi,0) > 0 AND ValueWhen(V1,bi,0)<ValueWhen(P1,bi,0)),IIf(ValueWhen(P1,H)<=ValueWhen(P1,H,0),False,P1),P1);
+
+
+V1 = IIf(V1,IIf(ValueWhen(V1,bi,2) < ValueWhen(P1,bi),V1,IIf(ValueWhen(V1,L,2)<L,False,V1)),V1);
+//V1 = IIf(V1 AND ValueWhen(V1,bi,0) > bi ,IIf(ValueWhen(V1,bi,0) < ValueWhen(P1,bi,0),IIf(ValueWhen(V1,L,0) <= L, False,V1),V1),V1); 
+V1 = IIf(V1 AND ValueWhen(V1,bi,0) > bi AND NOT(ValueWhen(P1,bi,0) > bi AND ValueWhen(P1,bi,0)<ValueWhen(V1,bi,0))  , IIf(ValueWhen(V1,L)>=ValueWhen(V1,L,0),False,V1),V1);
+
+
+P1H1 = ValueWhen(P1,H);
+P1Bar1 = ValueWhen(P1,bi);
+P1H2 = ValueWhen(P1,H,2);
+P1Bar2 = ValueWhen(P1,bi,2);
+V1L1 = ValueWhen(V1,L);
+V1Bar1 = ValueWhen(V1,bi);
+V1L2 = ValueWhen(V1,L,2);
+V1Bar2 = ValueWhen(V1,bi,2);
+
+
+//Bullish Patterns
+
+PTvalid = (P1Bar1 > V1Bar1 AND V1Bar1 > P1Bar2 AND P1bar2 > V1Bar2) AND P1; // Peaks and troughs are in order
+
+// 4 swings of developing Gartley/Bat etc.
+
+BullGartley4 = PTvalid AND (P1H2-V1L1)/(P1H2-V1L2) > GBmin AND (P1H2-V1L1)/(P1H2-V1L2) < GBmax
+				AND (P1H1-V1L1)/(P1H2-V1L1) > GCMin AND (P1H1-V1L1)/(P1H2-V1L1) < GCMax; 
+
+BullBat4 = PTvalid AND (P1H2-V1L1)/(P1H2-V1L2) > BatBmin AND (P1H2-V1L1)/(P1H2-V1L2) < BatBmax
+				AND (P1H1-V1L1)/(P1H2-V1L1) > BatCMin AND (P1H1-V1L1)/(P1H2-V1L1) < BatCMax; 
+
+BullButterfly4 = PTvalid AND (P1H2-V1L1)/(P1H2-V1L2) > BtBmin AND (P1H2-V1L1)/(P1H2-V1L2) < BtBMax
+				AND (P1H1-V1L1)/(P1H2-V1L1) > BtCmin AND (P1H1-V1L1)/(P1H2-V1L1) < BtCmax; 
+
+BullCrab4 = PTvalid AND (P1H2-V1L1)/(P1H2-V1L2) >CBmin AND (P1H2-V1L1)/(P1H2-V1L2) < CBmax 
+				AND (P1H1-V1L1)/(P1H2-V1L1) > CCmin AND (P1H1-V1L1)/(P1H2-V1L1) < CCmax; 
+
+
+// Bullish Gartley/Bat found. D retacement level is not evaluated
+
+BullGartley = IIf(LowestSince(BullGartley4,L) < ValueWhen(BullGartley4,P1H2)-(ValueWhen(BullGartley4,P1H2)-ValueWhen(BullGartley4,V1L2))*GDmin AND
+						LowestSince(bullGartley4,L) > ValueWhen(BullGartley4,P1H2)-(ValueWhen(BullGartley4,P1H2)-ValueWhen(BullGartley4,V1L2))*GDmax AND
+						HighestSince(BullGartley4,H) <= ValueWhen(BullGartley4,P1H1  ) AND
+						LowestSince(bullGartley4,L)==L, True,False);
+BullGartley = BullGartley AND LowestSince(BullGartley4,L) < ValueWhen(BullGartley4,V1L1);
+
+BullBat = IIf(LowestSince(BullBat4,L) < ValueWhen(BullBat4,P1H2)-(ValueWhen(BullBat4,P1H2)-ValueWhen(BullBat4,V1L2))*BatDmin AND
+						LowestSince(BullBat4,L) > ValueWhen(BullBat4,P1H2)-(ValueWhen(BullBat4,P1H2)-ValueWhen(BullBat4,V1L2))*BatDmax AND
+						HighestSince(BullBat4,H) <= ValueWhen(BullBat4,P1H1  ) AND
+						LowestSince(BullBat4,L)==L, True,False);
+BullBat = BullBat AND LowestSince(BullCrab4,L) < ValueWhen(BullCrab4,V1L1);
+
+
+BullCrab = IIf(LowestSince(BullCrab4,L) < ValueWhen(BullCrab4,P1H2)-(ValueWhen(BullCrab4,P1H2)-ValueWhen(BullCrab4,V1L2))*CDmin AND
+						LowestSince(BullCrab4,L) > ValueWhen(BullCrab4,P1H2)-(ValueWhen(BullCrab4,P1H2)-ValueWhen(BullCrab4,V1L2))*CDmax AND
+						HighestSince(BullCrab4,H) <= ValueWhen(BullCrab4,P1H1  ) AND
+						LowestSince(bullGartley4,L)==L, True,False);
+BullCrab = BullCrab AND LowestSince(BullCrab4,L) < ValueWhen(BullCrab4,V1L2);
+
+
+BullButterfly = IIf(LowestSince(BullButterfly4,L) < ValueWhen(BullButterfly4,P1H2)-(ValueWhen(BullButterfly4,P1H2)-ValueWhen(BullButterfly4,V1L2))*BtDMin AND
+						LowestSince(BullButterfly4,L) > ValueWhen(BullButterfly4,P1H2)-(ValueWhen(BullButterfly4,P1H2)-ValueWhen(BullButterfly4,V1L2))*BtDmax AND
+						HighestSince(BullButterfly4,H) <= ValueWhen(BullButterfly4,P1H1   ) AND
+						LowestSince(bullButterfly4,L)==L, True,False);
+BullButterfly = BullButterfly AND LowestSince(BullButterfly4,L) < ValueWhen(BullButterfly4,V1L2);
+
+
+
+// to remove redumbdent lines
+
+BullHar4 = BullGartley4 OR BullButterfly4 OR BullBat4 OR BullCrab4 ;
+BullHar = BullGartley OR BullButterfly OR BullBat OR BullCrab ;
+
+Point4 = IIf(BullHar,ValueWhen(BullHar4,bi),Null);
+BullHar = IIf(BullHar, IIf(Point4 == ValueWhen(BullHar,point4,0) AND ValueWhen(BullHar,bi,0) > bi ,False,BullHar),BullHar);
+
+X = ValueWhen(BullHar4,V1L2);
+Xbar = ValueWhen(BullHar4,V1Bar2);
+A = ValueWhen(BullHar4,P1H2);
+Abar = ValueWhen(BullHar4,P1bar2);
+B = ValueWhen(BullHar4,V1L1);
+Bbar = ValueWhen(BullHar4,V1bar1);
+C1 = ValueWhen(BullHar4,P1H1);
+C1bar = ValueWhen(BullHar4,P1bar1);
+D = ValueWhen(BullHar,L);
+Dbar = ValueWhen(BullHar,bi);
+ABdXA = (A-B)/(A-X);
+BCdAB = (C1-B)/(A-B);
+ADdXA = (A-D)/(A-X);
+BCdCD = (C1-D)/(C1-B);
+
+PlotPattern = Dbar > C1bar;
+if(LastValue(PlotPattern) AND bu)
+{
+Plot( LineArray(LastValue(Xbar),LastValue(X),LastValue(Abar),LastValue(A)),"",colorBlue,styleThick);
+Plot(LineArray(LastValue(Abar),LastValue(A),LastValue(Bbar),LastValue(B)),"",colorBlue,styleThick);
+Plot(LineArray(LastValue(Bbar),LastValue(B),LastValue(C1bar),LastValue(C1)),"",colorBlue,styleThick);
+Plot(LineArray(LastValue(C1bar),LastValue(C1),LastValue(Dbar),LastValue(D)),"",colorBlue,styleThick);
+Plot(LineArray(LastValue(Xbar),LastValue(X),LastValue(Bbar),LastValue(B)),"",colorBlue,styleDashed);
+Plot(LineArray(LastValue(Xbar),LastValue(X),LastValue(Abar),LastValue(A)),"",colorBlue,styleThick);
+Plot(LineArray(LastValue(Abar),LastValue(A),LastValue(C1bar),LastValue(C1)),"",colorBlue,styleDashed);
+Plot(LineArray(LastValue(Bbar),LastValue(B),LastValue(Dbar),LastValue(D)),"",colorBlue,styleDashed);
+Plot(LineArray(LastValue(Xbar),LastValue(X),LastValue(Dbar),LastValue(D)),"",colorBlue,styleDashed);
+
+PlotText(NumToStr(LastValue(ABdXA),1.2),(LastValue(Bbar)+LastValue(Xbar))/2,(LastValue(B)+LastValue(X))/2,colorBlue);
+PlotText(NumToStr(LastValue(BCdAB),1.2),(LastValue(C1bar)+LastValue(Abar))/2,(LastValue(C1)+LastValue(A))/2,colorBlue);
+PlotText(NumToStr(LastValue(ADdXA),1.2) ,(LastValue(Dbar)+LastValue(Xbar))/2,(LastValue(D)+LastValue(X))/2,colorBlue);
+PlotText(NumToStr(LastValue(BCdCD),1.2),(LastValue(Bbar)+LastValue(Dbar))/2,(LastValue(B)+LastValue(D))/2,colorBlue);
+}
+
+// Bearish Patterns
+
+PTvalid = (V1Bar1 > P1Bar1 AND P1Bar1 > V1Bar2 AND V1Bar2 > P1Bar2) AND V1;
+
+// Swing 4
+
+BearGartley4 = PTvalid AND (P1H1-V1L2)/(P1H2-V1L2) > GBmin AND (P1H1-V1L2)/(P1H2-V1L2) < GBmax AND
+				(P1H1-V1L1)/(P1H1-V1L2) > GCmin AND (P1H1-V1L1)/(P1H1-V1L2) < GCmax;
+
+BearBat4 = PTvalid AND (P1H1-V1L2)/(P1H2-V1L2) > BatBmin AND (P1H1-V1L2)/(P1H2-V1L2) < BatBmax AND
+				(P1H1-V1L1)/(P1H1-V1L2) > BatCmin AND (P1H1-V1L1)/(P1H1-V1L2) < BatCmax;
+
+BearButterfly4 = PTvalid AND (P1H1-V1L2)/(P1H2-V1L2) > BtBmin AND (P1H1-V1L2)/(P1H2-V1L2) < BtBmax AND
+				(P1H1-V1L1)/(P1H1-V1L2) > BtCmin AND (P1H1-V1L1)/(P1H1-V1L2) < BtCmax;
+
+BearCrab4 = PTvalid AND (P1H1-V1L2)/(P1H2-V1L2) > CBmin AND (P1H1-V1L2)/(P1H2-V1L2) < CBmax AND
+				(P1H1-V1L1)/(P1H1-V1L2) > CCmin AND (P1H1-V1L1)/(P1H1-V1L2) < CCmax;
+
+// Poin D
+
+BearGartley = IIf(HighestSince(bearGartley4,H) > ValueWhen(BearGartley4,V1L2) + (ValueWhen(BearGartley4,P1H2) - ValueWhen(BearGartley4,V1L2))*GDmin AND
+				 HighestSince(bearGartley4,H) < ValueWhen(BearGartley4,V1L2) + (ValueWhen(BearGartley4,P1H2) - ValueWhen(BearGartley4,V1L2))*GDMax AND	
+				LowestSince(BearGartley4,L) >= ValueWhen(BearGartley4,V1L1  ) AND
+				HighestSince(BearGartley4,H) == H, True, False);
+BearGartley = BearGartley AND HighestSince(BearGartley4,H) > ValueWhen(BearGartley4,P1H1);
+
+BearBat = IIf((HighestSince(BearBat4,H) > ValueWhen(BearBat4,V1L2) + (ValueWhen(BearBat4,P1H2) - ValueWhen(BearBat4,V1L2))*BatDmin AND
+				 HighestSince(BearBat4,H) < ValueWhen(BearBat4,V1L2) + (ValueWhen(BearBat4,P1H2) - ValueWhen(BearBat4,V1L2))*BatDMax AND	
+				LowestSince(BearBat4,L) >= ValueWhen(BearBat4,V1L1 ) AND
+				HighestSince(BearBat4,H) == H), True, False);
+BearBat = BearBat AND HighestSince(BearBat4,H) > ValueWhen(BearBat4,P1H1);
+
+BearButterfly = IIf(HighestSince(BearButterfly4,H) > ValueWhen(BearButterfly4,V1L2) + (ValueWhen(BearButterfly4,P1H2) - ValueWhen(BearButterfly4,V1L2))*BtDmin AND
+				 HighestSince(BearButterfly4,H) < ValueWhen(BearButterfly4,V1L2) + (ValueWhen(BearButterfly4,P1H2) - ValueWhen(BearButterfly4,V1L2))*BtDMax AND	
+				LowestSince(BearButterfly4,L) >= ValueWhen(BearButterfly4,V1L1 ) AND
+				HighestSince(BearButterfly4,H) == H, True, False);
+BearButterfly = BearButterfly AND HighestSince(BearButterfly4,H) > ValueWhen(BearButterfly4,P1H2);
+
+BearCrab = IIf(HighestSince(BearCrab4,H) > ValueWhen(BearCrab4,V1L2) + (ValueWhen(BearCrab4,P1H2) - ValueWhen(BearCrab4,V1L2))*CDmin AND
+				 HighestSince(BearCrab4,H) < ValueWhen(BearCrab4,V1L2) + (ValueWhen(BearCrab4,P1H2) - ValueWhen(BearCrab4,V1L2))*CDMax AND	
+				LowestSince(BearCrab4,L) >= ValueWhen(BearCrab4,V1L1 ) AND
+				HighestSince(BearCrab4,H) == H, True, False);
+BearCrab =BearCrab AND HighestSince(BearCrab4,H) > ValueWhen(BearCrab4,P1H2);
+
+
+BearHar4 = BearGartley4 OR BearButterfly4 OR BearBat4 OR BearCrab4 ;
+BearHar = BearGartley OR BearButterfly OR BearBat OR BearCrab ;
+
+Point4 = IIf(BearHar,ValueWhen(BearHar4,bi),Null);
+BearHar = IIf(BearHar, IIf(Point4 == ValueWhen(BearHar,point4,0) AND ValueWhen(BearHar,bi,0) > bi ,False,BearHar),BearHar);
+
+X = ValueWhen(BearHar4,P1H2);
+Xbar = ValueWhen(BearHar4,P1Bar2);
+A = ValueWhen(BearHar4,V1L2);
+Abar = ValueWhen( BearHar4,V1bar2);
+B = ValueWhen(BearHar4,P1H1);
+Bbar = ValueWhen(BearHar4,P1bar1);
+C1 = ValueWhen(BearHar4,V1L1);
+C1bar = ValueWhen(BearHar4,V1bar1);
+D = ValueWhen(BearHar,H);
+Dbar = ValueWhen(BearHar,bi);
+
+ABdXA = (B-A)/(X-A);
+BCdAB = (B-C1)/(B-A);
+ADdXA = (D-A)/(X-A);
+BCdCD = (D-C1)/(B-C1);
+
+PlotPattern = Dbar > C1bar;
+
+if(LastValue(Plotpattern) AND be)
+
+{
+Plot( LineArray(LastValue(Xbar),LastValue(X),LastValue(Abar),LastValue(A)),"",colorRed,styleThick);
+Plot(LineArray(LastValue(Abar),LastValue(A),LastValue(Bbar),LastValue(B)),"",colorRed,styleThick);
+Plot(LineArray(LastValue(Bbar),LastValue(B),LastValue(C1bar),LastValue(C1)),"",colorRed,styleThick);
+Plot(LineArray(LastValue(C1bar),LastValue(C1),LastValue(Dbar),LastValue(D)),"",colorRed,styleThick);
+Plot(LineArray(LastValue(Xbar),LastValue(X),LastValue(Bbar),LastValue(B)),"",colorRed,styleDashed);
+Plot(LineArray(LastValue(Xbar),LastValue(X),LastValue(Abar),LastValue(A)),"",colorRed,styleThick);
+Plot(LineArray(LastValue(Abar),LastValue(A),LastValue(C1bar),LastValue(C1)),"",colorRed,styleDashed);
+Plot(LineArray(LastValue(Bbar),LastValue(B),LastValue(Dbar),LastValue(D)),"",colorRed,styleDashed);
+Plot(LineArray(LastValue(Xbar),LastValue(X),LastValue(Dbar),LastValue(D)),"",colorRed,styleDashed);
+
+PlotText(NumToStr(LastValue(ABdXA),1.2),(LastValue(Bbar)+LastValue(Xbar))/2,(LastValue(B)+LastValue(X))/2,colorRed);
+PlotText(NumToStr(LastValue(BCdAB),1.2),(LastValue(C1bar)+LastValue(Abar))/2,(LastValue(C1)+LastValue(A))/2,colorRed);
+PlotText(NumToStr(LastValue(BCdCD),1.2) ,(LastValue(Dbar)+LastValue(Bbar))/2,(LastValue(D)+LastValue(B))/2,colorRed);
+PlotText(NumToStr(LastValue(ADdXA),1.2) ,(LastValue(Dbar)+LastValue(Xbar))/2,(LastValue(D)+LastValue(X))/2,colorRed);
+
+}
+
+LatPattern = bullHar OR bearHar;
+Lastpattern = LastValue(ValueWhen(LatPattern,IIf(BullGartley,1,IIf(BearGartley,-1,IIf(BullBat,2,IIf(BearBat,-2,
+				IIf(BullButterfly,3,IIf(BearButterfly,-3,IIf(BullCrab,4,IIf(BearCrab,-4,Null))))))))));
+PatternName = WriteIf(LastPattern == 1,"Bullish Gartley",WriteIf(LastPattern == -1,"Bearish Gartley",WriteIf(LastPattern == 2,"Bullish Bat",
+				WriteIf(LastPattern == -2,"Bearish Bat",WriteIf(LastPattern == 3,"Bullish Butterfly",WriteIf(LastPattern == -3,"Bearish Butterfly",
+				WriteIf(LastPattern == 4,"Bullish Crab",WriteIf(LastPattern == -4,"Bearish Crab","None"))))))));
+
+
+plotFractals = ParamToggle("Plot Fractals","Off|On",0);
+if(PlotFractals)
+{
+	PlotShapes(shapeSmallCircle*P1,colorRed,0,H,10);
+	PlotShapes(shapeSmallCircle*V1,colorBlue,O,L,-10);
+}
+
+GfxSetTextColor(IIf(LastPattern > 0, colorGreen,colorRed));
+GfxTextOut("Last Pattern : " + PatternName,0,20);
+
+Filter = BullHar OR BearHar;
+Bull = BullHar; Bear = BearHar;
+Color = IIf(Bull,colorGreen,colorRed);
+AddColumn(IIf(Bull,1,IIf(Bear,-1,Null)),"Pattern",1.0,colorWhite,Color);

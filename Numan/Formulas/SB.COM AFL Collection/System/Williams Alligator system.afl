@@ -1,0 +1,185 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Williams Alligator system
+//  Author/Uploader: Steve Wiser 
+//  E-mail:          slwiserr@erols.com
+//  Date/Time Added: 2001-08-13 19:53:30
+//  Origin:          
+//  Keywords:        
+//  Level:           semi-advanced
+//  Flags:           system,indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=100
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=100
+//
+//------------------------------------------------------------------------------
+//
+//  This code attempts to do most of the Williams Alligator sytem
+//
+//  where the terms fractal up and fractal down are used. Along
+//
+//  with terms like Alligators month, lips, etc.
+//
+//  To get a real picture of this go to the web site
+//
+//  www.profitunity.com and download the demo software
+//
+//  Investors Dream and see how this code compares.
+//
+//  You really need to read the book to get a picture of
+//
+//  what is going on. This is a good read. You can
+//
+//  get the Williams books on his web site as will. You
+//
+//  only need the latest one.
+//
+//------------------------------------------------------------------------------
+
+/* The first set of lines are to set up the color coding for
+the price bars */
+
+outsidebar = outside();
+insidebar = H <= Ref(H,-1) and L >= Ref(L,-1);
+upbar = H > ref(H,-1) and L >= ref(L, -1);
+downbar = L < ref(L,-1) and H <= ref(H,-1);
+barcolor=iif(outsidebar, 1, iif(downbar, 4, iif(upbar,5, 6) ) );
+
+/*The following builds the alligator lines*/
+maxGraph=12;
+AlligatorBlue=Ref(Wilders(A,13),-8);
+Graph0=AlligatorBlue;
+AlligatorRed=Ref(Wilders(A,8),-5);
+Graph1=AlligatorRed;
+AlligatorGreen=Ref(Wilders(A,5),-3);
+Graph2=AlligatorGreen;
+Graph0Style=Graph1Style=Graph2Style=1+4;
+
+Graph3=C;  
+Graph3Style=64; 
+
+/*Red:* modified for Amibroker*/
+
+
+/*
+Graph3Color=22;  22 is the number for dark green
+*/
+
+Graph3barcolor=barcolor;
+
+Graph2Color=27; /* 6 is green */
+Graph1Color=5;  /* 5 is red color */
+Graph0color=7;  /* 7 is dark blue */
+/*The following builds Fractal Up*/
+var1=ValueWhen(
+  (Ref(H,-2) > Ref(H, -4)) AND
+  (Ref(H,-2) > Ref(H, -3)) AND
+  (Ref(H,-2) > Ref(H, -1)) AND
+  (Ref(H,-2) > H), Ref(H,-2),1); 
+FractalUp=HighestSince(var1>0,var1,1);
+Graph4=FractalUp;
+Graph4Color=3;  /* 6 is green */
+Graph4Style=9;
+/*The following builds Fractal Down*/
+var2= 
+(Ref(L,-2) <= Ref(L, -1)) AND
+(Ref(L,-2) <= Ref(L, 0)) AND
+(Ref(L,-2) <= Ref(L, -3)) AND
+(Ref(L,-2) <= Ref(L, -4));
+FractalDown=ValueWhen( var2,Ref(L,-2),1);
+Graph5=FractalDown;
+Graph5Style=1;
+Graph5Color=8;  /* red is 5 blue is 7 */
+Graph5Style=9;
+/*
+Graph6=ma(c,17);
+graph7=ma(c,50);
+graph8=ma(c,200);
+graph6Style=Graph7Style=graph8Style=12;
+*/
+
+/* Below are the buy sell signals for testing */
+
+buy = cross(H,FractalUp+0.065)  
+            and  (C > AlligatorRed)                ;  
+
+Sell= A < AlligatorGreen 
+        or    (ref(C,-2) < FractalUp 
+        and (ref(C,-1)<ref(C,-2) )        )             ;
+
+
+
+/* The following is Guru commentary coding  */
+/* Guru Commentary */
+
+WriteIF(Hold(Buy==1,10),
+    "Buy signal bars ago  " +   WriteIF(Hold(Buy==1,10),
+    WriteVal(BarsSince(Buy==1)),""),
+    "No Buy Signal")  + "\n" +
+WriteIF(Hold(Sell==1,10),
+    "Sell signal bars ago  " +   WriteIF(Hold(Sell==1,10),
+    WriteVal(BarsSince(Sell==1)),""),
+    "No Sell Signal")  ; 
+
+/* End of commentary code */
+
+/* The following lines of code set up a sell on the last day if in an open position*/
+barnumber = cum( 1 );
+lastbar = barnumber == lastvalue( barnumber );
+sell = SELL or LASTBAR;
+
+filter = cross(H,FractalUp+0.065)  or Cross(L,FractalDown-0.065) ;  
+
+numcolumns = 5;
+column0 = IIF(buy==1,1,-1);
+column0format = 1.2;
+column0name = "Buy+1,Sell-1";WriteIF(Buy==1,"  Buy","  Sell" );
+column1 = FractalUp;
+column1name = "FractalUp";column1 = FractalUp; WriteVal(FractalUp);
+column1format = 1.2;
+
+column2 = FractalDown;
+column2name = "Fractal Down";
+column2format = 1.2;
+column3 = MA(V,3)/EMA(V,17);
+column3name = "MAV(3/17)";
+column3format=1.2;
+column4 = C;
+column4name = "Today's Close "; 
+column4format=1.2;
+
+
+/* removes redundant buy and sell signals */
+Buy=ExRem(Buy,Sell);
+Sell=ExRem(Sell,Buy);
+
+
+first=1;  
+
+/* First is the number of days for each ROC interval for reviewing performance */
+/* To use this filter always make the current day at least 3*first days before the current date
+    for meaningful results */
+/*
+numcolumns = 7;
+column0 = C;
+column0format = 1.2;
+column0name = "Close";
+column1 = ref(C, 1+first);
+column1name = "Close+i ";
+column1format = 1.2;
+column2 = ref(C,1+first*2);
+column2name = "Close+i*2   ";
+column2format = 1.2;
+column3 =  ref(C,1+first*3);
+column3name = "Close+i*3 ";
+column3format = 1.2;
+column4= ref(C,first*1+1)  -  C;
+column4name="ROC+i";
+column4format = 1.2;
+column5=  ref(C,first*2+1)  -  C;
+column5name="ROC+2i";
+column5format = 1.2;
+column6=  ref(C,first*3+1)  -  C;
+column6name="ROC+3i";
+column6format = 1.2;
+*/
+/*  End of Exploration Code. */

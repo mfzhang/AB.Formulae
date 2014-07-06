@@ -1,0 +1,51 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Pivot Point Graph
+//  Author/Uploader: Tiziano Fogliata 
+//  E-mail:          
+//  Date/Time Added: 2001-06-23 13:30:29
+//  Origin:          
+//  Keywords:        pivot point support resistance
+//  Level:           medium
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=32
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=32
+//
+//------------------------------------------------------------------------------
+//
+//  This indicator, using data from the previous trading day, calculates the
+//  next day's pivot point as well as support and resistance levels.
+//
+//  High, Low, and Close data are needed.
+//
+//------------------------------------------------------------------------------
+
+/* Calcolo dei pivot point 
+e dei supporti e resistenze
+*/
+
+P  =  ((H + L + C) / 3);
+R1  =  ((2 * P) - L);
+S1  =  ((2 * P)  - H);
+R2  =  ((P - S1) + R1);
+S2  =  (P - (R1 - S1));
+
+maxgraph = 5;
+
+graph0 = P;
+graph1 = R1;
+graph2 = S1;
+graph3 = R2;
+graph4 = S2;
+
+graph0style = 4;
+graph1style = 1;
+graph2style = 1;
+graph3style = 1;
+graph4style = 1;
+
+graph0color = 7;
+graph1color = 5;
+graph2color = 5;
+graph3color = 9;
+graph4color = 9;

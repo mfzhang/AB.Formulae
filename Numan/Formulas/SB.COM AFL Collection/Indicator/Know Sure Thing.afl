@@ -1,0 +1,34 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Know Sure Thing
+//  Author/Uploader: Tomasz Janeczko 
+//  E-mail:          tj@amibroker.com
+//  Date/Time Added: 2001-06-16 08:42:59
+//  Origin:          Originally developed by Martin Pring
+//  Keywords:        rate-of-change,trend
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=18
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=18
+//
+//------------------------------------------------------------------------------
+//
+//  Daily, Short-time Know Sure Thing indicator. This is smoothed version of
+//  classical rate-of-change indicator.
+//
+//------------------------------------------------------------------------------
+
+/*
+** Daily, Short term KST 
+** AFL formula by Tomasz Janeczko 
+*/
+
+p1 = ma( Roc(Close,10), 10);
+p2 = ma( Roc( Close, 15), 10 );
+p3 = ma( Roc( Close, 20), 10 ) ;
+p4 = ma( Roc( Close, 30), 15);
+
+kst = p1 + 2 * p2 + 3 * p3 + 4 * p4;
+ 
+graph0 = kst / 10;
+  

@@ -1,0 +1,42 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    ROC of MACD Weekly
+//  Author/Uploader: Frank Snay 
+//  E-mail:          fesnay@san.rr.com
+//  Date/Time Added: 2002-04-04 15:46:25
+//  Origin:          Weekly Trend Indicator using ROC of MACD Signal Line
+//  Keywords:        ROC of MACD Weekly
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=182
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=182
+//
+//------------------------------------------------------------------------------
+//
+//  Using the Weekly icon on the side toolbar, this indicator will give a
+//  visual presentation of the trend of a stock. The title will also give
+//  values and a text description of the trend
+//
+//------------------------------------------------------------------------------
+
+/* ROC of MACD Signal Line
+   Use with "Weekly" toolbar icon */
+
+MAWeeklyMacd = Signal(6,13,5);
+MACDRoc = maWeeklyMacd - Ref(maWeeklyMacd,-5);
+
+//Cond1 - "V" bottom, NEW UP TREND  
+Cond1 = IIf(MACDRoc > Ref(MACDRoc,-1) AND Ref(MACDRoc,-1) <= Ref(MACDRoc,-2),1,0);
+//Cond2 - "V" top, NEW DOWN TREND   
+Cond2 = IIf(MACDRoc < Ref(MACDRoc,-1) AND Ref(MACDRoc,-1) >= Ref(MACDRoc,-2),1,0);
+//cond3 - Trend is Up    
+Cond3 = IIf(MACDRoc > Ref(MACDRoc,-1) AND Ref(MACDRoc,-1) >= Ref(MACDRoc,-2),1,0);
+//Cond4 - Trend is Down    
+Cond4 = IIf(MACDRoc < Ref(MACDRoc,-1) AND Ref(MACDRoc,-1) <= Ref(MACDRoc,-2),1,0);
+//Cond5 - Trend is Flat    
+Cond5 = IIf(MACDRoc== Ref(MACDRoc,-1) ,1,0);
+
+Graph0 = MACDRoc;Graph0Style = 1;Graph0Color = 6;
+
+Title = Name() + "   MACD ROC Values:   Yesterday =" + WriteVal(Ref(MACDRoc,-1)) + "   Today =" + WriteVal(MACDRoc)+ "       Weekly -" +
+WriteIf(Cond1==1," NEW UP TREND  ", WriteIf(Cond2==1," NEW DOWN TREND   ", WriteIf(Cond3==1,"   Trend is Up    ",WriteIf(Cond4==1," Trend is Down    ",WriteIf(Cond5==1," Trend is Flat    ","")))));

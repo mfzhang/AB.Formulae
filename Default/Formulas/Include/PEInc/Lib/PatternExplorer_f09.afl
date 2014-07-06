@@ -1,0 +1,67 @@
+//|-----------------------------------------------------------------------------------------
+//|PatternExplorer.com - PatternExplorer_f09
+//|Copyright © 2007, PatternExplorer.com
+//|http://www.PatternExplorer.com
+//|e-mail: support@PatternExplorer.com
+//|-----------------------------------------------------------------------------------------
+Bulls =  H;
+Tickers = C;
+
+if ( GroupID() == 253 AND StrLeft( Name(), 2 ) == "~i" )
+{
+    sFBu = Null;
+    sFT   = Null;
+    iFBu = H;
+    iFT   = C;
+}
+else
+    if ( GroupID() == 253 AND StrLeft( Name(), 2 ) == "~s" )
+    {
+        sFBu = H;
+        sFT = C;
+        iFBu = Null;
+        iFT = Null;
+    }
+    else
+    {
+        iFBu = Foreign( "~i" + WriteVal( IndustryID(), 1.0 ) + " - " + IndustryID( 1 ), "H" );
+        iFT   = Foreign( "~i" + WriteVal( IndustryID(), 1.0 ) + " - " + IndustryID( 1 ), "C" );
+        sFBu = Foreign( "~s" + WriteVal( SectorID(), 1.0 ) + " - " + SectorID( 1 ), "H" );
+        sFT   = Foreign( "~s" + WriteVal( SectorID(), 1.0 ) + " - " + SectorID( 1 ), "C" );
+    }
+
+sFBu_p = 100 * sFBu / sFT;
+
+sFBe_p = 100 - sFBu_p;
+iFBu_p = 100 * iFBu / iFT;
+iFBe_p = 100 - iFBu_P;
+TickersDB = Foreign( "~Tickers_in_DB", "C" );
+missing_quotes_filter = Highest( TickersDB ) - TickersDB > 10;
+
+if ( GroupID() == 253 )
+{
+    if ( StrFind( Name(), "~s" ) )
+    {
+        sector = Name();
+        industry = "";
+    }
+    else
+        if ( StrFind( Name(), "~i" ) )
+        {
+            sector = "";
+            industry = Name();
+        }
+        else
+        {
+            sector = "";
+            industry = "";
+        }
+}
+else
+{
+    sector = SectorID( 1 );
+    industry = IndustryID( 1 );
+}
+
+SymF =  IIf( StrLeft( Name(), 1 ) == "~", StrLeft( Name(), 2 ) == "~s" OR StrLeft( Name(), 2 ) == "~i", 1 );
+SymFSI =  IIf( StrLeft( Name(), 1 ) == "~", StrLeft( Name(), 3 ) != "~s0" AND StrLeft( Name(), 3 ) != "~i0", Null );

@@ -1,0 +1,194 @@
+_SECTION_BEGIN("V-spiker");
+
+SetChartBkGradientFill( ParamColor("BgTop", colorBlack),
+
+ParamColor("BgBottom", colorBlack),ParamColor("Titleblock",colorDarkBlue ));
+
+
+upcolor=ParamColor("UpCandleColor",colorBlack );
+downcolor=ParamColor("DownCandleColor",colorBlack );
+
+
+//Volume Change
+Volwma=WMA(V,15);
+Volchange=(((V-Volwma)/Volwma)*100);
+Vol=(ROC(V,1)); 
+
+
+//GraphXSpace = Param("Xspace", 10, 2, 20, 1);
+// vol with std
+LBP = Param("Look Back", 15, 0, 150,1 );
+Mean = MA(ln(V),LBP);
+StD = StDev(ln(V),LBP);
+xp3 = exp(mean + 2*std); //3 band
+xp2 = exp(mean + 1.5*std); //2 nd band
+xp1 = exp(mean + 1*std); // 1st band
+xm = exp(mean); // avg
+xn1 = exp(mean - 1*std); // -1 band
+xn2 = exp(mean - 1.5*std); //-2 band
+//Plot(xp3,"", colorGrey50,1|4096);
+//Plot(xp2,"", colorGrey50,1|4096);
+//Plot(xp1,"", colorPaleBlue,1|4096);
+//Plot(xm, "AvgVol", ParamColor( "AvgColor", colorOrange ),ParamStyle("AvgStyle",styleLine|styleThick|styleDots,maskAll),1|4096);
+Plot(Volwma, "AvgVol", ParamColor( "AvgColor", colorGold ),ParamStyle("AvgStyle",styleLine|styleThick|styleDots,maskAll),1|4096);
+
+
+//Plot(xn1,"",colorBlue,1|4096);
+////Plot(xn2,"", 1,1|4096);
+
+upbar = C > Ref(C,-1);
+downbar = C< Ref(C,-1);
+barcolor2=IIf(downbar,colorRed, IIf(upbar, 2,19) );
+
+upbar = C > Ref(C,-1);
+downbar = C< Ref(C,-1);
+
+O = IIf(downbar, V, 0); 
+C = IIf(downbar, 0,V);
+L=0; 
+H = V;
+
+ColorHighliter = IIf(upbar, upcolor,IIf(downbar, downcolor,colorDarkGreen));
+SetBarFillColor( ColorHighliter );
+
+PlotOHLC( O,H,L,C, "", barColor2, ParamStyle("CandleStyle",styleCandle,maskAll));
+
+/*
+PcntInc = NumToStr((V-xm)/xm*100,2);
+_N(Title =Name() + " " + ": {{VALUES}}"+   WriteIf(V,"  |\\c33 TotVol =\\c35 ","")
+ +WriteVal(V, 1.0)+"\n"+EncodeColor(colorTurquoise)+
+WriteIf(V > XM*(1 + (LBP * .01)),"Volume's("+PcntInc+")% ABOVE its("+Lbp+") days average","")+
+WriteIf(V < XM*(1 + (LBP * .01)),"Volume's("+PcntInc+")% BELOW its("+Lbp+") days average",""));
+*/
+///////////////////////////
+_SECTION_BEGIN("Volume Oscillator");
+
+PlusDM= IIf(High>Ref(High,-1) AND Low>=Ref(Low,-1), High-Ref(High,-1),
+                 IIf(High>Ref(High,-1) AND Low<Ref(Low,-1)
+                 AND High-Ref(High,-1)>Ref(Low,-1)-Low,
+                High-Ref(High,-1),0));
+
+Vm=log(EMA(V,3));
+ 
+Buy= (C-L)*Vm+ (H-O)*Vm + 
+         IIf(C>O,(C-O)*Vm,0) + PlusDM*Vm + 
+         IIf(Ref(C,-1)<O,(O-Ref(C,-1))*Vm,0);
+
+MinDM = IIf(Low<Ref(Low,-1)   AND  High<=Ref(High,-1), Ref(Low,-1)-Low,
+               IIf(High>Ref(High,-1) AND Low<Ref(Low,-1)
+               AND High-Ref(High,-1)<Ref(Low,-1)-Low, Ref(Low,-1)-Low, 0));
+
+Sell= (H-C)*Vm + (O-L)*Vm + 
+         IIf(C<O,(O-C)*Vm,0) + MinDM*Vm + 
+         IIf(Ref(C,-1)>O,(Ref(C,-1)-O)*Vm,0);
+
+Wm=Wilders(Wilders(Buy,3)-Wilders(Sell,3),3);
+
+Buy=Cross(Wm,0);
+Sell=Cross(0,Wm);
+
+
+PlotShapes( IIf( Buy, shapeHollowSmallCircle, shapeNone ), colorOrange, layer = 0, yposition = H, offset = 4);
+PlotShapes( IIf( Sell, shapeHollowSmallCircle, shapeNone ), colorWhite, layer = 0, yposition = H, offset = 10);
+//Title = Name() + " " + WriteVal(V, 1.0) +  ;
+_SECTION_END();
+
+
+
+
+_N(Title =Name() + " " +EncodeColor(colorWhite)+" Total Vol: " +WriteVal(V,format=1)+
+ EncodeColor(49) +" Vol Change : " + WriteIf(Vol>0,EncodeColor(08),EncodeColor(04)) +WriteVal(Vol,format=1.2)+ "%  "  +  WriteIf(Buy,"  |\\c33 Volume :- Buy","") + WriteIf(Sell," |\\c33 Volume :- Sell","")+
+"\n"+
+ EncodeColor(colorWhite)+"WMA Vol: "+   WriteVal(Volwma,format=1)
+
++ EncodeColor(05)
++WriteIf(V > Volwma,"  Volume's("+WriteVal(Volchange,format=1.2)+")% ABOVE its(15) days WMA","")
++ EncodeColor(04)
++WriteIf(V < Volwma, "  Volume's("+WriteVal(Volchange,format=1.2)+")% BELOW its(15) days WMA",""));
+
+
+//WriteIf(V > XM*(1 + (LBP * .01)),"Volume's("+PcntInc+")% ABOVE its("+Lbp+") days average","")+
+//WriteIf(V < XM*(1 + (LBP * .01)),"Volume's("+PcntInc+")% BELOW its("+Lbp+") days average",""));
+_SECTION_END();
+
+
+_SECTION_BEGIN("Spiker_Shadow");
+
+
+C1 = Ref(C, -1);
+uc = C > C1; dc = C <= C1;
+ud = C > O; dd = C <= O;
+
+
+green = 1; blue = 2; yellow = 3; red = 4; white = 5;
+VType = IIf(ud,          
+         IIf(uc, green, yellow),
+       IIf(dd, 
+         IIf(dc, red, blue), white));
+
+/* green volume: up-day and up-close*/
+gv = IIf(VType == green, V, 0); 
+/* yellow volume: up-day but down-close */
+yv = IIf(VType == yellow, V, 0); 
+/* red volume: down-day and down-close */
+rv = IIf(VType == red, V, 0); 
+/* blue volume: down-day but up-close */
+bv = IIf(VType == blue, V, 0); 
+
+
+uv = gv + bv; uv1 = Ref(uv, -1); /* up volume */
+dv = rv + yv; dv1 = Ref(dv, -1); /* down volume */
+
+
+VolPer = Param("Adjust Vol. MA per.", 10, 1, 255, 1);
+ConvPer = Param("Adjust Conv. MA per.", 4, 1, 255, 1);
+
+
+MAuv = TEMA(uv, VolPer ); mauv1 = Ref(mauv, -1);
+MAdv = TEMA(dv, VolPer ); madv1 = Ref(madv, -1);
+MAtv = TEMA(V, VolPer );//total volume
+
+
+
+
+Converge = (TEMA(MAuv - MAdv, ConvPer));
+Converge1 = Ref(Converge, -1);
+ConvergeUp = Converge > Converge1;
+ConvergeOver = Converge > 0;
+rising = ConvergeUp AND ConvergeOver;
+falling = !ConvergeUp AND ConvergeOver;
+
+
+/*convergenceOscillator = Param("Show Oscillator", 0, 0, 1, 1);
+OscillatorOnly = Param("Show Oscillator Only", 0, 0, 1, 1);
+if(convergenceOscillator OR OscillatorOnly){
+Plot(Converge, "Bull/Bear Volume Convergence/Divergence", colorViolet,
+1|styleLeftAxisScale|styleNoLabel|styleThick);
+Plot(0,"", colorYellow, 1|styleLeftAxisScale|styleNoLabel);
+}*/
+
+
+upshadow=ParamColor("UpShadowColor",colorDarkYellow );
+downshadow=ParamColor("DownShadowColor",colorDarkGrey );
+riseFallColor = IIf(rising, upshadow,downshadow); 
+
+riseFallShadows = Param("Show RiseFallShadows", 1, 0, 1, 1);
+if(riseFallShadows){
+Plot(IIf(rising OR falling, 1, 0), "", riseFallColor,ParamStyle("ShadeStyle",styleHistogram|styleArea|styleThick|styleOwnScale|styleNoLabel,maskAll));
+
+/*Plot(IIf(rising OR falling, 1, 0), "", riseFallColor,
+styleHistogram|styleArea|styleOwnScale|styleNoLabel);*/
+}
+
+
+//GraphXSpace =5;
+
+//_N(Title="");
+_SECTION_END();
+
+
+
+_SECTION_BEGIN("Graphics");
+GrpPrm=Param("Graphic Space",-5,-10,10);
+GraphXSpace=GrpPrm;
+_SECTION_END();

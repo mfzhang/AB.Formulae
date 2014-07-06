@@ -1,0 +1,52 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    DATA Export
+//  Author/Uploader: BOX3130 
+//  AIM:             export EOD data to intraday format
+//  Level:           basic
+// ------------------------------------------------------------------------------
+//  AFL for AA window, exports to TXT file for each ticker. 
+//------------------------------------------------------------------------------
+ 
+/*
+Export EOD data (and intraday data) to TXT files 
+One file for each stock
+In the first line insert the directory you want to save them to, make sure the directory exists
+Select your charts to export with the "Apply to" filter in AA window 
+Select the timeframe period you want to save as using the AA "Settings"
+Press Scan button
+*/
+// C:\\Users\\smnuman\\Downloads\\StockBangladesh\\AB.data.Backup\\
+fh = fopen( "C:\\Users\\smnuman\\Downloads\\StockBangladesh\\AB.data.Backup\\20110404.TickerData\\"+Name()+".csv", "a"); 
+if( fh ) 
+{ 
+   //fputs( "Ticker,Date,Time,Open,High,Low,Close,Volume \n", fh ); 
+   fputs( "Ticker,Date,Open,High,Low,Close,Volume \n", fh ); 
+   y = Year(); 
+   m = Month(); 
+   d = Day(); 
+   //r=16;    // r = Hour();      //these function are used for intraday data export.
+   //e=10;    // e = Minute();    //these function are used for intraday data export.
+   //n=0;     // n = Second();    //these function are used for intraday data export.
+   // EOD data exported to a intraday format with time set as 16:10:00. The time point can be changed by alterring the vaule of r,e,n above 
+    
+   for( i = 0; i < BarCount; i++ ) 
+   { 
+      fputs( Name() + "," , fh );
+      ds = StrFormat("%02.0f-%02.0f-%02.0f,", 
+                     y[ i ], m[ i ], d[ i ] ); 
+      fputs( ds, fh ); 
+      
+      //ts = StrFormat("%02.0f:%02.0f:%02.0f,", 
+      //               r[ i ],e[ i ],n[ i ] ); 
+      //fputs( ts, fh ); 
+ 
+      qs = StrFormat("%.4f,%.4f,%.4f,%.4f,%.0f\n", 
+                     O[ i ],H[ i ],L[ i ],C[ i ],V[ i ] ); 
+      fputs( qs, fh ); 
+   } 
+ 
+   fclose( fh ); 
+} 
+ 
+Buy = 0;

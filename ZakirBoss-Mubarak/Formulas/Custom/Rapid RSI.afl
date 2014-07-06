@@ -1,0 +1,12 @@
+// Rapid RSI
+//
+Period = Param("Period", 14, 2, 100 );
+Diff = C - Ref( C, -1 );
+Up = Max( Diff, 0 );
+Dn = Max( -Diff, 0 );
+UpSum = Sum( Up, Period );
+DnSum = Sum( Dn, Period );
+RS = IIf( DnSum != 0, UpSum / DnSum, 100 );
+RapidRSI = 100 - 100 / ( 1 + RS );
+Plot( RapidRSI, "RapidRSI"+Period, colorRed );
+_SECTION_END();

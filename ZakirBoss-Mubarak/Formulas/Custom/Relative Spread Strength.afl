@@ -1,0 +1,12 @@
+_SECTION_BEGIN("Relative Spread Strength");
+// Relative Spread Strength
+//
+RSPeriod = Param("RSI Period", 5, 1, 100 );
+E1Period = Param("E1 Period", 10, 1, 100 );
+E2Period = Param("E2 Period", 40, 1, 200 );
+E1 = MA( C, E1Period );
+E2 = MA( C, E2Period );
+Spread = E1 - E2;
+RS = RSIa( Spread, RSPeriod );
+Smooth = MA( RS, 5 );
+Plot( Smooth, "RSS", colorRed );

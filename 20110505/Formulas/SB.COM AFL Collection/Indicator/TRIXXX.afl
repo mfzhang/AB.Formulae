@@ -1,0 +1,22 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    TRIXXX
+//  Author/Uploader: Roman Glinka 
+//  E-mail:          glina1@tlen.pl
+//  Date/Time Added: 2004-04-25 07:55:10
+//  Origin:          
+//  Keywords:        
+//  Level:           medium
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=355
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=355
+//
+//------------------------------------------------------------------------------
+//
+//  Short term indicator: buy when indicator is upper 0 line and cross signal
+//  up, sell when indicator falling down
+//
+//------------------------------------------------------------------------------
+
+Graph0=(Trix(3)*Trix(5)*Trix(7))/100;
+Graph1=MA(Graph0,3);

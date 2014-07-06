@@ -1,0 +1,51 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Ema bands
+//  Author/Uploader: dtholz 
+//  E-mail:          dtholz@bigpond.net.au
+//  Date/Time Added: 2002-03-11 04:00:54
+//  Origin:          
+//  Keywords:        ema trending bands
+//  Level:           basic
+//  Flags:           exploration,indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=169
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=169
+//
+//------------------------------------------------------------------------------
+//
+//  ema offset bands easy to change 5 bands and ema period
+//
+//  indicator and AA scan .
+//
+//  this produced excellent results on the ASX ( aussie exchange)
+//
+//------------------------------------------------------------------------------
+
+/* EMA offset bands ver 1_2
+I'd guess this is NOT much different to bbands except you can contol the per % offset and the periods ema to off set*/
+per=.10;//Percent placement
+periods=20;//time periods
+/*********************************/
+
+emaverage= EMA(C,periods);
+bandsAdjust=emaverage*per;
+
+upperband=emaverage+bandsAdjust;
+Lowerband=emaverage-bandsAdjust;
+Plot(EMA(C,periods),"ema",5,1);
+Plot(C,"EMA",15,64);// plots the close with candles
+Plot(upperband,"upperband",3,1);// upperband
+Plot(Lowerband,"lowerband",4,1);//lowerband
+
+bCond1=Ref(Cross(C,Lowerband),-1) AND C > lowerband ;
+bCond2= C > EMAverage ;// the "or" gets me into up trends 
+bCond3= C > EMA(C,65);// trend
+
+Buy = bcond1 AND bCond3 OR bCond2; 
+
+scond1= Ref( Cross(emaverage,C),-1)AND C < emaverage;// close days under ema 
+scond2=C < Lowerband;//failed trade drops below lowerband
+Sell = scond1 OR scond2;
+
+Buy = ExRem( Buy, Sell );// removes buy/sell arrows
+Sell = ExRem( Sell, Buy );

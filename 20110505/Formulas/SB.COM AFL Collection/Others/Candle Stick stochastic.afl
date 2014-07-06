@@ -1,0 +1,113 @@
+/* -- CANDLESTOCHASTICS 	-- */
+/* -- Written by Jim Varney 	-- */
+/*
+This Exploration combines Stochastics with a scan for 7 different candlestick patterns (Dark Cloud Cover, Piercing Line, Morning and Evening Doji Stars, Hammer, and Engulfing).
+
+Buy Signal: Stochastic at or below 20 and at least one bullish candle pattern.
+Sell Signal: Stochastic at or above 80 and at least one bearish candle pattern.
+
+Vol Index: this column is the ratio of today's volume to the 14-day average volume.
+This column should be sorted Descending. The best signals are occur when VolIndex is at least 2 or higher.
+
+PCL[up]: Piercing Line, "up" signifies Bullish.
+MDS[up]: Morning Doji Star
+BLE[up]: Bullish Engulfing
+HAM[up]: Hammer
+BRE[dn]: Bearish Engulfing, "dn" signifies Bearish.
+DCC[dn]: Dark Cloud Cover
+EDS[dn]: Evening Doji Star
+
+A "1" in the column signifies TRUE, a "0" indicates no signal.
+
+------------------------------------------------------------------*/
+
+/* Minimum Price and 14 day Avg Volume Values for Filter */
+minPrice = 3;     //change as needed
+minVol = 50000;   //change as needed
+
+VolAvg = MA( V, 14 );
+VolumeIdx = V / VolAvg;
+AvgRange = Sum( abs(O-C),15 )/15;
+
+/* Candle Codes */
+White = IIf((C>O) AND ((C-O)>=0.8*(H-L)),1,0) AND (C-O)>AvgRange;
+Black = IIf((C<O) AND ((O-C)>=0.8*(H-L)),1,0) AND (O-C)>AvgRange;
+Doji  = IIf(abs(O-C)<=0.1*(H-L),1,0);
+
+/* Dark Cloud Cover [Bear] */
+DCC = IIf(Ref(White, -1) AND Black AND C<=Ref(((H+L)/2),-1)
+	AND O>Ref(C,-1), 1,0);
+
+/* Piercing Line [Bull] */
+PL = IIf(Ref(Black, -1) AND White AND C>=Ref(((H+L)/2),-1)
+	AND O<Ref(C,-1), 1,0);
+
+/* Evening Doji Star [Bear] */
+EDS = IIf(Ref(White, -2) AND Ref(Doji, -1) AND Black AND
+	C<=Ref(((H+L)/2),-2), 1,0);
+
+/* Morning Doji Star [Bull] */
+MDS = IIf(Ref(Black, -2) AND Ref(Doji, -1) AND White AND
+	C>=Ref(((H+L)/2),-2), 1,0);
+
+/* Hammer [Bull] */
+HAM = IIf( (H-L > 1.5*AvgRange) AND (C > (H+L)/2)  AND (O > C) AND 
+	(VolumeIdx > 2), 1, 0);
+
+/* Bearish Engulfing */
+BRE = IIf(Black AND Ref(White, -1) AND (C < Ref(O, -1))  AND (O > Ref(C, -1)), 1,0);
+
+/* Bullish Engulfing */
+BLE = IIf(White AND Ref(Black, -1) AND (C > Ref(O,-1))  AND (O < Ref(C,-1)), 1,0);
+
+
+/* Stochastics 14-4 */
+
+ss = MA(StochK(14),4);
+StochBuy = IIf(ss<=20, 1, 0);
+StochSell = IIf(ss>=80, 1, 0);
+
+/* Exploration Columns for Sorting */
+
+NumColumns = 9;
+
+Column0 = V;
+Column1 = VolumeIdx;
+Column2 = PL;
+Column3 = MDS;
+Column4 = BLE;
+Column5 = HAM;
+Column6 = BRE;
+Column7 = DCC;
+Column8 = EDS;
+
+Column0Name = "Volume"; 
+Column1Name = "Vol Idx";
+Column2Name = "PCL[up]";
+Column3Name = "MDS[up]";
+Column4Name = "BLE[up]";
+Column5Name = "HAM[up]";
+Column6Name = "BRE[dn]";
+Column7Name = "DCC[dn]";
+Column8Name = "EDS[dn]";
+
+Column0Format = 1.0;
+Column1Format = 1.1;
+Column2Format = 1.0;
+Column3Format = 1.0;
+Column4Format = 1.0;
+Column5Format = 1.0;
+Column6Format = 1.0;
+Column7Format = 1.0;
+Column8Format = 1.0;
+
+
+/* Filter */
+
+Filter = ((C > minPrice) AND (VolAvg >= minVol)) AND (StochBuy AND (PL OR MDS OR BLE OR HAM)) OR (StochSell AND (BRE OR DCC OR EDS));
+
+
+/* Buy and Sell */
+
+Buy = IIf((StochBuy > 0) AND (PL + MDS + HAM + BLE > 0), 1, 0);
+Sell = IIf((StochSell > 0) AND (BRE + DCC + EDS > 0), 1, 0);

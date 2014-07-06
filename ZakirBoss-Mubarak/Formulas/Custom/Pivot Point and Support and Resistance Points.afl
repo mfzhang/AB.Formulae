@@ -1,0 +1,47 @@
+/* Pivot points and Support and Resistance Points*/
+/* for next day trading*/
+/* coded by Anthony Faragasso */
+
+
+MaxGraph =8;
+
+p = (H+L+C)/3;
+r1 = (2*p)-L;
+s1 = (2*p)-H;
+r2 = p +(r1 - s1);
+s2 = p -(r2 - s1);
+
+Graph0=p;
+Graph1=r1;
+Graph2 = s1;
+Graph3= r2;
+Graph4 = s2;
+
+Graph0Style = Graph1Style = Graph2Style = Graph3Style = Graph4Style = 16 + 8;
+Graph0Color = 2;
+Graph1Color = Graph2Color = 8;
+Graph3Color = Graph4Color = 6;
+ 
+Graph5 = Close;
+Graph5Color = 3;
+Graph5Style = 128;
+"";
+"------------------------------------------------------------------------------------------------------------";
+"    PIVOT POINTS AND SUPPORT AND RESISTANCE POINTS ";
+"------------------------------------------------------------------------------------------------------------";
+"";
+"MARKET BEING EVALUATED :  " + Title = Name() + "      DATE : "  + Date();
+"";
+"TODAY'S CLOSE WAS : "+"( " +WriteVal(Close,format=1.2)+" )";
+"----------------------------------------------------------------------------------------------------------------------";
+"    *******  THESE POINTS ARE VALID FOR NEXT TRADING DAY ******";
+"-----------------------------------------------------------------------------------------------------------------------";
+"RESISTENCE POINT 2 : ----------------" +WriteVal(Graph3,format=1.2);
+"";
+"RESISTENCE POINT 1 : ----------------" +WriteVal(Graph1,format=1.2);
+"";
+" --------------------------------------------------------"+ "("+WriteVal(Graph0,format=1.2)+")" +"   PIVOT POINT--------";
+"";
+"SUPPORT POINT 1 : ----------------------" +WriteVal(Graph2,format=1.2);
+"";
+"SUPPORT POINT 2 : ----------------------" +WriteVal(Graph4,format=1.2);

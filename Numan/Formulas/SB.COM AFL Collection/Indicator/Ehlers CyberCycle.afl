@@ -1,0 +1,50 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Ehlers CyberCycle
+//  Author/Uploader: Not Too Swift 
+//  E-mail:          
+//  Date/Time Added: 2005-03-19 23:35:31
+//  Origin:          
+//  Keywords:        
+//  Level:           medium
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=442
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=442
+//
+//------------------------------------------------------------------------------
+//
+//  Ehlers CyberCycle is an indicator listed in "Cybernetic Analysis for Stocks
+//  and Futures," by John Ehlers. This is a slightly modified version of the
+//  code I found at:
+//
+// 
+//  http://www.traders.com/Documentation/FEEDbk_docs/Archive/052004/TradersTips/TradersTips.html#amibroker
+//
+//------------------------------------------------------------------------------
+
+SetBarsRequired( 200, 0 );
+
+// Ehlers CyberCycle
+// Cybernetic Analysis for Stocks and Futures
+// Chapter 4, p. 33. Code on p. 38.
+// Original code is at:
+// http://www.traders.com/Documentation/FEEDbk_docs/Archive/052004/TradersTips/TradersTips.html#amibroker
+
+function CyberCycle( array, alpha )
+{
+  smooth = ( array + 2 * Ref( array, -1 ) +
+             2 * Ref( array, -2 ) + Ref( array, -3 ) ) / 6;
+  // init value
+  Cycle = ( array[ 2 ] - 2 * array[ 1 ] + array[ 0 ] )/4;
+  for( i = 6; i < BarCount; i++ )
+  {
+     Cycle[ i ] = ( ( 1 - 0.5 * alpha) ^ 2 ) *
+                  ( smooth[ i ] - 2 * smooth[ i - 1 ] + smooth[ i - 2] ) +
+                  2 * ( 1 - alpha ) * Cycle[ i - 1 ] -
+                  ( ( 1 - alpha) ^ 2 ) * Cycle[ i - 2 ];
+  }
+  return Cycle;
+}
+Cycle = CyberCycle( (H+L)/2, 0.07 );
+Plot( Cycle, "CyberCycle", colorBlue );
+Plot( Ref(Cycle, -1), "Trigger", colorRed);

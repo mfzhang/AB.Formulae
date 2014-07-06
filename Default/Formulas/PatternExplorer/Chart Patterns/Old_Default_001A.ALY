@@ -1,0 +1,43 @@
+BROKLAY2
+8
+Price-MACD-StochRSI-Vol
+4
+1001 50
+2 13
+1007 16
+1024 19
+GradPrice.RSI(14)-AD
+3
+1004 60
+3 20
+1003 20
+%K%D-Vol.MAVol(15)
+3
+1008 59
+5 20
+6 21
+Ultimate(7,14,28)-OBV
+3
+1025 60
+1031 20
+1032 20
+PE.Fib-Trix
+2
+1021 80
+9 20
+PE.Fractals.Swing-Volume
+3
+1026 33
+1029 33
+1030 33
+PE.PriceTS-AD-Chaikin-PE.Fib
+4
+1016 36
+13 12
+14 12
+1017 36
+PE.Triangular-Volume
+3
+1014 42
+1018 14
+1015 43

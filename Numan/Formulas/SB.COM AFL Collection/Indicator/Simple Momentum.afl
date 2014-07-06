@@ -1,0 +1,28 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Simple Momentum
+//  Author/Uploader: Alex Fler 
+//  E-mail:          alexfler@mail.ru
+//  Date/Time Added: 2005-08-06 22:46:26
+//  Origin:          Simple Momentum
+//  Keywords:        momentum
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=539
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=539
+//
+//------------------------------------------------------------------------------
+//
+//  The momentum of a security is the ratio of today's price compared to the
+//  price x-time periods ago. Similar to what you'll find in Metastock ,Trade
+//  Station 2000i or Advanced Get
+//
+//------------------------------------------------------------------------------
+
+/* Momentum indicator */
+/* The momentum of a security is the ratio of today's price compared to the price x-time periods ago */
+/* Coded by Alex Fler */
+
+periods=Param("Periods",14,2,200,1);
+Plot( mom=(Close/Ref(Close,-periods)-1),_DEFAULT_NAME(),ParamColor("Color", colorCycle ), ParamStyle("Style") );
+Plot(0,"",colorBlue,style=32);

@@ -1,0 +1,20 @@
+/* Standard Error Bands */
+Periods = Param("Standard Error", 18, 1, 100, 1); 
+
+function SteBand( array, periods, upper ) 
+{ 
+  Lr = LinearReg( array, periods ); 
+  se = StdErr( array, periods ); 
+  return LR + IIf( upper, 1, -1 ) * 2 * se; 
+} 
+
+upperstderrband = SteBand( C, Periods, True ); 
+lowerstderrband = SteBand( C, Periods, False ); 
+midstderrband = (upperstderrband + lowerstderrband )/2; 
+
+Plot( Close, "Close", colorBlack, styleCandle );
+Plot( upperstderrband , "upperstderrband ", colorGreen, 4 );
+Plot( lowerstderrband , "lowerstderrband ", colorRed, 4 ); 
+Plot( midstderrband , "midstderrband ", colorBlack , styleLine); 
+
+GraphXSpace = 3;

@@ -1,0 +1,97 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    DMI Spread Index
+//  Author/Uploader: Steve Wiser 
+//  E-mail:          slwiserr@erols.com
+//  Date/Time Added: 2001-07-05 19:13:58
+//  Origin:          
+//  Keywords:        
+//  Level:           basic
+//  Flags:           system,exploration,indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=59
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=59
+//
+//------------------------------------------------------------------------------
+//
+//  Uses DMI Spread Index as a system, indicator and exploration
+//
+//------------------------------------------------------------------------------
+
+/*  Settings setup should have buy and sell at open with one day delay. I also use a 5%
+     maximum stop loss.  This code also plots the DMI Index in its own chart pane. Note that I
+     have also provided a zero line for better viewing of the zero cross.*/
+
+/* Exploration, System and Indicator 
+    Author Steve Wiser
+   Email address: slwiserr@erols.com
+   May 5, 2001 */
+
+Percent=3;
+pds=PeakBars(C,Percent,2)-PeakBars(C,Percent,1);
+pds=lastvalue(pds);
+
+/* the following code is for the consolidation periods or better know
+as the sleeping Alligator */
+
+var3= 5;
+var4= 3;
+var10=10;         
+var0= Ref(Wilders(C,13),-8);
+var1= Ref(Wilders(C,8),-5);
+var2= Ref(Wilders(C,5),-3);
+var5= Ma((var0+var1+var2),var4) ;
+angle=Atan(var5-Ref(var5,-var3)/var3);
+angle=iif( angle >90,angle-360,angle);
+hope=iif( angle <20 AND angle>-20,1,0);
+cry=((Stdev(C,var3*2)   -  Ref(Wilders(Stdev(C,var3*2),8),-5))/
+       (Ref(Wilders(Stdev(C,var3*2),8),-5)))<0;
+
+/*  End of Sleeping Alligator which is an area of little or no volitlity or price movement.*/
+
+SI=MA(PDI(pds)-MDI(pds),5);
+graph0=SI;  /* Spread Index */
+graph1=0;   /* Provides a zero based line of blue color */ 
+graph1Style=5;
+
+Buy=cross(SI,0) ;
+     /* or PDI(14)>MDI(14) and ADX(14)>MDI(14) and (Hope and Cry)==0;*/
+     /* Having PDI and ADX and (Hope and Cry) does not test as well */
+sell=cross(0,SI) or ADX(14)<MDI(14) and PDI(14)<MDI(14);
+
+Buy=exrem(buy,sell);    /* this removes redundant buy/sell signals */
+Sell=exrem(sell,buy);
+
+short=sell;
+cover=buy;
+
+/* The following code is the exploraiton code */
+
+Filter=(  /*ref(Buy,-1)==0 and*/ (Buy==1)  );
+numcolumns = 7;
+column0 =ref(C+0.065,-1);
+column0format = 1.2;
+column0name = "Trigger Price";
+column1 = C;
+column1name = "Close       ";
+column1format = 1.2;
+column2 = ma(v,17);
+column2name = "17 Ma Vol   ";
+column2format = 1.0;
+column3 = ma(C,17)/ma(c,50);
+column3name = "% 17/50 ";
+column3format = 1.2;
+column3format = 1.2;
+column4= ma(c,17);
+column4name="17 C ma";
+column4format = 1.2;
+column4= ma(c,50);
+column4name="50 C ma";
+column4format = 1.2;
+Column5=SI;
+Column5Name="DMI Index";
+Column5format=1.2;
+Column6=ROC(SI,3);
+Column6Name="ROC of SI";
+Column6format=1.2;
+/*  End of Exploration Code. */
+

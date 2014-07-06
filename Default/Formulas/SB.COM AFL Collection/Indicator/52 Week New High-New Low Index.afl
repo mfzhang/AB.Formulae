@@ -1,0 +1,46 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    52 Week New High-New Low Index
+//  Author/Uploader: Dennis Skoblar 
+//  E-mail:          DennisAndLisa@sbcglobal.net
+//  Date/Time Added: 2005-07-11 10:14:58
+//  Origin:          Alexander Elder's book, "Trading For A Living"
+//  Keywords:        New Hi-New Low Index, 52 Week New Hi-New Low Index
+//  Level:           basic
+//  Flags:           exploration,indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=502
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=502
+//
+//------------------------------------------------------------------------------
+//
+//  Calculates new 52 week High's vs new 52 week lows. Input a Date 5 years
+//  back to the current Date in the Range section of the Analysis Window AND
+//  click the From button. In the Apply To section, click the Use Filter button
+//  AND click the Define > Include > Group > Stock to scan stocks ONLY. Right
+//  click on chart window,
+//
+//  then > Parameters > Show MiddlLe Lines - NO > Levels > +-100. Compare
+//  against the SP-500, look for convergences, divergences. Read Elder's book
+//  "Trading For A Living" pp.194-200. The new symbol "~NewHiNewLoIndex" will
+//  be found in the Workspace > Symbol > All > at the end.
+//
+//------------------------------------------------------------------------------
+
+// Calculates new 52 week High's vs new 52 week lows.
+// The new symbol "~NewHiNewLoIndex" will be found in the Workspace > Symbol > All > at the end.
+// Input a Date 5 years back to the current Date in the Range section of the Analysis Window AND click the From button.
+// In the Apply To section, click the Use Filter button AND click the Define > Include > Group > Stock 
+// to scan stocks ONLY. Right click on chart window, then > Parameters > Show MiddlLe Lines - NO > Levels > +-100.
+// Compare against the SP-500, look for convergences, divergences. Read Elder's book "Trading For A Living" pp.194-200.
+
+H1 = High > Ref(HHV(High,260),-1);
+L1 = Low < Ref(LLV(Low,260),-1);
+HiLoDifference = H1 - L1;
+
+Buy = 0; 
+Filter = 0;
+
+AddToComposite( HiLoDifference , "~NewHiNewLoIndex", "X", atcFlagDefaults = 7);
+
+GraphXSpace = 10;
+Plot(Foreign("~NewHiNewLoIndex","C",1),"52 Week New High - New Low Index",colorYellow,styleHistogram);    

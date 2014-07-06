@@ -1,0 +1,15 @@
+/* Chandelier Exit */
+/* Geoff Mulhall Oct 2004 */
+/* Requires chandelier plugin installed */
+
+GraphXSpace = 5;
+
+Plot(Close,"",colorBlack,styleCandle);
+Plot(ChandelierCl(ATR(15),2.5),"",colorRed,styleLine);
+Plot(ChandelierHL(ATR(15),2.5),"",colorBlue,styleLine);
+Plot(ChandelierCl(ATR(15),3),"ChandelierCl",colorOrange,styleLine);
+Plot(ChandelierHL(ATR(15),3),"ChandelierHL",colorWhite,styleLine);
+
+
+Buy  = Close > Ref( ChandelierCl(ATR(15),3), -1);
+Sell = Close < Ref( ChandelierCl(ATR(15),3), -1); 

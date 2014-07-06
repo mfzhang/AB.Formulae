@@ -1,0 +1,51 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Price-Volume Rank
+//  Author/Uploader: Tomasz Janeczko 
+//  E-mail:          tj@amibroker.com
+//  Date/Time Added: 2001-06-16 08:29:55
+//  Origin:          Presented in TASC magazine
+//  Keywords:        oscillator
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=14
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=14
+//
+//------------------------------------------------------------------------------
+//
+//  A Price Volume Rank. Buy/Sell at 5/10-day crossovers. Buy when fast line
+//  crosses below 2.5. Sell when fast line crosses above 2.5. Use turn-around
+//  points cautiously. Remember that a climbing PVR line indicates a weakening
+//  market. Make another indicator using a double-smoothing to use a less
+//  volatile graph. Thanks to Donald Dalley for the description
+//
+//------------------------------------------------------------------------------
+
+/* Price-Volume Rank Indicator
+   Use a 1 if price and volume are up
+   Use a 2 if price is up and volume is down
+   Use a 3 if price and volume are down
+   Use a 4 if price is down and volume is up
+
+  Plot a 5-day and a 10-day MA of these values.
+  Buy/Sell at 5/10-day crossovers.
+  Buy when fast line crosses below 2.5.
+  Sell when fast line crosses above 2.5.
+
+  Use turn-around points cautiously.
+  Remember that a climbing PVR line indicates a
+  weakening market.
+  Make another indicator using a double-smoothing
+  to use a less volatile graph.
+*/
+
+P1 = REF( CLOSE, -1 );
+V1 = REF( VOLUME, -1);
+
+PVR = IIF( CLOSE >  P1 AND VOLUME >  V1, 1,
+      IIF( CLOSE >  P1 AND VOLUME <= V1, 2,
+      IIF( CLOSE <= P1 AND VOLUME <= V1, 3, 4 )));
+
+GRAPH0 = MA( PVR, 5 );
+GRAPH1 = MA( PVR, 10 ) ;
+

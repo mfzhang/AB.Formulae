@@ -1,0 +1,13 @@
+_SECTION_BEGIN("RSI of a Volume weighted moving average");
+
+periods=Param("VWMA periods ",5,2,200,1);
+
+smoothing=Param("exp. smoothing of VWMA",3,2,200,1);
+rsiperiods=Param("rsi periods",9,2,200,1);
+Vwma = Sum((Volume*Close),periods)/Sum (Volume,periods);
+svwma=EMA(Vwma,smoothing);
+Plot(RSIa(SVwma,rsiperiods),"RSI of  VWMA ",colorBlack,styleLine);
+Plot(70,"",colorRed,styleLine);
+Plot(30,"",colorGreen,styleLine);
+
+_SECTION_END();

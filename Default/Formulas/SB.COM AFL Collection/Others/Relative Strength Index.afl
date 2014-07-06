@@ -1,0 +1,67 @@
+/* File:          RSI Guru Commentary
+** Requirements:  AmiBroker 3.0 (AFL 1.1)
+** Last Modified: TJ, Mar 22nd, 1999 
+*/
+SetChartOptions(0,0,chartGrid30|chartGrid70);
+periods = Param( "Periods", 15, 1, 200, 1 );
+Plot( RSI( periods), _DEFAULT_NAME(), ParamColor( "Color", colorCycle ), ParamStyle("Style")  );
+"Review of " + Name() +" as of "+Date();
+
+vrsi = RSI( 14 );
+
+Buy = Cross( vrsi, 30 );
+Sell = Cross( 70, vrsi );
+
+"\nThe current value for the 14 day RSI is " + WriteVal( vrsi );
+
+"\nThe RSI, written by J. Welles Wilder in 1978, can be used in several different ways to analyze a chart.\n";
+
+"Tops and Bottoms";
+"================\n";
+
+WriteIf( vrsi > 70, "The RSI is above 70.  This is where it usually tops.  The RSI usually forms tops AND bottoms before the underlying security.",
+WriteIf( vrsi < 30, "The RSI is below 30.  This is where it usually bottoms. The RSI usually forms tops AND bottoms before the underlying security.","The RSI is NOT currently in a topping (above 70) OR bottoming (below 30) range. " 
++ WriteIf( Cross( 70, vrsi ), "However, the RSI just crossed below 70 from a topping formation.  This is a bearish sign.",
+WriteIf( Cross( vrsi, 30 ), "However, the RSI just crossed above 30 from a bottoming formation.  This is a bullish sign.", "" ) ) ) ); 
+
+bars30 = BarsSince( Buy );
+bars70 = BarsSince( Sell );
+
+"\nBuy/Sell signals";
+  "================\n";
+
+"A buy or sell signal is generated when the RSI moves out of an overbought/oversold area. \nThe last Signal was a "
++WriteIf( bars30 < bars70, "buy", WriteIf( bars30 > bars70, "sell", "" ))+
+WriteVal( Min( bars30, bars70 ), 3.0 ) + " period(s) ago.";
+
+"\nChart Formations";
+  "================\n";
+
+"The RSI often forms chart patterns (such as head and shoulders or rising wedges) that may OR may NOT be visible on the price chart.  "+
+"Since the analysis of chart patterns is subjective, the Guru Advisor cannotfind them.  You will have to visually inspect the RSI indicator to look for such patterns.";
+
+"\nFailure Swings (also known as support or resistance penetrations or breakouts";
+ 
+"=============================================================================\n";
+
+WriteIf( vrsi >= HHV( vrsi, 14 ), "The RSI has just reached its highest valuein the last 14 period(s).  This is bullish.",
+WriteIf( vrsi <= LLV( vrsi, 14 ), "The RSI has just reached its lowest value inthe last 14 period(s).  This is bearish.","The RSI does not currently show any Failure Swings." ) );
+
+"\nSupport and Resistance";
+  "======================\n";
+"The RSI shows, sometimes more clearly than the price chart, levels of support AND resistance."+
+"As with chart formations, this is subjective, so you must visually inspect the chart to determine this.";
+
+"\nDivergence";
+  "==========\n";
+
+WriteIf( Close >= HHV( Close, 14 ) AND vrsi < HHV( vrsi, 14 ), 
+"The security price has set a new 14-day high while the RSI has not.  This is abearish Divergence.",
+WriteIf( vrsi >= HHV( vrsi, 14 ) AND Close < HHV( Close, 14 ), 
+"The RSI has set a new 14-day high while the security price has not.  This is abullish Divergence.",
+WriteIf( Close <= LLV( Close, 14 ) AND vrsi > LLV( vrsi, 14 ), 
+"The security price has set a new 14-day low while the RSI has not.  This is abullish Divergence.",
+WriteIf( vrsi <= LLV( vrsi, 14) AND Close > LLV(Close,14), 
+"The RSI has set a new 14-day low while the security price has not.  This is abearish Divergence.","The RSI and price are not diverging." ) ) ) ); 
+
+"\n\nThis commentary is not a recommendation to buy or sell, but rather aguideline to interpreting the specified indicators.  The author accepts no liability whatsoever for any loss arising from any use of this expert OR its contents.";

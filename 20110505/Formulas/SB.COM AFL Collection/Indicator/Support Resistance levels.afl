@@ -1,0 +1,44 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Support Resistance levels
+//  Author/Uploader: Graham Kavanagh 
+//  E-mail:          gkavanagh@e-wire.net.au
+//  Date/Time Added: 2003-05-22 22:25:51
+//  Origin:          
+//  Keywords:        Support Resistance
+//  Level:           medium
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=282
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=282
+//
+//------------------------------------------------------------------------------
+//
+//  Indicator to show support and resistance levels based on RSI indicator
+//  reversals
+//
+//------------------------------------------------------------------------------
+
+//Support and resistance levels using RSI.
+//graham Kavanagh May 2003
+//Load into Indicator Builder
+//Sensitivity of the levels can be changed with the variables
+//Can test different numbers live with the Param function ctrl-R with open pane
+RSIperiod	= 5;	// Param("RSI p",3,14,30,1);
+Percent 		= 5;	//	Param("ZIG %",8,9,15,1);
+EMAperiod 	= 5;	//Param("EMA p",4,5,10,1);
+HHVperiod 	= 5;	//Param("HHV p",3,5,10,1);
+NumLine 		= 1;	//Param("Num Lines",3,1,20,1);
+
+Base = DEMA(RSI(RSIperiod),EMAperiod);
+
+GraphXSpace=0.5;
+Plot(C,"",colorBlack,styleCandle);
+
+for( i = 1; i <= numline; i++ )
+{
+ResBase = LastValue(Peak(Base,Percent,i));
+SupBase = LastValue(Trough(Base,Percent,i));
+Plot(ValueWhen( ResBase==Base, HHV(H,HHVperiod) ), "Resist Level", colorRed, styleLine);
+Plot(ValueWhen( supbase==Base, LLV(L,HHVperiod) ), "Support Level", colorGreen, styleLine);
+}
+Title = Name() + "; " + Date() + ": Support & Resistance Levels using RSI: " + /*EncodeColor(colorGreen)+ "Support Levels are Green; "+EncodeColor(colorRed)+ "Resistance Levels are Red: "+EncodeColor(colorBlack)+*/ "Num lines ="+WriteVal(numline,1) ; 

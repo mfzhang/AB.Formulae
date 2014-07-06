@@ -1,0 +1,799 @@
+//#include "C:\\AmiBroker Formulas\\Formulas\\Include\\TDashIncludeGlobal.afl";
+
+PersistentPath = StaticVarGetText( "~PersistentPath" ); // Global
+if ( PersistentPath == "" ) 
+{
+    PersistentPath = "PersistentVariables\\";
+    fmkdir( PersistentPath );
+    StaticVarSetText( "~PersistentPath", PersistentPath );
+}
+
+function AddRowTogfxTitle( Msg, Color, FontSize )
+{
+    local VOrder;
+    Vorder = Nz( VarGet( "VOrder" ) );
+    LTVPos = FontSize;						//Status( "pxwidth" ) / 2;
+    if ( Msg != "" )
+    {
+        VPos = VOrder * ( 1.4 * FontSize ) + LTVPos/2;
+        HCtr = Status( "pxwidth" )/50;
+        GfxSelectFont( "Lucida Console", FontSize );
+        GfxSetTextAlign( 0 );				// 6 = center alignment
+        GfxSetTextColor( Color ); 		//ColorRGB( Color , 200 , Color ) );
+        GfxSetBkMode( 1 ); 				// transparent
+        GfxTextOut( Msg, HCtr, VPos );
+        VarSet( "VOrder", ++Vorder );
+    }
+}
+
+function PersistentVarRemove( VarName )
+{
+    global PersistentPath;
+    Fn = PersistentPath + VarName + ".pva";
+    fh = fdelete( Fn ) ;
+    return fh;
+}
+
+function PersistentVarGet( VarName )
+{
+    global PersistentPath;
+    fh = fopen( PersistentPath + VarName + ".pva", "r" );
+    if ( fh )
+    {
+        String = fgets( fh );
+        fclose( fh );
+        Number = StrToNum( String );
+    }
+    else Number = Null;
+    return Number;
+}
+
+function PersistentVarSet( VarName, Number )
+{
+    global PersistentPath;
+    String = NumToStr( Number );
+    fh = fopen( PersistentPath + VarName + ".pva", "w" );
+    if ( fh )
+    {
+        fputs( String, fh );
+        fclose( fh );
+    }
+    return fh;
+}
+
+//============
+
+RED = colorRed;			// for shorter function calls
+BLK = colorBlack;
+DGN = colorGreen;
+BGN = colorBrightGreen;
+PGN = colorPaleGreen;
+BLU = colorBlue;
+LBU = colorLightBlue;
+YEL = colorYellow;
+WHT = colorWhite;
+IND = colorIndigo;
+TEA = colorTeal;
+GRY = colorLightGrey;
+PNK = colorPink;
+G50 = colorGrey50;
+GLD = colorGold;
+
+function xSay( Text )
+	{
+	global VoiceOn;
+	if( VoiceOn ) Say( Text, 0 );
+	}
+
+function setBackGroundColor( BackgroundColor )
+{
+    GfxSelectSolidBrush( BackgroundColor );
+    GfxSelectPen( BackgroundColor );
+    x2 = Status( "pxwidth" );
+    y2 = Status( "pxheight" );
+    GfxRectangle( 0, 0, x2, y2 );
+}
+
+function gfxOctogonal( x1, y1, x2, y2, z )
+{
+    local x1, y1, x2, y2, z;
+    x1 = Nz( x1 );
+    x2 = Nz( x2 ) - 1;
+    y1 = Nz( y1 );
+    y2 = Nz( y2 ) - 1;
+    GfxPolygon( x1 + z, y1, x2 - z, y1, x2, y1 + z, x2, y2 - z, x2 - z, y2, x1 + z, y2, x1, y2 - z, x1, y1 + z, x1 + z, y1 );
+}
+
+function ShowTip( BrushColor, OutlineColor, TextColor, TipWidth, TipHeight, TipFontSize, TipsOn )
+{
+    global FontName, FontWeight;
+    pxwidth = Status( "pxwidth" );
+    pxheight = Status( "pxheight" );
+    MXTip = GetCursorXPosition( 1 );
+    MYTip = GetCursorYPosition( 1 );
+    x1 = x2 = x3 = x4 = x5 = y1 = y2 = y3 = y4 = y5 = 0;
+    D  = 30;
+    TipMsg = VarGetText( "Tip" );
+    if ( TipsOn AND TipMsg != "" )
+    {
+        XMid = pxwidth / 2;
+        YMid = pxheight / 2;
+
+        if ( MXTip < XMid AND MYTip < YMid ) 		// in Left Top of pane
+        {
+            X1 = MXTip; 				Y1 = MYTip + D * 0.75;
+            X2 = MXTip + TipWidth; 	Y2 = MYTip + TipHeight + D * 0.75;
+
+            X3 = MXTip + D * 0.75;	Y3 = Y1;
+            X4 = MXTip + D * 2;		Y4 = Y1;
+            X5 = MXTip;					Y5 = MYTip;
+        }
+
+        if ( MXTip > XMid AND MYTip < YMid ) 		// in Right Top of pane
+        {
+            X1 = MXTip - TipWidth; 	Y1 = MYTip + D * 0.75;
+            X2 = MXTip; 				Y2 = MYTip + TipHeight + D * 0.75;
+
+            X3 = MXTip - D * 0.75;	Y3 = Y1;
+            X4 = MXTip - D * 2;		Y4 = Y1;
+            X5 = MXTip;					Y5 = MYTip;
+        }
+
+        if ( MXTip < XMid AND MYTip > YMid ) 		// in left bottom of pane
+        {
+            X1 = MXTip; 				Y1 = MYTip - TipHeight - D * 0.75;
+            X2 = X1 + TipWidth; 	Y2 = Y1 + TipHeight;
+
+            X3 = MXTip + 2 * D;		Y3 = Y2 - 1;
+            X4 = MXTip + D * 0.75;	Y4 = Y2 - 1;
+            X5 = MXTip;					Y5 = y2 + D * 0.75;
+        }
+
+        if ( MXTip > XMid AND MYTip > YMid ) 		// In right bottom of pane
+        {
+            X1 = MXTip - TipWidth;	Y1 = MYTip - TipHeight - D * 0.75; // Rectangle
+            X2 = X1 + TipWidth;	Y2 = Y1 + TipHeight;
+
+            X3 = X2 - 2 * D;		Y3 = Y2 - 1; // Pointer
+            X4 = X2 - D * 0.75;	Y4 = Y2 - 1;
+            X5 = X2;					Y5 = y2 + D * 0.75;
+        }
+
+        GfxSetBkMode( 0 );
+        GfxSelectPen( OutlineColor );
+        GfxSelectFont( FontName, TipFontSize, FontWeight );
+        GfxSetTextColor( TextColor);
+        GfxSelectSolidBrush( BrushColor );
+        GfxRoundRect( X1, y1, x2, y2, D, D );
+        GfxPolygon(   X3, Y3 , X4 , Y4, X5, Y5 ); 	// Pointer
+        GfxSelectPen( BrushColor ); 					// Hide line between RoundRect and Pointer
+        GfxMoveTo( X3, Y3 );
+        GfxLineTo( X4, Y4 );
+        GfxDrawText( TipMsg, x1 + 10, y1 + 3, x2 - 10, y2 - 5, 16 + 65 );
+    }
+}
+
+function DrawButton( Coord, x1, y1, x2, y2  )
+{
+    global Radius, ButtonSpacing, FontSize;
+    ButtonColor = VarGet( "ButtonColor"+Coord );
+    TextColor = VarGet( "ButtonTextColor"+Coord );
+    Label = VarGetText( "ButtonLabel"+Coord );
+    Header = VarGetText( "ButtonHeader"+Coord );
+    GfxSetTextColor( TextColor );
+    GfxSetBkColor( ButtonColor  );
+    Radius = Min( ( X2 - X1 ) / 2, Radius );
+
+    X1 = X1 + ButtonSpacing; // Make button a little smaller that cell size
+    Y1 = Y1 + ButtonSpacing+1; // so that group color can show
+    X2 = X2 - ButtonSpacing;
+    Y2 = Y2 - ButtonSpacing;
+    GfxSelectSolidBrush( ButtonColor ); // Draw button
+    GfxSelectPen( colorBlack, 1);
+    GfxRoundRect( x1, y1, x2, y2, Radius, Radius );
+
+    F1 = (Y2-Y1)/3; // Size font wrt button height and width
+    F2 = (X2-X1) / 7;
+    FontSize = Min( F1, F2 );
+    StaticVarSet( "~FontSize", FontSize );
+
+    GfxSetBkMode( 1 );
+    if ( Label == "" ) GfxDrawText( Header, x1, y1 + 1, X2, Y2, 37 ); // Single label button
+    else // upper and lower label button
+    {
+        Ym = ( Y1 + Y2 ) / 2 + 1; 
+        GfxDrawText( Header, x1, y1, X2, Ym, 41 );
+        GfxDrawText( Label, x1, Ym-2, X2, Y2, 1 );
+    }
+}
+
+function DefineGroup ( GroupName, Col1, Row1, GroupCols, GroupRows, GroupColor, GroupOutlineColor, Visible )
+{
+    global ButtonWidth, ButtonHeight, Radius, GroupRounding;
+    if ( Visible )
+    {
+        X1 = ButtonWidth * Col1;
+        Y1 = ButtonHeight * Row1;
+        X2 = ButtonWidth * ( Col1+GroupCols ) + 1;
+        Y2 = ButtonHeight * ( Row1+GroupRows ) + 1;
+        GfxSelectPen(  GroupOutlineColor, 1 ); // Color group area
+        GfxSelectSolidBrush( GroupColor );
+        if( GroupRounding ) GfxRoundRect( x1, y1, x2, y2, Radius, Radius );
+        else GfxRectangle( x1, y1, x2, y2 );
+    }
+    VarSet( GroupName+"_Color", GroupColor );
+}
+
+function Click()
+{
+    global ClickSound;
+   // if( ClickSound ) PlaySound( "C:\\Program Files (x86)\\AmiBroker\\Wav files\\Click.wav" );
+	if( ClickSound ) PlaySound( "C:\users\smnuman\Downloads\spelunky_1_0b\sound" );
+}
+
+function ButtonFunctions( Coord, OnButton )
+{
+    global LeftClick, LeftDown;
+    Type = VarGetText( "ButtonType" + Coord );
+    Type = StrToUpper( Type );
+
+    switch ( Type )
+    {
+        case "TRIGGER":
+            if ( LeftClick AND OnButton )
+            {
+                VarSet( "ButtonColor" + Coord, VarGet( "ButtonOnColor" + Coord ) );
+                VarSet( "ButtonTextColor" + Coord, VarGet( "ButtonOnTextColor" + Coord ) );
+                VarSetText( "ButtonLabel" + Coord, VarGetText( "ButtonOnLabel" + Coord ) );
+                StaticVarSet( "~" + Coord + "_State", True );
+            }
+            else
+            {
+                VarSet( "ButtonColor" + Coord, VarGet( "ButtonOffColor" + Coord ) );
+                VarSet( "ButtonTextColor" + Coord, VarGet( "ButtonOffTextColor" + Coord ) );
+                VarSetText( "ButtonLabel" + Coord, VarGetText( "ButtonOffLabel" + Coord ) );
+                StaticVarSet( "~" + Coord + "_State", False );
+            }
+            break;
+        case "TOGGLE":
+            ToggleState = StaticVarGet( "~" + Coord + "_State" );
+            if ( IsNull( ToggleState ) ) // Initialize if needed
+            {
+                ToggleState = PersistentVarget( Coord + "_State" );
+                if ( IsNull( ToggleState ) ) PersistentVarSet( Coord + "_State", ToggleState = 0 );
+                StaticVarSet( "~" + Coord + "_State", ToggleState );
+            }
+
+            if ( LeftClick AND OnButton ) // Toggle State
+            {
+                if ( ToggleState ) ToggleState = 0;
+                else ToggleState = 1;
+                StaticVarSet( "~" + Coord + "_State", ToggleState );
+                PersistentVarSet( Coord + "_State", ToggleState );
+            }
+            ToggleState = StaticVarGet( "~" + Coord + "_State" );
+            if ( ToggleState ) // Set new colors
+            {
+                VarSet( "ButtonColor" + Coord, VarGet( "ButtonOnColor" + Coord ) );
+                VarSet( "ButtonTextColor" + Coord, VarGet( "ButtonOnTextColor" + Coord ) );
+                VarSetText( "ButtonLabel" + Coord, VarGetText( "ButtonOnLabel" + Coord ) );
+            }
+            else
+            {
+                VarSet( "ButtonColor" + Coord, VarGet( "ButtonOffColor" + Coord ) );
+                VarSet( "ButtonTextColor" + Coord, VarGet( "ButtonOffTextColor" + Coord ) );
+                VarSetText( "ButtonLabel" + Coord, VarGetText( "ButtonOffLabel" + Coord ) );
+            }
+            break;
+        case "ROTATE":
+            OffText = VarGetText( "ButtonOffLabel" + Coord );  // get csv list of labels
+            RotateLabels = StrReplace( OffText, "|", "," );		// allow for | separators
+            NumRotates = StrCount( RotateLabels, "," );	      // find number of options
+            RotatePos = StaticVarGet( "~" + Coord + "_State" );// Get last setting
+            if ( IsNull( RotatePos ) ) // Initialize if needed
+            {
+                RotatePos = PersistentVarget( Coord + "_State" );
+                if ( IsNull( RotatePos ) ) PersistentVarSet( Coord + "_State", RotatePos = 0 );
+                StaticVarSet( "~" + Coord + "_State", RotatePos );
+            }
+            if ( LeftClick AND OnButton ) // change option
+            {
+                if ( ++RotatePos > NumRotates ) RotatePos = 0;
+                StaticVarSet( "~" + Coord + "_State", RotatePos );
+                PersistentVarSet( Coord + "_State", RotatePos );
+                VarSet( "ButtonColor" + Coord, VarGet( "ButtonOnColor" + Coord ) );
+                VarSet( "ButtonTextColor" + Coord, VarGet( "ButtonOnTextColor" + Coord ) );
+            }
+            else
+            {
+                VarSet( "ButtonColor" + Coord, VarGet( "ButtonOffColor" + Coord ) );
+                VarSet( "ButtonTextColor" + Coord, VarGet( "ButtonOffTextColor" + Coord ) );
+            }
+            RotatePos = StaticVarGet( "~" + Coord + "_State" );
+            Offtext = VarGetText( "ButtonOffLabel" + Coord ); // set new colors
+            VarSetText( "ButtonLabel" + Coord, StrExtract( OffText, RotatePos ) );
+            break;
+        case "TEXT":
+            VarSet( "ButtonColor" + Coord, VarGet( "ButtonOnColor" + Coord ) );
+            VarSet( "ButtonTextColor" + Coord, VarGet( "ButtonOnTextColor" + Coord ) );
+            VarSetText( "ButtonLabel" + Coord, VarGetText( "ButtonOnLabel" + Coord ) );
+            break;
+    }
+}
+
+function DrawButtonLayout( ShowGrid )
+{
+    global ButtonSpacing, ButtonWidth, ButtonHeight, Radius, MY, MX, LeftClick, LeftDown, HighLightColor, NumberCols, NumberRows;
+
+    for ( Col = 0; Col < NumberCols; Col++ )
+    {
+        for ( Row = 0; Row < NumberRows; Row++ )
+        {
+            Coord = "_" + Col + "_" + Row;
+            if ( VarGet( "ButtonDefined" + Coord ) )
+            {
+                X1 = ButtonWidth * Col;
+                Y1 = ButtonHeight * Row;
+                X2 = X1 + ButtonWidth;
+                Y2 = Y1 + ButtonHeight;
+                OnButton = MX >= X1 AND MY >= Y1 AND MX <= X2 AND MY <= Y2;
+
+                ButtonFunctions( Coord, OnButton );
+
+                if ( OnButton ) // Highlight outline of selected button
+                {
+                    GfxSelectSolidBrush( HighLightColor );
+                    GfxSelectPen(  HighLightColor , 1 );
+                    GfxRoundRect( x1, y1+1, x2, y2, Radius, Radius );
+                    VarSetText( "Tip", VarGetText( "ButtonTip" + Coord ) );
+                }
+
+                DrawButton( Coord, x1, y1, x2, y2 );
+
+                if ( OnButton ) // return button select information
+                {
+                    Header = VarGet( "ButtonHeader" + Coord );
+                    Label = VarGet( "ButtonLabel" + Coord );
+                    if ( LeftClick )
+                    {
+                        VarSetText( "TDashAction", "~" + Header + "," + Label );
+                    }
+                    else VarSetText( "TDashAction", Header + "," + Label );
+                }
+            }
+            else
+                if ( ShowGrid ) // for development only
+                {
+                    X1 = ButtonWidth * Col;
+                    Y1 = ButtonHeight * Row;
+                    X2 = X1 + ButtonWidth+1;
+                    Y2 = Y1 + ButtonHeight+1;
+                    GfxSelectPen(  colorGrey50 , 1, 2 );
+                    GfxSelectSolidBrush( colorLightGrey );
+                    GfxSetBkColor( colorLightGrey );
+                    GfxSetTextColor( colorGrey50 );
+                    GfxSelectFont( "Lucida Console", 10, 500 );
+                    GfxRectangle( x1, y1, x2, y2 );
+                    GfxDrawText( "" + Col + ":" + Row, x1, y1, X2, Y2, 37 );
+                    FontSize = Nz(StaticVarGet( "~FontSize"));
+                    GfxSelectFont( "Lucida Console", FontSize, 500 );
+                }
+        }
+    }
+}
+
+
+function PlaceButton( Type, Header, OffLabel, OnLabel, OffColor, OnColor, OffTextColor, OnTextColor, Col, Row, Visible, Tip )
+{
+    Coord = "_" + Col + "_" + Row;
+    VarSetText( "ButtonType" + Coord, Type );
+    VarSetText( "ButtonHeader" + Coord, Header );
+    VarSetText( "ButtonOffLabel" + Coord, OffLabel );
+    VarSetText( "ButtonOnLabel" + Coord, OnLabel );
+    VarSet( "ButtonOffColor" + Coord, OffColor );
+    VarSet( "ButtonOnColor" + Coord, OnColor );
+    VarSet( "ButtonOffTextColor" + Coord, OffTextColor );
+    VarSet( "ButtonOnTextColor" + Coord, OnTextColor );
+    VarSet( "ButtonVisible" + Coord, Visible );
+    VarSetText( "ButtonTip" + Coord, Tip );
+    VarSet( "ButtonDefined" + Coord, True ); // This tells us a button has been placed at coord
+    return ButtonState = Nz( StaticVarGet( "~" + Coord + "_State" ) );
+}
+
+function PlaceQBarButton( Header, OffLabel, OnLabel, OffColor, OnColor, OffTextColor, OnTextColor, Col, Visible, Tip )
+{
+    global GroupSpacing, ButtonSpacing, ButtonRadius, InCash, InShort, InLong, pxheight, ButtonHeight, ButtonWidth;
+    global ButtonSpacing, Radius, MY, MX, FontSize;
+    GroupName = "QBar";
+
+    QBarButtonNum = Nz( VarGet( "QBarButtonNum" ) ); // Count horizontal position
+    VarSet( "QBarButtonNum", ++QBarButtonNum );
+
+    Coord = GroupName+"_"+Col;
+    VarSetText( "ButtonTip" + Coord, Tip );
+    pxwidth = Status( "pxwidth" );
+    pxheight = Status( "pxheight" );
+    MY 	= Max( ButtonHeight / 2, MY );  				// Do not show partial buttons at top
+    MY   = Min( pxheight - ButtonHeight / 2, MY ); // or at bottom of window
+    Y1 = MY - ButtonHeight/2;
+    Y2 = MY + ButtonHeight/2;
+    Y1m 	= Nz( MY ) - ButtonHeight / 2; 				// Track Qbar at vertical center of buttons
+
+    X1 = ButtonWidth * Col;
+    X2 = X1 + ButtonWidth;
+
+    if ( VarGet( "OnQBar" ) ) // Only show QBar when cursor is in a QBar column
+    {
+        StaticVarSet( "~QBarYPixel", MY );
+
+        VarSetText( "ButtonHeader" + Coord, Header );
+        OnButton = MX >= X1 AND MY >= Y1 AND MX <= X2 AND MY <= Y2;
+        if ( LeftClick AND OnButton )
+        {
+            VarSet( "ButtonColor" + Coord, OnColor );
+            VarSet( "ButtonTextColor" + Coord, OnTextColor );
+            VarSetText( "ButtonLabel" + Coord, OnLabel );
+        }
+        else
+        {
+            VarSet( "ButtonColor" + Coord, OffColor );
+            VarSet( "ButtonTextColor" + Coord, OffTextColor );
+            VarSetText( "ButtonLabel" + Coord, OffLabel );
+        }
+
+        if ( OnButton ) // Highlight ouline of selected button
+        {
+            GfxSelectSolidBrush( HighLightColor );
+            GfxSelectPen(  HighLightColor , 1 );
+            GfxRoundRect( x1, y1, x2+1, y2, Radius, Radius );
+            VarSetText( "Tip", VarGetText( "ButtonTip" + Coord ) );
+            Header = VarGet( "ButtonHeader" + Coord ); // return button select information
+            Label = VarGet( "ButtonLabel" + Coord );
+            if ( LeftClick ) 
+            {
+                VarSetText( "TDashAction", "~" + Header + "," + Label ); // Click
+            }
+            else if( LeftDown ) 
+					 VarSetText( "TDashAction", "~~" + Header + "," + Label ); // Down
+            else 
+                VarSetText( "TDashAction", Header + "," + Label ); // Hover
+
+            StaticVarSet( "~ActionColor", OffColor);
+            StaticVarSet( "~ActionTextColor", OffTextColor );
+        }
+
+        if( QBarButtonNum == 1 )
+        {
+            ActionColor = Nz(StaticVarGet( "~ActionColor"));
+            GfxSelectPen(  ActionColor, 1 );
+            GfxMoveTo( 0, MY ); 								// Draw price line at left of QBar
+            GfxLineTo( VarGet( "QBarX1" ), MY);
+        }
+        Coord = GroupName+"_"+ Col;
+        QBarVisible = True;
+        DrawButton( Coord, x1, y1, x2, y2  );
+
+    }
+    else QBarVisible = False;
+    StaticVarSet( "~QBarVisible", QBarVisible );
+}
+
+function DefineQBarGroup( GroupName, Col1, QBarCols, GroupColor, GroupOutlineColor, Visible )
+{
+    global Radius, GroupRounding;
+    pxheight = Status( "pxheight" );
+    MY 	= Max( ButtonHeight / 2, MY );  				// Do not show partial buttons at top
+    MY   = Min( pxheight - ButtonHeight / 2, MY ); // or at bottom of window
+    X1 = ButtonWidth * Col1 -1;
+    X2 = ButtonWidth * (Col1+QBarCols) +1;
+    Y1 = MY - ButtonHeight/2 -1;
+    Y2 = MY + ButtonHeight/2 +1;
+    OnQBar = NOT IsNull( MY ) AND NOT IsNull( MY ) AND MX <= X2 AND MX > X1;
+    if( Visible AND OnQBar)
+    {
+        GfxSelectPen(  GroupOutlineColor, 1 ); // Color group area
+        GfxSelectSolidBrush( GroupColor );
+        if( GroupRounding ) GfxRoundRect( x1, y1, x2, y2, Radius, Radius );
+        else GfxRectangle( x1, y1, x2, y2 );
+        
+    }
+    VarSet( "QBarX1", X1 );
+    VarSetText( "GroupName", GroupName );
+    VarSet( "OnQBar", OnQBar );
+}
+
+function LinkWithMainChart()
+{
+    MX = GetCursorXPosition( 1 );
+    MY = GetCursorYPosition( 1 );
+    OnTDash = !IsNull( MX ) AND !IsNull( MY ); // Is cursor in TDash?
+    LeftClick = GetCursorMouseButtons() == 9 AND OnTDash;
+    LeftDown = ( GetCursorMouseButtons() == 1 OR LeftClick ) AND OnTDash;
+    PrevLeftDownState = Nz( StaticVarGet( "~LeftDown" ) );
+    LeftButtonRelease = LeftDown < PrevLeftDownState;
+    StaticVarSet( "~LeftDown", LeftDown );
+    QBarVisible = Nz(StaticVarGet( "~QBarVisible" ));
+    if ( QBarVisible  ) 
+    {
+        StaticVarSet( "~NowDragging_", True );
+    }
+    else if ( LeftButtonRelease )
+    {
+        StaticVarSet( "~NowDragging_", False );
+        StaticVarSet( "~LeftButtonRelease", True );
+    }
+    if ( Nz( StaticVarGet( "~NowDragging_" ) ) ) StaticVarSet( "~TDashYPixels", MY );
+}
+
+function PlaceHeader( Header, color, FrameColor, textColor, Col1, Row1, NumCol, Tip )
+{
+    global Radius, ButtonSpacing, ButtonWidth, FontName, FontSize, Fontweight;
+    Coord = "_" + Col1 + "_" + Row1;
+    X1 = ButtonWidth * Col1;
+    Y1 = ButtonHeight * Row1;
+    X2 = X1 + ( NumCol * ButtonWidth );
+    Y2 = Y1 + ButtonHeight+1;
+
+    GfxSelectSolidBrush( FrameColor); // Draw button
+    GfxSelectPen( color, 1 );
+    if( GroupRounding ) GfxRoundRect( x1, y1, x2, y2, Radius, Radius );
+    else GfxRectangle( x1, y1, x2, y2 );
+
+    OnButton = MX >= X1 AND MY >= Y1 AND MX <= X2 AND MY <= Y2;
+    if( OnButton )     VarSetText( "Tip", Tip );
+    Radius = Min( ( X2 - X1 ) / 2, Radius );
+
+    X1 = X1 + ButtonSpacing + 2; // Make button a little smaller that cell size
+    Y1 = Y1 + ButtonSpacing + 2; // so that group color can show
+    X2 = X2 - ButtonSpacing - 2;
+    Y2 = Y2 - ButtonSpacing - 2;
+
+    F1 = (Y2-Y1)/2; // Size font wrt button height and width
+    F2 = (X2-X1) / 8;
+    FontSize = Min( F1, F2 );
+    GfxSelectFont( FontName, FontSize, FontWeight );
+
+    GfxSelectSolidBrush( color ); // Draw button
+    GfxSelectPen( color, 1 );
+    GfxRoundRect( x1, y1, x2, y2, Radius, Radius );
+    GfxSetBkMode( 1 );
+    GfxSetTextColor( TextColor );
+    GfxDrawText( Header, x1, y1 + 1, X2, Y2, 37 ); // Single label button
+
+    FontSize = Nz(StaticVarGet( "~FontSize"));
+    GfxSelectFont( FontName, FontSize, FontWeight );
+}
+
+function DrawControlButton( Type, x1, y1, x2, y2, ControlDown )
+{
+    GfxSelectSolidBrush( colorLightGrey);
+    GfxSelectPen( colorBlack, 1);
+    if( ControlDown ) 
+    {
+        Edge1Color = colorWhite;
+        Edge2Color = colorGrey50;
+    }
+    else 
+    {
+        Edge2Color = colorWhite;
+        Edge1Color = colorGrey50;
+    }
+    GfxRectangle( X1, y1, X2, Y2+1 );
+
+    GfxSelectPen( Edge2Color, 1); // left upper edge
+    GfxMoveTo( x1+1, Y1+1 );
+    GfxLineTo( x2-1, y1+1 );
+    GfxMoveTo( x1+1, Y1+1 );
+    GfxLineTo( x1+1, y2 );
+
+    GfxSelectPen( Edge1Color, 1); //right lower edge
+    GfxMoveTo( x2-2, Y1+1 );
+    GfxLineTo( x2-2, y2 );
+    GfxMoveTo( x1+1, Y2-1 );
+    GfxLineTo( x2-1, y2-1 );
+
+    GfxSelectPen( colorBlack, 1);
+    switch( Type )
+    {
+    case "CANCEL":
+
+        GfxMoveTo( X1+4, Y1+4 );
+        GfxLineTo( X2-4, Y2-3 );
+        GfxMoveTo( X1+4, Y2-4 );
+        GfxLineTo( X2-4, Y1+3 );
+        break;
+    
+    case "DECREMENT":
+        GfxMoveTo( X1+4, Y1+8 );
+        GfxLineTo( X2-4, Y1+8 );
+        break;
+
+    case "INCREMENT":
+        GfxMoveTo( X1+4, Y1+8 );
+        GfxLineTo( X2-4, Y1+8 );
+        GfxMoveTo( X1+8, Y1+4 );
+        GfxLineTo( X1+8, Y2-3 );
+        break;
+    }
+
+}
+
+function DrawMarkerpoint( MarkerDown, MArkercolor, MArkerpencolor, MAinYPos )
+{
+    global MArkerWidth, MArkerheight;
+    X1 = 0;
+    X2 = MarkerWidth;		// Width of marker
+    y  = MArkerheight; 		// Height of marker
+    p  = y/2;
+    y1 = MainYpos - y/2; 	// Top of marker
+    Y2 = MainYpos + y/2; 	// bottom of marker
+
+    if( MarkerDown )
+    {
+        LowerEdge = colorWhite;
+        UpperEdge = colorGrey50;
+    }
+    else 
+    {
+        UpperEdge = colorWhite;
+        LowerEdge = colorGrey50;
+    }
+    GfxSelectSolidBrush( MArkerColor);
+    GfxSelectPen( MArkerPenColor, 1);
+    GfxPolygon( 0, MainYpos, p, y1, x2, y1, x2, y2, p, y2 );
+
+    GfxSelectPen( UpperEdge, 1);
+    GfxMoveTo( X1+1, MainYpos );
+    GfxLineTo( p, y1+1 );
+    GfxLineTo( X2, y1+1 ); 
+
+    GfxSelectPen( LowerEdge, 1);
+    GfxMoveTo( X1+1, MainYpos );
+    GfxLineTo( p, y2-1 );
+    GfxLineTo( X2-1, y2-1 );
+    GfxLineTo( X2-1, y1 );
+}
+
+function ServiceMarkers( MarkerName, MArkerColor, MArkerTextColor, MArkerPenColor, Tip )
+{
+    global MarkerWidth, MArkerHeight, FontName, MarkerFontSize, FontWeight, MX, MY, OnTDash;
+    global LeftClick, LeftDown, LeftButtonRelease, TDashStartup;
+    MarkerWidth = 60;
+    MArkerHeight = 16;
+    MarkerFontSize = 10;
+    // Start up: park markers at top
+    MArkernumber = Nz( VarGet( "MarkerNumber" ) ); // Incremented by all markers
+    VarSet( "Markernumber", ++MArkerNumber );
+    Newmarker = IsNull( StaticVarGet( "~Exists_"+MarkerName ) ); // individual var for each marker
+    if( Newmarker )
+    {
+        StaticVarSet( "~TDashYPixels_"+MArkerName, MArkerNumber*MArkerheight-MArkerheight/2 );
+        MArkerColor = colorLightGrey;
+    }
+
+    // Save colors so that main chart can use them
+    StaticVarSet( "~MarkerColor_"+MarkerName , MArkerColor );
+    StaticVarSet( "~MarkerTextColor_"+MarkerName , MArkerTextColor);
+    StaticVarSet( "~MarkerPenColor_"+MarkerName , MArkerPenColor );
+
+    // If cursor over marker, set return value and tip
+    OnMarker = Nz( StaticVarGet( "~OnTDashMarker_"+MarkerName ));
+    if( OnMarker )
+    {
+        VarSetText( "TDashAction", "Marker,"+MarkerName );       // 'return value'
+        VarSetText( "Tip", Tip );
+    }
+
+    InDrag = Nz( StaticVarGet( "~InDrag" ) );  
+    if ( LeftClick AND OnMarker AND NOT InDrag ) // if not already dragging another marker
+    {
+        StaticVarSet( "~NowDragging_"+MarkerName, True );			// Set drag status for marker
+        StaticVarSet( "~InDrag", True );									// Set when dragging any marker
+        StaticVarSet( "~Exists_"+MarkerName, True ); 					// activate marker
+        VarSetText( "TDashAction", "~Marker,"+MarkerName ); 		// Left Click on marker
+        // sample relative click offset wrt to marker position
+        MainYpos = Nz( StaticVarGet( "~TDashYPixels_"+MarkerName ) );
+        StaticVarSet( "~MarkerClickYOffset", MainYpos-MY );
+    }
+
+    // If button is released when dragging the current price is saved
+    NowDragging = Nz( StaticVarGet( "~NowDragging_"+MarkerName ) );
+    if ( LeftButtonRelease )
+    {
+        NowDragging = Nz( StaticVarGet( "~NowDragging_"+MarkerName ) );
+        if( NowDragging )
+        {
+            Price = Nz( StaticVarGet( "~MainChartPrice_"+MarkerName ) ); //_TRACE( "Release "+MarkerName +" @ "+price );
+            PersistentVarSet( "MainChartPrice_"+MArkerName, Price ); 
+            VarSetText( "TDashAction", "~~~Marker,"+MarkerName );    // Stop dragging
+        }
+        StaticVarSet( "~NowDragging_"+MarkerName, False );			// Stop Dragging
+        StaticVarSet( "~InDrag", False );
+        StaticVarSet( "~LeftButtonRelease", True );
+    }
+
+    if ( Nz( StaticVarGet( "~NowDragging_"+MarkerName ) ) ) 		// If dragging marker:
+    {
+        MarkerClickYOffset = Nz(StaticVarGet( "~MarkerClickYOffset" ));
+        // subtract MarkerClickYOffset from MY to prevent Marker "jump" when starting to drag
+        StaticVarSet( "~TDashYPixels_"+MarkerName, MY+MarkerClickYOffset ); // Tell main Chart where cursor is
+        VarSetText( "TDashAction", "~~Marker,"+MarkerName );     // Now dragging
+    }
+    MainYpos = Nz( StaticVarGet( "~TDashYPixels_"+MarkerName ) ); // Else main chart Y-position is used
+
+    X1 = 0;
+    X2 = MarkerWidth;		// Width of marker
+    y  = MArkerheight; 		// Height of marker
+    y1 = MainYpos - y/2; 	// Top of marker
+    Y2 = MainYpos + y/2; 	// bottom of marker
+
+    OnMarker = MX > x1 AND MX < x2 AND MY > y1 AND MY < y2;
+    StaticVarSet( "~OnTDashMarker_"+MarkerName, OnMarker );
+    ControlWidth = Y2-Y1;
+    MarkerDown = LeftDown AND OnMarker;
+    DrawMarkerPoint( MarkerDown, MArkercolor, MArkerpencolor, MAinYPos );
+
+    GfxSetBkMode(0);
+    GfxSelectFont( FontName, MarkerFontSize, FontWeight );
+    GfxSetTextColor( MArkerTextColor );
+    GfxDrawText( "  "+MarkerName , x1, y1, X2, Y2, 37 );
+
+    // Add Increment control to right of marker
+    X1 = X2;		
+    X2 = X1 + ControlWidth + 1;
+    Y2 = y2;
+    OnIncrementPrice = MX > x1 AND MX < x2 AND MY > y1 AND MY < Y2;
+    IncrDown = OnIncrementPrice AND LeftDown;
+    if ( OnIncrementPrice )
+    {
+        VarSetText( "TDashAction", "Marker," + MarkerName+",+" );     // Hover Marker
+        VarSetText( "Tip", Tip );
+        if ( LeftClick )
+        {
+            Price = Nz( StaticVarGet( "~MainChartPrice_"+MarkerName ) );
+            StaticVarSet( "~MainChartPrice_"+MarkerName, Price+0.01 );
+            VarSetText( "TDashAction", "~Marker," + MarkerName+",+" );  // Cancel Marker 
+        }
+        VarSetText( "Tip", Tip );
+    }
+    DrawControlButton( "INCREMENT", x1, y1, x2, y2, IncrDown);
+
+    // Add Decrement control to right of marker
+    X1 = X2 - 1;		
+    X2 = X1 + ControlWidth;
+    OnDecrementPrice = MX > x1 AND MX < x2 AND MY > y1 AND MY < Y2;
+    DecrDown = OnDecrementPrice AND LeftDown;
+    if ( OnDecrementPrice)
+    {
+        VarSetText( "TDashAction", "Marker," + MarkerName+",-" );     // Hover Marker
+        VarSetText( "Tip", Tip );
+        if ( LeftClick )
+        {
+            Price = Nz( StaticVarGet( "~MainChartPrice_"+MarkerName ) );
+            StaticVarSet( "~MainChartPrice_"+MarkerName, Price-0.01 );
+            VarSetText( "TDashAction", "~Marker," + MarkerName+",-" );  // Cancel Marker
+        }
+        VarSetText( "Tip", Tip );
+    }
+    DrawControlButton( "DECREMENT", x1, y1, x2, y2, DecrDown);
+
+    // Add CANCEL control to right of marker
+    X1 = X2 - 1;		
+    X2 = X1 + ControlWidth + 1;
+    OnCancel = MX > x1 AND MX < x2 AND MY > y1 AND MY < Y2;
+    CancelDown = OnCancel AND LeftDown;
+    if ( OnCancel )
+    {
+        VarSetText( "TDashAction", "Marker," + MarkerName+",X" );     // Hover Marker
+        VarSetText( "Tip", Tip );
+        if ( LeftButtonRelease )
+        {
+            StaticVarSet( "~Exists_" + MarkerName, Null );
+            VarSetText( "TDashAction", "~Marker," + MarkerName+",X" );  // Cancel Marker
+        }
+        VarSetText( "Tip", Tip );
+    }
+    DrawControlButton( "CANCEL", x1, y1, x2, y2, CancelDown );
+
+    return MainYpos;
+}

@@ -1,0 +1,24 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Auto Analysis Island Reversal
+//  Author/Uploader: Larry Lovrencic 
+//  E-mail:          lvl@firstpacific.net
+//  Date/Time Added: 2001-09-09 20:28:18
+//  Origin:          
+//  Keywords:        island reversals
+//  Level:           basic
+//  Flags:           exploration
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=117
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=117
+//
+//------------------------------------------------------------------------------
+//
+//  Find Island Reversals using automatic analysis
+//
+//------------------------------------------------------------------------------
+
+/*Island Reversals Automatic Analysis
+by Larry Lovrencic*/
+
+buy=ref(L,-2)>ref(H,-1) AND L>ref(H,-1); 
+sell=ref(H,-2)<ref(L,-1) AND H<ref(L,-1);

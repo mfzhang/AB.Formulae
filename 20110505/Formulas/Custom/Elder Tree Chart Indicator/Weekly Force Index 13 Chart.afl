@@ -1,0 +1,11 @@
+// Weekly Force Index 13 Chart
+_SECTION_BEGIN("Weekly Force Index Thirteen Period");
+TimeFrameSet( inWeekly ); 
+FI=EMA(V*(C-Ref(C,-1)),13);
+TimeFrameRestore();
+Plot(FI,"FI",colorCustom11,styleLine);
+Plot(0,"ZERO LINE",colorWhite,styleThick);
+_SECTION_END();
+
+//----------------------------------------------------------------------------------------------------------------------
+

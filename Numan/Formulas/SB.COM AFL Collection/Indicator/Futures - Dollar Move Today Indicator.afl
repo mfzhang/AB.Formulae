@@ -1,0 +1,66 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Futures - Dollar Move Today Indicator
+//  Author/Uploader: Tommy Beard 
+//  E-mail:          tab321@yahoo.com
+//  Date/Time Added: 2005-05-24 05:30:06
+//  Origin:          
+//  Keywords:        futures commodities dollar-gain performance
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=464
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=464
+//
+//------------------------------------------------------------------------------
+//
+//  This AFL for Futures Contracts will show the Percent Change, Point Change,
+//  and Dollar Movement compared to the Prior Day. Click on any bar and you
+//  will see the values in the title. Symbols used in formula are those of
+//  BriteFutures which is free data and downloadable into Amibroker.
+//
+//------------------------------------------------------------------------------
+
+//Dollar Move Today AFL shows Point Move and Dollar Move on a Contract within the Title of the Chart
+//Filename: F-DollarMoveToday
+MidRange=(H+L)/2;//Figure Used in Title for Middle of Price Range.
+
+//////////////////////////////////////
+//Future Symbols Data and Point Values
+symbol = Name();
+char1 = StrLeft(symbol, 1);
+char2 = StrMid( symbol, 1, 1);
+if (char1 == "C") PointValue = 50; //Corn
+if (char1 == "O") PointValue = 100; //Oats
+if (char1 == "W") PointValue = 50; //Wheat
+if (char1 == "S") PointValue = 50; //Soybeans
+if (char1 == "B" AND char2 == "O") PointValue = 600;//Bean Oil
+if (char1 == "C" AND char2 == "O") PointValue = 10;//Cocoa
+if (char1 == "C" AND char2 == "T") PointValue = 500;//Cotton
+if (char1 == "F" AND char2 == "C") PointValue = 500;//FCattle
+if (char1 == "G" AND char2 == "C") PointValue = 100;//Gold
+if (char1 == "H" AND char2 == "G") PointValue = 250;//Copper
+if (char1 == "K" AND char2 == "C") PointValue = 375;//Coffee
+if (char1 == "K" AND char2 == "W") PointValue = 50;//KWheat
+if (char1 == "L" AND char2 == "C") PointValue = 400;//LCattle
+if (char1 == "L" AND char2 == "B") PointValue = 110;//Lumber
+if (char1 == "L" AND char2 == "H") PointValue = 400;//LHogs
+if (char1 == "O" AND char2 == "J") PointValue = 150;//OJuice
+if (char1 == "P" AND char2 == "A") PointValue = 100;//Palladium
+if (char1 == "P" AND char2 == "B") PointValue = 400;//PBelly
+if (char1 == "P" AND char2 == "L") PointValue = 50;//Platinum
+if (char1 == "S" AND char2 == "B") PointValue = 1120;//Sugar
+if (char1 == "S" AND char2 == "I") PointValue = 5000;//Silver
+if (char1 == "S" AND char2 == "M") PointValue = 100;//SBMeal
+BegPrice = Ref(Close,-1);//Price Yesterday
+LastPrice =(Close);//Price Today
+//Calculate gain during range
+TotPtGain = (LastPrice - BegPrice);
+Points = (TotPtGain*1);
+Money = (TotPtGain*PointValue);
+/////////////////////////////////////
+
+Plot(Close, "Price", colorBlack, styleCandle);
+Plot(MA(Close,50),"50MA",colorRed,styleLine);
+PtChange=(Close-(Ref(Close,-1)));
+
+Title = Name() + " " + Date() + EncodeColor( colorBlue )+ " C: " + C + EncodeColor( colorBlack ) + " O: " + O + " H: " + H + " L: " + L + EncodeColor( colorBlue ) + " M:" + MidRange + "" + EncodeColor( colorBrown ) + WriteVal(ROC( Close, 1) ) + "%" + EncodeColor( colorIndigo ) + WriteVal( PtChange)+" Pts " + "\n" + EncodeColor( colorIndigo ) + WriteVal(Money,format=1.0) + " Dollar Move";

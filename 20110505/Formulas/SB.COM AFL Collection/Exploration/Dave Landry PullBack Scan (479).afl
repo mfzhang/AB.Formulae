@@ -1,0 +1,164 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Dave Landry PullBack Scan
+//  Author/Uploader: Dennis Skoblar 
+//  E-mail:          DennisAndLisa@sbcglobal.net
+//  Date/Time Added: 2005-06-21 04:16:59
+//  Origin:          "Dave Landry On Swing Trading" and "Dave Landry's 10 Best Swing Trading Patterns And Strategies"
+//  Keywords:        Dave Landry,Landry,pullback scan,pullback
+//  Level:           medium
+//  Flags:           system,exploration
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=479
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=479
+//
+//------------------------------------------------------------------------------
+//
+//  This is the Dave Landry PullBack Scan as developed by him and taken from
+//  his two books, "Dave Landry On Swing Trading" and "Dave Landry's 10 Best
+//  Swing Trading Patterns And Strategies". The scan searches for stocks making
+//  a pullback from their most recent 20 day highs or 20 day lows. This is best
+//  used as an Exploration, all the ColumnNames can be seen and used as
+//  filters. Drop the "Tools" drop down menu in the Formula Editor containing
+//  this code and toggle the "Apply Indicator" to get the chart layout
+//  displayed.
+//
+//------------------------------------------------------------------------------
+
+// Dave Landry Pullback Scan.
+// Coded by Dennis Skoblar 6/8/2005.
+// As adapted by "Dave Landry On Swing Trading" and "Dave Landry's 10 Best Swing Trading Patterns And Strategies".
+// Special "Thank You" to Dave Landry, the Yahoo Groups Amibroker Club and the Amibroker Support Staff for thier help.
+//
+// This is best used as an Exploration, all the ColumnNames can be seen and used as filters.
+// Drop the "Tools" drop down menu in the Formula Editor containing this code and toggle the "Apply Indicator" to get the chart layout displayed.
+// Best used against a black background.
+
+//======================= Variables ==================================================================================================================
+
+// PULLBACK SCAN
+
+DLL1 = Ref(H,-1) > Ref(HHV(H,20),-2) AND H < Ref(H,-1);
+DLL2 = Ref(H,-2) > Ref(HHV(H,20),-3) AND H < Ref(H,-2);
+DLL3 = Ref(H,-3) > Ref(HHV(H,20),-4) AND H < Ref(H,-3);
+DLL4 = Ref(H,-4) > Ref(HHV(H,20),-5) AND H < Ref(H,-4);
+DLL5 = Ref(H,-5) > Ref(HHV(H,20),-6) AND H < Ref(H,-5);
+DLL6 = Ref(H,-6) > Ref(HHV(H,20),-7) AND H < Ref(H,-6);
+DLL7 = Ref(H,-7) > Ref(HHV(H,20),-8) AND H < Ref(H,-7);
+DLL8 = Ref(H,-8) > Ref(HHV(H,20),-9) AND H < Ref(H,-8);  
+DLL= H < Ref(HHV(H,20),-1);
+DLS1 = Ref(L,-1) < Ref(LLV(L,20),-2) AND L > Ref(L,-1);
+DLS2 = Ref(L,-2) < Ref(LLV(L,20),-3) AND L > Ref(L,-2);
+DLS3 = Ref(L,-3) < Ref(LLV(L,20),-4) AND L > Ref(L,-3);
+DLS4 = Ref(L,-4) < Ref(LLV(L,20),-5) AND L > Ref(L,-4);
+DLS5 = Ref(L,-5) < Ref(LLV(L,20),-6) AND L > Ref(L,-5);
+DLS6 = Ref(L,-6) < Ref(LLV(L,20),-7) AND L > Ref(L,-6);
+DLS7 = Ref(L,-7) < Ref(LLV(L,20),-8) AND L > Ref(L,-7);
+DLS8 = Ref(L,-8) < Ref(LLV(L,20),-9) AND L > Ref(L,-8);
+DLS = L > Ref(LLV(L,20),-1);
+
+// Price and Volume 
+PVFilter = (C>15) AND Ref((MA(V,50)),-1)>100000;
+
+// Moving Average proper order
+BullishMAs = IIf(MA(C,10) > EMA(C,20) AND EMA(C,20) > EMA(C,30), 1, 0);
+BearishMAs = IIf(MA(C,10) < EMA(C,20) AND EMA(C,20) < EMA(C,30), 1, 0);
+
+// How far the stock has moved in the past month (preferable at least 10 pts in the past 20 days)
+TenTwentyFilter = HHV(H,20)-LLV(L,20);
+
+// 50 Day Historical Volatility
+FiftyDayHVFilter = round(StDev(log(C/Ref(C,-1)),50)*100*sqrt(256));
+
+// Dave Landry Pull Back Scan
+DLPBS = (IIf((DLL AND (DLL1 OR DLL2 OR DLL3 OR DLL4 OR DLL5 OR DLL6 OR DLL7 OR DLL8)) AND PVFilter AND BullishMAs, 1, 0)) OR 
+        (IIf((DLS AND (DLS1 OR DLS2 OR DLS3 OR DLS4 OR DLS5 OR DLS6 OR DLS7 OR DLS8)) AND PVFilter AND BearishMAs, 1, 0));
+
+//=================== End Variables =================================================================================================================
+
+//=================== Columns =======================================================================================================================
+
+NumColumns = 5;
+
+Column0 = FullName();     
+Column0Name = "Ticker name";
+           
+Column1	  = IIf((DLL AND (DLL1 OR DLL2 OR DLL3 OR DLL4 OR DLL5 OR DLL6 OR DLL7 OR DLL8)) AND PVFilter AND BullishMAs, 1, 0);
+Column1Name = "Buy Signal";
+
+Column2     = IIf((DLS AND (DLS1 OR DLS2 OR DLS3 OR DLS4 OR DLS5 OR DLS6 OR DLS7 OR DLS8)) AND PVFilter AND BearishMAs, 1, 0);
+Column2Name = "Sell Signal"; 
+
+Column3     = TenTwentyFilter;
+Column3Name = "10/20 Value";
+
+Column4		= FiftyDayHVFilter;
+Column4Name	="HV50 Value";
+
+AddTextColumn( IndustryID(1), "Industry" );
+
+AddTextColumn( MarketID(1), "Market" );
+
+//==================== End Columns ===================================================================================================================
+
+//==================== Filter and Buy/Sell criteria ==================================================================================================
+
+// Filter based on 20 day hi/lo and pullback, moving averages lined up correctly, price and volume criteria, and stocks matching their respective industries and markets.
+Filter = DLPBS; 
+Buy  = Column1;
+Sell = Column2;
+
+//====================  End Filter and Buy/Sell criteria =============================================================================================
+
+//======================= Chart Layout  ==============================================================================================================
+
+// OHLC bar graph with headings
+_SECTION_BEGIN("Price"); 
+SetChartOptions(0,chartShowArrows|chartShowDates);
+_N(Title = StrFormat("{{NAME}} - {{INTERVAL}} {{DATE}} Open %g, Hi %g, Lo %g, Close %g (%.1f%%) {{VALUES}}", O, H, L, C, SelectedValue( ROC( C, 1 ) ) ));
+Plot( C, "Close", ParamColor("Color", colorYellow ), styleBar | ParamStyle("Style") | GetPriceStyle() ); 
+_SECTION_END();
+
+// 20 period linear regression line
+x = Cum(1); //
+lastx = LastValue( x ); Daysback = 20; aa = LastValue( LinRegIntercept( Close, Daysback) );
+bb = LastValue( LinRegSlope( Close, Daysback ) );
+y = Aa + bb * ( x - (Lastx - DaysBack) ); 
+Plot( IIf( x >= (lastx - Daysback), y, -1e10 ), "LinReg", colorCustom11 );
+
+// 10 period SMA
+_SECTION_BEGIN("MA");
+P = ParamField("Price field",-1);
+Periods = Param("Periods",10 );
+Plot( MA( P, Periods ), _DEFAULT_NAME(), ParamColor( "Color", colorBlue ), ParamStyle("Style") ); 
+_SECTION_END();
+
+// 20 period EMA
+_SECTION_BEGIN("EMA");
+P = ParamField("Price field",-1);
+Periods = Param("Periods", 20 );
+Plot( EMA( P, Periods ), _DEFAULT_NAME(), ParamColor( "Color", colorRed ), ParamStyle("Style") ); 
+_SECTION_END();
+
+// 30 period EMA
+_SECTION_BEGIN("EMA1");
+P = ParamField("Price field",-1);
+Periods = Param("Periods", 30);
+Plot( EMA( P, Periods ), _DEFAULT_NAME(), ParamColor( "Color", colorCustom12 ), ParamStyle("Style") ); 
+_SECTION_END();
+
+// Add 50 Day Historical Volotility and 10/20 filter as a different screen, just cut and paste each one to a separate Formula Editor Sceen and save them under
+// Custom Indicators...then drop them into the main screen.
+
+// 50 day historical volotility
+// _SECTION_BEGIN("HV50");
+// HV50 = round(StDev(log(C/Ref(C,-1)),50)*100*sqrt(256));
+// Plot(HV50,"HV50",colorYellow,styleLine);
+// _SECTION_END();
+
+// 10/20 filter
+// _SECTION_BEGIN("TenTwentyValue");
+// TenTwentyValue = HHV(H,20)-LLV(L,20);
+// Plot(TenTwentyValue,"10/20 Value",colorRed,styleLine);
+// _SECTION_END();
+
+//======================= End Chart Layout  ===========================================================================================================

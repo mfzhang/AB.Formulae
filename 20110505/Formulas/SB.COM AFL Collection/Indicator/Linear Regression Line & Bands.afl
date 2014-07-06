@@ -1,0 +1,74 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Linear Regression Line & Bands
+//  Author/Uploader: Geoff Mulhall 
+//  E-mail:          gmulhall@urban.net.au
+//  Date/Time Added: 2002-05-27 06:31:34
+//  Origin:          www.equis.com/free/taaz/linearregression.html
+//  Keywords:        Linear Regression
+//  Level:           semi-advanced
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=193
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=193
+//
+//------------------------------------------------------------------------------
+//
+//  A linear regression line plots the a least squares line of best fit through
+//  the closing price. In this case bands are also plotted above and below the
+//  central linear regression line to indicate the maximum excursion of the
+//  stock from the line.
+//
+//------------------------------------------------------------------------------
+
+/* Linear Regression Slope */
+/* Geoff Mulhall 25-May-2002 */
+/* Refer www.equis.com/free/taaz/linearregression.html */
+/* for a mathematical explanation of the formulae */
+
+N = LastValue(LLVBars(Low,190));   // lookback period  - can be set by the user if necessary
+Start = 1;
+
+X = Cum(Start);    // Set up the x cordinate array of the Linear Regression Line
+Y = Close;         // Set the y co-ordinate of the Linear Regression line    
+
+/* Calculate the slope (bconst) and the y intercept (aconst) of the line */
+
+SUMX    = LastValue(Sum(X,N));
+SUMY    = LastValue(Sum(Y,N));
+SUMXY   = LastValue(Sum(X*Y,N));
+SUMXSqd = LastValue(Sum(X*X,N));
+SUMSqdX = LastValue(SUMX * SUMX);
+
+bconst  = (N * SUMXY - SUMX * SUMY)/(N * SUMXSqd - SUMSqdX);
+aconst  = (SUMY - bconst * (SUMX))/N;
+
+/* Force the x value to be very negative so the graph does not apear before the lookback period */
+
+Domain =  IIf ( X > LastValue(X) - N, 1 , -1e10);   
+Xvar = X * Domain;
+
+/* Linear Regression Line */
+
+Yvar = aconst + bconst * Xvar;
+
+/* Plot the graphs */
+
+Graphxspace = 10;
+MaxGraph=4;
+
+/* Candle chart */ 
+Graph0 = Close;
+Graph0Style = 64;
+Graph0Color = 1;
+
+/* Linear Regression Lines */
+Graph1 = Yvar;
+Graph2 = Yvar - LastValue(HHV(Yvar - Low,N));
+Graph3 = Yvar + LastValue(HHV(High - Yvar,N));
+
+Graph1Style = 1;
+Graph1Color = 2;
+Graph2Style = 1;
+Graph2Color = 2;
+Graph3Style = 1;
+Graph3Color = 2;

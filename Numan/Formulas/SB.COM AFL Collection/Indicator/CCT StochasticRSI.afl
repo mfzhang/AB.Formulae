@@ -1,0 +1,38 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    CCT StochasticRSI
+//  Author/Uploader: Tomasz Janeczko 
+//  E-mail:          tj@amibroker.com
+//  Date/Time Added: 2001-07-20 10:03:37
+//  Origin:          Originally developed by Steve Karnish, http://www.cedarcreektrading.com
+//  Keywords:        
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=76
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=76
+//
+//------------------------------------------------------------------------------
+//
+//  Steve Karnish wrote:
+//
+//  "Roger Altman, William Blau, Stanley Kroll, and Tushar Chande have all
+//  improved on J. Welles Wilder&amp;#8217;s Relative Strength Index. I believe
+//  the best of these derivative indicators is the Stochastic RSI. [...] This
+//  version is just one of many I use. I like substituting the numbers 3, 5, 8
+//  &amp; 13 in this formula. "
+//
+//------------------------------------------------------------------------------
+
+/* CCT StochRSI
+**
+** Originally developed by Steve Karnish 
+** http://www.cedarcreektrading.com
+**
+** AFL translation by Tomasz Janeczko
+**
+** Set scaling: Custom 0..100
+** Grid: 30/70
+*/
+
+period = 13;
+graph0=100*( ( RSI( period ) - LLV( RSI( period ) , period ) ) / ( ( HHV( RSI( period ) , period ) ) - LLV(RSI( period ), period ) ) );

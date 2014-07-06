@@ -1,0 +1,60 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    MACD indicator display
+//  Author/Uploader: Paul Moore 
+//  E-mail:          
+//  Date/Time Added: 2006-05-21 19:36:21
+//  Origin:          
+//  Keywords:        MACD
+//  Level:           medium
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=622
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=622
+//
+//------------------------------------------------------------------------------
+//
+//  Sometimes, it can be difficult to view the MACD histogram bars when the
+//  MACD lines are very close together, causing the bars to be very short. This
+//  indicator automatically adjusts the scaling of the MACD histogram bars such
+//  that they occupy the maximum area in its indicator pane.
+//
+//------------------------------------------------------------------------------
+
+PeriodFast = Param( "Fast EMA", 12, 2, 200, 1 );
+PeriodSlow = Param( "Slow EMA", 26, 2, 200, 1 );
+PeriodSignal = Param( "Signal EMA", 9, 2, 200, 1 );
+MACDInd = MACD(PeriodFast, PeriodSlow );
+SigInd = Signal(PeriodFast, PeriodSlow , PeriodSignal );
+HistInd = MACDInd - SigInd ;
+_N( macdStr = WriteVal( PeriodFast, 1.0 )+","+WriteVal( PeriodSlow , 1.0 ) );
+_N( sigStr = macdStr + ","+WriteVal( PeriodSignal , 1.0 ) );
+
+// Get displayed min and max value of MACD and MACD-H, to rescale it for better visibility
+// BarsDisplayed = BarsSince( Status("barvisible") AND NOT Ref(Status("barvisible"),-1)  );
+BarsDisplayed = IIf( IsEmpty(BarsSince( Status("barvisible") AND NOT Ref(Status("barvisible"),-1) ) ),
+                     BarIndex(),
+                     BarsSince( Status("barvisible") AND NOT Ref(Status("barvisible"),-1) ) );
+scMACDMax = LastValue(HHV(Max(MACDInd, sigInd), BarsDisplayed ) );
+scMACDMin = LastValue(-HHV(Max(-MACDInd, -sigInd), BarsDisplayed ) );
+scaleMACD = Max( abs(scMACDMax), abs(scMACDMin) ); 
+
+// Plot(BarsDisplayed, "bars", colorBlue );
+// Plot( HHV(Max(MACDInd, sigInd), BarsDisplayed ), "max", colorGreen );
+// Plot( -HHV(Max(-MACDInd, -sigInd), BarsDisplayed ), "min", colorRed );
+// Plot( scMACDMax, "max", colorGreen );
+// Plot( scMACDMin, "min", colorOrange );
+
+scHistMax = LastValue(HHV(HistInd, BarsDisplayed ) );
+scHistMin = LastValue(LLV(HistInd, BarsDisplayed ) );
+scaleHist = Max( abs(scHistMax), abs(scHistMin) );
+
+HistColour = colorBlue;
+// HistColour = IIf( HistInd > Ref(HistInd,-1), colorBlue, colorRed ); 
+Plot( HistInd, "", HistColour, styleHistogram  | styleThick | styleOwnScale , 
+      -scaleHist * 1.2, scaleHist * 1.2 );
+Plot( MACDInd, "", colorBrightGreen);
+Plot( SigInd , "", colorRed);
+
+Plot( scaleMACD * 1.2,"", colorRed , styleNoDraw );
+Plot( -scaleMACD * 1.2 ,"", colorRed , styleNoDraw ); 
+GraphXSpace = 0;

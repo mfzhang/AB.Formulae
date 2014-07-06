@@ -1,0 +1,96 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Ranking Ticker WatchList
+//  Author/Uploader: nenapacwanfr 
+//  E-mail:          s.carrasset@laposte.net
+//  Date/Time Added: 2004-12-05 13:54:05
+//  Origin:          
+//  Keywords:        
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=411
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=411
+//
+//------------------------------------------------------------------------------
+//
+//  /*
+//
+//  returns the Rank of a ticker in a WL for a given indicator
+//
+//  if the ticker is outside the WL the rank is empty
+//
+//  UNFORTUNATELY if the WL contains many tickers the formula is slowwwwww
+//
+//  */
+//
+//------------------------------------------------------------------------------
+
+
+/* 
+returns the Rank of a ticker in a WL for a given indicator
+if the ticker is outside the WL the rank is empty
+UNFORTUNATELY if the WL contains many tickers the formula is slowwwwww
+*/
+
+listNum=0 ;//enter watchlist number
+list = GetCategorySymbols( categoryWatchlist, listnum );
+
+for( i = 0; ( sym = StrExtract( list, i ) ) != ""; i++ )
+{
+SetForeign(sym);
+VarSet("MyInd"+i,MFI(14));// Indicator
+/*
+VarSet stores the Value of MFI
+ticker 0 has its value of MFI stored in MyInd + 0
+ticker 1 has its value of MFI stored in MyInf + 1 ...
+*/
+Rank =1;// Initialize the Rank
+
+for( j = 0; ( item = StrExtract( list, j ) ) != ""; j++ )
+{
+SetForeign(item);
+VarSet("ThisInd"+j,MFI(14));//Indicator
+Rank=Rank + IIf( VarGet("MyInd"+i) < VarGet("ThisInd"+j),1,0);
+/*
+VarGet returns the value of VarSet
+Every value of MyInd + i is compared to every Value of ThisInd + j
+and the Rank in incremented of + 1 every time the Ind is < to others.
+you can also write it
+Rank=Rank + IIf( VarGet("MyInd"+i) < MFI(14),1,0);
+because of SetForeign
+*/
+RestorePriceArrays();// to get out the influence of SetForeign
+}
+VarSet("Rank"+i,Rank);
+}
+
+/*
+I want to know the Rank when I click on a ticker
+I must know the position of the ticker in a WL
+this loop can do the job instead of writing
+IIf(Name()=="12017", 0, IIf(Name()=="12027", 1, ...
+*/
+Count=0;
+BreakLoop = False;
+for( k = 0; NOT(BreakLoop) &&( ticker = StrExtract( list, k ) ) != ""; k++ )
+{
+if(Name()==ticker)
+Breakloop=True;
+else
+Count=Count+1;
+}
+
+
+//Plot(Count,"",2,1);
+Plot(VarGet("Rank"+ Count),"",2,1);
+
+/*
+you Can Control the Rank if you Plot the MFI Of every tickers with
+list = GetCategorySymbols( categoryWatchlist, listnum ); 
+
+for( i = 0; ( sym = StrExtract( list, i ) ) != ""; i++ ) 
+{ 
+SetForeign(sym);
+Plot(MFI(14) ,sym,i+1,1);
+}
+*/

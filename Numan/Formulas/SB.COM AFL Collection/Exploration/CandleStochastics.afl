@@ -1,0 +1,137 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    CandleStochastics
+//  Author/Uploader: Jim Varney 
+//  E-mail:          
+//  Date/Time Added: 2001-06-19 01:31:57
+//  Origin:          
+//  Keywords:        Candlesticks Stochastics
+//  Level:           medium
+//  Flags:           exploration
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=26
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=26
+//
+//------------------------------------------------------------------------------
+//
+//  "CandleStochastics" is an Exploration that combines Stochastics with a scan
+//  for 7 different candlestick patterns (Dark Cloud Cover, Piercing Line,
+//  Morning and Evening Doji Stars, Hammer, and Engulfing). A Buy signal occurs
+//  when the 14-4 Stochastic is at or below 20 and at least one bullish candle
+//  pattern is detected. Sell signals happen at 80 or better and if there's a
+//  bearish candle pattern.
+//
+//------------------------------------------------------------------------------
+
+/* -- CANDLESTOCHASTICS 	-- */
+/* -- Written by Jim Varney 	-- */
+/*
+This Exploration combines Stochastics with a scan for 7 different candlestick patterns (Dark Cloud Cover, Piercing Line, Morning and Evening Doji Stars, Hammer, and Engulfing).
+
+Buy Signal: Stochastic at or below 20 and at least one bullish candle pattern.
+Sell Signal: Stochastic at or above 80 and at least one bearish candle pattern.
+
+Vol Index: this column is the ratio of today's volume to the 14-day average volume.
+This column should be sorted Descending. The best signals are occur when VolIndex is at least 2 or higher.
+
+PCL[up]: Piercing Line, "up" signifies Bullish.
+MDS[up]: Morning Doji Star
+BLE[up]: Bullish Engulfing
+HAM[up]: Hammer
+BRE[dn]: Bearish Engulfing, "dn" signifies Bearish.
+DCC[dn]: Dark Cloud Cover
+EDS[dn]: Evening Doji Star
+
+A "1" in the column signifies TRUE, a "0" indicates no signal.
+
+------------------------------------------------------------------*/
+
+/* Minimum Price and 14 day Avg Volume Values for Filter */
+minPrice = 3;     //change as needed
+minVol = 50000;   //change as needed
+
+VolAvg = ma( v, 14 );
+VolumeIdx = v / VolAvg;
+AvgRange = sum( abs(O-C),15 )/15;
+
+/* Candle Codes */
+White = iif((C>O) AND ((C-O)>=0.8*(H-L)),1,0) AND (C-O)>AvgRange;
+Black = iif((C<O) AND ((O-C)>=0.8*(H-L)),1,0) AND (O-C)>AvgRange;
+Doji  = iif(abs(O-C)<=0.1*(H-L),1,0);
+
+/* Dark Cloud Cover [Bear] */
+DCC = iif(ref(White, -1) AND Black AND C<=ref(((H+L)/2),-1)
+	AND O>ref(C,-1), 1,0);
+
+/* Piercing Line [Bull] */
+PL = iif(ref(Black, -1) AND White AND C>=ref(((H+L)/2),-1)
+	AND O<ref(C,-1), 1,0);
+
+/* Evening Doji Star [Bear] */
+EDS = iif(ref(White, -2) AND ref(Doji, -1) AND Black AND
+	C<=ref(((H+L)/2),-2), 1,0);
+
+/* Morning Doji Star [Bull] */
+MDS = iif(ref(Black, -2) AND ref(Doji, -1) AND White AND
+	C>=ref(((H+L)/2),-2), 1,0);
+
+/* Hammer [Bull] */
+HAM = iif( (H-L > 1.5*AvgRange) AND (C > (H+L)/2)  AND (O > C) AND 
+	(VolumeIdx > 2), 1, 0);
+
+/* Bearish Engulfing */
+BRE = iif(Black AND ref(White, -1) AND (C < ref(O, -1))  AND (O > ref(C, -1)), 1,0);
+
+/* Bullish Engulfing */
+BLE = iif(White AND ref(Black, -1) AND (C > ref(O,-1))  AND (O < ref(C,-1)), 1,0);
+
+
+/* Stochastics 14-4 */
+
+ss = ma(stochk(14),4);
+StochBuy = iif(ss<=20, 1, 0);
+StochSell = iif(ss>=80, 1, 0);
+
+/* Exploration Columns for Sorting */
+
+NumColumns = 9;
+
+Column0 = V;
+Column1 = VolumeIdx;
+Column2 = PL;
+Column3 = MDS;
+Column4 = BLE;
+Column5 = HAM;
+Column6 = BRE;
+Column7 = DCC;
+Column8 = EDS;
+
+Column0Name = "Volume"; 
+Column1Name = "Vol Idx";
+Column2Name = "PCL[up]";
+Column3Name = "MDS[up]";
+Column4Name = "BLE[up]";
+Column5Name = "HAM[up]";
+Column6Name = "BRE[dn]";
+Column7Name = "DCC[dn]";
+Column8Name = "EDS[dn]";
+
+Column0format = 1.0;
+Column1format = 1.1;
+Column2format = 1.0;
+Column3format = 1.0;
+Column4format = 1.0;
+Column5format = 1.0;
+Column6format = 1.0;
+Column7format = 1.0;
+Column8format = 1.0;
+
+
+/* Filter */
+
+Filter = ((C > minPrice) AND (VolAvg >= minVol)) AND (StochBuy AND (PL or MDS or BLE or HAM)) OR (StochSell AND (BRE or DCC or EDS));
+
+
+/* Buy and Sell */
+
+Buy = iif((StochBuy > 0) AND (PL + MDS + HAM + BLE > 0), 1, 0);
+Sell = iif((StochSell > 0) AND (BRE + DCC + EDS > 0), 1, 0);

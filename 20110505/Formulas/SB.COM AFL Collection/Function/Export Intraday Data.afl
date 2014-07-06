@@ -1,0 +1,61 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Export Intraday Data
+//  Author/Uploader: Graham Kavanagh 
+//  E-mail:          gkavanagh@e-wire.net.au
+//  Date/Time Added: 2004-02-05 05:15:52
+//  Origin:          
+//  Keywords:        export data
+//  Level:           basic
+//  Flags:           showemail,function
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=327
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=327
+//
+//------------------------------------------------------------------------------
+//
+//  AFL for AA window, exports to TXT file for each ticker. Set the timeframe
+//  in AA settings window
+//
+//------------------------------------------------------------------------------
+
+/*
+Export intraday and EOD data to TXT files 
+One file for each stock
+In the first line insert the directory you want to save them to, make sure the directory exists
+Select your charts to export with the "Apply to" filter in AA window 
+Select the timeframe period you want to save as using the AA "Settings"
+Press Scan button
+by Graham Kavanagh 05 Feb 2004
+*/
+
+fh = fopen( "c:\\SaveData\\"+Name()+".txt", "w"); 
+if( fh ) 
+{ 
+   fputs( "Ticker,Date,Time,Open,High,Low,Close,Volume \n", fh ); 
+   y = Year(); 
+   m = Month(); 
+   d = Day(); 
+   r = Hour();
+   e = Minute();
+   n = Second();
+   
+   for( i = 0; i < BarCount; i++ ) 
+   { 
+      fputs( Name() + "," , fh );
+      ds = StrFormat("%02.0f-%02.0f-%02.0f,", 
+                     y[ i ], m[ i ], d[ i ] ); 
+      fputs( ds, fh ); 
+     
+      ts = StrFormat("%02.0f:%02.0f:%02.0f,", 
+                     r[ i ],e[ i ],n[ i ] ); 
+      fputs( ts, fh ); 
+
+      qs = StrFormat("%.4f,%.4f,%.4f,%.4f,%.0f\n", 
+                     O[ i ],H[ i ],L[ i ],C[ i ],V[ i ] ); 
+      fputs( qs, fh ); 
+   } 
+
+   fclose( fh ); 
+} 
+
+Buy = 0;

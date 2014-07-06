@@ -1,0 +1,37 @@
+Period = Param("VFI Period", 26, 26, 1300, 1 );
+
+Coef = 0.2;
+
+VCoef = Param("Max. vol. cutoff", 2.5, 2.5, 50, 1 );
+
+inter = log( Avg ) - log( Ref( Avg, -1 ) );
+
+Vinter = StDev(inter, 30 );
+
+Cutoff = Coef * Vinter * Close;
+
+Vave = Ref( MA( V, Period ), -1 );
+
+Vmax = Vave * Vcoef;
+
+Vc = Min( V, VMax );
+
+MF = Avg - Ref( Avg, -1 );
+
+VCP = IIf( MF > Cutoff, VC, IIf ( MF < -Cutoff, -VC, 0 ) );
+
+VFI = Sum( VCP , Period )/Vave;
+
+VFI = EMA( VFI, 3 );
+
+Plot( VFI, "VFI", colorBlack, styleThick );
+
+Plot( EMA( VFI, 7 ), "EMA7 of VFI", colorBrown );
+
+Plot( 0, "", colorSeaGreen, styleNoLabel );
+
+Plot( V, "Volume", IIf( VCP > 0, colorGreen,
+
+      IIf( VCP < 0, colorRed, colorBlue ) ),
+
+      styleHistogram | styleOwnScale | styleNoLabel );

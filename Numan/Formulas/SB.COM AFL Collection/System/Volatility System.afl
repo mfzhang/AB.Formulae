@@ -1,0 +1,138 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Volatility System
+//  Author/Uploader: Ed 
+//  E-mail:          empottasch@home.nl
+//  Date/Time Added: 2004-10-18 05:46:18
+//  Origin:          The Volatility System after Welles Wilder Jr Book: New concepts in technical trading systems, 1978
+//  Keywords:        Volatility System Welles Wilder
+//  Level:           medium
+//  Flags:           system
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=388
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=388
+//
+//------------------------------------------------------------------------------
+//
+//  The Volatility System after Welles Wilder Jr
+//
+//  Book: New concepts in technical trading systems, 1978
+//
+//  Simple stop and reverse system. Did not see one single system designed by
+//  Wilder that actually works. We are so lucky having Amibroker and todays
+//  power of desktop computers.
+//
+//------------------------------------------------------------------------------
+
+/*
+
+The Volatility System after Welles Wilder Jr
+Book: New concepts in technical trading systems, 1978
+
+Translation in Amibroker Formula Language (AFL)
+by: Edward Pottasch, empottasch@home.nl
+created: October 18, 2004
+
+*/
+
+SetBarsRequired(100000,100000);
+
+// setting for use in portfolio trading
+SetOption("MaxOpenPositions", 25 ); 
+PositionSize = -15;
+SetTradeDelays(0,0,0,0);
+PositionScore = 50 - RSI(14);
+
+// constant (any number between 2.80 and 3.10)
+const = 3.0; //const = Optimize("const", const, 0.5, 5, 0.1 );
+
+// period over which ATR is calculated
+period = 7; //period = Optimize("period", period, 1, 50, 1 );
+
+// ARC
+ARC = const * ATR(period);
+
+// SIC (significant close) + / - ARC
+SAR_long = Ref(HHV(C,period) - ARC,-1);
+SAR_short = Ref(LLV(C,period) + ARC,-1);
+
+// initialize storage array
+SAR_plot = 0;
+Buy = Short = Sell = Cover = 0;
+
+// initialize position
+lpos = 0;
+spos = 0;
+
+//
+for (i = 0; i < BarCount; i++) {
+
+	if (lpos == 0 AND spos == 0) {
+
+		if (C[ i ] < SAR_long[ i ]) {
+	
+			Short[ i ] = 1;
+			ShortPrice[ i ] = C[ i ];
+			spos = 1;
+		
+		} else if (C[ i ] > SAR_short[ i ]) {
+
+			Buy[ i ] = 1;
+			BuyPrice[ i ] = C[ i ];
+			lpos = 1;
+
+		}	
+		
+		SAR_plot[ i ] = null;
+	
+	} else if (lpos == 1 AND spos == 0) {
+	
+		// update SAR for chart
+		SAR_plot[ i ] = SAR_long[ i ];
+		
+		// check if we need to reverse
+		if (C[ i ] < SAR_long[ i ]) {
+	
+			Sell[ i ] = 1;
+			SellPrice[ i ] = C[ i ];
+			lpos = 0;
+			
+			Short[ i ] = 1;
+			ShortPrice[ i ] = C[ i ];
+			spos = 1;
+				
+		}
+	
+	} else if (lpos == 0 AND spos == 1) {
+	
+		// update SAR for chart
+		SAR_plot[ i ] = SAR_short[ i ];
+		
+		// check if we need to reverse
+		if (C[ i ] > SAR_short[ i ]) {
+	
+			Cover[ i ] = 1;
+			CoverPrice[ i ] = C[ i ];
+			spos = 0;
+			
+			Buy[ i ] = 1;
+			BuyPrice[ i ] = C[ i ];
+			lpos = 1;
+				
+		}
+		
+	}
+
+}
+
+
+// Price chart
+Plot(C,"",1,64);
+
+// SAR (Stop and reverse points)
+Plot(SAR_plot,"SAR", colorGold, styleDots | styleNoLine);
+
+// buy, sell, short and cover symbols
+PlotShapes(IIf(Buy,shapeUpArrow,0),colorWhite, layer = 0, yposition = BuyPrice, offset = 0 );
+PlotShapes(IIf(Sell,shapeDownArrow,0),colorYellow, layer = 0, yposition = SellPrice, offset = 0 );
+PlotShapes(IIf(Short,shapeHollowDownArrow,0),colorLightBlue, layer = 0, yposition = ShortPrice, IIf(Sell,offset = -15,offset = 0) );
+PlotShapes(IIf(Cover,shapeHollowUpArrow,0),colorGold, layer = 0, yposition = CoverPrice, IIf(Buy,offset = -15,offset = 0) );

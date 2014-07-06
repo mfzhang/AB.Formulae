@@ -1,0 +1,34 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Three Shift Indicator - Daytrading
+//  Author/Uploader: Tommy Beard 
+//  E-mail:          tab321@yahoo.com
+//  Date/Time Added: 2005-12-31 04:56:47
+//  Origin:          
+//  Keywords:        Indicator, Trading System, EMA, MA, Crossovers
+//  Level:           basic
+//  Flags:           system,indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=575
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=575
+//
+//------------------------------------------------------------------------------
+//
+//  Three Shift Indicator can be used on the 3 Minute, 13 Minute, and 60 Minute
+//  Charts for Day Trading. It is taken from the book, Secrets of the
+//  Underground Trader by Jea Yu and Russell Lockhart ... Advanced Methods for
+//  Short Term and Swing Trading Any Market.
+//
+//------------------------------------------------------------------------------
+
+//The Three Shift Indicator is taken from the book, Secrets of the Underground Trader by Jea Yu and Russell Lockhart ... Advanced Methods for Short Term and Swing Trading Any Market.  The 3 Period Displaced Moving Average is used as the primary indicator.  White Line (3 DMA) crossing above Green Line (5 EMA) is the signal to go long.  White Line (3 DMA) crossing below Red Line (15 EMA) is the signal to go short.  The indicator can be used on the 3 Minute, 13 Minute, and 60 Minute Charts.  The Three Shift is used as a early signal to alert that a Breakout or Breakdown is coming.  One Caveat - ALWAYS let the Three Shift cross THROUGH before entering a trade.  It can often give you a lead time of up to six minutes before the rest of the world realizes that the uptrend or downtrend has been formed.  Wait for the cross THROUGH because many times it will touch and appear to be crossing only to reverse.  You will have plenty of time to trade once the Three Shift crosses.  The Green and Red Lines are to allow the trader to view the actual trend without being distracted by the noise of the price action. Page 17. 
+ 
+//The Shifted EMA - Default is 3 Period and -3 Lead/Lag 
+EMAPeriod = Param("Fast EMA",3,1,25,1);
+DisplacementPeriod = Param("Shift",-3,-25,25,1);
+
+//Plot the Lines
+Plot(Ref(EMA(Close,EMAPeriod),-DisplacementPeriod),"DEMA1",colorWhite,styleLine);
+Plot(EMA(Close, 5 ), "5 Wk EMA", colorGreen, styleLine);
+Plot(EMA(Close, 15 ), "15 Wk EMA", colorRed, styleLine);
+
+Title = Name() + "  " + Date() + EncodeColor(colorIndigo) + "   " + C + WriteVal(ROC( Close, 1) ) + "%" + EncodeColor(colorBlue) +  "  Three Shift Indicator  ";

@@ -1,0 +1,36 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Woodies CCI Panel
+//  Author/Uploader: Dennis Skoblar 
+//  E-mail:          DennisAndLisa@sbcglobal.net
+//  Date/Time Added: 2006-09-13 01:14:41
+//  Origin:          www.woodiescciclub.com
+//  Keywords:        Woodie's CCI
+//  Level:           medium
+//  Flags:           system,exploration,indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=705
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=705
+//
+//------------------------------------------------------------------------------
+//
+//  Please go to
+//
+//  http://woodiescciclub.com/forum/viewtopic.php?p=5609#5609
+//
+//  for the panel and updates. Please use the most current Amibroker Version,
+//  otherwise it will generate an error.
+//
+//  Dennis
+//
+//------------------------------------------------------------------------------
+
+/////////////////////////////// 
+
+// CCI Woodies Style  
+
+// Codded/Added by Dennis, Kris, Wring, Greg
+
+// Last Update: 9/12/2006
+
+/////////////////////////////// 
+

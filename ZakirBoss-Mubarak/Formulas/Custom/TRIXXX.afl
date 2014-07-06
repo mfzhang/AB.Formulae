@@ -1,0 +1,2 @@
+Graph0=(Trix(3)*Trix(5)*Trix(7))/100;
+Graph1=MA(Graph0,3);

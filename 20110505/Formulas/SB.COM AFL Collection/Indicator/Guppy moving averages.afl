@@ -1,0 +1,38 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Guppy moving averages
+//  Author/Uploader: Tomasz Janeczko 
+//  E-mail:          tj@amibroker.com
+//  Date/Time Added: 2001-06-16 08:38:56
+//  Origin:          Originally developed by Darryl Guppy
+//  Keywords:        moving average
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=17
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=17
+//
+//------------------------------------------------------------------------------
+//
+//  A set of moving averages of different periods. An example on using multiple
+//  graphs in single indicator window.
+//
+//------------------------------------------------------------------------------
+
+maxgraph = 10;
+/* blue lines */
+graph0= ma( close, 3 );
+graph1= ma( close, 5 );
+graph2= ma( close, 8 );
+graph3 = ma( close, 12 );
+graph4 = ma( close, 15 );
+graph0style = graph1style = graph2style = graph3style =graph4style = 1;
+graph0color = graph1color = graph2color = graph3color =graph4color = 7;
+
+/* red lines */
+graph5= ma( close, 30 );
+graph6= ma( close, 35 );
+graph7= ma( close, 40 );
+graph8 = ma( close, 45 );
+graph9 = ma( close, 50 );
+graph5style = graph6style = graph7style = graph8style =graph9style = 1;
+graph5color = graph6color = graph7color = graph8color =graph9color = 5;

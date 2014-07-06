@@ -1,0 +1,103 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Chandelier Exit
+//  Author/Uploader: Jarod Marshall 
+//  E-mail:          riot_starta@hotmail.com
+//  Date/Time Added: 2006-02-02 07:43:01
+//  Origin:          
+//  Keywords:        Chandelier Exit Stop Loss
+//  Level:           semi-advanced
+//  Flags:           system,indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=583
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=583
+//
+//------------------------------------------------------------------------------
+//
+//  These two forms of the same indicator are designed to act as the Chandelier
+//  Exit stop loss as described by Barbara Rockefeller in "Technical Analysis
+//  for Dummies", and is written especially for use with AmiBroker. She
+//  describes the Chandelier exit as a dataset of "the highest high or the
+//  highest close SINCE YOUR ENTRY." To allow the Chandelier exit to stop you
+//  out gives you a couple of average-true-ranges (ATRs) from the best price
+//  the stock has reached SINCE YOUR ENTRY.
+//
+//  Only *you* know when your trading rules will dictate that you enter the
+//  trade, and so my Chandelier Exit Preview here allows you to preview the
+//  Chandelier exit series by clicking on the bar that AmiBroker&amp;#8217;s
+//  back-test/optimize says you should buy on. If your RSI says
+//  &amp;#8220;buy&amp;#8221; on the 1st of June, simply overlay my Chandelier
+//  Exit formula onto your price data, and click on the bar corresponding to
+//  the 1st of June. The three series named "Chand..." will change each time
+//  you click a different bar. Thus when you click the 1st of June bar, you get
+//  a Chandelier Exit stop loss especially designed for buying that stock on
+//  the 1st of June. The second formula, the Chandelier Exit, is designed to
+//  fit into your automated AmiBroker trading formulae.
+//
+//------------------------------------------------------------------------------
+
+_SECTION_BEGIN("Chandelier Exit Preview");
+
+YourHold = BarIndex() - SelectedValue(BarIndex()); //How many bars between the selected bar and each bar following
+
+Multiple = Param("Multiple", 3, 1, 10, 1); //How many ATR’s to be allowed below the highest high since selected bar
+ATRPeriods = Param("ATR Periods", 22, 1, 50, 1); //How many periods to use for the ATR
+Graph1 = HHV(Close,YourHold) - (Multiple * ATR(ATRPeriods)); //Chandelier exit line from highest close
+Graph2 = HHV(High, YourHold) - (Multiple * ATR(ATRPeriods)); //Chandelier exit line from highest high
+Graph3 = LLV(Low, YourHold) + (Multiple * ATR(ATRPeriods)); //Chanderlier exit from lowest low (used when going short)
+Plot(Graph1, "ChandClose", ParamColor( "ChandClose Color", colorCycle ), ParamStyle("ChandClose Style")  );
+Plot(Graph2, "ChandHigh", ParamColor( "ChandHigh Color", colorCycle ), ParamStyle("ChandHigh Style")  );
+Plot(Graph3, "ChandLow", ParamColor( "ChandLow Color", colorCycle ), ParamStyle("ChandLow Style")  );
+
+_SECTION_END();
+
+_SECTION_BEGIN("Chandelier Exit");
+
+YourHold = BarIndex() - ValueWhen(<your "buy" criterion>, BarIndex(), 1);//Replace <...> with your 'buy' formula
+
+Multiple = Param("Multiple", 3, 1, 10, 1); //How many ATR’s to be allowed below the highest high since latest "buy" bar
+ATRPeriods = Param("ATR Periods", 22, 1, 50, 1); //How many periods to use for the ATR
+Graph1 = HHV(Close,YourHold) - (Multiple * ATR(ATRPeriods)); //Chandelier exit line from highest close
+Graph2 = HHV(High, YourHold) - (Multiple * ATR(ATRPeriods)); //Chandelier exit line from highest high
+Graph3 = LLV(Low, YourHold) + (Multiple * ATR(ATRPeriods)); //Chanderlier exit from lowest low (used when going short)
+Plot(Graph1, "ChandClose", ParamColor( "ChandClose Color", colorCycle ), ParamStyle("ChandClose Style")  );
+Plot(Graph2, "ChandHigh", ParamColor( "ChandHigh Color", colorCycle ), ParamStyle("ChandHigh Style")  );
+Plot(Graph3, "ChandLow", ParamColor( "ChandLow Color", colorCycle ), ParamStyle("ChandLow Style")  );
+
+_SECTION_END();
+
+Buy = <your "buy" criterion>;
+Sell = <your "sell" criterion> OR Cross(Graph1, Close); //Use the appropriate Graph1, Graph2 or Graph3 for whichever Chandelier exit you wish
+
+Short = Sell;
+Cover = Buy;
+
+_SECTION_END();
+
+/* These two forms of the same indicator are designed to act as the Chandelier Exit stop loss as described by Barbara Rockefeller in 
+"Technical Analysis for Dummies", and is written especially for use with AmiBroker. She describes the Chandelier exit as a dataset of 
+"the highest high or the highest close SINCE YOUR ENTRY." To allow the Chandelier exit to stop you out gives you a couple of 
+average-true-ranges (ATRs) from the best price the stock has reached SINCE YOUR ENTRY.
+
+Only *you* know when your trading rules will dictate that you enter the trade, and so my Chandelier Exit Preview here allows you to preview 
+the Chandelier exit series by clicking on the bar that AmiBroker’s back-test/optimize says you should buy on. If your RSI says “buy” on the 
+1st of June, simply overlay my Chandelier Exit formula onto your price data, and click on the bar corresponding to the 1st of June. The three 
+series named "Chand..." will change each time you click a different bar. Thus when you click the 1st of June bar, you get a Chandelier Exit 
+stop loss especially designed for buying that stock on the 1st of June. The second formula, the Chandelier Exit, is designed to fit into your
+automated AmiBroker trading formulae.
+
+Why do all this?.... 1) Adaptive trailing stops allow you to crystallize profits made. 2) The Chanderlier Exit takes into account when you
+bought the stock, making it more relevant. 3) This AmiBroker version allows you to preview when it would stop you out for any bar that your
+trading system tells you. 4) It can be fairly easily integrated into your automated AmiBroker back-tests and optimizations.
+
+How to integrate it into your personal AmiBroker trading system:
+
+Pretend your "buy" formula is simply [MA(Close, 10) > O] and your "sell" formula is [MA(Close, 10) < 0] for simplicity. Run a window with 
+the MA(Close, 10) graph so you can see when it crosses zero, and place another window with the price, and overlay with the Chandelier Exit
+formula you wish to use. If you use Chandelier Exit Preview, simply click on each day when the MA(Close, 10) crosses zero, and the appropriate
+Chandelier exit lines for the highest High and Close, and lowest Low will appear. The point of the Preview is that you can click on any day
+and see how the Chandelier exit would behave :).
+
+As for the second, Chandelier Exit formula, simply copy your "[MA(Close, 10) > O]" and use it to replace the <your "buy" criterion>. Then 
+go to your Sell criterion and add "OR" then copy the appropriate Graph1, Graph2 or Graph3 depending on whether your Chandelier Exit should
+use the highest High (Graph1) or Close (Graph2) or lowest Low (Graph3), in the form of "OR Cross(Graph1, Close)". If you wish to optimize 
+the "ATRPeriods" and "Multiple" paramaters, simply replace "Param" with "Optimize" and run it through the Automatic Analysis.

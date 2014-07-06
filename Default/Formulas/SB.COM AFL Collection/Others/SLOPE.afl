@@ -1,0 +1,29 @@
+ScriptVersion = " Exploration Y,G=Slope";
+
+//////////////////// PRECIO //////////////////////////////////////////////
+
+Plot(C,"",colorBlack,styleCandle|styleNoLabel);
+
+Filter = Close > 5;
+AddColumn(Close,"Close");
+
+PositionSize = 50;
+
+///////////////////////	MEDIAS MOVILES///////////////////
+
+slope = Param("slope",2,2,50,1);
+Color20= IIf(LinRegSlope(MA(C,5),slope)<0,colorRed,colorBrightGreen);
+event1= LinRegSlope(MA(C,5),slope)<1;
+Plot( MA( C,9), "",Color20, styleLine);
+//Plot( event1, "", colorRose, styleArea|styleOwnScale);
+Color50= IIf(LinRegSlope(MA(C,50),slope)<0,colorRed,colorBlue); 
+Plot( MA( C, 60), "",Color50  , styleLine);
+Color100= IIf(LinRegSlope(MA(C,100),slope)<0,colorRed,colorYellow);
+Plot( MA( C,  90), "",Color100 , styleLine);
+Color150= IIf(LinRegSlope(MA(C,150),slope)<0,colorRed,10); 
+Plot( MA( C, 150), "",Color150  , styleLine);
+
+event1=Cross(MA(C,2),MA(C,7));
+PlotShapes( IIf(event1 ,shapeDigit1,0) ,5, 1, L,-30);
+event4=Cross(MA(C,7),MA(C,2));
+PlotShapes( IIf(event4 ,shapeDigit4,0) ,4, 1, H,30);

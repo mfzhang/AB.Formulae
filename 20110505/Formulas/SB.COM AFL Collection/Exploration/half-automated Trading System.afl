@@ -1,0 +1,143 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    half-automated Trading System
+//  Author/Uploader: Thomas Zmuck 
+//  E-mail:          thomas.zm@aon.at
+//  Date/Time Added: 2001-12-21 16:45:47
+//  Origin:          
+//  Keywords:        half-automated Trading System
+//  Level:           basic
+//  Flags:           system,exploration
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=142
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=142
+//
+//------------------------------------------------------------------------------
+//
+//  This System finds stocks, where the price reached a support or resistance
+//  line, that you have manually drawn.
+//
+//  You must give every line any of these 6 predifined StudyID's
+//
+//  (RE,SU,UP,DN,RI,ST). The system automaticaly detects, if the line is
+//  currently a support or resistance line.
+//
+//  There are two modes: Modus == 0; I called it "after touching" , because you
+//  become the signal after the stock has touched any support or resistance
+//  line.Adjustment for touching is "ALvalue and AHvalue" With ALvalue you can
+//  define, how near the Low must go to any support line, equivalent AHvalue to
+//  resistance line, before a signal is given.
+//
+//  With Modus == 1 "bLvalue and bHvalue" you can detect stocks, where the
+//  price is before touching any line, so you mostly can find signals for the
+//  next trading day and so you have enough time to check other arguments and
+//  then you can buy at the exact support Level or sell at the exact resistance
+//  level.
+//
+//  Cross_buy_value = 1.03; Cross_sell_value = 0.97;
+//
+//  Here you can define the value, where the price must reached, before a
+//  signal would be generated. For example: 1.03 means that a buy signal is
+//  given, when the price is 3% above the last resistance. equivalent the
+//  cross_sell_value.
+//
+//  With the Explore Function you can see the distance from the current close
+//  to all support and resistance lines in percent.
+//
+//  Re = Resistance Su = Support
+//
+//  In the indicator window you can see the close and all your study's
+//  (currently 6 study's possible).
+//
+//  So you can quickly see, if you've forgotten to give a study ID to any line.
+//
+//  Attention: Dont forget, that the back-test brings unrealistic results,
+//  because the signals only real at the time that you've drawn the study.
+//
+//  Also dont forget in the explore window, that only the resistance and
+//  support distances are shown, that you have drawn and defined with a study
+//  ID.
+//
+//  So enjoy it!
+//
+//  Every comments are welcome
+//
+//------------------------------------------------------------------------------
+
+Modus = 0; 
+/*Modus 0 = after touching (bLvalue and bHvalue)*/
+/*Modus 1 = before touching* (ALvalue and AHvalue)*/ 
+bLvalue = 1.06;   ALvalue = 1.02;
+bHvalue = 0.93;   AHvalue = 0.99;
+
+Cross_buy_value  = 1.03;
+Cross_sell_value = 0.97;
+/*this is the value, where a line cross is defined as true, it's a way to ignore false breakout's  default = 3 % */
+
+MLV = IIf (Modus ==0, ALvalue,
+bLvalue);/*Modus_Low_value */
+MHV = IIf (Modus ==0, AHvalue, bHvalue);/*Modus_High_value */
+
+/*Study - Definition  - give your name's */
+L1 = Study ("SU"); L2 = Study ("RE"); L3 = Study ("DN");
+L4 = Study ("UP"); L5 = Study ("RI"); L6 = Study ("ST");
+
+/*Buy Conditions*/
+N1 = L <= MLV * L1 AND IIf(Modus == 1,L >= Alvalue * L1,C>0) AND C > L1 AND Ref (L,-1)>L1;
+N2 = L <= MLV * L2 AND IIf(Modus == 1,L >= Alvalue * L2,C>0) AND C > L2 AND Ref (L,-1)>L2;
+N3 = L <= MLV * L3 AND IIf(Modus == 1,L >= Alvalue * L3,C>0) AND C > L3 AND Ref (L,-1)>L3;
+N4 = L <= MLV * L4 AND IIf(Modus == 1,L >= Alvalue * L4,C>0) AND C > L4 AND Ref (L,-1)>L4;
+N5 = L <= MLV * L5 AND IIf(Modus == 1,L >= Alvalue * L5,C>0) AND C > L5 AND Ref (L,-1)>L5;
+N6 = L <= MLV * L6 AND IIf(Modus == 1,L >= Alvalue * L6,C>0) AND C > L6 AND Ref (L,-1)>L6;
+
+P1 = C > L1*Cross_buy_value AND (Ref (C,-1)<L1 OR Ref (C,-2)<L1);
+P2 = C > L2*Cross_buy_value AND (Ref (C,-1)<L2 OR Ref (C,-2)<L2);
+P3 = C > L3*Cross_buy_value AND (Ref (C,-1)<L3 OR Ref (C,-2)<L3);
+P4 = C > L4*Cross_buy_value AND (Ref (C,-1)<L4 OR Ref (C,-2)<L4);
+P5 = C > L5*Cross_buy_value AND (Ref (C,-1)<L5 OR Ref (C,-2)<L5);
+P6 = C > L6*Cross_buy_value AND (Ref (C,-1)<L6 OR Ref (C,-2)<L6);
+
+/*Sell Conditions*/
+Q1 = H >= MHV * L1 AND IIf(Modus == 1,H <= AHvalue * L1,C>0) AND C < L1 AND Ref (H,-1)<L1;
+Q2 = H >= MHV * L2 AND IIf(Modus == 1,H <= AHvalue * L2,C>0) AND C < L2 AND Ref (H,-1)<L2;
+Q3 = H >= MHV * L3 AND IIf(Modus == 1,H <= AHvalue * L3,C>0) AND C < L3 AND Ref (H,-1)<L3;
+Q4 = H >= MHV * L4 AND IIf(Modus == 1,H <= AHvalue * L4,C>0) AND C < L4 AND Ref (H,-1)<L4;
+Q5 = H >= MHV * L5 AND IIf(Modus == 1,H <= AHvalue * L5,C>0) AND C < L5 AND Ref (H,-1)<L5;
+Q6 = H >= MHV * L6 AND IIf(Modus == 1,H <= AHvalue * L6,C>0) AND C < L6 AND Ref (H,-1)<L6;
+
+R1 = C < L1*Cross_sell_value  AND (Ref (C,-1)>L1 OR Ref (C,-2)>L1);
+R2 = C < L2*Cross_sell_value  AND (Ref (C,-1)>L2 OR Ref (C,-2)>L2);
+R3 = C < L3*Cross_sell_value  AND (Ref (C,-1)>L3 OR Ref (C,-2)>L3);
+R4 = C < L4*Cross_sell_value  AND (Ref (C,-1)>L4 OR Ref (C,-2)>L4);
+R5 = C < L5*Cross_sell_value  AND (Ref (C,-1)>L5 OR Ref (C,-2)>L5);
+R6 = C < L6*Cross_sell_value  AND (Ref (C,-1)>L6 OR Ref (C,-2)>L6);
+/*Buy & Sell PART*/
+Buy = N1 OR N2 OR N3 OR N4 OR N5 OR N6 OR 
+      P1 OR P2 OR P3 OR P4 OR P5 OR P6;
+Sell = Q1 OR Q2 OR Q3 OR Q4 OR Q5 OR Q6 OR 
+       R1 OR R2 OR R3 OR R4 OR R5 OR R6;
+/*Explore-Part*/
+L1_diff =  (L1/ C -1)*100;
+L2_diff =  (L2/ C -1)*100;
+L3_diff =  (L3/ C -1)*100;
+L4_diff =  (L4/ C -1)*100;
+L5_diff =  (L5/ C -1)*100;
+L6_diff =  (L6/ C -1)*100;
+
+Filter = Buy OR Sell;
+
+AddColumn( L1_diff,  WriteIf (C > L1 ,"Su1_%", "Re1_%"),1.1 );
+AddColumn( L2_diff,  WriteIf (C > L2 ,"Su2_%", "Re2_%"),1.1 );
+AddColumn( L3_diff,  WriteIf (C > L3 ,"Su3_%", "Re3_%"),1.1 );
+AddColumn( L4_diff,  WriteIf (C > L4 ,"Su4_%", "Re4_%"),1.1 );
+AddColumn( L5_diff,  WriteIf (C > L5 ,"Su5_%", "Re5_%"),1.1 );
+AddColumn( L6_diff,  WriteIf (C > L6 ,"Su6_%", "Re6_%"),1.1 );
+
+/*Graph-Part*/
+Plot (C,"close",1,64);
+Plot (L1,"L1",2,1);/*white*/
+Plot (L2,"L2",5,1);/*green*/
+Plot (L3,"L3",7,1);/*yellow*/
+Plot (L4,"L4",4,1);/*red*/
+Plot (L5,"L5",6,1);/*blue*/
+Plot (L6,"L6",9,1);/*orange*/
+

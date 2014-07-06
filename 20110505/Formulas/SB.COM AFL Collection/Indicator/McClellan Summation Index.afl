@@ -1,0 +1,38 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    McClellan Summation Index
+//  Author/Uploader: Tomasz Janeczko 
+//  E-mail:          tj@amibroker.com
+//  Date/Time Added: 2001-06-16 08:27:58
+//  Origin:          Originally developed by Sherman and Marian McClellan
+//  Keywords:        breadth,overbought,oversold
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=13
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=13
+//
+//------------------------------------------------------------------------------
+//
+//  The McClellan Summation Index is a market breadth indicator developed by
+//  Sherman and Marian McClellan. It is a long-term version of the McClellan
+//  Oscillator and its interpretation is similar to that of the McClellan
+//  Oscillator except that it is more suited to major trend reversals. For more
+//  extensive coverage of the index refer to the book Patterns for Profit, by
+//  Sherman and Marian McClellan. McClellan suggests the following rules for
+//  use with the summation Index: Look for major bottoms when the Summation
+//  Index falls below -1300. Look for major tops to occur when a divergence
+//  with the market occurs above a Summation Index level of +1600. The
+//  beginning of a significant bull market is indicated when the Summation
+//  Index crosses above +1900 after moving upward more than 3600 points from
+//  its prior low (e.g. the index moves from -1600 to +2000). The summation
+//  index is plotted by adding the Cum function to the McCllellan Oscillator.
+//
+//------------------------------------------------------------------------------
+
+/*
+McClellan Summation Index
+
+*/
+
+Graph0 = Cum( Ema( AdvIssues()-DecIssues(), 19 ) - Ema( AdvIssues()-DecIssues(), 39 ) );
+ 

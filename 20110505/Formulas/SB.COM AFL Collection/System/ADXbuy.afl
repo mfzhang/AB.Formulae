@@ -1,0 +1,92 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    ADXbuy
+//  Author/Uploader: goldfreaz 
+//  E-mail:          goldfreaz@thelion.com
+//  Date/Time Added: 2002-04-21 21:12:36
+//  Origin:          System using ADX Buy on positive PDI momentum and sell when the momentum diminishes
+//  Keywords:        
+//  Level:           medium
+//  Flags:           system
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=185
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=185
+//
+//------------------------------------------------------------------------------
+//
+//  Buy: slope ADX > slope ADX threshold and
+//
+//  ADX > ADX threshold + ADX histeresis and
+//
+//  PDI > ADX + DI histeresis and
+//
+//  slope PDI - slope MDI > slope DI threshold and
+//
+//  PDI > ADX
+//
+//  Sell: {ADX > ADX threshold - ADX histeresis and
+//
+//  PDI < ADX - DI histeresis} or
+//
+//  MDI > PDI + DI histeresis
+//
+//  with optimization */
+//
+//------------------------------------------------------------------------------
+
+/*ADX system
+goldfreaz - 18 April 2002
+
+Buy:  slope ADX > slope ADX threshold and
+      ADX > ADX threshold + ADX histeresis and
+      PDI > ADX + DI histeresis and
+      slope PDI - slope MDI > slope DI threshold and
+      PDI > ADX
+
+Sell:  {ADX > ADX threshold - ADX histeresis and
+       PDI < ADX - DI histeresis} or
+       MDI > PDI + DI histeresis      
+
+with  optimization */ 
+
+
+
+// ADX and PDI/MDI have different smoothing constants
+// smoothing defined as a exponential daily average, not Wilder's nonsense
+Aperiod=11;
+Bperiod=13;
+ADXthreshold=18;
+dadxthr=0.5;
+slpadxD=18;
+slpadxthr=0.35;
+dPM=3.5;
+slppmD=3;
+slpPMthr=-0.65;
+  //Aperiod=Optimize("Aperiod",13,11,15,1);
+  //Bperiod=Optimize("Bperiod",14,13,17,1);
+  //ADXthreshold=Optimize("ADXthreshold",17,16,18,0.25);
+  //dadxthr=Optimize("dADXthr",0.25,0,1.5,0.25);
+  //slpadxD=Optimize("slpadxD",12,18,22,1);
+  //slpadxthr=Optimize("slpadxthr",0.35,0.2,0.5,0.05);
+  //dPM=Optimize("dPM",1,3.5,4,0.2);
+  //slppmD=Optimize("slppmD",3,2,4,1);
+  //slpPMthr=Optimize("slpPMthr",-0.65,-1,-0.5,0.05);
+Ppdi=PDI(Bperiod);
+Mmdi=MDI(Bperiod);
+dx=100*abs(Ppdi-Mmdi)/(Ppdi+Mmdi);
+Aadx=EMA(dx,Aperiod);
+slpadx=(Aadx-Ref(MA(Aadx,slpadxD),-1))/slpadxD;
+slpPM=(Ppdi-Ref(EMA(Ppdi,slppmD),-1)-Mmdi+Ref(EMA(Mmdi,slppmD),-1))/slppmD;
+
+Buy =slpadx>slpadxthr AND Aadx>ADXthreshold+dadxthr AND Ppdi>Mmdi+dPM AND slpPM>slpPMthr AND Ppdi>Aadx;
+
+Sell=(Aadx>ADXthreshold-dadxthr AND Ppdi<Aadx-dPM) OR Mmdi>Ppdi+dPM;
+
+  Filter=Buy OR Sell; 
+  Sell=ExRem(Sell,Buy); Buy=ExRem(Buy,Sell);
+
+AddColumn(Buy,"Buy");
+AddColumn(Sell,"sell");
+AddColumn(Aadx,"Aadx");
+AddColumn(slpPM,"slpPM");
+AddColumn(BuyPrice,"BuyPrice");
+AddColumn(SellPrice,"SellPrice");

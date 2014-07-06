@@ -1,0 +1,57 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    sort function
+//  Author/Uploader: walt schwarz 
+//  E-mail:          wschwarz@optonline.net
+//  Date/Time Added: 2003-05-26 17:11:16
+//  Origin:          
+//  Keywords:        sort array function
+//  Level:           medium
+//  Flags:           showemail,function
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=283
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=283
+//
+//------------------------------------------------------------------------------
+//
+//  will return the passed array in sorted order
+//
+//------------------------------------------------------------------------------
+
+function sort(inlist)
+
+{
+
+//sort inlist
+
+temp=0;
+
+for(i = BarCount-1; i>=0; i--)
+
+{
+
+for (j = 1; j <= i; j++)
+
+{
+
+if (inlist[j-1] > inlist[j])
+
+{
+
+temp = inlist[j-1];
+
+inlist[j-1] = inlist[j];
+
+inlist[j] = temp;
+
+}
+
+}
+
+}
+
+//inlist now sorted
+
+return inlist;
+
+}
+ 

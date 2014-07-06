@@ -1,0 +1,115 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    QP2 Float Analysis
+//  Author/Uploader: Steve Wiser 
+//  E-mail:          slwiserr@erols.com
+//  Date/Time Added: 2001-08-12 11:06:29
+//  Origin:          
+//  Keywords:        
+//  Level:           basic
+//  Flags:           exploration,indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=99
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=99
+//
+//------------------------------------------------------------------------------
+//
+//  As an exploration this looks for the most recent peak
+//
+//  or trough and from that point calculates the amount of
+//
+//  volume that has traded. Taking this volume and dividing
+//
+//  this be the amount of float (shares available for trading
+//
+//  that are not held by insiders) to get a percentage of
+//
+//  the total float that has been trading since that last
+//
+//  peak or trough. From Wood's Precision Float indicator
+//
+//  type of theory somewhere between 80 and 120 percent of
+//
+//  the float one has a higher potential for finding trend
+//
+//  changes. Of course that are always exceptions to the
+//
+//  rule.
+//
+//  If you use this an an indicator look at the title to
+//
+//  see the detail information concerning the amount of
+//
+//  float, the percentage of float traded since the last
+//
+//  trend change and the number of days since a complete
+//
+//  float turnover based on a 50 DVA.
+//
+//------------------------------------------------------------------------------
+
+MaxGraph = 9;
+
+EnableScript("jscript");
+
+// this is to show only one entry per stock
+
+ticker = name();
+
+<%
+CInfo = new ActiveXObject("QuotesPlus.CompanyInfo");
+CInfo.Symbol = AFL("ticker");
+
+// try-catch block handles the situation when
+// QuotesPlus object returns strange values
+
+try
+{
+AFL("Float") = Number( CInfo.Float() );
+}
+catch( e )
+{
+AFL("Float") = 0;
+}
+
+
+%>
+
+PercentChange=8;
+
+PkBars = PeakBars(C,PerCentChange,1);
+TghBars = TroughBars(C,PerCentChange,1);
+
+Bars1 = IIF(PkBars<TghBars,PkBars,TghBars);
+Bars1 = IIF( IsEmpty( Bars1 ), 0, Bars1 ); 
+
+TotalVol1 = Sum(Volume,Bars1)/1000000;     
+
+PerCentFloat = TotalVol1/Float*100;
+
+filter = cum( 1 ) == lastvalue( cum( 1 ) ); 
+/*filter = (PerCentFloat > 85) OR (PerCentFloat < 115);*/
+
+numcolumns = 4;
+
+column0 = Float;
+column0name = "   Float   ";
+Column1 = ma(Volume,50)/1e6;
+Column1Name = "50 DVA";
+Column2 = TotalVol1;
+Column2Name = "TotalVolume";
+Column3 = PerCentFloat;
+Column3Name = "PerCentOfFloat";
+
+GraphXspace = 5;
+graph1 = close;
+Graph1Style= 64;
+graph0 = zig( close, PerCentChange );
+graphxspace= 9;
+
+title="The Per Cent of Float today="  +  WriteVal(PerCentFloat) + 
+        ";    Float="  +   WriteVal(Float)   +
+        ";    50DVA = " +   WriteVal(ma(V,50)/1e6 )  +  "    Million Shares" +
+        "   Days since for float turnover based on MOV" + 
+            WriteVal(Float/(ma(v,50)/1e6) );
+
+

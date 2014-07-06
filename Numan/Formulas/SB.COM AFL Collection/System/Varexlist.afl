@@ -1,0 +1,47 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Varexlist
+//  Author/Uploader: Jaco Jonker 
+//  E-mail:          jjonker@shisas.com
+//  Date/Time Added: 2001-07-06 04:30:40
+//  Origin:          Own development.
+//  Keywords:        Exploration, RSI, Stochastics, Macd, ROC, Ultimate
+//  Level:           medium
+//  Flags:           system,indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=69
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=69
+//
+//------------------------------------------------------------------------------
+//
+//  This is a basic exploration list I developed for the US markets. It has no
+//  fancy script, just plain widely used indicators setup in a logical format,
+//  with some unconventional combinations. It is a medium term system with
+//  excellent results in the past 5 years on the Dow Jones and Nasdaq 100, but
+//  the major problem is the huge drawdowns on some shares. Works well as an
+//  indicator in the weekly format as well.
+//
+//------------------------------------------------------------------------------
+
+/* Commentary Name Varex
+
+**    Requirements : AmiBroker 3.0 + (AFL 1.1)
+
+**         Version : 0.03
+
+**    Version Date :June 25, 2001
+
+**          Author Jaco Jonker
+
+*/
+
+ARSI = RSI(9);
+BRSI = RSI(14);
+AROC = ROC(10);
+AULT = ULTIMATE();
+AMAC = signal();
+stochKw = STOCH(14);
+stochDw = EMA( STOCH(14), 5);
+
+Buy = ARSI < 28 and BRSI < 33 and AROC < 0.4 and AULT < 40 and AMAC < 0 and stochKw < 40 and ARSI > ref(arsi,-1) and stochKw > ref(stochKw, -1);
+
+Sell = ARSI > 70 and BRSI > 65 and AULT > 60 and AMAC > 0 and stochKw > 70;

@@ -1,0 +1,894 @@
+_SECTION_BEGIN("Price");
+outsidebar = Outside();
+insidebar = H <= Ref(H,-1) AND L >= Ref(L,-1);
+upbar = H > Ref(H,-1) AND L >= Ref(L, -1);
+downbar = L < Ref(L,-1) AND H <= Ref(H,-1);
+barcolor=IIf(outsidebar, 2, 
+               IIf(downbar,   4, 
+               IIf(upbar,        5, 
+               IIf(insidebar,6, 0 ) ) ) );
+
+
+/* Colourized price bars drawn here */
+Graph0 = Close;
+Graph0Style = 128;
+
+//barcolor = IIf( downbar, 4, IIf( upbar, 5, 1 ) );
+Graph0BarColor = ValueWhen( barcolor != 0, barcolor );
+SetBarFillColor( IIf( Close > Open, colorDarkGreen, colorDarkRed) );
+
+SetChartOptions(0,chartShowArrows|chartShowDates);
+_N(Title = StrFormat("{{NAME}} - {{INTERVAL}} {{DATE}} Open %g, Hi %g, Lo %g,
+Close %g (%.1f%%) {{VALUES}}", O, H, L, C, SelectedValue( ROC( C, 1 ) ) ));
+Plot( C, "Close", ParamColor("Color", colorBlack ), styleNoTitle |
+ParamStyle("Style") | GetPriceStyle() ); 
+_SECTION_END();
+
+ _SECTION_BEGIN("SAR");
+ acc =Param("Acceleration ", 0.02, 0, 1, 0.001 );
+ accm =Param("Max. acceleration" , 0.2, 0, 1, 0.001 );
+
+ Plot( SAR( acc, accm ), _DEFAULT_NAME( ), ParamColor( "Color", colorCycle ),
+ ParamStyle(" Style", styleDots | styleNoLine, maskDefault | styleDots | styleNoLine ) );
+
+ Sell=Cross(SAR( acc, accm ),C); //artinya sell jika Parabolic SAR menembus harga dari bawah.
+ Buy=Cross(C, SAR( acc, accm )); //artinya buy jika parabolic SAR menembus harga dari atas.
+_SECTION_END ();
+
+_SECTION_BEGIN("GC 10");
+periode1=Param("periode1",5,2,60,1);
+periode2=Param("periode2",20,2,60,1);
+ 
+MA1=EMA(C,periode1);
+MA2=EMA(C,periode2);
+maincolor = IIf(MA1 < MA2, colorRed, IIf(MA1 > MA2, colorBrightGreen, 0));
+submaincolor = IIf(MA1 < MA2, colorWhite, IIf(MA1 > MA2, colorGold, 0)); 
+shadowcolor = IIf(MA1 < MA2, colorDarkRed, IIf(MA1 > MA2, colorDarkGreen, 0)); 
+
+Buy=Cover=Cross(MA1,MA2);
+Sell=Short=Cross(MA2,MA1);
+
+Plot(MA1,"exponential moving average1",maincolor);
+Plot(MA2,"exponential moving average2",submaincolor);
+PlotOHLC( O, MA1, MA2, C ,  _DEFAULT_NAME(), shadowcolor,  styleCloud  );
+
+PlotShapes(shapeUpArrow*Buy,colorGreen,0,MA1,12); //selalu dibuat untuk membentuk tanda
+PlotShapes(shapeDownArrow*Sell,colorRed,0,MA2,12);
+PlotShapes(IIf(Buy, shapeHollowUpTriangle, shapeNone), colorBrightGreen, 0,Low, Offset=-50);
+AlertIf( Buy, "SOUND C:\\Windows\\Media\\Ding.wav", "Audio alert", 2 );
+_SECTION_END();
+
+
+_SECTION_BEGIN("MENUJU FORMASI SEMPURNA SMA5-20");
+/* Create date: 20 May 2008 by Meddi Rinaldi*/
+
+
+vSMA=5;
+vEMA=20;
+
+H1 = -1;
+H2 = -2;
+H3 = -3;
+
+Filter = Buy=(EMA( Close, vSMA) < EMA( Close, vEMA) ) AND 
+          (EMA( Close, vSMA) > Ref(EMA( Close, vSMA),H1) ) AND
+          (Ref(EMA( Close, vSMA),H2) > Ref(EMA( Close,vSMA),H3) );
+
+PlotShapes(IIf(Buy, shapeHollowUpArrow, shapeNone), colorYellow, 0,Low, Offset=-15);
+
+
+AddColumn( Close, "Close" );
+AddColumn( EMA( Close, vSMA), "SMA" );
+AddColumn( EMA( Close, vEMA), "EMA" );
+AddColumn((EMA( Close, vSMA) - EMA( Close, vEMA)) / EMA( Close, vEMA)*100,"D-MA");
+
+AlertIf( Buy, "SOUND C:\\Windows\\Media\\Ding.wav", "Audioalert", 1, 1+2 );
+_SECTION_END();
+
+
+
+_SECTION_BEGIN("EMA3");
+P = ParamField("Price field",-1);
+Periods = Param("Periods", 15, 2, 300, 1, 10 );
+Plot( EMA( P, Periods ), _DEFAULT_NAME(), ParamColor( "Color", colorCycle ), ParamStyle("Style") ); 
+_SECTION_END();
+
+//Volume Price Analysis AFL - VPA Version 1.0
+//AFL by Karthikmarar. Detailed explanation available at www.vpanalysis.blogspot.com
+//====================================================================================
+_SECTION_BEGIN("Volume Price Analysis - V.1.0");
+SetChartOptions(0,chartShowArrows|chartShowDates);
+//=======================================================================================
+DTL=Param("Linear regression period",60,10,100,10); 
+wbf=Param("WRB factor",1.5,1.3,2.5,.1);
+nbf=Param("NRB factor",0.7,0.3,0.9,0.1);
+TL=LinRegSlope(EMA(C, DTL),2); 
+ Vlp=Param("Volume lookback period",30,20,300,10);
+Vrg=EMA(V,Vlp);
+St = StDev(Vrg,Vlp); 
+Vp3 = Vrg + 3*st; 
+Vp2 = Vrg + 2*st;;
+Vp1 = Vrg + 1*st;;
+Vn1 = Vrg -1*st; 
+Vn2 = Vrg -2*st; 
+rg=(H-L);
+arg=Wilders(rg,30);
+wrb=rg>(wbf*arg);
+nrb=rg<(nbf*arg); 
+Vl=V<Ref(V,-1) AND V<Ref(V,-2);
+upbar=C>Ref(C,-1);
+dnbar=C<Ref(C,-1); 
+Vh=V>Ref(V,-1) AND Ref(V,-1)>Ref(V,-2);
+Cloc=C-L;
+x=rg/Cloc;
+x1=IIf(Cloc=0,arg,x);
+Vb=V>Vrg OR V>Ref(V,-1);
+ucls=x1<2;
+dcls=x1>2;
+mcls=x1<2.2 AND x1>1.8 ;
+Vlcls=x1>4;
+Vhcls=x1<1.35;
+j=EMA(C,5);
+TLL=LinRegSlope(j,40) ;
+Tlm=LinRegSlope(j,15) ;
+tls=LinRegSlope(j,5);
+mp=(H+L)/2;
+_SECTION_END();
+//==========================================================================================
+_SECTION_BEGIN("VSA");
+utbar=wrb AND dcls AND tls>0 ;
+utcond1=Ref(utbar,-1) AND dnbar ;
+utcond2=Ref(utbar,-1) AND dnbar AND V>Ref(V,-1);
+utcond3=utbar AND V> 2*Vrg;
+trbar=Ref(V,-1)>Vrg  AND Ref(upbar,-1) AND Ref(wrb,-1) AND dnbar AND dcls AND wrb AND tll>0 AND H==HHV(H,10);
+Hutbar=Ref(upbar,-1) AND Ref(V,-1)>1.5*Vrg AND dnbar AND dcls AND NOT wrb AND NOT utbar;
+Hutcond=Ref(Hutbar,-1) AND dnbar AND dcls AND NOT utbar;
+tcbar=Ref(upbar,-1) AND H==HHV(H,5)AND dnbar AND (dcls OR mcls) AND V>vrg AND NOT wrb AND NOT Hutbar ;
+Scond1=(utcond1 OR utcond2 OR utcond3) ;
+Scond2=Ref(scond1,-1)==0;
+scond=scond1 AND scond2;
+stdn0= tll<0 AND V>Ref(V,-1) AND Ref(dnbar,-1) AND upbar AND (ucls OR mcls) AND tls<0 AND tlm<0;
+stdn= V>Ref(V,-1) AND Ref(dnbar,-1) AND upbar AND (ucls OR mcls) AND tls<0 AND tlm<0;
+stdn1= tll<0 AND V>(vrg*1.5) AND Ref(dnbar,-1) AND upbar AND (ucls OR mcls)AND tls<0 AND tlm<0;
+stdn2=tls<0 AND Ref(V,-1)<Vrg  AND upbar AND vhcls AND V>Vrg;
+bycond1= stdn OR stdn1;
+bycond= upbar  AND Ref(bycond1,-1);
+stvol= L==LLV(L,5)  AND (ucls OR mcls) AND V>1.5*Vrg AND tll<0;
+ndbar=upbar AND nrb AND Vl  AND dcls ;
+nsbar=dnbar AND nrb AND Vl  AND dcls ;
+nbbar= C>Ref(C,-1) AND Vl AND nrb AND x1<2;
+nbbar= IIf(C>Ref(C,-1) AND V<Ref(V,-1) AND V<Ref(V,-2) AND x1<1.1,1,0);
+lvtbar= vl AND L<Ref(L,-1) AND ucls;
+lvtbar1= V<Vrg AND L<Ref(L,-1) AND ucls AND tll>0 AND tlm>0 AND wrb;
+lvtbar2= Ref(Lvtbar,-1) AND upbar AND ucls;
+dbar= V>2*Vrg AND dcls AND upbar AND tls>0 AND tlm>0 AND NOT Scond1 AND NOT utbar;
+eftup=H>Ref(H,-1) AND L>Ref(L,-1) AND C>Ref(C,-1) AND C>=((H-L)*0.7+L) AND rg>arg AND V>Ref(V,-1);
+eftupfl=Ref(eftup,-1) AND (utbar OR utcond1 OR utcond2 OR utcond3);
+eftdn=H<Ref(H,-1) AND L<Ref(L,-1) AND C<Ref(C,-1) AND  C<=((H-L)*0.25+L) AND rg>arg AND V>Ref(V,-1);
+_SECTION_END();
+//=======================================================================================================================
+_SECTION_BEGIN("Chart");
+Vcolor=IIf(tls>0 AND tlm>0 AND tll>0,colorLime,IIf(tls>0 AND tlm>0 AND tll<0,colorGreen,
+IIf(tls>0 AND tlm<0 AND tll<0,colorPaleGreen,IIf(tls<0 AND tlm<0 AND tll<0,colorRed,IIf(tls<0 AND tlm>0 AND tll>0,colorPaleGreen,
+IIf(tls<0 AND tlm<0 AND tll>0,colorOrange,colorBlue))))));
+GraphXSpace = 5;
+PlotOHLC( Open,  High,  Low,  Close, "", vcolor, styleBar | styleThick  );
+_SECTION_END();
+//============================================================================================================================
+// commentary
+_SECTION_BEGIN("Commentary");
+Vpc= utbar OR utcond1 OR utcond2 OR utcond3 OR stdn0 OR stdn1 OR stdn2 OR stdn OR lvtbar1 OR Lvtbar OR Lvtbar2 OR Hutbar OR Hutcond OR ndbar OR stvol OR tcbar;
+
+if( Status("action") == actionCommentary ) 
+(
+printf ( "=========================" +"\n"));
+printf ( "VOLUME PRICE ANALYSIS" +"\n");
+printf ( "www.vpanalysis.blogspot.com" +"\n");
+printf ( "=========================" +"\n");
+printf ( Name() + " - " +Interval(2) +  "  - " + Date() +" - " +"\n"+"High-"+H+"\n"+"Low-"+L+"\n"+"Open-"+O+"\n"+
+"Close-"+C+"\n"+ "Volume= "+ WriteVal(V)+"\n");
+WriteIf(Vpc,"=======================","");
+WriteIf(Vpc,"VOLUME ANALYSIS COMMENTARY:\n","");
+
+WriteIf(utbar , "Up-thrusts are designed to catch stops and to mislead as many traders as possible.  
+They are normally seen after there has been weakness in the background. The market makers know that the
+market is weak, so the price is marked up to catch stops, encourage traders to go long in a weak market,
+AND panic traders that are already Short into covering their very good position.","")+
+WriteIf(utcond3,"This upthrust bar is at high volume.This is a sure sign of weakness. One may even seriously 
+consider ending the Longs AND be ready to reverse","")+WriteIf(utbar OR utcond3," Also note that A wide spread 
+down-bar that appears immediately after any up-thrust, tends to confirm the weakness (the market makers are 
+locking in traders into poor positions).
+With the appearance of an upthrust you should 
+certainly be paying attention to your trade AND your stops. On many upthrusts you will find that the market will 
+'test' almost immediately.","")+WriteIf(utcond1 , "A wide spread down bar following a Upthrust Bar.
+This confirms weakness. The Smart Money is locking in Traders into poor positions","");
+WriteIf(utcond2 , "Also here the volume is high( Above Average).This is a sure sign of weakness. The Smart Money is 
+locking in Traders into poor positions","")+WriteIf(stdn, "Strength Bar. The stock has been in a down Trend. An upbar 
+with higher Volume closing near the High is a sign of strength returning. The downtrend is likely to reverse soon. ","")+
+WriteIf(stdn1,"Here the volume is very much above average. This makes this indication more stronger. ","")+ 
+WriteIf(bycond,"The previous bar saw strength coming back. This upbar confirms strength. ","")+
+WriteIf(Hutbar," A pseudo Upthrust. This normally appears after an Up Bar with above average volume. This looks like an upthrust bar
+closing down near the Low. But the Volume is normally Lower than average. this is a sign of weakness.If the Volume is High then weakness 
+increases. Smart Money is trying to trap the retailers into bad position. ","")+
+WriteIf(Hutcond, "A downbar after a pseudo Upthrust Confirms weakness. If the volume is above average the weakness is increased. ","")+
+WriteIf(Lvtbar2,"The previous bar was a successful Test of supply. The current bar is a upbar with higher volume. This confirms strength","")+
+WriteIf(dbar,"A wide range, high volume bar in a up trend closing down is an indication the Distribution is in progress. The smart money
+is Selling the stock to the late Comers rushing to Buy the stock NOT to be Left Out Of a Bullish move. ","")+
+WriteIf(Lvtbar2,"The previous bar was a successful Test of supply. The current bar is a upbar with higher volume. This confirms strength","")+
+WriteIf(tcbar,"The stock has been moving up on high volume. The current bar is a Downbar with high volume. Indicates weakness and probably end of the up move","")+
+WriteIf(eftup,"Effort to Rise bar. This normally found in the beginning of a Markup Phase and is bullish sign.These may be found at the top of an Upmove as the Smart money makes a 
+last effort to move the price to the maximum","")+
+WriteIf(eftdn,"Effort to Fall bar. This normally found in the beginning of a Markdown phase.","")+
+
+WriteIf(nsbar,"No Supply. A no supply bar indicates supply has been removed and the Smart money can markup the price. It is better to wait for confirmation","")+
+WriteIf(stvol,"Stopping Volume. This will be an downbar during a bearish period closing towards the Top accompanied by High volume.
+A stopping Volume normally indicates that smart money is absorbing the supply which is a Indication that they are Bullishon the MArket.
+Hence we Can expect a reversal in the down trend. ","")+
+WriteIf(ndbar, "No Demand
+Brief Description:
+Any up bar which closes in the middle OR Low, especially if the Volume has fallen off, 
+is a potential sign of weakness.
+
+Things to Look Out for:
+if the market is still strong, you will normally see signs of strength in the next few bars, 
+which will most probably show itself as a:
+* Down bar with a narrow spread, closing in the middle OR High. 
+* Down bar on Low Volume.","");
+_SECTION_END();
+
+
+_SECTION_BEGIN("Advanced Trend Lines");
+ShowSR   = ParamToggle("Show Vert S/R","No|Yes", 0);
+SRPer    = Param("S/R Percentage", 3, 1);
+SRBack   = Param("S/R Back", 5, 1);
+function GetXSupport(Lo, Percentage, Back)
+{
+ return ((BarCount - 1) - LastValue(TroughBars(Lo, Percentage,Back)));
+}
+function GetYSupport(Lo, Percentage, Back)
+{
+ return (LastValue(Trough(Lo, Percentage, back)));
+}
+
+function GetXResistance(Hi, Percentage, Back)
+{
+ return ((BarCount - 1) -LastValue(PeakBars(Hi, Percentage, Back)));
+}
+function GetYResistance(Hi, Percentage, Back)
+{
+ return (LastValue(Peak(Hi, Percentage, Back)));
+}
+function TD_Supply(P)
+{
+	return ( P > Ref(P, 1) AND P > Ref(P, -1) AND P > Ref(C, -2));
+}
+function TD_Demand(P)
+{
+	return ( P < Ref(P, 1) AND P < Ref(P, -1) AND P < Ref(C, -2));
+}
+
+//Parameters
+Percentage 	= Param("Percentage", 1.5, 0.01, 100. ,0.01);
+DrawAllLines 	= ParamToggle("Draw All Lines?", "No|Yes");
+Lines 			= Param("Lines?", 1, 1, BarCount-2);
+DrawR 			= ParamList("Resistance Points", "Off|High to High|High to Low", 1);
+DrawS 			= ParamList("Support Points", "Off|Low to Low|Low to High", 1);
+ShowTDP 		= ParamToggle("Show TD Pionts", "No|Yes", 1);
+AllOrDownR 	= ParamToggle("Resistance Direction", "All|Down");
+AllOrUpS 		= ParamToggle("Support Direction", "All|Up");
+ShowSR			= ParamToggle("Show Vert S/R","No|Yes", 1);
+SRPer			= Param("S/R Percentage", 3, 1);
+SRBack			= Param("S/R Back", 5, 1);
+str = "";
+Res = Sup = 0;
+Con = 1;
+
+Main = C;
+Con = ConS = ConR = 1;
+if(DrawS=="Low to Low")
+{
+	Support1 = L;
+	Support2 = L;
+}
+else
+{
+	Support1 = L;
+	Support2 = H;
+}
+if(DrawR=="High to High")
+{
+	Resistance1 = H;
+	Resistance2 = H;
+}
+else
+{
+	Resistance1 = H;
+	Resistance2 = L;
+}
+
+//Plotting Area
+Plot(Main, "", IIf(C>O,colorGreen, colorRed), styleBar);
+if(DrawAllLines)
+for(i = 2; i<=Lines+1; i++)
+{
+	if(DrawS!="Off")
+	{
+		x0 = GetXSupport(Support1, Percentage, i);
+		x1 = GetXSupport(Support2, Percentage, i-1);
+		y0 = GetYSupport(Support1, Percentage, i);
+		y1 = GetYSupport(Support2, Percentage, i-1);
+		x = LineArray(x0, y0, x1, y1, 1);
+		if(AllOrUpS) ConS = StrToNum(NumToStr(y0 < y1));
+		if(Con AND ConS)
+			Plot(x, "", IIf(LastValue(C) < LastValue(x), colorCustom12,colorYellow),
+styleLine|styleThick);
+	}
+	if(DrawR!="Off")
+	{
+		x0 = GetXResistance(Resistance1, Percentage, i);
+		x1 = GetXResistance(Resistance2, Percentage, i-1);
+		y0 = GetYResistance(Resistance1, Percentage, i);
+		y1 = GetYResistance(Resistance2, Percentage, i-1);
+		x = LineArray(x0, y0, x1, y1, 1);
+		if(AllOrDownR) ConR = y0 > y1;
+		if(Con AND ConR)
+			Plot(x, "",  IIf(LastValue(C) < LastValue(x), colorCustom12,colorYellow),
+styleLine|styleThick);
+	}
+}
+else
+{
+	if(DrawS!="Off")
+	{
+		x0 = GetXSupport(Support1, Percentage, Lines+1);
+		x1 = GetXSupport(Support2, Percentage, Lines);
+		y0 = GetYSupport(Support1, Percentage, Lines+1);
+		y1 = GetYSupport(Support2, Percentage, Lines);
+		x = LineArray(x0, y0, x1, y1, 1 );
+		Sup = LastValue(LinRegSlope(x, Lines+1));
+		if(AllOrUpS) ConS = y0 < y1;
+		if(Con AND ConS)
+			Plot(x, "", IIf(LastValue(C) < LastValue(x), colorCustom12,colorYellow),
+styleLine|styleThick);
+	}
+	if(DrawR!="Off")
+	{
+		x0 = GetXResistance(Resistance1, Percentage, Lines+1);
+		x1 = GetXResistance(Resistance2, Percentage, Lines);
+		y0 = GetYResistance(Resistance1, Percentage, Lines+1);
+		y1 = GetYResistance(Resistance2, Percentage, Lines);
+		x = LineArray(x0, y0, x1, y1, 1 );
+		Res = LastValue(LinRegSlope(x, Lines+1));
+		if(AllOrDownR) ConR = y0 > y1;
+		if(Con AND ConR)
+			Plot(x, "",  IIf(LastValue(C) < LastValue(x), colorCustom12,colorYellow),
+styleLine|styleThick);
+	}
+str = "\nR Slope=("+Res+"), S Slope=("+Sup+")";
+}
+
+if(ShowTDP)
+{
+	PlotShapes(TD_Supply(H)*shapeSmallCircle, colorRed, 0, H, H*.001);
+	PlotShapes(TD_Demand(L)*shapeSmallCircle, colorBrightGreen, 0, L, -L*.001);
+}
+
+if(ShowSR)
+{
+    for(i=1; i<=SRBack; i++)
+    {
+        x0 = GetXSupport(L, SRPer, i);
+        x1 = BarCount-1;
+        y0 = GetYSupport(L, SRPer, i);
+        x = LineArray(x0, y0, x1, y0, 0);
+        Plot(x, "", IIf(LastValue(C) > x, colorGreen, colorRed), styleLine|styleDashed|styleThick);
+        x0 = GetXResistance(H, SRPer, i);
+        y0 = GetYResistance(H, SRPer, i);
+        x = LineArray(x0, y0, x1, y0, 0);
+        Plot(x, "", IIf(LastValue(C) > x, colorGreen, colorRed), styleLine|styleDashed|styleThick);
+
+    }
+}
+
+
+//=========================================================================================
+//ploting the chart shapes
+_SECTION_BEGIN("Indications");
+PlotShapes( shapeSmallSquare*(utbar AND NOT scond) , colorRed, 0, H, 10 );
+PlotShapes(shapeSmallCircle*trbar, colorBlue, 0, H, 20 );
+PlotShapes(shapeSmallDownTriangle*scond, colorRed, 0, H,-20);
+PlotShapes(shapeSmallSquare*stdn, colorLime, 0, L, -20 );
+PlotShapes(shapeSmallSquare*stdn1, colorLime, 0, L, -20 );
+PlotShapes(shapeSmallSquare*lvtbar1, colorLime, 0, L, -20 );
+PlotShapes(shapeSmallUpTriangle*lvtbar2, colorYellow, 0, L, -20 );
+PlotShapes(shapeHollowSmallCircle*stvol, colorLime, 0, L, -10 );
+PlotShapes(shapeSmallUpTriangle*bycond, colorLime, 0, L, -20 );
+PlotShapes(shapeSmallSquare*(Hutbar) , colorBlue, 0, H, 10 );
+PlotShapes(shapeSmallDownTriangle*(Hutcond) , colorBlue, 0, H, -20 );
+PlotShapes(shapeSmallDownTriangle*tcbar , colorYellow, 0, H, -20 );
+PlotShapes(shapeSmallUpTriangle*stdn2, colorAqua, 0, L, -20 );
+PlotShapes(shapeSmallSquare*(dbar) , colorBlue, 0, H, 10 );
+PlotShapes(shapeSmallSquare*lvtbar, colorCustom12, 0, L, -20);
+PlotShapes(shapeSmallSquare*(ndbar) , colorBlue, 0, H, 10 );
+PlotShapes(shapeSmallCircle*nsbar, colorLime, 0, L, -20 );
+PlotShapes(shapeSmallCircle*eftup, colorTurquoise, 0, mp, 0 );
+PlotShapes(shapeSmallCircle*eftdn, colorYellow, 0, mp, 0 );
+
+_SECTION_END();
+//======================================================================================================================================================================================
+//TITLE
+_SECTION_BEGIN("Title");
+if( Status("action") == actionIndicator ) 
+(
+Title = EncodeColor(colorWhite)+ "Volume Price Analysis" + " - " +  Name() + " - " + EncodeColor(colorRed)+ Interval(2) + EncodeColor(colorWhite) +
+ "  - " + Date() +" - " +EncodeColor(colorLime)+ "Volume= "+WriteVal(V)+"--"+EncodeColor(colorYellow)+
+WriteIf (utbar, " An Upthrust Bar. A sign of weakness. ","")+
+WriteIf (utcond1, " A downbar after an Upthrust. Confirm weakness. ","")+
+WriteIf (utcond2 AND NOT utcond1, " A High Volume downbar after an Upthrust. Confirm weakness.","")+
+WriteIf (utcond3, "This upthrust at very High Voume, Confirms weakness","")+
+WriteIf (stdn1, "Strength seen returning after a down trend. High volume adds to strength. ","")+
+WriteIf (stdn0 AND NOT stdn, "Strength seen returning after a down trend. ","")+
+WriteIf (stdn AND NOT stdn1, "Strength seen returning after a long down trend. ","")+
+WriteIf (Lvtbar, "Test for supply. ","")+
+WriteIf (Lvtbar2, "An Upbar closing near High after a Test confirms strength. ","")+
+WriteIf (bycond, "An Upbar closing near High. Confirms return of Strength. ","")+
+WriteIf (dbar, "A High Volume Up Bar closing down in a uptrend shows Distribution. ","")+
+WriteIf (Hutbar, "Psuedo UpThrust.   A Sign of Weakness. ","")+
+WriteIf (Hutcond, "A Down Bar closing down after a Pseudo Upthrust confirms weakness. ","")+
+WriteIf (Lvtbar1, "Test for supply in a uptrend. Sign of Strength. ","")+
+WriteIf (stdn2, "High volume upbar closing on the high indicates strength. ","")+
+WriteIf (Tcbar, "High volume Downbar after an upmove on high volume indicates weakness. ","")+
+WriteIf (ndbar, "No Demand. A sign of Weakness. ","")+
+WriteIf (nsbar, "No Supply. A sign of Strength. ","")+
+WriteIf (eftup, "Effort to Rise. Bullish sign ","")+
+WriteIf (eftdn, "Effort to Fall. Bearish sign ","")+
+WriteIf (eftupfl, "Effort to Move up has failed. Bearish sign ","")+
+WriteIf (stvol, "Stopping volume. Normally indicates end of bearishness is nearing. ","")+
+("\n Volume: ")+WriteIf(V>Vp2,EncodeColor(colorLime)+"Very High",WriteIf(V>Vp1,EncodeColor(colorLime)+" High",WriteIf(V>Vrg,EncodeColor(colorLime)+"Above Average",
+WriteIf(V<Vrg AND V>Vn1,EncodeColor(colorRed)+"Less than Average",WriteIf(V<Vn1,"Low","")))))+
+(EncodeColor(colorYellow)+"      Spread: ")+WriteIf(rg >(arg*2),EncodeColor(colorLime)+" Wide",WriteIf(rg>arg,EncodeColor(colorLime)+" Above Average",EncodeColor(colorRed)+" Narrow"))+
+(EncodeColor(colorYellow)+"      Close:  ")+WriteIf(Vhcls,EncodeColor(colorLime)+"Very High",WriteIf(ucls,EncodeColor(colorLime)+"High",WriteIf(mcls,EncodeColor(colorYellow)+"Mid",
+WriteIf(dcls,EncodeColor(colorRed)+"Down","Very Low"))))+
+("\n Trend: ")+WriteIf(tls>0,EncodeColor(colorLime)+"  Short Term-UP",EncodeColor(colorRed)+"  Short Term-Down")+
+WriteIf(tlm>0,EncodeColor(colorLime)+"         MID Term-UP",EncodeColor(colorRed)+"        Mid Term-Down")+
+WriteIf(tll>0,EncodeColor(colorLime)+"       Long Term-Up",EncodeColor(colorRed)+"         Long term-Down")); 
+_SECTION_END();
+//============================================================================================================================================================================================
+_SECTION_BEGIN("Exploration");
+
+
+lqok=V>Vrg;
+Cond=stdn1 OR bycond  OR stdn2 OR ndbar OR tcbar OR utbar OR utcond1 OR trbar;
+color = IIf(stdn1, colorPaleGreen,IIf(bycond , colorGreen,IIf(stdn2, colorBrightGreen, 
+        IIf(ndbar, colorYellow,IIf(Tcbar, colorOrange,IIf(utbar OR  utcond1, colorRed,IIf(trbar,colorCustom12,colorWhite))))))); 
+Filter = (cond AND lqok) ;
+
+AddTextColumn(
+WriteIf(stdn1,"Strenth Seen", 
+WriteIf(bycond ,"STR + ",
+WriteIf(stdn2,"Strength Pronouced",
+WriteIf(ndbar,"Weakness seen",
+WriteIf(Tcbar,"WEAK",
+WriteIf(utbar OR  utcond1,"Weakness pronounced",
+WriteIf(trbar,"Reversal Likely",""))))))),"Strength Meter",1,colorDefault,color); 
+
+//=====================================================================
+//background stock name (works only on Amibroker version 5.00 onwards.
+//=====================================================================
+_SECTION_BEGIN("Name");
+GfxSetOverlayMode(1);
+GfxSelectFont("Tahoma", Status("pxheight")/6 );
+GfxSetTextAlign( 6 );// center alignment
+//GfxSetTextColor( ColorRGB( 200, 200, 200 ) );
+GfxSetTextColor( ColorHSB( 42, 42, 42 ) );
+GfxSetBkMode(0); // transparent
+GfxTextOut( Name(), Status("pxwidth")/2, Status("pxheight")/12 );
+GfxSelectFont("Tahoma", Status("pxheight")/12 );
+GfxTextOut( "VPA", Status("pxwidth")/2, Status("pxheight")/3 );
+GfxSelectFont("Tahoma", Status("pxheight")/36 );
+//GfxTextOut( "www.vpanalysis.blogspot.com", Status("pxwidth")/2, Status("pxheight")/2 );
+_SECTION_END();
+//======================================================================================
+
+_SECTION_BEGIN("Ribbon Trend");
+P = ParamField( "Price field", -1 );
+
+PMA1 = Param( "MA1", 5, 2, 400, 1 );
+PMA2 = Param( "MA2", 20, 2, 400, 1 );
+PMA3 = Param( "MA3", 50, 2, 400, 1 );
+PMA4 = Param( "MA4", 200, 2, 400, 1 );
+
+MA1 = EMA( P, PMA1 );
+MA2 = EMA( P, PMA2 );
+MA3 = EMA( P, PMA3 );
+MA4 = EMA( P, PMA4 );
+
+
+Cond1 = Close > MA1 AND NOT( Close > MA2 ) AND NOT( MA1 > MA2 );
+Cond2 = Close > MA1 AND Close > MA2 AND NOT( MA1 > MA2 );
+Cond3 = Close > MA1 AND Close > MA2 AND MA1 > MA2;
+Cond4 = NOT( Close > MA1 ) AND Close > MA2 AND MA1 > MA2;
+Cond5 = NOT( Close > MA1 ) AND NOT( Close > MA2 ) AND MA1 > MA2;
+Cond6 = NOT( Close > MA1 ) AND NOT( Close > MA2 ) AND NOT( MA1 > MA2 );
+
+
+for ( i = 1; i < BarCount; i++ )
+{
+	if ( Cond1[i] ){
+	pointer[i] = 1;Color[i] = ColorRGB(128,128,255);
+	//PlotText( "\n 1", i, Low[i], colorGreen );
+	}
+	else if ( Cond2[i] ){
+	pointer[i] = 2;Color[i] = colorAqua;
+	//PlotText( "\n 2", i, Low[i], colorLightBlue );
+	}
+	else if ( Cond3[i] ){
+	pointer[i] = 3;Color[i] = colorGreen;
+	//PlotText( "\n 3", i, Low[i], colorGrey40 );
+	}
+	else if ( Cond4[i] ){
+	pointer[i] = 4; Color[i] = colorYellow;
+	//PlotText( "\n 4", i, Low[i], colorYellow );
+	}
+	else if ( Cond5[i] ){
+	pointer[i] = 5; Color[i] = ColorRGB(255,159,207);
+	//PlotText( "\n 5", i, Low[i], colorOrange );
+	}
+	else if ( Cond6[i] ){
+	pointer[i] = 6; Color[i] = colorRed;
+	//PlotText( "\n 6", i, Low[i], colorRed );
+	}
+	else{
+	Color[i] = colorWhite;
+	}
+}
+
+Plot( 1, "", Color, styleArea | styleOwnScale | styleNoLabel, 0, 80 );
+_SECTION_END();
+
+_SECTION_BEGIN("Bollinger Bands");
+P = ParamField("Price field",-1);
+Periods = Param("Periods", 15, 2, 100, 1 );
+Width = Param("Width", 2, 0, 10, 0.05 );
+Color = ParamColor("Color", colorCycle );
+Style = ParamStyle("Style");
+//Plot( BBandTop( P, Periods, Width ), "BBTop" + _PARAM_VALUES(), Color, Style ); 
+//Plot( BBandBot( P, Periods, Width ), "BBBot" + _PARAM_VALUES(), Color, Style ); 
+_SECTION_END();
+
+_SECTION_BEGIN("BB Trading by Dimaz");
+Sell=Cross(P,BBandTop( P, Periods, Width ));
+Buy=Cross(P,BBandBot( P, Periods, Width ));
+PlotShapes(IIf(Sell, shapeHollowDownArrow , shapeNone), colorRed, 0, Low, Offset=-50);
+PlotShapes(IIf(Buy, shapeHollowUpArrow , shapeNone), colorRed, 0, Low, Offset=-50);
+_SECTION_END();
+
+_SECTION_BEGIN("Linear Regression 2 SD");
+//  Linear Regression Line with 2 Standard Deviation Channels Plotted Above and Below 
+//  Written by Patrick Hargus, with critical hints from Marcin Gorzynski, Amibroker.com Technical Support 
+//      Designed for use with AB 4.63 beta and above, using drag and drop feature.  
+//  Permits plotting a linear regression line of any price field available on the chart for a period determined by the user.  
+//     2 Channels, based on a standard deviation each determined by the user, are plotted above and below the linear regression line. 
+// 		A look back feature is also provided for examining how the indicator would have appeared on a chart X periods in the past.    
+
+
+P = ParamField("Price field",-1);
+Daysback = Param("Period for Liner Regression Line",21,1,240,1);
+shift = Param("Look back period",0,0,240,1); 
+
+
+//  =============================== Math Formula =============================================================
+
+x = Cum(1);
+lastx = LastValue( x ) - shift; 
+aa = LastValue( Ref(LinRegIntercept( p, Daysback), -shift) ); 
+bb = LastValue( Ref(LinRegSlope( p, Daysback ), -shift) ); 
+y = Aa + bb * ( x - (Lastx - DaysBack +1 ) ); 
+
+
+// ==================Plot the Linear Regression Line ==========================================================
+
+
+LRColor = ParamColor("LR Color", colorCycle ); 
+LRStyle = ParamStyle("LR Style");
+
+LRLine =  IIf( x > (lastx - Daysback) AND BarIndex() < Lastx, y, Null );
+Plot( LRLine , "LinReg", LRCOLOR, LRSTYLE ); //  styleDots ); 
+
+// ==========================  Plot 1st SD Channel ===============================================================
+
+SDP = Param("Standard Deviation", 1.5, 0, 6, 0.1);
+SD = SDP/2;
+
+z = (GetPerformanceCounter()/100)%256; 
+anim=ColorHSB( ( z ) % 256, 255, Param("Brightness", 75, 0, 255, 1 ));
+RequestTimedRefresh(1);
+
+
+width = LastValue( Ref(SD*StDev(p, Daysback),-shift) );   // THIS IS WHERE THE WIDTH OF THE CHANELS IS SET  
+SDU = IIf( x > (lastx - Daysback) AND BarIndex() < Lastx, y+width , Null ) ;
+SDL = IIf( x > (lastx - Daysback) AND BarIndex() < Lastx, y-width , Null ) ;
+
+SDColor = ParamColor("SD Color", colorCycle ); 
+SDStyle = ParamStyle("SD Style");
+
+Plot( SDU , "Upper Lin Reg", SDColor,SDStyle ); 
+Plot( SDL , "Lower Lin Reg", SDColor,SDStyle ); 
+//PlotOHLC( O, SDU, SDL,C ,  _DEFAULT_NAME(), colorPlum,  styleCloud  );
+PlotOHLC( O, SDU, SDL,C ,  _DEFAULT_NAME(), anim,  styleCloud  );
+
+//  ==========================  Plot 2d SD Channel ===============================================================
+
+SDP2 = Param("2d Standard Deviation", 2.0, 0, 6, 0.1);
+SD2 = SDP2/2;
+
+width2 = LastValue( Ref(SD2*StDev(p, Daysback),-shift) );   // THIS IS WHERE THE WIDTH OF THE CHANELS IS SET  
+SDU2 = IIf( x > (lastx - Daysback) AND BarIndex() < Lastx, y+width2 , Null ) ;
+SDL2 = IIf( x > (lastx - Daysback) AND BarIndex() < Lastx, y-width2 , Null ) ;
+
+SDColor2 = ParamColor("2 SD Color", colorCycle ); 
+SDStyle2 = ParamStyle("2 SD Style");
+
+Plot( SDU2 , "Upper Lin Reg", SDColor2,SDStyle2 ); 
+Plot( SDL2 , "Lower Lin Reg", SDColor2,SDStyle2 ); 
+
+// ============================ End Indicator Code ==============================================================
+
+_SECTION_END();
+
+
+_SECTION_BEGIN("Fib Retracements");
+	fibs = ParamToggle("Plot Fibs","Off|On",1);
+	pctH = Param ("Pivot Hi %", 0.325,0.001,2.0,0.002);
+	HiLB = Param ("Hi LookBack",1,1,BarCount-1,1);
+	pctL = Param ("Pivot Lo %", 0.325,0.001,2.0,0.002);
+	LoLB = Param ("Lo LookBack",1,1,BarCount-1,1);
+	Back = Param ("Extend Left = 2",1,1,500,1);
+	Fwd  = Param("Plot Forward", 0, 0, 500, 1);
+	text = ParamToggle("Plot Text","Off|On",1);
+	hts  = Param ("Text Shift", -33.5,-50,50,0.10);
+	style =ParamStyle("Line Style",styleLine,styleNoLabel);
+x = BarIndex();
+pRp  = PeakBars( H, pctH, 1) == 0;
+yRp0 = SelectedValue(ValueWhen( pRp, H, HiLB));
+xRp0 = SelectedValue(ValueWhen( pRp, x, HiLB));
+pSp  = TroughBars( L, pctL, 1) == 0;
+ySp0 = SelectedValue(ValueWhen( pSp, L, LoLB));
+xSp0 = SelectedValue(ValueWhen( pSp, x, LoLB));
+Delta = yRp0 - ySp0;
+
+function fib(ret)
+{
+retval = (Delta * ret);
+Fibval = IIf(ret < 1.0 
+AND xSp0 < xRp0, yRp0 - retval, IIf(ret < 1.0 
+AND xSp0 > xRp0, ySp0 + retval,IIf(ret > 1.0 
+AND xSp0 < xRp0, yRp0 - retval, IIf(ret > 1.0 
+AND xSp0 > xRp0, ySp0 + retval, Null)))); 
+return FibVal;
+}
+
+x0 = Min(xSp0,xRp0)-Back;
+x1 = (BarCount -1);
+//////////////////////////////////////////////////////////////////
+r236 = fib(0.236);	r236I = LastValue (r236,1);
+r382 = fib(0.382);	r382I = LastValue (r382,1);
+r050 = fib(0.50);		r050I = LastValue (r050,1);
+r618 = fib(0.618);	r618I = LastValue (r618,1);
+r786 = fib(0.786);	r786I = LastValue (r786,1);
+e127 = fib(1.27);		e127I = LastValue (e127,1);
+e162 = fib(1.62);		e162I = LastValue (e162,1);
+e200 = fib(2.00);		e200I = LastValue (e200,1);
+e262 = fib(2.62);		e262I = LastValue (e262,1);
+e424 = fib(4.24);		e424I = LastValue (e424,1);
+//////////////////////////////////////////////////////////////////
+p00 = IIf(xSp0 > xRp0,ySp0,yRp0); 	p00I = LastValue (p00,1);
+p100 = IIf(xSp0 < xRp0,ySp0,yRp0); 	p100I = LastValue (p100,1);
+color00 =IIf(xSp0 > xRp0,colorLime,colorRed);
+color100 =IIf(xSp0 < xRp0,colorLime,colorRed);
+//////////////////////////////////////////////////////////////////
+numbars = LastValue(Cum(Status("barvisible")));
+fraction= IIf(StrRight(Name(),3) == "", 3.2, 3.2);
+//////////////////////////////////////////////////////////////////
+if(fibs==1)
+{
+Plot(LineArray(xRp0-Fwd,yRp0,x1,yRp0,Back),"PR",32,8|styleNoRescale,Null, Null,Fwd);
+Plot(LineArray(xSp0-Fwd,ySp0,x1,ySp0,Back),"PS",27,8|styleNoRescale,Null, Null,Fwd);
+Plot(LineArray(x0-Fwd,r236,x1,r236,Back),"",45,style|styleNoRescale,Null, Null,Fwd);
+Plot(LineArray(x0-Fwd,r382,x1,r382,Back),"",44,style|styleNoRescale,Null, Null,Fwd);
+Plot(LineArray(x0-Fwd,r050,x1,r050,Back),"",41,style|styleNoRescale,Null, Null,Fwd);
+Plot(LineArray(x0-Fwd,r618,x1,r618,Back),"",43,style|styleNoRescale,Null, Null,Fwd);
+Plot(LineArray(x0-Fwd,r786,x1,r786,Back),"",42,style|styleNoRescale,Null, Null,Fwd);
+Plot(LineArray(x0-Fwd,e127,x1,e127,Back),"e127",47,style|styleNoRescale,Null, Null,Fwd);
+Plot(LineArray(x0-Fwd,e162,x1,e162,Back),"e162",47,style|styleNoRescale,Null, Null,Fwd);
+Plot(LineArray(x0-Fwd,e200,x1,e200,Back),"p200",47,style|styleNoRescale,Null, Null,Fwd);
+Plot(LineArray(x0-Fwd,e262,x1,e262,Back),"p262",47,style|styleNoRescale,Null, Null,Fwd);
+Plot(LineArray(x0-Fwd,e424,x1,e424,Back),"p424",25,style|styleNoRescale,Null, Null,Fwd);
+}
+//////////////////////////////////////////////////////////////////
+if(text==1)
+{ 
+PlotText(" 0% = " + WriteVal(p00,fraction), 	LastValue(BarIndex())-(numbars/hts), p00I  + 0.05, color00);
+PlotText("23% = " + WriteVal(r236,fraction), LastValue(BarIndex())-(numbars/hts), r236I + 0.05, 45);
+PlotText("38% = " + WriteVal(r382,fraction), LastValue(BarIndex())-(numbars/hts), r382I + 0.05, 44);
+PlotText("50% = " + WriteVal(r050,fraction), LastValue(BarIndex())-(numbars/hts), r050I + 0.05, 41);
+PlotText("62% = " + WriteVal(r618,fraction), LastValue(BarIndex())-(numbars/hts), r618I + 0.05, 43);
+PlotText("78% = " + WriteVal(r786,fraction), LastValue(BarIndex())-(numbars/hts), r786I + 0.05, 42);
+PlotText("100% = " + WriteVal(p100,fraction), LastValue(BarIndex())-(numbars/hts),p100I + 0.05, color100);
+PlotText("127% = " + WriteVal(e127,fraction), LastValue(BarIndex())-(numbars/hts),e127I + 0.05, 47);
+PlotText("162% = " + WriteVal(e162,fraction), LastValue(BarIndex())-(numbars/hts),e162I + 0.05, 47);
+PlotText("200% = " + WriteVal(e200,fraction), LastValue(BarIndex())-(numbars/hts),e200I + 0.05, 47);
+PlotText("262% = " + WriteVal(e262,fraction), LastValue(BarIndex())-(numbars/hts),e262I + 0.05, 47);
+PlotText("424% = " + WriteVal(e424,fraction), LastValue(BarIndex())-(numbars/hts),e424I + 0.05, 25);
+}
+_SECTION_END();
+//////////////////////////////////////////////////////////////////
+//if (tchoice==1 ) 
+{
+//_N(Title = EncodeColor(colorWhite)+StrFormat(" {{NAME}} -   {{INTERVAL}}      {{DATE}}    Open:  %g,    High:  %g,     Low:  %g,     Close:  %g     {{VALUES}}",O, H, L, C, SelectedValue( ROC( C, 1   ) ) ));
+}
+//////////////////////////////////////////////////////////////////
+//if (tchoice==2 ) 
+{
+//Title = EncodeColor(colorWhite)+  Date() + "   Tick = " + EncodeColor(5) + Interval()+
+EncodeColor(colorWhite) + "     Open = " + EncodeColor(colorWhite) + O + 
+EncodeColor(colorWhite) + "     High = " + EncodeColor(5) + H +
+EncodeColor(colorWhite) + "      Low = " + EncodeColor(colorRed) + L + 
+EncodeColor(colorWhite) + "     Close = " + EncodeColor(colorWhite) + C + "\n" +
+EncodeColor( colorWhite) +"_______________"+"\n"+
+EncodeColor( colorWhite)  + "424%   =  "	+ 	EncodeColor(25)+ e424 + " " +"\n"+
+EncodeColor( colorWhite)  + "262%   =  "	+ 	EncodeColor(47)+ e262 + " " +"\n"+
+EncodeColor( colorWhite)  + "200%   =  "	+ 	EncodeColor(47)+ e200 + " " +"\n"+
+EncodeColor( colorWhite)  + "162%   =  "	+ 	EncodeColor(47)+ e162 + " " +"\n"+
+EncodeColor( colorWhite)  + "127%   =  "	+ 	EncodeColor(47)+ e127 + " " +"\n"+
+EncodeColor( colorYellow) + "  Res    =  "	+ 	EncodeColor(32)+ p100 + " " +"\n"+
+EncodeColor( colorWhite)  + "  78%   =  "	+	EncodeColor(42)+ r786 + " " +"\n"+
+EncodeColor( colorWhite)  + "  62%   =  "	+ 	EncodeColor(43)+ r618 + " " +"\n"+
+EncodeColor( colorWhite)  + "  50%   =  "	+ 	EncodeColor(41)+ r050 + " " +"\n"+
+EncodeColor( colorWhite)  + "  38%   =  "	+ 	EncodeColor(44)+ r382 + " " +"\n"+
+EncodeColor( colorWhite)  + "  23%   =  "	+ 	EncodeColor(45)+ r236+ " " +"\n"+
+EncodeColor( colorYellow) + "  Sup   =   "	+ 	EncodeColor(34)+ p00 + " " ;
+}
+GraphXSpace=5;
+
+//=====================================================================
+//background stock name (works only on Amibroker version 5.00 onwards.
+//=====================================================================
+
+_SECTION_BEGIN("Scan Harga");
+
+EntryPrice = Param("EntryPrice", 0, 0, 100000, 1 );
+Rule = Close >= EntryPrice ;
+
+Filter= Sell= Rule AND V>2000 ;
+//Filter= Sell= (EntryPrice AND V>2000) OR (Rule AND V>2000 );
+
+V0 = Ref(Volume,0) ;
+V1 = Ref(Volume,- 1);
+V2 = Ref(Volume,- 2);
+V3 = Ref(Volume,- 3);
+VR=(V1+V2+V3) /3;
+VTREND = (V0 > VR);
+VoK =  V0>V1 AND V0>VR;
+Vup= (V0>V1 AND V1>V2) AND (V0>Vr) AND ((V0/Vr)>1.1);
+
+
+AddColumn(Ref(C,-1), "PrevClose",1.0, IIf( Ref(C,-1), colorGold, colorBlack ));
+AddColumn(O, "Open",1.0, IIf( O==L , colorGreen, IIf(O==Ref(C,-1),colorGold, IIf(O<Ref(C,-1),colorRed,colorBlue) )));
+AddColumn(Close, "Last",1.0, IIf(C>Ref(C,-1), colorGreen, colorRed ));
+AddColumn(C-Ref(C,-1),"Naik/Trn",1.0, IIf(C>Ref(C,-1),colorGreen,IIf(C==Ref(C,-1),colorGold,IIf(C<Ref(C,-1),colorRed,colorBlue) )));
+AddColumn(EntryPrice, "Sell Order", 1.0,colorDefault, IIf(C>=EntryPrice,colorGold,colorWhite));
+AddColumn(VOk,"V.Ok",1.0,colorDefault, IIf( VOk, colorGreen, colorRed ) );
+AddColumn( Vup, "V.Up", 1,IIf( Vup, colorGreen, colorRed ) );
+AddColumn(Volume,"V-Today",1.0, IIf( Volume >2000, colorGreen, colorRed ));
+AddColumn(V1,"V-Yest",1.0, IIf( Vr >2000, colorGreen, colorRed ));
+//AddColumn(Vr, "V-Avg",1.0, IIf( Vr >2000, colorLime, colorRed ));
+//AddColumn(V0/ Vr,"Vol Ratio",1.1, IIf( V0/Vr >1.1, colorLime, colorRed ));
+
+AlertIf( Sell, "SOUND C:\\Windows\\Media\\Iwan.wav", "Audioalert", 1, 1+2 );
+_SECTION_END();
+
+//////////begin/////////
+
+box1=0;
+box2=0;
+SetBarsRequired(10000,10000);
+procedure fillDarvas(start,end,swap,top, bottom )
+{
+   for ( j = start; j < end; j++)
+   {
+       if( box1[j] == swap)
+  box1[j]= top ;
+else
+box1[j]= bottom;
+
+       if(box2[j] == swap)
+  box2[j]= bottom ;
+else
+box2[j]= top;
+   }
+}
+
+BoxArr1 = 0;
+BoxArr2 = 0;
+StateArray = 0;
+DBuy = 0;
+DSell = 0;
+TopArray = 0;
+BotArray = 0;
+tick=0;
+
+BoxTop = High[0];
+BoxBot = Low[0];
+swap=0;
+state = 0;
+BoxStart = 0;
+
+for (i=0; i<BarCount; i++)
+{
+ if (state==5)
+ {
+  TopArray[i]=BoxTop;
+  BotArray[i]=BoxBot;
+  if (Low[i]<(BoxBot*(1-tick/100)) || High[i]>(BoxTop*(1+tick/100)))
+  {
+fillDarvas(BoxStart,i,swap,BoxTop,BoxBot);
+
+  state = 1;
+  swap =  !swap;
+  BoxTop = High[i];
+  BoxStart = i;
+  }
+ }
+ else
+ {
+  if (High[i]<BoxTop)
+  {
+      if ((state<3) || (Low[i]>BoxBot))
+      {
+   state++;
+   }
+      else
+   {
+      state=3;
+   }
+      if (state==3)
+      BoxBot=Low[i];
+  }
+  else
+  {
+      state=1;
+      BoxTop=High[i];
+  }
+ }
+ StateArray[i] = state;
+}
+
+fillDarvas(BoxStart,BarCount,swap,BoxTop,BoxBot);
+
+
+Buyrule=H>Ref(box1,-1) AND H>Ref(box2,-1) AND Ref(statearray,-1)==5;
+Sellrule=L<Ref(box1,-1) AND L<Ref(box2,-1) AND Ref(statearray,-1)==5;
+
+
+_SECTION_BEGIN("Darvas box");
+Plot(C,"",1,64);
+Plot( box2, "" , 1 + statearray , styleLine );
+Plot( box1, " Status = "+WriteVal(statearray,1.0) , 1 + statearray, styleLine );
+_SECTION_END();
+
+
+Buy = Buyrule;
+statopt = Optimize("statopt var", 3, 1, 5, 1 ); 
+lossopt= Optimize("lossopt var", 5, 3, 10, 1 ); 
+PlotShapes(IIf(Buy==1, shapeUpArrow , shapeNone), colorBrightGreen, 0, Low, Offset=-15);
+
+//statopt=5;
+//lossopt=7;
+
+topvalue=IIf(box1>box2,box1,box2);
+Sellrule2 = (((topvalue-Close)*100/topvalue) > lossopt) AND (statearray == statopt);
+Sell = Sellrule OR Sellrule2;
+PlotShapes(IIf(Sell==1, shapeDownArrow , shapeNone), colorYellow, 0, Low, Offset=-50);
+Short = Sell;
+Cover = Buy;

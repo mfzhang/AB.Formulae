@@ -1,0 +1,87 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    R-Squared
+//  Author/Uploader: Jayson Casavant 
+//  E-mail:          jcasavant@adelphia.net
+//  Date/Time Added: 2002-11-10 16:33:47
+//  Origin:          The New Technical Trader by Tushar Chande and Stanley Kroll
+//  Keywords:        Trend Detection
+//  Level:           medium
+//  Flags:           indicator,commentary
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=233
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=233
+//
+//------------------------------------------------------------------------------
+//
+//  R-2 attempts to measure a percentage of a stocks movement that can be
+//  attributed to Linear Regression. When used in combination with Slope you
+//  have a tool that can aid in trend detection.
+//
+//  To determine if the trend is statistically significant for a given x-period
+//  linear regression line, Plot the r-squared indicator and refer to the
+//  following table. This table shows the values of r-squared required for A
+//  95% confidence level at various time periods. If the r-squared value is
+//  less than the critical values shown, you should assume that prices show no
+//  statistically significant trend.
+//
+//  Number of Periods r-squared Critical Value(95%confidence)
+//
+//  5 0.77
+//
+//  10 0.40
+//
+//  14 0.27
+//
+//  20 0.20
+//
+//  25 0.16
+//
+//  30 0.13
+//
+//  50 0.08
+//
+//  60 0.06
+//
+//  120 0.03
+//
+//  The indicator includes commentary and an interpretation of its use.
+//
+//------------------------------------------------------------------------------
+
+/*To determine if the trend is statistically significant for a given x-period linear regression line, Plot the r-squared indicator and refer to the following table.  This table shows the values of r-squared required for A 95% confidence level at various time periods.  If the r-squared value is less than the critical values shown, you should assume that prices show no statistically significant trend. 
+
+Number ofPeriods	r-squaredCritical Value(95%confidence)
+5	0.77
+10	0.40
+14	0.27
+20	0.20
+25	0.16
+30	0.13
+50	0.08
+60	0.06
+120	0.03 
+*/        
+
+R2PDS=20; /*for automatic adjustments to the r2 critical value line use one of the periods listed above*/
+
+R2=Correlation(Cum( 1 ),C,r2pds)*Correlation(Cum( 1 ),C,r2pds);
+slope=LinRegSlope(C,r2pds);
+
+Crit=IIf(R2PDS==5,.77,IIf(R2PDS==10,.40,IIf(R2PDS==14,.27,IIf(R2PDS==20,.20,IIf(R2PDS==25,.16,IIf(R2PDS==30,.13,IIf(R2PDS==50,.08,IIf(R2PDS==60,.06,IIf(R2PDS==120,.03,0)))))))));
+
+Plot(r2,"R Squared",2,1);
+Plot(slope,"Slope",IIf(slope<0,4,5),2|styleOwnScale);
+Plot(Crit,"",7,1);
+
+Title=WriteIf(R2>Crit,"R2 Values indicate a Trend is in place","R2 Values Indicate a Trendliess Market")+WriteIf(slope>0,"\n Slope is Positive","\n Slope is Negative");
+
+"\n \n Interpretation \n r-squared values show the percentage of movement that can be explained by linear regression. For example, if the r-squared value over 20 days is at 70%, this means that 70% of the movement of the security is explained by linear regression. The other 30% is unexplained Random noise.\n While R2 values are interesting on their own they are easier to interpret when used in conjunction with Slope. When R2 exceeds its critical Value this indicates the market is Trending, when the indicator falls below its threshold then a trend less condition may be in place. \n This table shows the values of r-squared required for A 95% confidence level at various time periods. If the r-squared value is less than the critical values shown, you should assume that prices show no statistically significant trend. \n \n R-2 Pds     Critical Value(95%confidence)"+                                  
+
+"\n \n    5               0.77\n    10             0.40\n    14             0.27\n    20             0.20\n    25             0.16\n    30             0.13\n    50             0.08 \n    60             0.06 \n    120           0.03"
+
++"\n \n You may even consider opening a Short-term position opposite the prevailing trend when you observe r-squared rounding off at extreme levels. For example, if the slope is positive AND r-squared is above 0.80 then begins to turn down, you may consider selling or opening A Short position. There are numerous ways to use the linear regression outputs of r-squared and Slope in trading systems. For more detailed coverage, refer to the book The New Technical Trader by Tushar Chande and Stanley Kroll"; 
+
+
+
+
+                                                                                                                                                                                            

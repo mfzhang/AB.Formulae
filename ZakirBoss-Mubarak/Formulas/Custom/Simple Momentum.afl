@@ -1,0 +1,7 @@
+/* Momentum indicator */
+/* The momentum of a security is the ratio of today's price compared to the price x-time periods ago */
+/* Coded by Alex Fler */
+
+periods=Param("Periods",14,2,200,1);
+Plot( mom=(Close/Ref(Close,-periods)-1),_DEFAULT_NAME(),ParamColor("Color", colorCycle ), ParamStyle("Style") );
+Plot(0,"",colorBlue,style=32);

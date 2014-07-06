@@ -1,0 +1,14 @@
+// Weekly MACD Histogran
+_SECTION_BEGIN("Weekly MACD");
+TimeFrameSet( inWeekly );
+MACDw = MACD( 12, 26 ) - Signal( 12, 26, 9 );
+MACDwLINE =  MACD( 12, 26 ) ;
+MACDwSignal = Signal( 12, 26, 9 );
+TimeFrameRestore();
+Plot(MACDw,"MACD Weekly",colorYellow,styleHistogram);
+Plot(MACDwLINE,"MACD Weekly Line",colorRed,styleLine);
+Plot(MACDwSignal,"MACD Weekly Signal Line",colorBlue,styleLine);
+_SECTION_END();
+
+// ----------------------------------------------------------------------------------------------------------------------
+

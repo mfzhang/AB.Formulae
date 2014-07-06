@@ -1,0 +1,59 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Commodity Channel Index
+//  Author/Uploader: Tomasz Janeczko 
+//  E-mail:          tj@amibroker.com
+//  Date/Time Added: 2001-06-16 08:55:42
+//  Origin:          Originally developed by Donald R. Lambert
+//  Keywords:        
+//  Level:           medium
+//  Flags:           system,commentary
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=22
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=22
+//
+//------------------------------------------------------------------------------
+//
+//  CCI measures price excursions from the mean price as a statistical
+//  variation. The indicator works quite well with commodities, stocks and
+//  mutual funds. It keeps trades neutral in a sideways moving market, and
+//  helps get in the market when a breakout occurs.
+//
+//  This sample commentary shows how to use WriteVal() and WriteIf functions
+//  and implements basic CCI interpretation rules. May be also used as a simple
+//  trading system.
+//
+//------------------------------------------------------------------------------
+
+/* Project:       AmiBroker
+** File:          cci.afl
+** Title:         CCI Guru Commentary Example (English)
+** Requirements:  AFL 1.1 (AmiBroker 3.0) or above
+** Date:          Feb 9th, 1999
+** Written by:    Tomasz Janeczko
+*/ 
+
+buy=cross( cci(), -100 );
+sell = cross( 100, cci() );
+
+"Review of " + fullname() + " (" + name() + ")" + "\nas of " + date();
+
+
+"\nCurrent Statistics\n";
+"Close:    " + WriteVal(Close);
+"Change:   " + WriteVal(Close - Ref( Close, -1 ) ) ;
+"CCI Value:" + WriteVal(CCI());
+
+"\nCCI is now in "+
+writeif( cci() < -100, "oversold", 
+writeif( cci() > 100,  "overbought", "neutral" )) +
+" range";
+
+bsbuy  = barssince( buy );
+bssell = barssince( sell );
+
+"\nCCI has generated "+
+writeif( bsbuy > 5 AND bssell > 5, "no signals during last 5 periods.",
+writeif( bsbuy < bssell, "buy signal " + writeval( bsbuy, 3.0  ),
+"sell signal " + writeval( bssell, 3.0) ) + " periods ago.");
+
+ 

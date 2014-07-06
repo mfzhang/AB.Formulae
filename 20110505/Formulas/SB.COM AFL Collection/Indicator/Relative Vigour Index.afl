@@ -1,0 +1,36 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Relative Vigour Index
+//  Author/Uploader: Stefan Bondorowicz 
+//  E-mail:          SBondorowicz@aol.com
+//  Date/Time Added: 2002-01-18 11:17:19
+//  Origin:          John Ehler
+//  Keywords:        
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=150
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=150
+//
+//------------------------------------------------------------------------------
+//
+//  Relative Vigour Index described in an article by John Ehlers
+//
+//  in the January 2002 edition of TASC.
+//
+//------------------------------------------------------------------------------
+
+/* Relative Vigour Index from TASC 01/02 */
+
+period = 14;
+
+value1 = ( ( C - O ) + ( 2 * Ref( C - O, -1) ) + ( 2 * Ref( C - O, -2) ) + Ref( C - O, -3) ) / 6;
+value2 = ( ( H - L ) + ( 2 * Ref( H - L, -1) ) + ( 2 * Ref( H - L, -2) ) + Ref( H - L, -3) ) / 6;
+
+num = Sum( value1, period );
+denom = Sum( value2, period );
+
+RVI = IIf( denom != 0, num / denom, 0);
+
+RVISig = ( RVI + 2 * Ref( RVI, -1) + 2 * Ref( RVI, -2) + Ref( RVI, -3) ) / 6;
+Graph1 = RVI;
+Graph0 = RVISig;

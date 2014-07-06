@@ -1,0 +1,43 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    T3
+//  Author/Uploader: dale Butkowski 
+//  E-mail:          
+//  Date/Time Added: 2001-08-05 09:47:23
+//  Origin:          Steve Burns, Technical Analysis of Stocks & Commodities
+//  Keywords:        
+//  Level:           basic
+//  Flags:           system
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=82
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=82
+//
+//------------------------------------------------------------------------------
+//
+//  Trading system based on cubing of function (1+a)-ax^2 where a is the
+//  amplification ( 0 < a < 1.0, I use 0.7) and en is the exponentially
+//  smoothed average of the closing price.
+//
+//------------------------------------------------------------------------------
+
+/* T3 trading system */
+a = 0.7;
+n = 2;
+
+alpha = 2/(n + 1);
+e1 =  ema(close, n);
+e2 = ema (e1, n);
+e3 = ema (e2, n);
+e4 = ema (e3,  n);
+e5 = ema (e4, n);
+e6 = ema (e5, n);
+
+T3 = -a^3 * e6 + (3 * a^2 +3 * a^3) * e5 + (-6 * a^2 - 3 *
+ a - 3 * a^3) * e4 + (1 + 3 * a + a^3 + 3 * a^2) * e3;
+
+graph0 = close;
+graph1 = T3;
+
+SELL = cross ( Close, T3 );
+BUY = cross (T3, Close );
+SHORT = cross ( Close, T3);
+COVER = cross (T3, Close );

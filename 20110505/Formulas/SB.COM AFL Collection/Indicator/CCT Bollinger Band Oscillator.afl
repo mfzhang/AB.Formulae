@@ -1,0 +1,44 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    CCT Bollinger Band Oscillator
+//  Author/Uploader: Tomasz Janeczko 
+//  E-mail:          tj@amibroker.com
+//  Date/Time Added: 2001-07-20 09:44:39
+//  Origin:          Steve Karnish, http://www.cedarcreektrading.com
+//  Keywords:        bollinger band
+//  Level:           medium
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=73
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=73
+//
+//------------------------------------------------------------------------------
+//
+//  Steve Karnish wrote:
+//
+//  "Bollinger Bands were developed by John Bollinger and are envelopes that
+//  are plotted at two (2) standard deviation levels above and below a moving
+//  average. The CCT Bollinger Band Oscillator reconfigures the classic bands.
+//  The new indicator constructs two (2) parallel lines instead of the erratic
+//  envelopes. These parallel lines represent a measurement of two (2) standard
+//  deviations from the mean and are assigned zero and 100 on the chart. The
+//  indicator represents the price as it travels above and below the mean (50%)
+//  and outside the two standard deviations (zero and 100). Penetration of the
+//  upper or lower band represents overbought and oversold conditions. When
+//  using the CCT Bollinger Band Oscillator, &amp;#8220;failure
+//  swings&amp;#8221; and &amp;#8220;divergences&amp;#8221; can lead to
+//  significant reversals."
+//
+//------------------------------------------------------------------------------
+
+/* CCT Bollinger Band Oscillator 
+**
+** Originally developed by Steve Karnish 
+** http://www.cedarcreektrading.com
+**
+** AFL translation by Tomasz Janeczko
+**
+** Set scaling: Automatic
+** Grid: Middle, Level 0
+*/
+
+graph0= 100 * ( C + 2*StDev( C, 21) - MA( C, 21 ) ) / ( 4 * StDev( C, 21 ) );

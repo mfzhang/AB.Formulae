@@ -1,0 +1,30 @@
+_SECTION_BEGIN("Appel's ROC");
+
+x = ROC (C, 5);
+y = ROC (C, 15);
+z = ROC (C, 25);
+
+A = x + y + z;
+
+Plot (A, "Appel's ROC", colorRed);
+
+Plot (4, "", colorBlack, styleNoLabel, styleDashed);
+
+Buy = Cross (A,4);
+Sell = Cross (4,A);
+Filter = Buy OR Sell;
+
+AddColumn( Buy, "Buy", 1);
+AddColumn(Sell, "Sell", 1);
+AddColumn(Close,"Close",1.2);
+AddColumn(Volume,"Volume",1.0);
+
+
+
+printf("This is a Buy & Hold indicator. I have coded Mr. Appels indicator as per his book.\n");  
+printf("However, I have added Buy AND Sell conditions as a point of reference only.\n");  
+printf("Personally, I would use it as a exploration to identify possible long positions. \n"); 
+printf("Mr. Appel advice is, There is only one Buy rule AND only one Sell rule: You Buy when the Triple\n"); 
+printf("Momentum Level, the Sum of the 5-, 15-, AND 25-Day rates of change, crosses from below to above 4%. \n"); 
+printf("You Sell when the Triple Momentum Level, the Sum of the 5-, 15-,\n"); 
+printf("AND 25-Day rates of change, crosses from above to below 4%.\n"); 

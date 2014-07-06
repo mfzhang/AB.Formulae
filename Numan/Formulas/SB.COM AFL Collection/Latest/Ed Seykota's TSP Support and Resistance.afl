@@ -1,0 +1,250 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Ed Seykota's TSP: Support and Resistance
+//  Author/Uploader: Mark H. 
+//  E-mail:          com
+//  Date/Time Added: 2006-10-08 01:48:31
+//  Origin:          
+//  Keywords:        
+//  Level:           semi-advanced
+//  Flags:           system,exploration,indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=735
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=735
+//
+//------------------------------------------------------------------------------
+//
+//  This is an implementation of Seykota's TSP S-R system.
+//
+//  See http://www.seykota.com/tribe/TSP/SR/index.htm for details.
+//
+//  I have tested it and got identical results (well there is 2-cent difference
+//  due to rounding).
+//
+//------------------------------------------------------------------------------
+
+/*==============================================================================
+	Global Settings
+==============================================================================*/
+SetOption("InitialEquity", 1000000);
+SetOption("NoDefaultColumns", True );
+SetOption("CommissionMode", 2); //$$ per trade
+SetOption("CommissionAmount", 0);
+SetOption("MarginRequirement", 10);
+SetOption("UsePrevBarEquityForPosSizing", True);
+SetOption("UseCustomBacktestProc", True );
+
+SetTradeDelays( 0, 0, 0, 0 );
+
+/*==============================================================================
+	User-defined Functions
+==============================================================================*/
+function Support(p)
+{
+	sup = LLV(low, p);
+	sup[0] = low[0];
+	for (i = 1; i < p; i++)
+	{
+		if(low[i] < sup[i-1]) sup[i] = low[i];
+		else sup[i] = sup[i-1];
+	}	
+	return sup;
+}
+
+function Resistance(p)
+{
+	res = HHV(high, p);
+	res[0] = high[0];
+	for (i = 1; i < p; i++)
+	{
+		if(high[i] > res[i-1]) res[i] = high[i];
+	  	else res[i] = res[i-1];
+	}
+	return res;
+}	
+	
+function OptimizeNot(a1, a2, a3, a4, a5)
+{
+	return a2;
+}
+
+/*==============================================================================
+	Entry and Exit Rules
+==============================================================================*/
+fast = Optimize("Fast", 20, 5, 105, 5);
+slow = Optimize("Slow", 140, 20, 420, 20);
+FastRes = Resistance(fast);
+FastSup = Support(fast);
+SlowRes = Resistance(slow);
+SlowSup = Support(slow);
+heat = 0.05;
+
+// determine longer term trend
+// Note: could have problem if current bar is outside of all previous bars
+trend[0] = 0;
+for(bar= 1; bar < BarCount; bar++)
+{
+  if(high[bar] > SlowRes[bar-1]) trend[bar] = 1;
+  else if(low[bar] < SlowSup[bar-1]) trend[bar] = -1;
+  else trend[bar] = trend[bar-1];
+}
+
+LastPosition = 0; // 1 - long; -1 - short
+PositionRiskStop = 0;
+
+Buy = Sell = Short = Cover = 0;
+for(bar = 5; bar < BarCount-1; bar++)
+{
+  	// Exit position  by protection stop
+    if(LastPosition == 1)
+    {
+		// Sell at stop
+		if(PositionRiskStop > low[bar] )   // skip if the signal price only touch (=) the low
+		{
+		// We just calculate the exact price to simulate Ed's skid     
+			stopPrice = PositionRiskStop;
+			ff = min(open[bar], stopPrice) - low[bar];
+			stopPrice = min(open[bar], stopPrice) - 0.5*ff;
+	  		Sell[bar] = 1;
+	  		SellPrice[bar] = stopPrice;
+			TradePrice[bar] = stopPrice;
+			LastPosition = 0;
+		}
+    }
+    else if(LastPosition == -1)
+    {
+		// Cover at stop
+		if(PositionRiskStop < high[bar])  // skip if the signal price only touch (=) the high
+		{
+			stopPrice = PositionRiskStop;
+			ff = high[bar] - max(open[bar], stopPrice);
+			stopPrice = max(open[bar], stopPrice) + 0.5*ff;
+	  		Cover[bar] = 1;
+	  		CoverPrice[bar] = stopPrice;
+			TradePrice[bar] = stopPrice;
+			LastPosition = 0;
+		}
+    }
+
+  // move the protection stop
+  if(LastPosition == 1)
+  {
+      PositionRiskStop = FastSup[bar];
+  }
+  else if(LastPosition == -1)
+  {
+     PositionRiskStop = FastRes[bar];
+  }
+  else { // Enter position only when last position has been closed	  
+	  if(trend[bar] == 1)
+	  {
+		// buy at stop	    
+	    if( fastRes[bar] < high[bar+1]) 
+	    {
+		    ff = high[bar+1] - max(open[bar+1], fastRes[bar]);
+		    stopPrice = max(open[bar+1], FastRes[bar]) + 0.5*ff;
+		    f = heat/(FastRes[bar] - FastSup[bar]);
+			Buy[bar+1] = 1;
+			BuyPrice[bar+1] = stopPrice;
+			PositionSize[bar+1] = f; //this value is passed to CBT for position sizing
+			LastPosition  = 1;
+			PositionRiskStop = FastSup[bar+1];
+			TradePrice[bar+1] = stopPrice;
+			bar ++; // skip one bar since next bar has been handled
+	    }
+	  }
+	  else if(trend[bar] == -1)
+	  {	  
+	  	// short at stop
+	    if( fastSup[bar] > low[bar+1]) 
+	    {
+			ff = min(open[bar+1], FastSup[bar]) - low[bar+1];
+			stopPrice = min(open[bar+1], FastSup[bar]) - 0.5*ff;
+			f = heat/(FastRes[bar] - FastSup[bar]);
+	    	Short[bar+1] = 1;
+			ShortPrice[bar+1] = stopPrice;
+			PositionSize[bar+1] = f; //this value is passed to CBT for position sizing
+			LastPosition = -1;
+	    	PositionRiskStop = FastRes[bar+1];
+			TradePrice[bar+1] = stopPrice;
+			bar ++; // skip one bar since next bar has been handled
+	    }
+	  }
+  }
+}
+
+// close final day for accounting purpose
+bar = Barcount-1;
+if(LastPosition == 1) { Sell[bar] = 1; SellPrice[bar] = (low[bar]+close[bar])/2; }
+else if(LastPosition == -1) { Cover[bar] = 1; CoverPrice[bar] = (high[bar]+close[bar])/2; }
+
+/*==============================================================================
+	Automatic Analysis Action Options
+==============================================================================*/
+AAAction = Status("action");
+if(AAAction == actionIndicator)
+{
+	Plot(FastRes, "FastRes", colorRed);
+	Plot(SlowRes, "SlowRes", colorPink);
+	Plot(FastSup, "FastSup", colorGreen);
+	Plot(SlowSup, "SlowSup", colorBlue);
+}
+else if(AAAction == actionExplore)
+{
+	Filter = 1;	
+	AddColumn( DateTime(), "Date", formatDateTime ); 
+	AddColumn(O, "Open");
+	AddColumn(H, "High");
+	AddColumn(L, "Low");
+	AddColumn(C, "Close");
+	AddColumn(FastRes, "FastRes");
+	AddColumn(SlowRes, "SlowRes");
+	AddColumn(FastSup, "FastSup");
+	AddColumn(SlowSup, "SlowSup");
+	AddColumn(Trend, "Trend");
+	AddColumn(IIf(Buy, Asc("B"), IIf(Sell, Asc("S"), IIf(Short, Asc("H"), IIf(Cover, Asc("C"), 0)))) , "Signal", formatChar);
+	AddColumn(TradePrice, "TradePrice");
+}
+else if(AAAction == actionPortfolio)
+{
+	bo = GetBacktesterObject();
+	bo.PreProcess(); // Initialize backtester
+	for( bar=0; bar < BarCount; bar++)
+	{
+		eq =  bo.Equity;
+		for ( sig=bo.GetFirstSignal(bar); sig; sig=bo.GetNextSignal(bar) )
+		{
+			if (sig.isExit())
+			{
+            	if(bo.ExitTrade(bar,sig.symbol,sig.Price))
+				{ 
+					_TRACE("EXIT: " + sig.symbol + "@" + sig.Price);
+				}
+			}
+		}
+
+        // update stats after closing trades
+     	bo.UpdateStats(bar, 1 );
+       
+     	for ( sig=bo.GetFirstSignal(bar); sig; sig=bo.GetNextSignal(bar)) 
+     	{ 
+			if (sig.isEntry()) 
+			{ 
+				// sig.PosSize is passed from Phase I.
+				shares = round((eq*sig.PosSize)/100)*100;
+				ps = shares * sig.Price;
+
+				if(bo.EnterTrade(bar, sig.symbol, sig.IsLong, sig.Price, ps, sig.PosScore,sig.RoundLotSize)) 
+				{
+					_TRACE("ENTRY: " + sig.symbol + " @" + sig.Price + " PosScore=" + sig.PosScore + " PosSize=" + ps);
+            	}
+			}
+		}
+
+		bo.UpdateStats(bar,1); // MAE/MFE is updated when timeinbar is set to 1.
+		bo.UpdateStats(bar,2);
+   	}
+	bo.PostProcess(); // Finalize backtester
+}
+/*==============================================================================
+	End of Formula
+==============================================================================*/

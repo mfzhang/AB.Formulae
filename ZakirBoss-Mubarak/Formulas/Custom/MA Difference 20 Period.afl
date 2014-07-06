@@ -1,0 +1,9 @@
+/*MA Diff 20 by Larry Lovrencic*/
+T=20; /*Time Period for MA*/
+KMA=((C-MA(C,T))/MA(C,T))*100;   
+GRAPH0=KMA;
+GRAPH0STYLE=2+4;
+GRAPH0BARCOLOR=iif(KMA>0,5,4);
+graphxspace=5;
+
+title=name()+" "+date()+" The Close is "+writeval(abs(KMA),format=1.2)+"%"+writeif(KMA>0," above"," below")+" the 20 period MA";

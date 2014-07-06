@@ -1,0 +1,109 @@
+//AFL Coding: Don Lindberg, http://finance.groups.yahoo.com/group/amibroker/message/111949
+
+_SECTION_BEGIN("Price");
+
+SetChartOptions(0,chartShowArrows|chartShowDates);
+
+_N(Title = StrFormat("{{NAME}} - {{INTERVAL}} {{DATE}} Open %g, Hi %g, Lo %g, Close %g (%.1f%%) {{VALUES}}", O, H, L, C, SelectedValue( ROC( C, 1 ) ) ));
+
+Plot( C, "Close", ParamColor("Color", colorBlack ), styleNoTitle | ParamStyle("Style") | GetPriceStyle() ); 
+
+_SECTION_END();
+
+ 
+
+ 
+
+_SECTION_BEGIN("Colored Bolinger Bands");
+
+ 
+
+pr=Param( "Period",20,0,100,1);
+
+P = ParamField("Price field",-1);
+
+ Style = ParamStyle("Style") | styleNoRescale | styleNoLabel |styleDashed;
+
+ 
+
+ BBT=BBandTop(P,pr,2);
+
+ BBB=BBandBot(P,pr,2);
+
+ 
+
+topcond = (Cross(BBT,C)OR C>BBT)AND Ref(C, -1)> BBT;
+
+botcond = ( Cross(C,BBB))AND Ref(C, -1 < BBB);
+
+ 
+
+bbtcolor = IIf( BBT> Ref (BBT, -1), colorDarkGreen,colorRed );
+
+bbbcolor = IIf( BBB > Ref (BBB, -1), colorDarkGreen,colorRed );
+
+ 
+
+ Plot( BBT, "BBTop" + _PARAM_VALUES(), bbtcolor, styleLine|styleThick); 
+
+ Plot( BBB, "BBBot" + _PARAM_VALUES(), bbbcolor, styleLine|styleThick ); 
+
+ 
+
+PlotOHLC( BBT,BBT,BBB,BBB, "", ColorRGB(254,238,175),styleCloud );
+
+ 
+
+Buy=botcond;
+
+Sell=topcond ;
+
+//Buy=ExRem(Buy,Sell);
+
+//Sell=ExRem(Sell,Buy);
+
+ 
+
+            PlotShapes(shapeUpArrow * Buy, colorGreen, 0, L, - 10);
+
+            PlotShapes(shapeDownArrow * Sell, colorRed, 0, H, - 10);
+
+ 
+
+ 
+
+_SECTION_END();
+
+_SECTION_BEGIN("BkGrgd Color Bars");
+
+// background vis a vis MA(c,200);
+
+p = Param("period", 20, 1, 200, 1);
+
+Cond1 = Close > MA(C,p);
+
+Cond2 = Close < MA(C,p);
+
+//Plot(C,"", colorBlack, 64);
+
+Plot( WMA(C,p),"", IIf(Cond1, colorBlack,IIf(Cond2,colorRed,colorGreen)),1);
+
+Cond1 = Close > MA(C,p);
+
+Cond2 = Close < MA(C,p);
+
+Plot(Param("Height",100,1,100,1),"",IIf(Cond1, 
+
+ColorRGB(213,255,214),IIf(Cond2,ColorRGB(255,217,217),colorGold) 
+
+),styleArea|styleOwnScale|styleNoTitle|styleNoLabel|styleNoRescale,0,100);
+
+Plot( WMA(C,p),"", colorBlue,1);
+
+SetChartBkColor(colorLightYellow);
+
+SetChartOptions(1,0,1);
+
+GraphGridZOrder = 0 ;
+
+_SECTION_END();

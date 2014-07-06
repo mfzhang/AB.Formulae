@@ -1,0 +1,11 @@
+// Daily BullPower
+_SECTION_BEGIN("Bull Power EMA");
+/*Bull Power*/
+Lookback = Param ("EMA Lookback",13);
+BullPower = High - EMA(Close,Lookback);
+Plot (BullPower, "", ParamColor ("Color", colorCustom11), styleHistogram );
+Title = Name() + "   " + Date() + "     Bull Power" + WriteVal (Lookback, 3.0) + " Day:   " + WriteVal (BullPower, 5.3);
+GraphXSpace = 5;
+_SECTION_END();
+
+// ----------------------------------------------------------------------------------------------------------------------

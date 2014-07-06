@@ -1,0 +1,769 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    AFL highlighter for ConTEXT (free editor)
+//  Author/Uploader: Larry McNeese 
+//  E-mail:          
+//  Date/Time Added: 2006-06-09 02:29:56
+//  Origin:          
+//  Keywords:        
+//  Level:           semi-advanced
+//  Flags:           system,exploration,indicator,commentary,function
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=627
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=627
+//
+//------------------------------------------------------------------------------
+//
+//  I just updated my ConTEXT Editor file and thought I would share the work
+//  that was started with Geoff Mulhall and Dave Merrill. I copied and pasted
+//  the complete list of words from AB's website using Notepad and Excel to
+//  trim the list. Then I pasted just the list of words to AB's Formula Editor
+//  to Spellcheck and autocorrect the words. They are from Version 4.80.
+//
+//------------------------------------------------------------------------------
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Amibroker Formula Language 
+//
+//////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////////
+// language name
+
+Language:               AFL
+
+
+//////////////////////////////////////////////////////////////////////////////
+// default file filter
+// note: if more than one extension is associated, eg:
+// C/C++ files (*.c,*.cpp,*.h,*.hpp)|*.c;*.cpp;*.h;*.hpp
+
+Filter:                 AFL files (*.afl)|*.afl
+
+
+//////////////////////////////////////////////////////////////////////////////
+// help file which will be invokend when F1 is pressed
+
+HelpFile:               C:\Program Files\AmiBroker\Broker.chm
+
+
+//////////////////////////////////////////////////////////////////////////////
+// language case sensitivity
+//                      0  - no
+//                      1  - yes
+
+CaseSensitive:          1
+
+
+//////////////////////////////////////////////////////////////////////////////
+// comment type: LineComment - comment to the end of line
+// BlockCommentBeg - block comment begin, it could be
+// multiline
+// BlockCommentEnd - block comment end
+
+LineComment:            //
+BlockCommentBeg:        /*
+BlockCommentEnd:        */
+
+
+//////////////////////////////////////////////////////////////////////////////
+// identifier characters
+// note: characters shouldn't be delimited, except arrays
+// array of chars could be defined as from_char..to_char
+
+IdentifierBegChars:     a..z A..Z _
+IdentifierChars:        a..z A..Z _ 0..9
+
+//////////////////////////////////////////////////////////////////////////////
+// numeric constants begin characters
+// note: characters shouldn't be delimited, except arrays
+// array of chars could be defined as from_char..to_char
+// number always starts with 0..9 except when NumConstBeg
+// defines other
+
+NumConstBegChars:       0..9 
+
+
+//////////////////////////////////////////////////////////////////////////////
+// numeric constants characters
+// note: characters shouldn't be delimited, except arrays
+// array of chars could be defined as from_char..to_char
+// number always starts with 0..9 except when NumConstBeg
+// defines other
+
+NumConstChars:          0..9 A..Z . -
+
+
+//////////////////////////////////////////////////////////////////////////////
+// escape character
+
+EscapeChar:
+
+
+//////////////////////////////////////////////////////////////////////////////
+// keyword table
+// note: delimited with spaces, lines could be wrapped
+// you may divide keywords into five groups which can be
+// highlighted differently
+
+
+// reserved words and variable names
+
+KeyWords1:
+
+// reserved words
+AND
+False
+NOT
+Null
+OR
+True
+
+// reserved variable names
+Avg
+BarCount
+Buy
+BuyPrice
+C
+Close
+Column0
+Column0Format
+Column0Name
+Column1
+Column1Format
+Column1Name
+Column2
+Column2Format
+Column2Name
+Column3
+Column3Format
+Column3Name
+Column4
+Column4Format
+Column4Name
+Column5
+Column5Format
+Column5Name
+Column6
+Column6Format
+Column6Name
+Column7
+Column7Format
+Column7Name
+Column8
+Column8Format
+Column8Name
+Column9
+Column9Format
+Column9Name
+Cover
+CoverPrice
+Exclude
+Filter
+Graph0
+Graph0BarColor
+Graph0Color
+Graph0High
+Graph0Low
+Graph0Name
+Graph0Open
+Graph0Style
+Graph1
+Graph1BarColor
+Graph1Color
+Graph1High
+Graph1Low
+Graph1Name
+Graph1Open
+Graph1Style
+Graph2
+Graph2BarColor
+Graph2Color
+Graph2High
+Graph2Low
+Graph2Name
+Graph2Open
+Graph2Style
+Graph3
+Graph3BarColor
+Graph3Color
+Graph3High
+Graph3Low
+Graph3Name
+Graph3Open
+Graph3Style
+Graph4
+Graph4BarColor
+Graph4Color
+Graph4High
+Graph4Low
+Graph4Name
+Graph4Open
+Graph4Style
+Graph5
+Graph5BarColor
+Graph5Color
+Graph5High
+Graph5Low
+Graph5Name
+Graph5Open
+Graph5Style
+Graph6
+Graph6BarColor
+Graph6Color
+Graph6High
+Graph6Low
+Graph6Name
+Graph6Open
+Graph6Style
+Graph7
+Graph7BarColor
+Graph7Color
+Graph7High
+Graph7Low
+Graph7Name
+Graph7Open
+Graph7Style
+Graph8
+Graph8BarColor
+Graph8Color
+Graph8High
+Graph8Low
+Graph8Name
+Graph8Open
+Graph8Style
+Graph9
+Graph9BarColor
+Graph9Color
+Graph9High
+Graph9Low
+Graph9Name
+Graph9Open
+Graph9Style
+GraphXSpace
+GraphZOrder
+H
+High
+L
+Low
+MarginDeposit
+MaxGraph
+NumColumns
+O
+OI
+Open
+OpenInt
+PointValue
+PositionScore
+PositionSize
+RoundLotSize
+Sell
+SellPrice
+Short
+ShortPrice
+TickSize
+Title
+V
+Volume
+
+// constants
+
+actionBacktest
+actionCommentary
+actionExploration
+actionIndicator
+actionOptimize
+actionPortfolio
+actionScan
+chartShowArrows
+chartShowDates
+colorAqua
+colorBlack
+colorBlue
+colorBlueGrey
+colorBrightGreen
+colorBrown
+colorCustom1
+colorCustom10
+colorCustom11
+colorCustom12
+colorCustom13
+colorCustom14
+colorCustom15
+colorCustom16
+colorCustom2
+colorCustom3
+colorCustom4
+colorCustom5
+colorCustom6
+colorCustom7
+colorCustom8
+colorCycle
+colorDarkBlue
+colorDarkGreen
+colorDarkGrey
+colorDarkOliveGreen
+colorDarkRed
+colorDarkTeal
+colorDarkYellow
+colorDefault
+colorGold
+colorGreen
+colorGrey40
+colorGrey50
+colorIndigo
+colorLavender
+colorLightBlue
+colorLightGrey
+colorLightOrange
+colorLightYellow
+colorLime
+colorOrange
+colorPaleBlue
+colorPaleGreen
+colorPaleTurquoise
+colorPink
+colorPlum
+colorRed
+colorRose
+colorSeaGreen
+colorSkyblue
+colorTan
+colorTeal
+colorTurquoise
+colorViolet
+colorWhite
+colorYellow
+compressHigh
+compressLast
+compressLow
+compressOpen
+compressVolume
+expandFirst
+expandLast
+expandPoint
+in15Minute
+in1Minute
+in5Minute
+inDaily
+inHourly
+inMonthly
+inWeekly
+maskHistogram
+scoreNoRotate
+shapeCircle
+shapeDigit0
+shapeDigit1
+shapeDigit2
+shapeDigit3
+shapeDigit4
+shapeDigit5
+shapeDigit6
+shapeDigit7
+shapeDigit8
+shapeDigit9
+shapeDownArrow
+shapeDownTriangle
+shapeHollowCircle
+shapeHollowDownArrow
+shapeHollowDownTriangle
+shapeHollowSmallCircle
+shapeHollowSmallDownTriangle
+shapeHollowSmallSquare
+shapeHollowSmallUpTriangle
+shapeHollowSquare
+shapeHollowStar
+shapeHollowUpArrow
+shapeHollowUpTriangle
+shapeNone
+shapePositionAbove
+shapeSmallCircle
+shapeSmallDownTriangle
+shapeSmallSquare
+shapeSmallUpTriangle
+shapeSquare
+shapeStar
+shapeUpArrow
+shapeUpTriangle
+styleArea
+styleBar
+styleCandle
+styleDots
+styleHistogram
+styleLeftAxisScale
+styleLine
+styleNoDraw
+styleNoLabel
+styleNoLine
+styleNoRescale
+styleNoTitle
+styleOwnScale
+stylePointAndFigure
+styleStaircase
+styleSwingDots
+styleThick
+
+
+// functions
+
+KeyWords2:
+
+abs
+AccDist
+acos
+AddColumn
+AddTextColumn
+AddToComposite
+ADLine
+AdvIssues
+AdvVolume
+ADX
+AlertIf
+AlmostEqual
+AMA
+AMA2
+ApplyStop
+Asc
+asin
+atan
+ATR
+BarIndex
+BarsSince
+BBandBot
+BBandTop
+BeginValue
+CategoryAddSymbol
+CategoryGetName
+CategoryGetSymbols
+CategoryRemoveSymbol
+CCI
+ceil
+Chaikin
+ClipboardGet
+ClipboardSet
+ColorHSB
+ColorRGB
+Correlation
+cos
+cosh
+CreateObject
+CreateStaticObject
+Cross
+Cum
+Date
+DateNum
+DateTime
+DateTimeToStr
+Day
+DayOfWeek
+DayOfYear
+DecIssues
+DecVolume
+DEMA
+EMA
+EnableRotationalTrading
+EnableScript
+EnableTextOutput
+EncodeColor
+EndValue
+Equity
+exp
+ExRem
+ExRemSpan
+fclose
+fdelete
+feof
+fgets
+Flip
+floor
+fmkdir
+fopen
+Foreign
+fputs
+frac
+frmdir
+FullName
+GapDown
+GapUp
+GetBaseIndex
+GetCategorySymbols
+GetChartID
+GetCursorMouseButtons
+GetCursorXPosition
+GetCursorYPosition
+GetDatabaseName
+GetExtraData
+GetOption
+GetPriceStyle
+GetRTData
+GetRTDataForeign
+GetScriptObject
+GetTradingInterface
+GroupID
+HHV
+HHVBars
+Highest
+HighestBars
+HighestSince
+HighestSinceBars
+Hold
+Hour
+IIf
+IndustryID
+Inside
+int
+Interval
+InWatchList
+IsContinuous
+IsEmpty
+IsFavorite
+IsFinite
+IsIndex
+IsNan
+IsNull
+IsTrue
+LastValue
+LineArray
+LinearReg
+LinRegIntercept
+LinRegSlope
+LLV
+LLVBars
+log
+log10
+Lowest
+LowestBars
+LowestSince
+LowestSinceBars
+MA
+MACD
+MarketID
+Max
+MDI
+Median
+MFI
+Min
+Minute
+Month
+Name
+NoteGet
+NoteSet
+Now
+NumToStr
+NVI
+Nz
+OBV
+Optimize
+OscP
+OscV
+Outside
+Param
+ParamColor
+ParamDate
+ParamField
+ParamList
+ParamStr
+ParamStyle
+ParamTime
+ParamToggle
+ParamTrigger
+PDI
+Peak
+PeakBars
+Percentile
+Plot
+PlotForeign
+PlotGrid
+PlotOHLC
+PlotShapes
+PlotText
+PlotVAPOverlay
+Prec
+Prefs
+printf
+PVI
+Random
+Ref
+RelStrength
+RestorePriceArrays
+RMI
+ROC
+round
+RSI
+RWI
+RWIHi
+RWILo
+SAR
+Second
+SectorID
+SelectedValue
+SetBarsRequired
+SetChartBkColor
+SetChartOptions
+SetCustomBacktestProc
+SetForeign
+SetFormulaName
+SetOption
+SetPositionSize
+SetTradeDelays
+sign
+Signal
+sin
+sinh
+sqrt
+StaticVarGet
+StaticVarGetText
+StaticVarRemove
+StaticVarSet
+StaticVarSetText
+Status
+StdErr
+StDev
+StochD
+StochK
+StrExtract
+StrFind
+StrFormat
+StrLeft
+StrLen
+StrMid
+StrRight
+StrToDateTime
+StrToLower
+StrToNum
+StrToUpper
+Study
+Sum
+tan
+tanh
+TEMA
+TimeFrameCompress
+TimeFrameExpand
+TimeFrameGetPrice
+TimeFrameMode
+TimeFrameRestore
+TimeFrameSet
+TimeNum
+Trin
+Trix
+Trough
+TroughBars
+TSF
+Ultimate
+UncIssues
+UncVolume
+ValueWhen
+VarGet
+VarGetText
+VarSet
+VarSetText
+Version
+Wilders
+WMA
+WriteIf
+WriteVal
+Year
+Zig
+_N
+_TRACE
+
+
+// flow control statements, variable scope, preprocessor
+
+KeyWords3:
+
+#include
+#include_once
+#pragma
+do
+else
+for
+function
+global
+if
+local
+procedure
+return
+while
+
+// Misc Functions
+
+KeyWords4:
+
+_DEFAULT_NAME
+_PARAM_VALUES
+_SECTION_BEGIN
+_SECTION_END
+_SECTION_NAME
+
+//////////////////////////////////////////////////////////////////////////////
+// string delimiter: StringBegChar - string begin char
+// StringEndChar - string end char
+// MultilineStrings - enables multiline strings, as perl
+// has it
+
+StringBegChar:          "
+StringEndChar:          "
+MultilineStrings:       0
+
+
+//////////////////////////////////////////////////////////////////////////////
+// use preprocessor:    0 - no
+//                      1 - yes
+// note: if yes, '#' and statements after it will be
+// highlighted with Preprocessor defined colors
+
+UsePreprocessor:        1
+
+
+//////////////////////////////////////////////////////////////////////////////
+// highlight line:      0 - no
+//                      1 - yes
+// note: if yes, current line will be highlighted
+
+CurrLineHighlighted:    0
+
+
+//////////////////////////////////////////////////////////////////////////////
+// colors
+// note:                first value is foreground, second is background color
+//                        and third (optional) represents font attribute:
+//                        B - bold
+//                        I - italic
+//                        U - underline
+//                        S - strike out
+//                        attributes can be combined: eg. B or BI
+//                      as value, it could be used any standard windows color:
+//                        clBlack, clMaroon, clGreen, clOlive, clNavy,
+//                        clPurple, clTeal, clGray, clSilver, clRed, clLime,
+//                        clYellow, clBlue, clFuchsia, clAqua, clLtGray,
+//                        clDkGray, clWhite, clScrollBar, clBackground,
+//                        clActiveCaption, clInactiveCaption, clMenu, clWindow,
+//                        clWindowFrame, clMenuText, clWindowText, clCaptionText,
+//                        clActiveBorder, clInactiveBorder, clAppWorkSpace,
+//                        clHighlight, clHighlightText, clBtnFace, clBtnShadow,
+//                        clGrayText, clBtnText, clInactiveCaptionText,
+//                        clBtnHighlight, cl3DDkShadow, cl3DLight, clInfoText,
+//                        clInfoBk
+//                      as value, it could be used hex numeric constant too:
+//                        $BBGGRR - BB: blue, GG: green, RR: red, eg: $FF6A00
+
+SpaceCol:               clWindowText clWindow
+Keyword1Col:            clBlack clWindow B
+Keyword2Col:            clBlue clWindow
+Keyword3Col:            clMaroon clWindow B
+Keyword4Col:            clSilver clWindow
+Keyword5Col:            clBlue clWindow
+IdentifierCol:          clWindowText clWindow
+CommentCol:             clGreen clWhite
+NumberCol:              clFuchsia clWindow
+StringCol:              clFuchsia clWindow
+SymbolCol:              clBlack clWindow
+PreprocessorCol:        clMaroon clWindow B
+SelectionCol:           clWhite clNavy
+CurrentLineCol:         clBlack clYellow
+OverrideTxtFgColor:     0
+BlockAutoindent:        0
+BlockBegStr:
+BlockEndStr:
+MatchedBracesCol:       clWindowText clWindow

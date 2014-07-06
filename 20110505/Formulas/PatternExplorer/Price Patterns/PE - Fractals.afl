@@ -1,0 +1,158 @@
+//|-----------------------------------------------------------------------------------------
+//|PatternExplorer.com - Fractals
+//|Copyright © 2007, PatternExplorer.com
+//|http://www.PatternExplorer.com
+//|e-mail: support@PatternExplorer.com
+//|-----------------------------------------------------------------------------------------
+FormulaName = "PE - Fractals";
+
+SetChartOptions( 0, chartShowDates | chartWrapTitle );
+#pragma nocache
+#include_once  <\PEInc\PatternExplorer_f0.afl>
+#include_once "C:\Program Files (x86)\AmiBroker5\Formulas\PatternExplorer\#Defaults & Mods\PE - Defaults.afl"
+#include_once "C:\Program Files (x86)\AmiBroker5\Formulas\PatternExplorer\#Defaults & Mods\PE - Mods.afl"
+/*******************************************************************************************/
+AddCustomCodeBeforePE();
+/*******************************************************************************************/
+AddAlertParam( def_AudioAlert, def_EmailAlert, def_BarComplete );
+/*******************************************************************************************/
+_SECTION_BEGIN( "Alerts" );
+SRbS = ParamToggle( "S/R broken", "Off,On", 1 );
+SRcS = ParamToggle( "S/R confirmed", "Off,On", 1 );
+PjabS = ParamToggle( "Price just above/below", "Off,On", 1 );
+_SECTION_END();
+/*******************************************************************************************/
+_SECTION_BEGIN( "Main parameters" );
+SRplot = ParamToggle( "Plot S/R", "Off,On", 1 );
+Sswitch = ParamToggle( "PLot Swing Chart", "Off,On", 0 );
+Shswitch = ParamToggle( "Plot Swing Shapes", "Off,On", 0 );
+SwingSize = Param( "Swing Size %", 5, 0.1, 40, 0.1 );
+_SECTION_END();
+/*******************************************************************************************/
+_SECTION_BEGIN( "Sensitivity" );
+AddparamUsefromChart2( def_UseFromChart );
+PatternPriceBasis = ParamToggle( "Pattern Price Basis", "Close|High & Low", def_PatternPriceBasisFractals );
+Bars = Param( "Bars", 5, 2, 20, 1 );
+MinVertSize = Param( "Minimum Vertical Size (*ATR)", 0, 0, 3.01, 0.05 );
+
+if ( InChart )
+    StaticVarSet( "Ddf343", PatternPriceBasis );
+
+if ( inAA AND Usefromchart )
+    PatternPriceBasis = StaticVarGet( "Ddf343" );
+
+if ( InChart )
+    StaticVarSet( "P54972", Bars );
+
+if ( inAA AND Usefromchart )
+    Bars = StaticVarGet( "P54972" );
+
+if ( InChart )
+    StaticVarSet( "Adf343", MinVertSize );
+
+if ( inAA AND Usefromchart )
+    MinVertSize = StaticVarGet( "Adf343" );
+
+_SECTION_END();
+
+/*******************************************************************************************/
+_SECTION_BEGIN( "Styles" );
+
+Swingstyle = ParamStyle( "Swing Line", styleLine | styleThick, maskDefault );
+
+TopShape = Param( "Top Fractal Typ", 21, 0, 50, 1 );
+
+ValleyShape = Param( "Valley Fractal Typ", 22, 0, 50, 1 );
+
+_SECTION_END();
+
+/*******************************************************************************************/
+_SECTION_BEGIN( "Colors" );
+
+SLC = ParamColor( "Swing Low", colorPaleGreen );
+
+SHC = ParamColor( "Swing High", colorLightOrange );
+
+Swingcolor = ParamColor( "Swing Line", def_Color6 );
+
+Topshapecolor = ParamColor( "Top  Fractal", def_SellShapeColor );
+
+Valleyshapecolor = ParamColor( "Bottom Fractal", def_BuyShapeColor );
+
+_SECTION_END();
+
+/*******************************************************************************************/
+#include_once  <\PEInc\PatternExplorer_1.afl>
+#include_once  <\PEInc\Lib\PatternExplorer_f13.afl>
+/*******************************************************************************************/
+PlotShapes( IIf( Top, TopShape, -1e10 ), Topshapecolor, 0, H, def_BuyShapeOffset );
+
+PlotShapes( IIf( Valley, Valleyshape, -1e10 ), ValleyShapecolor, 0, L, def_SellShapeOffset );
+
+Plot( IIf( SRplot & x >= x_lasttop, LastValue( ValueWhen( top, TopInput, 1 ) ), Null ), "", Topshapecolor, 1 + styleNoRescale );
+
+Plot( IIf( SRplot & x >= x_lastvalley, LastValue( ValueWhen( Valley, ValleyInput, 1 ) ), Null ), "", Valleyshapecolor, 1 + styleNoRescale );
+
+/*******************************************************************************************/
+Buy = def_Buy AND ( Sup_confirmed OR Res_break );
+
+Sell = def_Sell AND ( Res_confirmed OR Sup_break );
+
+/*******************************************************************************************/
+Filter = def_Filter AND BarIndex() == LastValue( BarIndex() ) AND NOT GroupID() == 253;
+
+Filter = Filter AND ( SupSignals OR ResSignals );
+
+/*******************************************************************************************/
+Addefaultcolumns();
+
+Adddefaultcolumns( 2, 1 );
+
+AddTextColumn(
+    WriteIf( Sup_pricejustabove, "Price just above",
+             WriteIf( Sup_confirmed, "Confirmed",
+                      WriteIf( Sup_break, "Break", "" ) ) ), "Support", 1.2,
+    IIf( Sup_pricejustabove OR sup_confirmed, colorGreen, colorRed ) );
+
+AddTextColumn(
+    WriteIf( Res_pricejustbelow, "Price just below",
+             WriteIf( Res_confirmed, "Confirmed",
+                      WriteIf( Res_break, "Break", "" ) ) ), "Resistance", 1.2,
+    IIf( Res_pricejustbelow OR Res_confirmed, colorRed, colorGreen ) );
+
+AddTextColumn( FullName(), "Full name" );
+
+/*******************************************************************************************/
+PlotShapes( IIf( Shswitch AND PivotLow, shapeCircle, Null ), SLC, 0, L, -35 ) ;
+
+PlotShapes( IIf( Shswitch AND PivotHigh, shapeCircle, Null ), SHC, 0, H, 35 ) ;
+
+Plot( IIf( Sswitch, ZZ, Null ), " ", Swingcolor, Swingstyle + styleNoTitle );
+
+/*******************************************************************************************/
+if ( SRbS )
+{
+    AddAlert( Res_break, Audio, Email, "Resistance broken", 1, BarComplete, def_BuySound1 );
+    AddAlert( Sup_break, Audio, Email, "Support broken", 2, BarComplete, def_SellSound1 );
+}
+
+if ( SRcS )
+{
+    AddAlert( Sup_confirmed, Audio, Email, "Support confirmed", 1, BarComplete, def_BuySound2 );
+    AddAlert( Res_confirmed, Audio, Email, "Resistance confirmed", 2, BarComplete, def_SellSound2 );
+}
+
+if ( PjabS )
+{
+    AddAlert( Sup_pricejustabove, Audio, Email, "Price just above Support", 1, BarComplete, def_BuySound1 );
+    AddAlert( Res_pricejustbelow, Audio, Email, "Price just below Resistance", 2, BarComplete, def_SellSound1 );
+}
+
+/*******************************************************************************************/
+ToolTip = def_ToolTip;
+
+/*******************************************************************************************/
+AddCustomCodeAfterPE();
+
+/*******************************************************************************************/
+Title = "PatternExplorer.com - Fractals" + default_priceTitle;

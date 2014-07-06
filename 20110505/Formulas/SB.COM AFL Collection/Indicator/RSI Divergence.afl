@@ -1,0 +1,67 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    RSI Divergence
+//  Author/Uploader: Aron Pipa 
+//  E-mail:          
+//  Date/Time Added: 2006-03-19 22:00:02
+//  Origin:          
+//  Keywords:        
+//  Level:           medium
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=603
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=603
+//
+//------------------------------------------------------------------------------
+//
+//  + scanner
+//
+//------------------------------------------------------------------------------
+
+/*---------------------------------------------------
+	RSI Divergence
+	Aron Pipa, March, 20 , 2006
+--------------------------------------------------------*/
+
+GraphXSpace=7;
+n=Param("% Reverse ",20,0,100,1);
+
+Buy=Sell=0;
+Var = Zig(RSI(), n); 
+t= Trough(RSI(), n, 1); 
+p= Peak(RSI(), n, 1); 
+x[0] =Var[0];
+price[0] = C[0];
+j=0;
+
+// bearish divergence
+for ( i=0; i<BarCount; i++) 
+{
+if(Var[i] == p[i])
+{
+
+j++;
+x[j] =Var[i];
+price[j] =C[i];
+if(x[j] <x[j-1] && price[j-1]< price[j]) 
+Sell[i] =1;
+}
+}
+
+// bullish divergence
+for ( i=0; i<BarCount; i++) 
+{
+if(Var[i] == t[i])
+{
+j++;
+x[j] =Var[i];
+price[j] =C[i];
+if(x[j] >x[j-1] && price[j]<price[j-1]) 
+Buy[i] =1;
+}
+}
+
+Plot(Var, "", 39); 
+PlotShapes ( IIf(Sell, shapeSmallCircle, shapeNone), colorRed, 0 , Var,0);
+PlotShapes( IIf(Buy, shapeSmallCircle, shapeNone),  colorBrightGreen, 0, Var,0);
+
+Title ="RSI Divergence" ;

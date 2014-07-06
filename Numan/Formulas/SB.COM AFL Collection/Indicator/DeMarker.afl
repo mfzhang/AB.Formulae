@@ -1,0 +1,36 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    DeMarker
+//  Author/Uploader: Tomasz Janeczko 
+//  E-mail:          tj@amibroker.com
+//  Date/Time Added: 2001-06-16 08:19:53
+//  Origin:          Originally developed by Tom Demark
+//  Keywords:        overbought,oversold
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=10
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=10
+//
+//------------------------------------------------------------------------------
+//
+//  The DeMarker indicator is an attempt to overcome the shortcomings of
+//  classical overbought / oversold indicators. The DeMarker Indicator
+//  identifies potential price bottoms and tops. It accomplishes this by making
+//  price comparisons from one bar to the next and measuring the level of price
+//  demand. For more information please check AmiBroker Tips newsletter <a
+//  href="http://www.amibroker.com/newsletter/02-2000.html">Issue 2/2000</a>
+//
+//------------------------------------------------------------------------------
+
+/*
+** Tom Demark's DeMarker Indicator
+** AFL Implementation by Tomasz Janeczko
+*/
+
+highm = IIF( H > Ref( H, -1 ), H - Ref( H, - 1), 0 );
+lowm = IIF( L < Ref( L, -1 ), Ref( L, - 1 ) - L, 0 );
+
+DeMarker = 100 *  Sum( highm, 13 )/( Sum( lowm, 13 ) + Sum( highm, 13 ) );
+
+graph0 = DeMarker;
+

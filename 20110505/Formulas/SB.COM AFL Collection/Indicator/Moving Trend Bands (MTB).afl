@@ -1,0 +1,37 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Moving Trend Bands (MTB)
+//  Author/Uploader: Uenal Mutlu 
+//  E-mail:          uenal.mutlu@t-online.de
+//  Date/Time Added: 2003-04-08 21:00:27
+//  Origin:          Moving Trend: William Rafter, "The Moving Trend", TASC 1/2003 p38 The idea of Moving Trend Bands (MTB) is IMHO by  me.
+//  Keywords:        Moving Trend, Bands, MTB
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=266
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=266
+//
+//------------------------------------------------------------------------------
+//
+//  Around the Moving Trend Average an upper and lower band similar to
+//  Bollinger Bands is implemented. Maybe this is even better than BB (?).
+//
+//------------------------------------------------------------------------------
+
+/*
+   Moving Trend Bands (MTB)  [experimental]
+   Written 030408We by uenal.mutlu@t-online.de 
+   Similar to Bollinger Bands, maybe better?
+*/
+// mid = LinearReg(C, Prefs(4));
+   mid = TSF(C, Prefs(4));
+
+   sd  = StDev(mid, Prefs(4));
+   top = mid + 1 * sd;  // check 1
+   bot = mid - 1 * sd;
+
+   Plot(C, "Moving Trend Bands (MTB)   C",
+     colorBlack, 1 + 8);
+// Plot(mid,  "mid", colorRed, 1);
+   Plot(top,  "top", colorWhite, 1);
+   Plot(bot,  "bot", colorWhite, 1);

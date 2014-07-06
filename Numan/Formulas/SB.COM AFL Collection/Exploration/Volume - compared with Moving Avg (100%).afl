@@ -1,0 +1,54 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Volume - compared with Moving Avg (100%)
+//  Author/Uploader: Thomas Zmuck 
+//  E-mail:          thomas.zm@aon.at
+//  Date/Time Added: 2002-07-15 17:12:30
+//  Origin:          
+//  Keywords:        
+//  Level:           basic
+//  Flags:           exploration,indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=207
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=207
+//
+//------------------------------------------------------------------------------
+//
+//  This is principle only another view of the volume.
+//
+//  It shows you the difference from the current volume to the moving Volume in
+//  percent.
+//
+//  I like it, because it is easier to analyze. you dont need to compare the
+//  volume with the moving, which has everyday another value.
+//
+//  In this formula you see, for example, that sometimes the volume is 300%
+//  higher than the AVG. This makes it also easier to use in the exploration.
+//
+//  Try it out! I think, you like it.
+//
+//  Set the scale to percent and automatic
+//
+//------------------------------------------------------------------------------
+
+//written by Thomas Zmuck
+//Date: 15-07-02
+//thomas.zm@aon.at
+
+pds = 10;
+V1 = V/MA(V,10); V2 = V/MA(V,20);
+V3 = V/MA(V,50);
+
+barcolor = IIf(V<MA(V,pds),4,6);
+/* Colourized price bars drawn here */
+Plot(100*Volume/MA(V,pds),"    V/ma(10)",barcolor,2+4);
+
+Plot(100,"    AVG(10)",1,1);
+
+unsure = V1<1 AND V2<1 AND V3<1;
+sure   = V1>1 AND V2>1 AND V3>1;
+
+Filter = unsure;
+AddColumn(100*V/MA(V,10),"V/ma(V,10)",1.0);
+AddColumn(100*V/MA(V,20),"V/ma(V,20)",1.0);
+AddColumn(100*V/MA(V,50),"V/ma(V,50)",1.0);
+AddColumn(ROC(C,1),"%today");

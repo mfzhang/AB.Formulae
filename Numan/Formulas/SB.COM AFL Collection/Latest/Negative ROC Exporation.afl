@@ -1,0 +1,43 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Negative ROC Exporation
+//  Author/Uploader: Mubashar Virk 
+//  E-mail:          mavirk@gmail.com
+//  Date/Time Added: 2006-10-03 14:34:52
+//  Origin:          ROC
+//  Keywords:        ROC
+//  Level:           basic
+//  Flags:           exploration
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=729
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=729
+//
+//------------------------------------------------------------------------------
+//
+//  Hi there guys and ladies, I have a negative ROC exploration for all you
+//  tight-traders and beginners. Use it on you EOD data, it may give you some
+//  good picks for the next day. Needless to say you must study the securities
+//  by using William, Chaikin, and Bollinger's. Also try to put your own
+//  filtration values for ROC and Volume as mine are too tight. May the Profit
+//  be with you all.
+//
+//------------------------------------------------------------------------------
+
+P  =  ((H + L + C) / 3);
+R1  =  ((2 * P) - L);
+S1  =  ((2 * P)  - H);
+R2  =  ((P - S1) + R1);
+S2  =  (P - (R1 - S1));
+
+Filter = ROC( C, 1 ) < -0.50 AND V >29999; 
+
+AddColumn( V, "Volume",1 );
+AddColumn( C, "Close" );
+AddColumn( Ref (C, -1), "Last Close");
+AddColumn( C - Ref( C, -1), "Change");
+AddColumn( ROC( C, 1 ), "ROC" ); 
+AddColumn (RSI(), "RSI",1.2);
+AddColumn( r2, "R 2", 1.2);
+AddColumn( r1, "R 1", 1.2);
+AddColumn( P, "Pivot", 1.2);
+AddColumn( S1, "S 1", 1.2);
+AddColumn( S2, "S 2", 1.2);

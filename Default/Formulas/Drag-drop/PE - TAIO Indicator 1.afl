@@ -1,0 +1,147 @@
+//|-----------------------------------------------------------------------------------------
+//|PatternExplorer.com - TAIO indicator
+//|Copyright © 2007, PatternExplorer.com
+//|http://www.PatternExplorer.com
+//|e-mail: support@PatternExplorer.com
+//|-----------------------------------------------------------------------------------------
+FormulaName = "PE - TAIO Indicator";
+
+SetChartOptions( 0, chartShowDates | chartWrapTitle, chartGridMiddle == 0 );
+GraphXSpace = 10;
+#pragma nocache
+#include_once  <\PEInc\PatternExplorer_f0.afl>
+#Include_once "C:\Program Files (x86)\AmiBroker\Formulas\PatternExplorer\#Defaults & Mods\PE - Defaults.afl"
+#Include_once "C:\Program Files (x86)\AmiBroker\Formulas\PatternExplorer\#Defaults & Mods\PE - Mods.afl"
+/*******************************************************************************************/
+AddCustomCodeBeforePE();
+/*******************************************************************************************/
+AddAlertParam( def_AudioAlert, def_EmailAlert, def_BarComplete );
+/*******************************************************************************************/
+_SECTION_BEGIN( "Alerts" );
+BuySig = ParamList( "Buy Signal", List1 = "Taio Top,Taio Valley,Zero Line Cross,Zero Line Bounce,Oversold,Trend Level reached,Taio2 direction change", 1 );
+SellSig = ParamList( "Sell Signal", List2 = "Taio Top,Taio Valley,Zero Line Cross,Zero Line Bounce,Overbought,Trend Level reached,Taio2 direction change", 0 );
+_SECTION_END();
+/*******************************************************************************************/
+_SECTION_BEGIN( "Indicator Periods" );
+period1 = Param( "Period 1", def_TaioPeriod1, 1, 30, 1 );
+period2 = Param( "Period 2", def_TaioPeriod2, 1, 30, 1 );
+_SECTION_END();
+/*******************************************************************************************/
+_SECTION_BEGIN( "First Time Frame" );
+TAIO_switchvalue = ParamList( "Color Mode", List = "1 - Rising/Falling/Range,2 - Range/Trend,3 - Rising/Falling,4 - Zero based,5 - Single Color", def_TaioModeInd - 1 );
+Level = Param( "Trend Level", def_TrendLevel, 0, 90 );
+Shadows_switch = ParamToggle( "Plot Shadows", "Off|On", 0 );
+Ribbons_switch = ParamToggle( "Plot Ribbons", "On|Off", 1 );
+Ribbonsheight = Param( "Height", 5, 1, 100, 1 );
+Style1 = ParamStyle( "Style", styleHistogram + styleThick, maskAll );
+up_color1 = ParamColor( "Taio > Trend Level", def_TAIO_up_color );
+dn_color1 = ParamColor( "Taio < Trend Level", def_TAIO_dn_color );
+RangeP_color1 = ParamColor( "Range (>0)", def_TaioRangeP_color );
+RangeN_color1 = ParamColor( "Range (<0)", def_TaioRangeN_color );
+Singlecolor1 = ParamColor( "Single Color", colorLightBlue );
+_SECTION_END();
+/*******************************************************************************************/
+_SECTION_BEGIN( "Second Time Frame" );
+SecondTF2 = ParamToggle( "Plot Indicator", "Off|On", def_SecondTF2Switch );
+Multiplier = Param( "Multiplier", def_Taio2TFMultiplier, 1, 30, 1 );
+Taio2expandMode = ParamToggle( "Taio TF2 Expand Mode", "Expand First|Expand Last", 1 );
+SecondTFstyle = ParamStyle( "Style", styleLine + styleThick + styleDots, maskAll );
+Color_Mode2 = ParamToggle( "Color Mode", "1 - Rising/Falling|2 - Above/Below Zero", 0 );
+up_Color2 = ParamColor( "Up Color", def_TaioTF2Up_Color );
+dn_Color2 = ParamColor( "Dn Color", def_TaioTF2Dn_Color );
+_SECTION_END();
+/*******************************************************************************************/
+/*******************************************************************************************/
+AddGradientBackground( def_BGColorswitch, def_BgTopcolor, def_BgBottomcolor, def_titlebkcolor );
+/*******************************************************************************************/
+#include_once  <\PEInc\Lib\PatternExplorer_f12.afl>
+/*******************************************************************************************/
+Buy = def_Buy AND
+      IIf( BuySignal == 0, TpVa == -1,
+           IIf( BuySignal == 1, TpVa == 1,
+                IIf( BuySignal == 2, ZLC == 1,
+                     IIf( BuySignal == 3, ZLB == 1,
+                          IIf( BuySignal == 4, Oversold == 1,
+                               IIf( BuySignal == 5, UpperLevelreached == 1,
+                                    IIf( BuySignal == 6, Taio2upsig == 1, Null ) ) ) ) ) ) );
+Sell = def_Sell AND
+       IIf( SellSignal == 0, TpVa == -1,
+            IIf( SellSignal == 1, TpVa == 1,
+                 IIf( SellSignal == 2, ZLC == -1,
+                      IIf( SellSignal == 3, ZLB == -1,
+                           IIf( SellSignal == 4, Overbought == -1,
+                                IIf( SellSignal == 5, LowerLevelreached == -1,
+                                     IIf( SellSignal == 6, Taio2dnsig == 1, Null ) ) ) ) ) ) );
+/*******************************************************************************************/
+Alerttext =
+    "\nTaio =   " + WriteVal( Taio ) + ", "
+    + "\nTaio 2nd Time Frame =   " + WriteVal( Taio2 );
+AddAlert( Buy, Audio, Email, BuySig + Alerttext, 1, BarComplete, def_BuySound1 );
+AddAlert( Sell, Audio, Email, SellSig + Alerttext, 2, BarComplete, def_SellSound1 );
+/*******************************************************************************************/
+Filter = def_Filter AND NOT GroupID() == 253;
+/*******************************************************************************************/
+
+if ( inAA )
+{
+    if ( Widecolumns )
+    {
+        Addefaultcolumns();
+        AddColumn( Taio, "Taio", 1 );
+        AddColumn( Taio2, "Taio TF2", 1, 1, colorWhite, 60 );
+        AddColumn( TpVa, "Taio Top / Valley", 1, 1, IIf( TpVa == 1 OR TpVa == -1, colorLightBlue, colorWhite ), 0 );
+        AddColumn( ZLC, "Zero Line Cross", 1, 1, IIf( ZLCp, def_Color1, IIf( ZLCn, colorRed, colorWhite ) ), 90 );
+        AddColumn( ZLB, "Zero Line Bounce", 1, 1, IIf( ZLBp, def_Color1, IIf( ZLBn, colorRed, colorWhite ) ), 100 );
+        AddColumn( TrendLevelreached, "Trend Level reached", 1, 1, IIf( UpperLevelreached, def_Color1, IIf( LowerLevelreached, colorRed, colorWhite ) ), 120 );
+        AddColumn( OBOS, "Overbought/Oversold", 1, 1, IIf( Oversold, def_Color1, IIf( Overbought, colorRed, colorWhite ) ), 120 );
+        AddColumn( IIf( Taio > Level, BarsSince( Cross( Taio, Level ) ), IIf( Taio < -Level, BarsSince( Cross( -Level, Taio ) ), Null ) ), "Bars since Trendlevel reached", 1.0 );
+        AddColumn( IIf( Taio2upsig, 1, IIf( Taio2dnsig, -1, Null ) ), "Taio 2 Signals", 1, 1, IIf( Taio2upsig, def_Color1, IIf( Taio2dnsig, colorRed, colorWhite ) ), 40 );
+        AddTextColumn( FullName(), "Full name", 120 );
+    }
+    else
+    {
+        Addefaultcolumns();
+        Adddefaultcolumns( 2, 1 );
+        AddColumn( Taio, "Taio", 1 );
+        AddColumn( Taio2, "Taio TF2", 1, 1, colorWhite, 60 );
+        AddColumn( TpVa, "T/V", 1, 1, IIf( TpVa == 1 OR TpVa == -1, colorLightBlue, colorWhite ), 40 );
+        AddColumn( ZLC, "ZLC", 1, 1, IIf( ZLCp, def_Color1, IIf( ZLCn, colorRed, colorWhite ) ), 40 );
+        AddColumn( ZLB, "ZLB", 1, 1, IIf( ZLBp, def_Color1, IIf( ZLBn, colorRed, colorWhite ) ), 40 );
+        AddColumn( TrendLevelreached, "TLR", 1, 1, IIf( UpperLevelreached, def_Color1, IIf( LowerLevelreached, colorRed, colorWhite ) ), 40 );
+        AddColumn( OBOS, "OB/OS", 1, 1, IIf( Oversold, def_Color1, IIf( Overbought, colorRed, colorWhite ) ), 60 );
+        AddColumn( IIf( Taio > Level, BarsSince( Cross( Taio, Level ) ), IIf( Taio < -Level, BarsSince( Cross( -Level, Taio ) ), Null ) ), "BSTR", 1.0 );
+        AddColumn( IIf( Taio2upsig, 1, IIf( Taio2dnsig, -1, Null ) ), "T2 Sig", 1, 1, IIf( Taio2upsig, def_Color1, IIf( Taio2dnsig, colorRed, colorWhite ) ), 40 );
+        //AddTextColumn(FullName(),"Full name");
+    }
+}
+
+/*******************************************************************************************/
+PlotGrid( Level, colorDefault );
+
+PlotGrid( -Level, colorDefault );
+
+PlotGrid(   0, colorDefault );
+
+PlotGrid( 100, colorDefault );
+
+PlotGrid( -100, colorDefault );
+
+Plot( IIf( Ribbons_switch == 0, Ribbonsheight, -1e10 ), "", RibbonsColor, styleOwnScale | styleArea | styleNoLabel, -0.1, 100 );
+
+Plot( IIf( SecondTF2, Taio2, -1e10 ), "TF2 Taio", Taio2_color, SecondTFstyle );
+
+Plot( Taio, "TF1 Taio", Taio1_color, style1 );
+
+if ( Shadows_switch )
+{
+    PlotOHLC( 0, Taio, 0, Taio, "", IIf( Taio > 0, up_color1, dn_color1 ), styleCloud | styleClipMinMax, -Level, Level );
+}
+
+/*******************************************************************************************/
+ToolTip = def_ToolTip;
+
+/*******************************************************************************************/
+AddCustomCodeAfterPE();
+
+/*******************************************************************************************/
+Title = "PatternExplorer.com - Taio Indicator" + " - " +  Name() + " - " + EncodeColor( colorRed ) + Interval( 2 ) + EncodeColor() + "  - " + Date() + " - " + EncodeColor( LastValue( Taio1_color ) ) + "Taio = " + WriteVal( Taio, 1.2 ) + ", " + EncodeColor( LastValue( Taio2_color ) ) + "TF-Multiplier = " + WriteVal( Multiplier, 1.0 ) + ", " + "Taio 2nd time frame = " + WriteVal( Taio2, 1.2 ) + " ";

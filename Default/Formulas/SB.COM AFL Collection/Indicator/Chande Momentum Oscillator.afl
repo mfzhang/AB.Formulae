@@ -1,0 +1,35 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Chande Momentum Oscillator
+//  Author/Uploader: Jayson Casavant 
+//  E-mail:          jcasavant@adelphia.net
+//  Date/Time Added: 2002-12-09 01:34:00
+//  Origin:          Tushar Chande
+//  Keywords:        Momentum
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=239
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=239
+//
+//------------------------------------------------------------------------------
+//
+//  The CMO is closely related to, yet unique from, other momentum oriented
+//  indicators such as Relative Strength Index, Stochastic, Rate-of-Change,
+//  etc. It is most closely related to Welles Wilder&amp;#8217;s RSI, yet it
+//  differs in several ways. For a nice description of the indicator and
+//  interpretation visit
+//
+//  http://www.paritech.com/education/technical/indicators/momentum/chande.asp
+//
+//------------------------------------------------------------------------------
+
+cmopds=20;
+CMO_1=Sum( IIf( C > Ref( C, -1 ) , ( C - Ref( C ,-1 ) ) ,0 ) ,cmopds ) ;
+CMO_2=Sum( IIf( C < Ref( C ,-1 ) , ( Ref( C ,-1 ) - C )  ,0 ) ,cmopds );
+
+CMO=100 * (( CMO_1 -CMO_2)  /( CMO_1+CMO_2));
+Plot(Cmo,"CMO",IIf(cmo>Ref(cmo,-1),5,4),2|styleThick);
+Plot(MA(Cmo,9),"Trigger",colorYellow);
+Plot(50,"",15);
+Plot(-50,"",15);
+Title="CMO"+WriteVal(Cmo)+"   Trigger"+WriteVal(MA(Cmo,9));

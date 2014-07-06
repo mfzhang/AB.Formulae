@@ -1,0 +1,81 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    SectorRSI
+//  Author/Uploader: goldfreaz 
+//  E-mail:          goldfreaz@thelion.com
+//  Date/Time Added: 2002-05-04 14:45:07
+//  Origin:          some stuff from Dimitris
+//  Keywords:        
+//  Level:           semi-advanced
+//  Flags:           system
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=187
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=187
+//
+//------------------------------------------------------------------------------
+//
+//  Scan looks for stocks that have low RSI but turning up. Also, checks for
+//  composite to be in agreement. Run in the scan mode to establish composite.
+//  Then run in the backtest mode to find the winners. Paste all the winner
+//  from the results into their own separate group. Repeat the above on this
+//  elite group...model is set up for swing trading with a maximum hold of five
+//  days.
+//
+//------------------------------------------------------------------------------
+
+/* SectorRSI swing system
+** goldfreaz - 5 May 2002
+*/
+//myobj = CreateObject("MyAFLObject.Class1");
+PositionSize=4000;
+
+// Mean RSI
+Nrsi=14;//Optimize("Nrsi",11,14,19,1);
+rr=13;//Optimize("rr",15,12,15,1);
+ss=2;//Optimize("ss",3,2,3,1);
+Wfactor=1;//Optimize("Wf",0.8,0.8,1.3,0.1);
+slpTsiD=6;//Optimize("slpTsiD",6,5,8,1);
+
+MeanRSI = Foreign("~SUMRSI","O",1) / Foreign("~SUMRSI","V",1);
+rrsi=RSI(Nrsi);
+ROCmean=ROC(EMA(meanrsi,4),2);
+ROCrsi=ROC(EMA(rrsi,4),2);
+both=Wfactor*ROCmean+ROCrsi;
+Tsi=50 * ( EMA( EMA( both ,rr ) ,ss) / EMA( EMA( abs( both ),rr ), ss) );
+
+TsiBase=MA(Tsi,slpTsiD);
+Nx=1.77;//Optimize("Nx",5,1.6,1.9,.05);
+CurveTsi=Tsi-1.5*Ref(Tsi,-1)+.5*Ref(Tsi,-3);
+//CurveTsi=myobj.Curvature( Tsi, 3, Nx );
+//CurveTsi=myobj.ECurve( Tsi, Nx );
+wait=8;//Optimize("Wait",8,6,9,1);
+profitfactor=2.6;//Optimize("Pf",2.6,2.3,2.8,0.1);
+Patr=11;//Optimize("Patr",8,8,11,1);
+LossFactor=2.4;//Optimize("LF",1.5,1.2,2.8,0.2);
+PatrL=11;//Optimize("PatrL",11,10,13,1);
+CurveTsiCrit=3;//Optimize("CtsiC",5,2.7,3.2,.1);
+TsiCrit=-25;//Optimize("TsiC",-25,-26,-23,1);
+Buy = CurveTsi>CurveTsiCrit AND TsiBase<TsiCrit;
+ExRemSpan(Buy,wait);
+target=ProfitFactor*ATR(Patr);
+Loss=LossFactor*ATR(PatrL);
+ApplyStop(1,2,target,1);
+ApplyStop(2,2,Loss,0);
+Sell=Ref(Buy,-wait);
+  Filter=1;
+  Buy=ExRem(Buy,Sell);
+  Sell=ExRem(Sell,Buy);
+AddToComposite( Equity(1,-1), "~CompoEquity", "X",7);
+
+Rt=RSI( 9 );
+Rmean=IIf(Rt>=1 AND Rt<=99,Rt,0);
+AddToComposite(Rmean,"~SUMRSI","X",7);
+AddToComposite(1,"~SUMRSI","V",7);
+
+AddColumn(Buy,"Buy");
+AddColumn(Buy+target,"target");
+AddColumn(CurveTsi,"CTsi");
+
+MaxGraph=3;
+Graph0=MeanRSI; Graph0Color=14; Graph0Style=1;
+Graph1=rrsi; Graph1Color=5; Graph1Style=1;
+Graph2=Tsi; Graph2Color=2; Graph2Style=9;

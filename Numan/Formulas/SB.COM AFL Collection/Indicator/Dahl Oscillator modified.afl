@@ -1,0 +1,41 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Dahl Oscillator modified
+//  Author/Uploader: Hans 
+//  E-mail:          
+//  Date/Time Added: 2004-09-18 03:24:24
+//  Origin:          
+//  Keywords:        Dahl Oscillator
+//  Level:           basic
+//  Flags:           system,indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=380
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=380
+//
+//------------------------------------------------------------------------------
+//
+//  Modified formula from original DAHL(55) with 14 simple average. Used TEMA
+//  instead of simple MA, added parameters and optimization. Good also for
+//  trading system (as indicator to be used with 10 and 90 levels also)..
+//
+//------------------------------------------------------------------------------
+
+/*Dahl Oscillator TS modificato (TEMA)
+
+*/ 
+P=14;Q=34;R=9;AV=6;
+p = Optimize("Period",P,3,25,1); 
+q = Optimize("Q ",Q,20,36,2); 
+//r = Optimize("R lookback",R,5,25,1); 
+Av = Optimize("S Average",AV,2,30,2); 
+
+M=MA(C,q);
+Dahl = TEMA(	( M - Ref(M,-p)- LLV (M - Ref(M,-p),r) )/(HHV(M - Ref(M,-p),r)-(LLV(M - Ref(M,-p),r))),r)*100 ;
+
+Buy = Cover = Cross (dahl, MA(Dahl,av));
+Short = Sell = Cross (MA(Dahl,av), dahl);
+
+
+GraphXSpace=2;
+Plot(Dahl,"Dahl",4,4); 
+Plot(MA(Dahl,av),"Avg",7,4); 
+//===========================end Dahl oscillator

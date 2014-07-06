@@ -1,0 +1,14 @@
+//I just added close to your formula, it made it easier for me to use. Thanks
+
+// Plots a 20 period Donchian channel
+
+pds=20;
+DonchianUpper =HHV(Ref(H,-1),pds);
+DonchianLower = LLV(Ref(L,-1),pds);
+DonchianMiddle = (DonchianUpper+DonchianLower)/2;
+
+
+Plot(DonchianUpper,"DU",colorBlue,styleLine);
+Plot(Close,"close",colorWhite,styleLine);
+Plot(DonchianMiddle,"DM",colorGreen,styleLine);
+Plot(DonchianLower,"DL",colorRed,styleLine);

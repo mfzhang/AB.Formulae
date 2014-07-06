@@ -1,0 +1,64 @@
+/**************************************************************************
+Name		:	Elder Impulse Indicator
+Coded by	:	Lal
+Date		:	28.10.2005
+Note		: 	Please refer to Elder's "Come Into my Trading Room"
+				for full details 
+******************************************************************************/
+
+
+// User-defined parameter for EMA periods
+EMA_prds = Param("EMA_periods", 12, 1, 30, 1);
+
+
+// Compute EMA and MACD Histogram
+DayEMA		= EMA(Close, EMA_prds);
+Histogram	= MACD() - Signal();
+
+// Determine if we have an Impulse UP, DOWN or None
+Impulse_Up		=	DayEMA > Ref(DayEMA, -1) AND Histogram > Ref(Histogram, -1);
+Impulse_Down	=	DayEMA < Ref(DayEMA, -1) AND Histogram < Ref(Histogram, -1);   
+Impulse_None	=	(NOT Impulse_UP) AND (NOT Impulse_Down);
+
+// Compute Weekly MACD and determine whether rising or falling
+// Note: uses "non-standard"  parameters!
+TimeFrameSet(inWeekly);
+MACD_val	=	MACD(5, 8);
+Signal_val	=	Signal(5, 8, 5);
+Hist_in_w	=	MACD_val - Signal_val;
+
+wh_rising 	= Hist_in_w > Ref(Hist_in_w, -1);
+wh_falling 	= Hist_in_w < Ref(Hist_in_w, -1);
+
+TimeFrameRestore();
+
+// Now get Monthly MACD Histogram....
+TimeFrameSet(inMonthly);
+MACD_val		=	MACD(5, 8);
+Signal_val		=	Signal(5, 8, 5);
+Hist_in_m		=	MACD_val - Signal_val;
+
+mh_rising = Hist_in_m > Ref(Hist_in_m, -1);
+mh_falling = Hist_in_m < Ref(Hist_in_m, -1);
+
+TimeFrameRestore();
+
+wh_rising 	= TimeFrameExpand( wh_rising, inWeekly ); 
+wh_falling 	= TimeFrameExpand( wh_falling, inWeekly ); 
+mh_rising 	= TimeFrameExpand(mh_rising, inMonthly);
+mh_falling 	= TimeFrameExpand(mh_falling, inMonthly);
+
+kol 	= IIf( wh_rising, colorGreen,  IIf(wh_falling, colorRed,
+colorLightGrey));
+mkol 	= IIf( mh_rising, colorBlue,  IIf(mh_falling, colorYellow,
+colorLightGrey));
+
+// Plot them all!
+Plot(Close, "Close", colorTeal, styleBar);
+PlotShapes(shapeUpArrow * Impulse_Up, colorBlue, 0, Low, -12);
+PlotShapes(shapeDownArrow * Impulse_Down, colorRed, 0, High, -12);
+PlotShapes(shapeSmallCircle * Impulse_None, colorWhite, 0, High, 5);
+Plot(10, "ribbon", kol, styleOwnScale|styleArea|styleNoLabel, -12, 156);	
+//Weekly trend
+Plot(10, "ribbon", mkol, styleOwnScale|styleArea|styleNoLabel, -0.5, 150);	
+//Monthly Trend

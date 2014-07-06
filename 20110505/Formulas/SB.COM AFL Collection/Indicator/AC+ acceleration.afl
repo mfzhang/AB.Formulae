@@ -1,0 +1,42 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    AC+ acceleration
+//  Author/Uploader: Steve Wiser 
+//  E-mail:          slwiserr@erols.com
+//  Date/Time Added: 2001-07-05 19:08:13
+//  Origin:          
+//  Keywords:        
+//  Level:           semi-advanced
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=56
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=56
+//
+//------------------------------------------------------------------------------
+//
+//  Supports William's Alligator Trend Following system
+//
+//------------------------------------------------------------------------------
+
+/* Exploration, System and Indicator */
+    Author: Steve Wiser
+   Email address: slwiserr@erols.com
+   May 5, 2001 */
+
+outsidebar = outside();
+insidebar = H <= Ref(H,-1) and L >= Ref(L,-1);
+upbar = H > ref(H,-1) and L >= ref(L, -1);
+downbar = L < ref(L,-1) and H <= ref(H,-1);
+barcolor=iif(outsidebar, 1, 
+               iif(downbar,   4, 
+               iif(upbar,        5, 
+               iif(insidebar,6, 0 ) ) ) );
+
+var1=ma( A , 34);
+var2=ma( A,5);
+var3=var2-var1;
+var4=var3-ma(var3,5);
+Graph0=var4;
+graph0style=2+4;
+Graph1=wilders(var4,5);
+Graph1Style=5;
+Graph0Barcolor=Barcolor;

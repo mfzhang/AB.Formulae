@@ -1,0 +1,107 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Tom DeMark Range Expansion Index (TDREI)
+//  Author/Uploader: Brian 
+//  E-mail:          brianrichard99@hotmail.com
+//  Date/Time Added: 2006-03-20 22:52:16
+//  Origin:          Created by Tom DeMark
+//  Keywords:        TD REI, TDREI, Range Expansion Index, DeMark
+//  Level:           medium
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=607
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=607
+//
+//------------------------------------------------------------------------------
+//
+//  Tom DeMark's REI indicator oftentimes gives leading signals before other
+//  indicators begin signalling. Use this together with other leading
+//  indicators, for signal confirmation. This version also includes the TD
+//  Price Oscillator Qualifier (TD POQ) and DeMark's Duration Analysis, for
+//  identifying extreme overbought and oversold conditions.
+//
+//------------------------------------------------------------------------------
+
+/* 
+Tom DeMark's Range Expansion Index (TD REI)
+with Price Oscillator Qualifier (TD POQ)
+and Duration Analysis OverBought/Uptrend (yellow) 
+and OverSold/Downtrend (red) signals
+*/
+
+// Set variables here
+varOversoldSignal = (-35); // default (-45)
+varOverboughtSignal = 35; // default 45
+varPeriod = 5; // default 5 or 8
+// End set variables
+
+HighMom = H - Ref( H, -2 );
+LowMom = L - Ref( L, -2 );
+
+Cond1 = ( H >= Ref( L,-5) OR H >= Ref( L, -6 ) );
+Cond2 = ( Ref( H, -2 ) >= Ref( C, -7 ) OR Ref( H, -2 ) >= Ref( C, -8 ) ); 
+Cond3 = ( L <= Ref( H, -5 ) OR L <= Ref( H, -6) ); 	
+Cond4 = ( Ref( L, -2 ) <= Ref( C, -7 ) OR Ref( L, -2 ) <= Ref( C, -8 ) );
+
+Cond = ( Cond1 AND Cond3 ) OR ( Cond2 AND Cond4 );
+
+Num = IIf( Cond, HighMom + LowMom, 0 );
+Den = abs( HighMom ) + abs( LowMom );
+
+TDREI = 100 * Sum( Num, varPeriod )/Sum( Den, varPeriod ) ;
+
+// Identify oversold conditions, marked with white arrow to denote downtrend
+varOversold = IIf(Ref(TDREI,-5)<=varOversoldSignal 
+AND Ref(TDREI,-4)<=varOversoldSignal 
+AND Ref(TDREI,-3)<=varOversoldSignal 
+AND Ref(TDREI,-2)<=varOversoldSignal 
+AND Ref(TDREI,-1)<=varOversoldSignal 
+AND TDREI<=varOversoldSignal ,1,0);
+IIf(VarOversold>0,PlotShapes(shapeHollowDownArrow*varOversold,colorWhite),0);
+
+// Identify overbought conditions, marked with green arrow to denote uptrend
+varOverbought = IIf(Ref(TDREI,-5)>=varOverboughtSignal 
+AND Ref(TDREI,-4)>=varOverboughtSignal 
+AND Ref(TDREI,-3)>=varOverboughtSignal 
+AND Ref(TDREI,-2)>=varOverboughtSignal 
+AND Ref(TDREI,-1)>=varOverboughtSignal 
+AND TDREI>=varOverboughtSignal ,1,0);
+IIf(varOverbought>0,PlotShapes(shapeHollowUpArrow*varOverbought,colorYellow),0);
+
+
+// Tom DeMark Price Oscillator Qualifier (TD POQ)
+// Primary and Secondary Buy Setups apply to EOD of today
+// Buy = H > (H,-1)
+
+varPrimaryCheck = 0;
+varPrimaryBuySetup = (Ref(C,-1) > Ref (C,-2) 
+AND O < Ref(H,-1)
+AND H > Ref(H,-1));
+varSecondaryBuySetup = (Ref(C,-1) > Ref(C,-2) 
+AND O > Ref(H,-1) 
+AND O < Ref(H,-2)
+AND H > Ref(H,-1));
+varPrimaryBuySetupSignal = IIf(varPrimaryBuySetup 
+AND TDREI>varOversoldSignal
+AND Ref(TDREI,-1)<varOversoldSignal,1,0);
+varSecondaryBuySetupSignal = IIf(varSecondaryBuySetup
+AND TDREI>varOversoldSignal
+AND Ref(TDREI,-1)<varOversoldSignal,1,0);
+
+// Start: Plot all lines
+
+Graph0=TDREI;
+Graph0Style=4;
+Graph0Color=4;
+Graph1=varOverboughtSignal;
+Graph1Style=1;
+Graph1Color=6;
+Graph2=varOversoldSignal;
+Graph2Style=1;
+Graph2Color=6;
+
+IIf(varPrimaryBuySetupSignal>0,PlotShapes(shapeDigit1*varPrimaryBuySetupSignal,colorGreen) AND varPrimaryCheck=1,0);
+IIf(varSecondaryBuySetupSignal>0 AND varPrimaryCheck<1,PlotShapes(shapeDigit2*varSecondaryBuySetupSignal,colorDarkGreen),0);
+
+// End: plot all lines
+
+Title =Name() + " -TD REI: " + "("+ WriteVal ( Graph0,format=1.2)+")";

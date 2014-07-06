@@ -1,0 +1,30 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    a
+//  Author/Uploader: ali 
+//  E-mail:          abosliman2005m@hotmail.com
+//  Date/Time Added: 2006-09-21 18:37:12
+//  Origin:          a
+//  Keywords:        a
+//  Level:           advanced
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=713
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=713
+//
+//------------------------------------------------------------------------------
+//
+//  a
+//
+//------------------------------------------------------------------------------
+
+/* Bernstein Momentum Indicator */
+/* Set Scaling to Automatic, Show dates On, Percent On, Middle On */
+
+Title = "Bernstein MOM Close - Ref(Close,-7)"; 
+GraphXSpace = 5;
+Graph0 = MA(Close - Ref(Close,-7),1); 
+Graph0Style = 8; 
+Graph0Color = 5;
+Graph1 = MA(Graph0,5);
+Graph1Style = 1;  
+Graph1Color = 32;

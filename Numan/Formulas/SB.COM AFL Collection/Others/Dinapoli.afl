@@ -1,0 +1,45 @@
+/* Project:       AmiBroker
+** File:          Dinapoli.afl
+** Title:         Dinapoli Guru Commentary (Trading with DiNapoli
+Levels,chapter 5)
+** Date:          Dec 8th, 2003
+** Written by:    Grayesso (grayesso dog rambler dot ru)
+*/ 
+
+
+/* MACD (fa,sa,sig) , where: fa - fast avg., sa - slow avg., sig - signal
+ (it is necessary to install in preferences [Preferences - Indicators]) */
+fa = Prefs( 11 );
+sa = Prefs( 12 );
+sig = Prefs( 13 );
+
+/* Stochastic (range, Ksmooth, Dsmooth) 
+range - to install in preferences [Preferences - Indicators]*/
+range = Prefs(14);
+
+/* Attention!!! 
+Ksmooth and Dsmooth - to install here and now, in preferences uselessly to
+change */
+
+Ksmooth=3;
+Dsmooth=3;
+
+
+Buy=Cross(StochK (range,Ksmooth), StochD(range,Ksmooth,Dsmooth)) AND
+(MACD(fa,sa)>Signal(fa,sa,sig)) OR Cross(MACD(fa,sa),Signal(fa,sa,sig)) ;
+
+Sell = Cross(StochD(range,Ksmooth,Dsmooth), StochK(range,Ksmooth)) AND
+(MACD(fa,sa)< Signal (fa,sa,sig)) OR Cross(Signal(fa,sa,sig),MACD(fa,sa));
+
+
+"\n Review of    " + FullName() + " (" + Name() + ")" + "\n as of            "
++ Date();
+"\n MACD:          (" + Prefs(11)+","+Prefs(12)+","+Prefs(13)+")";
+" Stochastic:    (" + Prefs(14)+","+Ksmooth+","+Dsmooth+")";
+"\n Current Statistics :\n";
+" Close:              " + WriteVal(Close);
+" Change:          " + WriteVal(Close - Ref( Close, -1 ) ) ;
+"\n MACD Value:  " + WriteVal(MACD(fa,sa));
+" Signal Line:     " + WriteVal(Signal(fa,sa,sig));
+"\n Stochastic %K  "+WriteVal (StochK(range,Ksmooth));
+" Stochastic %D  "+WriteVal (StochD(range,Ksmooth, Dsmooth ));

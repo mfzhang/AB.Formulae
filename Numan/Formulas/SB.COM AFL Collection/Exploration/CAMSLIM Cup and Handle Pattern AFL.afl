@@ -1,0 +1,118 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    CAMSLIM Cup and Handle Pattern AFL
+//  Author/Uploader: Jerry Tyliczka 
+//  E-mail:          admin@wallstreettape.com
+//  Date/Time Added: 2003-11-15 14:57:03
+//  Origin:          
+//  Keywords:        cup handle
+//  Level:           medium
+//  Flags:           exploration
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=306
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=306
+//
+//------------------------------------------------------------------------------
+//
+//  CAMSLIM cup and handle pattern emploration. Code is based on the following
+//  article: http://www.haikulabs.com/mh.htm
+//
+//------------------------------------------------------------------------------
+
+// Cup and Handle exploration written by Jerry Tyliczka
+// visit us at: http://portals.wallstreettape.com
+//
+// This code written per specifications found at
+// http://www.haikulabs.com/mh.htm
+// Version 1.0
+//
+// This code calculates the Alpha, Delta, Beta and Gamma values
+// but they are not used in the filter criteria as specified
+// by the article which this code was based on.
+//
+// Look for additional changes as I tweak the below code. 
+// I will also include Scan feature and Backtesting in future release. 
+//
+// Comments, please write to admin@wallstreettape.com
+
+MinPrice=20;
+MinVolume=100000;
+
+//Left side of Handle formation can occur anywhere from 2-25days - look at the last 25 bars and get the number of bars since condition met.
+
+LH=HHV(Close,25); // Highest close past 25 days.
+BLH=HHVBars(Close,25); // Tells us # of bars that have past since high reached. Used to determine lowest bar.
+
+BH=LLV(Close,BLH); //  Lowest close since the highest value was reached/
+BBH=LLVBars(Close,BLH); // number of bars that have past since lowest value.
+
+NBLH=BLH-BBH; // this is the number of bars in the formation of the left side handle. NBLH must be atleast 2 to be a valid handle formation.
+
+// Now lets get the cup formation. Cup formation can occur anywhere from 23 to 145 days. The left side of the cup can be from 20-120 days and the right side can be anywhere from 3-25 days.
+
+// get the right side of the cup(low).
+
+BC=LLV(Close,BLH+25); // look at 25 bars since the left side of handle.
+BBC=LLVBars(Close,BLH+25);
+
+// get the left side of the cup.
+
+LC=Ref(HHV(Close,120),BBC*-1);
+BLC=Ref(HHVBars(Close,120),BBC*-1);
+
+// Get highest value before left side of cup started to form.
+
+KC=Ref(HHV(Close,30),BLC*-1);
+BKC=Ref(HHVBars(Close,120),BLC*-1);
+
+Delta= LC/KC;
+
+//Calculate the up/down relative price value during time frame RC (Right Cup Formation)
+
+URPV=DRPV=0;
+i=EndValue(BLH);
+j=EndValue(BBC);
+do
+ {
+   URPV = IIf(Ref(Close,i*-1)>Ref(Close,(i+1)*-1),Ref(Volume,(i*-1))*Ref(Close,(i*-1))-Ref(Close,(i+1)*-1),URPV);
+   DRPV = IIf(Ref(Close,i*-1)<Ref(Close,(i+1)*-1),Ref(Volume,(i*-1))*Ref(Close,(i+1)*-1)-Ref(Close,(i*-1)),DRPV);
+   i++;
+ } while (i<j);
+Alpha = URPV/DRPV; // Should be >1
+
+// Calculate Beta
+
+DRPV=0;
+i=EndValue(BBH);
+j=EndValue(BLH);
+do
+ {
+   DRPV = IIf(Ref(Close,i*-1)<Ref(Close,(i+1)*-1),Ref(Volume,(i*-1))*Ref(Close,(i+1)*-1)-Ref(Close,(i*-1)),DRPV);
+   i++;
+ } while (i<j);
+Beta = URPV/DRPV;
+Gamma = log(Alpha) + log(Beta) + delta;
+
+AddColumn(LH,"Left Handle");
+AddColumn(BH,"Bottom Handle");
+AddColumn(BC,"Bottom Cup");
+AddColumn(LC,"Left Cup");
+AddColumn(ALPHA,"Alpha");
+AddColumn(DELTA,"Delta");
+AddColumn(BETA,"BETA");
+AddColumn(GAMMA,"Gamma");
+
+// Filter Criteria as follows:
+// 1. Right side of handle must be at least 2 bars. NBHL>2
+// 2. Bottom of the cup must be lower than the left top of the cup.
+// 3. Left handle must be lower than or equal to the lect cup formation.
+// 4. Bottom of the cup must be less than the left handle.
+// 5. Bottom of the handle must be > 80% of the left handle + 20% of the bottom cup.
+// 6. Start of cup/handle formation must be greater than precedding chart value. LC>LC
+// 7. Minimum price and volume you can set any way you like.
+
+
+Filter= NBLH>2 AND Close>BH AND BC<LC AND LH<=LC AND BC<LH AND BH<LH AND BH>.8*LH+.2*BC AND KC<LC AND Close>MinPrice AND MA(Volume,30)>MinVolume;
+
+
+
+

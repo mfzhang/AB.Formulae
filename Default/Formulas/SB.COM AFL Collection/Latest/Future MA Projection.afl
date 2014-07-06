@@ -1,0 +1,29 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Future MA Projection
+//  Author/Uploader: OzFalcon 
+//  E-mail:          OzFalconAB@BDen.org
+//  Date/Time Added: 2006-10-02 18:12:20
+//  Origin:          Home Brew
+//  Keywords:        Future MA Projection
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=728
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=728
+//
+//------------------------------------------------------------------------------
+//
+//  A very basic example of Future Projection using various shift functionality
+//  of Amibroker. This example projects a Simple MA.
+//
+//------------------------------------------------------------------------------
+
+_SECTION_BEGIN("Future MA");
+// Plot Future MA.
+Fwd = Param( "Fwd Period", 5, -50, 50 );
+FwdC = Ref(Close,Fwd);
+FwdMA = MA(FwdC,Fwd);
+Plot(C,"Close",colorBlack,styleLine,0,0,-Fwd);
+Plot(FwdC,"FwdClose",colorRed,styleLine);
+Plot(FwdMA,"FwdMA",colorGreen,styleLine);
+_SECTION_END();

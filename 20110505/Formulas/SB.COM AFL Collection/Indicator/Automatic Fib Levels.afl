@@ -1,0 +1,97 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Automatic Fib Levels
+//  Author/Uploader: Aron Pipa 
+//  E-mail:          
+//  Date/Time Added: 2005-12-11 09:02:48
+//  Origin:          
+//  Keywords:        
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=573
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=573
+//
+//------------------------------------------------------------------------------
+//
+//  Plots automatically Fib leveles.
+//
+//------------------------------------------------------------------------------
+
+/*---------------------------------------------------
+	Automatic Fib Levels
+	Aron Pipa, December, 11, 2005
+--------------------------------------------------------*/
+
+
+Plot(C,"", colorWhite,styleCandle);
+
+// Get values for fib levels 
+
+StartBar=SelectedValue(BarIndex());
+FinishBar = EndValue( BarIndex() ); 
+i = startbar;
+period = FinishBar - StartBar;
+
+Lo =LLV(L,period);
+Hi = HHV(H,period);
+Line0 = 0; 
+Line1 = 0;
+Line2 = 0;
+Line3 = 0;
+Line4= 0;
+Line100 = 0;
+
+for( i = startbar; i < finishbar; i++ )
+{
+if(EndValue(C)<SelectedValue(C))
+{
+Line0  = EndValue(Lo);
+Line100 = EndValue(Hi);
+Line1 = Line0 + abs(Line100-Line0)*0.236;
+Line2 = Line0 + abs(Line100-Line0)*0.382;
+Line3 = Line0 + abs(Line100-Line0)*0.5;
+Line4 = Line0 + abs(Line100-Line0)*0.618;
+
+}
+else
+{
+Line100  = EndValue(Lo);
+Line0 = EndValue(Hi);
+Line1 =Line0 - abs(Line100-Line0)*0.236;
+Line2 = Line0 - abs(Line100-Line0)*0.382;
+Line3 = Line0 - abs(Line100-Line0)*0.5;
+Line4 = Line0 - abs(Line100-Line0)*0.618;
+
+}
+}
+
+// external fib lines begining fom selecetdbarindex()
+fib0= LineArray(startbar, Line0, finishbar, Line0, 0, 1);
+fib100 = LineArray(startbar, Line100, finishbar, Line100, 0, 1);
+
+// depth of middle lines
+n= round((finishbar-startbar)/2);
+
+// middle lines
+fib1= LineArray((finishbar-n), Line1, finishbar, Line1, 0, 1);
+fib2= LineArray((finishbar-n), Line2, finishbar, Line2, 0, 1);
+fib3= LineArray((finishbar-n), Line3, finishbar, Line3, 0, 1);
+fib4= LineArray((finishbar-n), Line4, finishbar, Line4, 0, 1);
+
+Plot(fib0,"", colorWhite);
+Plot(fib100,"", colorRed);
+Plot(fib1,"", colorGrey50);
+Plot(fib2,"", colorGrey50);
+Plot(fib3,"", colorOrange);
+Plot(fib4,"", colorGrey50);
+
+Title = Name() + " -  FIB LEVELS ";
+
+
+
+
+
+
+
+
+

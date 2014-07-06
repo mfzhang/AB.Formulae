@@ -1,0 +1,32 @@
+_SECTION_BEGIN("TI Neptune");
+//Copyright 9Trading.com
+
+m = Param("Periods", 34, 14, 50, 1 );
+n = Param("Average", 7, 3, 10, 1 );
+
+Plot(80,"",7);
+Plot(20,"",7);
+
+RSV=(Close-LLV(Low,m))/(HHV(High,m)-LLV(Low,m))*100;
+k=MA(rsv,n);
+d=MA(k,n);
+j=3*k-2*d;
+
+UP=k; 
+DOWN=d; 
+Oo=IIf(up<down,up,down);
+Hh=Oo;
+Ll=IIf(up<down,down,up);
+Cc=Ll;
+barcolor2=
+IIf( (Ref(up,-1)>Ref(down,-1) AND Ref(up,-1)>up AND up>down ) 
+  OR (Ref(up,-1)<Ref(down,-1) AND Ref(up,-1)<up AND up<down ) 
+  , colorBlue,
+  IIf(up>down,colorGreen,colorRed));
+PlotOHLC( Oo,hh,ll,Cc, "NEW-KDJ34", barcolor2, styleCloud );
+_SECTION_END();
+
+_SECTION_BEGIN("Background_Setting"); 
+SetChartBkGradientFill( ParamColor("BgTop", colorBlack), 
+ParamColor("BgBottom", colorBlack),ParamColor("titleblock",colorTeal )); 
+_SECTION_END();

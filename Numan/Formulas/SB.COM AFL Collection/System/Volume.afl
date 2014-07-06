@@ -1,0 +1,47 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Volume
+//  Author/Uploader: 0505670391-JEDDAH 
+//  E-mail:          SOOOOS50@HOTMAIL.COM
+//  Date/Time Added: 2006-04-21 13:47:08
+//  Origin:          _SECTION_BEGIN("Individual"); #include @LastBacktestFormula MaxGraph=0;GraphXSpace=5; GraphZOrder=1; Plot( Equity( 0, -2 ), "Equity", -8, styleArea );  if( ParamToggle("Show Buy-and-Hold?", "No|
+//  Keywords:        
+//  Level:           basic
+//  Flags:           system
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=616
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=616
+//
+//------------------------------------------------------------------------------
+//
+//  Volume WITH SECTOR SHOW THE BLANCE OF QUINTITY.
+//
+//------------------------------------------------------------------------------
+
+_SECTION_BEGIN("Individual");
+#include @LastBacktestFormula
+MaxGraph=0;GraphXSpace=5;
+GraphZOrder=1;
+Plot( Equity( 0, -2 ), "Equity", -8, styleArea );
+
+if( ParamToggle("Show Buy-and-Hold?", "No|Yes", 1 ) )
+{
+ /* now buy and hold simulation */
+ Short=Cover=0;
+ Buy=Status("firstbarintest");
+ Sell=Status("lastbarintest");
+ SetTradeDelays(0,0,0,0); PositionSize = -100;
+ ApplyStop(0,0,0,0);
+ ApplyStop(1,0,0,0);
+ ApplyStop(2,0,0,0);
+ Plot( Equity( 0, -2 ), "Buy&Hold", -9 );
+}
+_SECTION_END();
+
+_SECTION_BEGIN("Volume At Price");
+PlotVAPOverlay( Param("Lines", 300, 100, 1000, 1 ), Param("Width", 5, 1, 100, 1 ), ParamColor("Color", colorCycle ), ParamToggle("Side", "Left|Right" ) | 4*ParamToggle("Z-order", "On top|Behind", 1 ) );
+ 
+_SECTION_END();
+
+_SECTION_BEGIN("Volume1");
+Plot( Volume, _DEFAULT_NAME(), ParamColor("Color", colorBlueGrey ), ParamStyle( "Style", styleHistogram | styleOwnScale | styleThick, maskHistogram  ), 2 );
+_SECTION_END();

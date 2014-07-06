@@ -1,0 +1,65 @@
+_SECTION_BEGIN("NMN Chandelier Exit V2");
+/* Chandelier Exit v2 */
+/* by Geoff Mulhall */ 
+/* Modified 1-Feb-2003 to take advantage of Ami 2.5 Param Functionality */
+/* and to allow for Short Trades as well as Long Trades */
+/* The Chandelier Exit is a Volatility based exit. */
+/* Refer to http://www.traderclub.com/discus/board.html 
+/* Bulletin 35 Trailing Stops - The Chandelier Exit for more detail */
+/* Set Scaling to Automatic, Set Gridlines as follows Level 0 On, Show dates On, Middle On */
+/* Right Click anywhere in the Chart, Select Parameters to get the Param Dialogue and move the slides to */
+/* see the effect of changing ATRMultiplier ATRRange & HHVRange */ 
+ 
+/* Plot the Chart */
+//Title = "Chandelier"; 
+GraphXSpace = 2;
+/* Candle chart */ 
+Plot(Close,"Close",colorAqua,1);
+//Plot(WMA(Close,30),"Close WMA30",4,1);
+/* Chandelier Exit */
+/* Param( "ATRMultiplier", default, Min, Max, step ); */
+ShortLongSwitch = Param( "Sht(0) Lng(1)",1,0,1,1); // Set to 0 for a Short Trade, 1 for a Long Trade
+HighCloseSwitch = Param( "C(0) H/L(1)",1,0,1,1); // Set to 0 to hang from the Close, 1 for High (Long) OR Low (Short)
+ATRMultiplier =3.0;// Param( "ATR Mult", 3.0, 1, 4, 0.1);
+ATRRange =10; // Param( "ATR Rng", 10, 2, 30, 1);
+HHVLLVRange =10;// Param( "HHVLLV Rng", 10, 2, 30, 1);
+LongExitHungExHigh = HHV(High - AtrMultiplier * ATR(AtrRange),HHVLLVRange);
+LongExitHungExClose = HHV(Close - AtrMultiplier * ATR(AtrRange),HHVLLVRange);
+ShortExitHungExLow = LLV(Low + AtrMultiplier * ATR(AtrRange),HHVLLVRange);
+ShortExitHungExClose = LLV(Close + AtrMultiplier * ATR(AtrRange),HHVLLVRange);
+LongExit = IIf(HighCloseSwitch == 1, LongExitHungExHigh,LongExitHungExClose);
+ShortExit = IIf(HighCloseSwitch == 1,
+ShortExitHungExLow,ShortExitHungExClose);
+Exit1 = IIf(ShortLongSwitch == 1, LongExit, ShortExit);
+Exit0 = shortExit;
+Plot(Exit1,"Chandelier Green",colorBrightGreen,styleLine); 
+Plot(Exit0,"Chandelier Red",colorRed,styleLine); 
+G0 = Close;
+G1 = Exit1;
+G2 = Exit0;
+Buy = Cross(G0,G1); // OR Cross(G0,G2);
+//Cover = Cross(G0,G1); // OR Cross(G0,G2);
+Sell = Cross(G2,G0); // OR Cross(G1,G0);
+//Short = Sell ; //Cross(G2,G0); // OR Cross(G1,G0);
+Short=Sell;
+Cover=Buy;
+Buy=ExRem(Buy,Sell); Sell=ExRem(Sell,Buy); Short=ExRem(Short,Cover);
+Cover=ExRem(Cover,Short);
+Equity(1);
+B1 = (Buy * Close);
+S1 = (Sell * Close);
+B2= B1>S1;
+S2= S1>B1;
+Equity(1);
+Buy1 = Buy;
+Sell1 = Sell;
+//////////////////////////////////////
+//Plot(B1, "B1",5,6);
+PlotShapes( IIf( Sell , shapeSmallDownTriangle/*+ "shapePositonAbove"*/,
+shapeNone ), colorRed );
+PlotShapes( IIf( Buy , shapeSmallUpTriangle/*+ "shapePositonAbove"*/, shapeNone
+), colorBrightGreen ); 
+Plot(10, /* defines the height of the ribbon in percent of pane width */"",IIf(
+B2, colorBrightGreen, IIf( S2, colorRed, 0 )), /* choose
+color*/styleOwnScale|styleArea|styleNoLabel, -0.5, 100 );
+_SECTION_END();

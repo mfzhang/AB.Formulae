@@ -1,0 +1,34 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    EMA Crossover
+//  Author/Uploader: David McMillin 
+//  E-mail:          dmcmillin@socal.rr.com
+//  Date/Time Added: 2004-08-13 10:50:12
+//  Origin:          Unknown but basic
+//  Keywords:        EMA Crossover
+//  Level:           medium
+//  Flags:           system
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=379
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=379
+//
+//------------------------------------------------------------------------------
+//
+//  The formula is meant to work with Buystops and Sellstops at the previous
+//  days's 7d-ema crossovers. Appears to work well with long trades in about
+//  20% of the SPX. Designed for weekly traders.
+//
+//------------------------------------------------------------------------------
+
+// EMA Cross
+Range1=Optimize("range1",7,1,20,1);
+Range2=Optimize("range2",7,1,20,1);
+Plot( Close, "Price", colorBlack, styleCandle ); 
+Plot(EMA( Close,range1), "7d-ema", colorRed );  
+Buy = Cross((Close),(EMA(Close,range1))); 
+Buystop = Ref(EMA(Close,range1),-1); 
+BuyPrice = Max(Buystop,Low); 
+Sell = Cross(EMA(Close,range2),(Close)); 
+Sellstop = Ref(EMA(Close,range1),-1); 
+SellPrice = Min(sellstop,High); 
+Short = Sell; 
+Cover = Buy; 

@@ -1,0 +1,22 @@
+_SECTION_BEGIN("Automatic Trend Line");
+
+SetFormulaName("Automatic Trend Line");
+
+x = Cum(1);
+// Param( "Trend calc periods", 20,10,250,1)
+perchg = 0.3*LastValue( Highest( ROC( Low, 50 ) ));
+
+startvalue = LastValue( Trough( Low, perchg, 1 ) );
+endvalue1 = LastValue( Trough( Low, perchg, 2 ) );
+ 
+startbar = LastValue( ValueWhen( Low == startvalue, x, 1 ) );
+endbar = LastValue( ValueWhen( Low == endvalue1, x, 1 ) );
+ 
+Aa = (endvalue1-startvalue)/(endbar-startbar);
+b = startvalue;
+ 
+trendline = Aa * ( x  - startbar ) + b; 
+ 
+Plot( Close, "Price", colorBlue, styleCandle );
+Plot( IIf( x >= endbar, trendline, Null ), "Trendline", colorRed );
+_SECTION_END();

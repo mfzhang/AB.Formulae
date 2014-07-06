@@ -1,0 +1,5 @@
+Hld = IIf(C > Ref(MA(H, 3), -1), 1, IIf(C < Ref(MA(L, 3), -1), -1, 0));
+Hlv = ValueWhen(Hld != 0, Hld, 1); 
+Hilo = IIf(Hlv == -1, MA(H, 3), MA(L, 3));
+Trigger = IIf(C>Hilo, colorGreen, colorRed);
+Plot(Hilo,"HiLo",Trigger,styleStaircase);

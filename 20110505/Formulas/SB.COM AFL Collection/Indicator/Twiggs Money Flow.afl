@@ -1,0 +1,52 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Twiggs Money Flow
+//  Author/Uploader: Stock_Alchemist 
+//  E-mail:          Rayloom@yahoo.com
+//  Date/Time Added: 2006-04-12 12:39:27
+//  Origin:          http://www.incrediblecharts.com/technical/twiggs_money_flow.htm
+//  Keywords:        TMF, Twiggs Money Flow, Volume, Money Flow, CMF
+//  Level:           medium
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=614
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=614
+//
+//------------------------------------------------------------------------------
+//
+//  Twiggs Money Flow is a derivation of Chaikin Money Flow indicator, which is
+//  in turn derived from the Accumulation Distribution line. However, Twiggs
+//  Money Flow makes two basic improvements to the Chaikin Money Flow formula:
+//
+//  To solve the problem with gaps, Twiggs Money Flow uses true range, rather
+//  than daily Highs minus Lows.
+//
+//  And, rather than a simple-moving-average-type formula, Twiggs Money Flow
+//  applies exponential smoothing, using the method employed by Welles Wilder
+//  for many of his indicators.
+//
+//  To know more, please go to:
+//
+//  http://www.incrediblecharts.com/technical/twiggs_money_flow.htm
+//
+//------------------------------------------------------------------------------
+
+_SECTION_BEGIN("Twiggs Money Flow");
+/* 
+Twiggs Money Flow is a derivation of Chaikin Money Flow indicator, which is in turn derived from the Accumulation Distribution line. 
+However, Twiggs Money Flow makes two basic improvements to the Chaikin Money Flow formula:
+1-To solve the problem with gaps, Twiggs Money Flow uses true range, rather than daily Highs minus Lows.  
+2-And, rather than a simple-moving-average-type formula, Twiggs Money Flow applies exponential smoothing, using the method employed by Welles Wilder for many of his indicators. 
+ */
+
+periods = Param( "Periods", 21, 5, 200, 1 );
+TRH=Max(Ref(C,-1),H);
+TRL=Min(Ref(C,-1),L);
+TR=TRH-TRL; 
+ADV=V*((C-TRL)-(TRH-C))/ IIf(TR==0,9999999,TR);
+WV=V+(Ref(V,-1)*0);
+SmV= Wilders(WV,periods);
+SmA= Wilders(ADV,periods);
+
+TMF= IIf(SmV==0,0,SmA/SmV);
+Plot( TMF, _DEFAULT_NAME(), ParamColor("color", colorCycle ), ParamStyle("Style") );
+_SECTION_END();

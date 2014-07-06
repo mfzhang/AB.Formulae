@@ -1,0 +1,11 @@
+// Daily BearPower
+_SECTION_BEGIN("Bear Power EMA");
+/*Bear Power*/
+Lookback = Param ("EMA Lookback", 13);
+BearPower = Low - EMA(Close,Lookback);
+Plot (BearPower, "", ParamColor ("Color", colorRed), styleHistogram );
+Title = Name() + "   " + Date() + "     Bear Power" + WriteVal (Lookback, 3.0) + " Day:   " + WriteVal (BearPower, 5.3);
+GraphXSpace = 5;
+_SECTION_END();
+
+// End ---------------------------------------------------------------------------------------------------------------------

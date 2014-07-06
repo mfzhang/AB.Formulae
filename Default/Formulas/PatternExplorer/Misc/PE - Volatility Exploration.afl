@@ -1,0 +1,45 @@
+//|-----------------------------------------------------------------------------------------
+//|PatternExplorer.com - Volatility Exploration
+//|Copyright © 2007, PatternExplorer.com
+//|http://www.PatternExplorer.com
+//|e-mail: support@PatternExplorer.com
+//|-----------------------------------------------------------------------------------------
+FormulaName = "PE - Volatility Exploration";
+
+SetChartOptions( 0, 0, chartGridPercent + chartGridMiddle );
+#pragma nocache
+#include_once  <\PEInc\PatternExplorer_f0.afl>
+#Include_once "C:\Program Files (x86)\AmiBroker5\Formulas\PatternExplorer\#Defaults & Mods\PE - Defaults.afl"
+#Include_once "C:\Program Files (x86)\AmiBroker5\Formulas\PatternExplorer\#Defaults & Mods\PE - Mods.afl"
+/*******************************************************************************************/
+AddCustomCodeBeforePE();
+/*******************************************************************************************/
+pds = 100;
+RatioPds1 = Param( "Period 1", 5, 0, 100, 1 );
+RatioPds2 = Param( "Period 2", 100, 0, 200, 5 );
+/*******************************************************************************************/
+AddVolaRatio( RatioPds1, RatioPds2, pds );
+/*******************************************************************************************/
+Plot( VolaRatio, "Vola Ratio", 4, 1 );
+PlotGrid( 0, colorDefault );
+/*******************************************************************************************/
+Filter = def_Filter AND BarIndex() == LastValue( BarIndex() ) AND NOT GroupID() == 253;
+width = 50;
+digits = 1.2;
+Addefaultcolumns();
+AddColumn( MA( V, 50 ), "ma(V,50)", 1 );
+AddColumn( MA( IV, 5 ), "Vola 5", digits, colorDefault, colorDefault, width );
+AddColumn( MA( IV, 10 ), "Vola 10", digits, colorDefault, colorDefault, width + 2 );
+AddColumn( MA( IV, 50 ), "Vola 50", digits, colorDefault, colorDefault, width + 2 );
+AddColumn( MA( IV, 100 ), "Vola 100", digits, colorDefault, colorDefault, width + 10 );
+AddColumn( VolaRatio, "Vola Ratio", digits, colorDefault, colorDefault, width + 60 );
+AddColumn( MA( IV, 5 ) / MA( IV, 100 ), "Vola Ratio 5/100", digits, colorDefault, colorDefault, width + 60 );
+AddTextColumn( FullName(), "Full name" );
+/*******************************************************************************************/
+AddGradientBackground( def_BGColorswitch, def_BgTopcolor, def_BgBottomcolor, def_titlebkcolor );
+/*******************************************************************************************/
+ToolTip = def_ToolTip;
+/*******************************************************************************************/
+AddCustomCodeAfterPE();
+/*******************************************************************************************/
+Title = "PatternExplorer.com - Volatility Exploration" + " - " +  Name() + " - " + EncodeColor( colorRed ) + Interval( 2 ) + EncodeColor() + "  - " + Date();

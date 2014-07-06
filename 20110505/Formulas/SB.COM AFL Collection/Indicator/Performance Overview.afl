@@ -1,0 +1,85 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Performance Overview
+//  Author/Uploader: Thomas Zmuck 
+//  E-mail:          thomas.zm@aon.at
+//  Date/Time Added: 2002-08-24 08:32:35
+//  Origin:          
+//  Keywords:        Performance View
+//  Level:           advanced
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=216
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=216
+//
+//------------------------------------------------------------------------------
+//
+//  This formula is for indicator builder and shows you the performance from 4
+//  user-defined tickers or indices and the current ticker.
+//
+//  0% is always on the first visible bar over the zoomed area. You can also
+//  scroll the chart, 0% is always on the left.
+//
+//  Activate Percent in Indicator builder and select Level 0
+//
+//  Note: It requires the gaussian DLL for smoothing, but you can also change
+//  in every line: gauss2ord to MA or any other moving, but i think gauss2ord
+//  smoothing much better than ma or ema or anything else.
+//
+//  The gauss2ord plugin is available here:
+//
+//  http://groups.yahoo.com/group/amibroker/files/PLUGIN%20DLL/Gaussian.dll
+//
+//  Save it in amibroker/plugin folder and restart AB or go Plugins and Load
+//  again.
+//
+//------------------------------------------------------------------------------
+
+//Performance Overview
+//written: 23-Aug.2002
+//Thomas Zmuck
+//thomas.zm@aon.at
+
+pds=5; //select 1, if you want no smoothing, you can also use ma or ema instead Gauss2ord, but i find gauss2ord better.
+T1_mov = Gauss2ord(Foreign("^ixic","close"),pds);//blue Line
+T2_mov = Gauss2ord(Foreign("^iix","close"),pds);//green Line
+T3_mov = Gauss2ord(Foreign("^btk","close"),pds);//black Line
+T4_mov = Gauss2ord(Foreign("^soxx","close"),pds);//orange Line
+T5_mov = Gauss2ord(C,pds);//you can select here also 1 to have the current ticker unsmoothed
+
+T1=T1_mov;  T2=T2_mov;  T3=T3_mov;  T4=T4_mov;  T5=T5_mov;
+
+barvisible = Status("barvisible");
+FVB = barvisible AND NOT
+Ref(barvisible,-1);
+
+FVB_T1= ValueWhen(FVB==1,T1);
+FVB_T2= ValueWhen(FVB==1,T2);
+FVB_T3= ValueWhen(FVB==1,T3);
+FVB_T4= ValueWhen(FVB==1,T4);
+FVB_T5= ValueWhen(FVB==1,T5);
+
+First_T1_OV = ValueWhen(Cum(1)==1,T1);
+First_T2_OV = ValueWhen(Cum(1)==1,T2);
+First_T3_OV = ValueWhen(Cum(1)==1,T3);
+First_T4_OV = ValueWhen(Cum(1)==1,T4);
+First_T5_OV = ValueWhen(Cum(1)==1,T5);
+
+Perf_T1= IIf(IsEmpty(FVB_T5),100*(T1/First_T1_OV)-100,100*(T1/FVB_T1)-100);
+Perf_T2= IIf(IsEmpty(FVB_T5),100*(T2/First_T2_OV)-100,100*(T2/FVB_T2)-100);
+Perf_T3= IIf(IsEmpty(FVB_T5),100*(T3/First_T3_OV)-100,100*(T3/FVB_T3)-100);
+Perf_T4= IIf(IsEmpty(FVB_T5),100*(T4/First_T4_OV)-100,100*(T4/FVB_T4)-100);
+Perf_T5= IIf(IsEmpty(FVB_T5),100*(T5/First_T5_OV)-100,100*(T5/FVB_T5)-100); 
+
+Plot(Perf_T1,"",colorBlue,1);
+Plot(Perf_T2,"",colorGreen,1);
+Plot(Perf_T3,"",colorBlack,1);
+Plot(Perf_T4,"",colorOrange,1);
+Plot(Perf_T5,"",colorRed,1);
+
+Title= "Performance Overview       Smooth-Factor:"+WriteVal(pds,1.0)+"         "+"blue:   ^IXIC "+WriteVal(Perf_T1,1.2)+" %          "+
+"green:   ^IIX "+WriteVal(Perf_T2,1.2)+" %          "+
+"black:   ^BTK "+WriteVal(Perf_T3,1.2)+" %          "+
+"orange:   ^SOXX "+WriteVal(Perf_T4,1.2)+" %          red:   "+
+FullName()+"   " + WriteVal(Perf_T5,1.2)+" %";
+
+GraphXSpace = 2;

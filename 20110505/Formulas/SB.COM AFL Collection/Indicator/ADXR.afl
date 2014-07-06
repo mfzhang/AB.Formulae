@@ -1,0 +1,37 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    ADXR
+//  Author/Uploader: Jayson Casavant 
+//  E-mail:          jcasavant@adelphia.net
+//  Date/Time Added: 2002-11-07 00:51:21
+//  Origin:          Wells Wilder
+//  Keywords:        Market strength
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=230
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=230
+//
+//------------------------------------------------------------------------------
+//
+//  Developed by Wells Wilder ADXR is a component of the Directional Movement
+//  System. The indicator is used to determine if the market under study is
+//  trending or consolidating. According to Wilder values greater than 25
+//  indicate the use of Trend following systems or indicators. Values less than
+//  25 may be better suited to consolidation indicators.
+//
+//  Perhaps more useful is to simply note if the indicator is rising or
+//  falling. A rising ADXR indicates a trend is either forming or in place, a
+//  falling ADXR indicates a weakening trend or consolidation phase. Note that
+//  a rising ADXR indicates trend strength not direction.
+//
+//------------------------------------------------------------------------------
+
+/* Developed by Wells Wilder ADXR is a component of the Directional Movement System. The indicator is used to determine if the market under study is trending or consolidating. According to Wilder values greater than 25 indicate the use of Trend following systems or indicators. Values less than 25 may be better suited to consolidation indicators.
+
+Perhaps more useful is to simply note if the indicator is rising or falling. A rising ADXR indicates a trend is either forming or in place, a falling ADXR indicates a weakening trend or consolidation phase. Note that a rising ADXR indicates trend strength not direction.*/                                                       
+ 
+pds=14;
+Adxr = ( ADX(pds) + Ref( ADX(pds), -14 ) )/2;
+Plot(ADxr,"",colorWhite,4);
+
+            

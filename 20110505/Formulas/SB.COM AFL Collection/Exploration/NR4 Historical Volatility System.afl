@@ -1,0 +1,52 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    NR4 Historical Volatility System
+//  Author/Uploader: Daniel Ervi 
+//  E-mail:          
+//  Date/Time Added: 2001-09-08 17:28:09
+//  Origin:          Street Smarts, Connors and Raschke.  Also featured in TASC.
+//  Keywords:        NR4 volatility
+//  Level:           medium
+//  Flags:           exploration
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=115
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=115
+//
+//------------------------------------------------------------------------------
+//
+//  Connors and Raschke NR4 Historical Volatility System. Compares the 6 day
+//  volatility to the 100 day volatility. When this ratio drops below 50%, a
+//  buy stop and sell stop bracket the current price, expecting historical
+//  volatility to revert to the mean. Four day Narrow-Range (NR4) and Inside
+//  Day patterns are used to filter the trades to increase probabilities. For
+//  further explanation, refer to "Street Smarts" from Connors and Raschke.
+//
+//------------------------------------------------------------------------------
+
+/* Connors and Raschke Historical Volatility System
+    For further explanation, refer to "Street Smarts"
+    from Connors and Raschke.
+    Ported from Metastock code by Daniel Ervi           */
+
+numcolumns = 5;
+
+VolRatio =  StDev(Log(C/Ref(C,-1)),5) / StDev(Log(C/Ref(C,-1)),99);
+column0 =  VolRatio;
+column0name = "VolRatio";
+
+NR4Day = (H - L) < Ref(LLV(H-L,3),-1);
+column1 =  NR4Day;
+column1name = "Nr4Day";
+
+InsideDay = H < Ref(High,-1) AND Low > Ref(Low,-1);
+column2 =  InsideDay;
+column2name = "Inside Day";
+
+column3 =  High + 0.125;
+column3name = "Buy Stop";
+
+column4 =  Low - 0.125;
+column4name = "Sell Stop";
+
+filter = VolRatio < 0.5 AND (NR4Day == 1 AND InsideDay == 1);
+
+buy = filter;

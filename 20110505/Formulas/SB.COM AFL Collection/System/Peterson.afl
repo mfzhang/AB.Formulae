@@ -1,0 +1,159 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Peterson
+//  Author/Uploader: Marek Chlopek 
+//  E-mail:          mchlopek@post.pl
+//  Date/Time Added: 2001-10-17 02:55:21
+//  Origin:          
+//  Keywords:        
+//  Level:           basic
+//  Flags:           system
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=128
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=128
+//
+//------------------------------------------------------------------------------
+//
+//  Trading System developed by Dennis Peterson, described in article "Common
+//  Themes in Trading" 09/27/01, Traders.com Advantage
+//
+//------------------------------------------------------------------------------
+
+/* PETERSON.AFL v 1.00 17/10/2001
+/* Peterson Trading Method
+/* Developed by Dennis Peterson
+/* From Traders.com Advantage, article "Common Themes in Trading" 09/27/01, by Dennis Peterson
+/* Trading Method ported and coded by Marek Chlopek, October 2001
+/* Support from Tomasz Janeczko and Amibroker Mailing List members - THANKS!!!
+/*
+/* Cole Trading Method
+/* Developed by Roger Cole
+/* From Technical Analysis of Stocks and Commodities, V8:12 (460-463), by Alan Friedman
+/*
+/* TRI - The Range Indicator
+/* Developed by Jack L. Weinberg
+/* From Technical Analysis of Stocks and Commodities, V13:6 (238-242) */
+/*
+/* ************************************************************************** */
+/* Peterson Trading Method description
+/* An up signal is formed when:
+/* a) a stock make two Rally Days - kind of modified Cole Trading Method,
+/* b) The Range Indicator (TRI) indicates there is a possible trend change from down to up and
+/* c) exponential moving averages confirming trending up.
+/* An down signal is formed when:
+/* a) a stock make two Reaction Days - kind of modified Cole Trading Method,
+/* b) The Range Indicator (TRI) indicates there is a possible trend change from up to down and
+/* c) exponential moving averages confirming trending down */
+
+/* ************************************************************************** */
+opt1  =  9;// optimize("",10,7,10,1);
+opt2  =  4;
+opt3  = 66;
+opt4  =  8;
+opt5  =  3;
+opt6  =  8;
+opt7  =  9;
+opt8  =  7;
+opt9  = 10;
+
+/* ************************************************************************** */
+/* Condition a) - modified Cole Trading Method
+/* modification to Cole Trading Method proposed by Dennis Peterson:
+/* - two Rally or Reaction Days in a row instead of three,
+/* - Inside and Outside Days are not omitted when finding two days in a row
+/* - volume analysis is omitted */
+
+/* Cole's Trading Day Status definition */
+RY  = H >  Ref(H, -1) AND L >= Ref(L, -1); // Rally Day
+RX  = H <= Ref(H, -1) AND L <  Ref(L, -1); // Reaction Day
+IN  = H <= Ref(H, -1) AND L >= Ref(L, -1); // Inside Day
+OUT = H >  Ref(H, -1) AND L <  Ref(L, -1); // Outside Day
+
+/* Cole - counts number of Rally Days in a row (positive) or Reaction Days in a row (negative)
+/* When Rally Cole increases by 1 unless the first Rally Day then Cole = 1
+/* When Reaction Cole decreases by 1 unless the first Reaction Day then Cole = -1
+/* When Inside Day or Outside Day then Cole = 0 */
+PeriodRY = BarsSince(NOT RY);
+PeriodRX = BarsSince(NOT RX);
+Cole     = IIF(IN OR OUT, 0, ValueWhen(RX OR RY, Sum(RY, PeriodRY) - Sum(RX, PeriodRX)));
+
+CondABuy  = Cole >=  2; // two rally days in a row
+CondASell = Cole <= -2; // two reaction days in a row
+
+/* ************************************************************************** */
+/* Condition b) - The Range Indicator
+/*
+/* StochRange - first step in constructing the TRI
+/* StochRange - an oscillator of the ratio of the daily true range with the intraday range
+/* Value1 - Today's True Range divided by today's close minus yesterday's close unless C-Ref(C,-1) < 0 then Value1 = True Range
+/* Value2 - the lowest value of Value1, over the last q days
+/* Value3 - the highest value of Value1, over the last q days */
+q = opt1; /* stochastic period */
+Value1 = IIF(C > Ref(C, -1), ATR(1) / (C - Ref(C, -1)), ATR(1));
+Value2 = LLV(Value1, q);
+Value3 = HHV(Value1, q);
+StochRange = IIF((Value3 - Value2) > 0, 100 * (Value1 - Value2) / (Value3 - Value2), 100 * (Value1 - Value2));
+
+/* The Range Indicator - TRI by J.L Weinberg
+/* The Range Indicator - smooth StochRange using an exponential moving average of m periods */
+m = opt2; /* exponential smoothing period */
+TRI = EMA(StochRange, m);
+
+CondBBuy  = Hold(TRI > opt3, opt4);
+CondBSell = Hold(TRI > opt3, opt7);
+
+/* ************************************************************************** */
+/* Condition c) - exponential moving averages */
+
+ema1 = EMA(C, opt5);
+ema2 = EMA(C, opt6);
+ema3 = EMA(C, opt8);
+ema4 = EMA(C, opt9);
+
+CondCBuy  = ema1 > ema2;
+CondCSell = ema3 < ema4;
+
+/* ************************************************************************** */
+/* Trading Signals in Peterson Trading Method */
+Buy   = CondABuy  AND CondBBuy  AND CondCBuy;
+Sell  = CondASell AND CondBSell AND CondCSell;
+
+Buy   = ExRem(Buy,  Sell);
+Sell  = ExRem(Sell, Buy);
+
+Cover = Buy;
+Short = Sell;
+
+/* ************************************************************************** */
+/* Graphic presentation in Amibroker */
+//maxgraph = 1;
+//graph0 = Cole;
+//title = name() + " - Cole = " + WriteVal(graph0, 1.0);
+
+/* ************************************************************************** */
+/* Exploration in Amibroker */
+filter = 1;
+numcolumns = 21;
+column0 = H;		column0name = "H";		column0format = 1.2;
+column1 = L;		column1name = "L";		column1format = 1.2;
+column2 = V;		column2name = "V";		column2format = 1.0;
+column3 = RY;		column3name = "RY";		column3format = 1.0;
+column4 = RX;		column4name = "RX";		column4format = 1.0;
+column5 = IN;		column5name = "IN";		column5format = 1.0;
+column6 = OUT;		column6name = "OUT";		column6format = 1.0;
+column7 = Cole;		column7name = "Cole";		column7format = 1.0;
+column8 = CondABuy;	column8name = "ABuy";		column8format = 1.0;
+column9 = CondASell;	column9name = "ASell";		column9format = 1.0;
+column10= TRI;		column10name= "TRI";		column10format= 1.2;
+column11= CondBBuy;	column11name= "BBuy";		column11format= 1.0;
+column12= CondBSell;	column12name= "BSell";		column12format= 1.0;
+column13= ema1;		column13name= "ema1";		column13format= 1.4;
+column14= ema2;		column14name= "ema2";		column14format= 1.4;
+column15= ema3;		column15name= "ema3";		column15format= 1.4;
+column16= ema4;		column16name= "ema4";		column16format= 1.4;
+column17= CondCBuy;	column17name= "CBuy";		column17format= 1.0;
+column18= CondCSell;	column18name= "CSell";		column18format= 1.0;
+column19= Buy;		column19name= "BuySig";		column19format= 1.0;
+column20= Sell;		column20name= "SellSig";	column20format= 1.0;
+
+/* ************************************************************************** */
+/* END PETERSON Indicator Formula */

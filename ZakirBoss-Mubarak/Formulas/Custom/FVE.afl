@@ -1,0 +1,13 @@
+Period = 22;
+// users of v4.25 or higher can use Param to adjust period in real time
+// Period = Param("FVE period", 22, 10, 80, 1 );
+MF = C - (H+L)/2 + Avg - Ref( Avg, -1 );
+Vc = IIf( MF > 0.003 * C, V,
+IIf( MF < -0.003 * C, -V, 0 ) );
+FVE = Sum( Vc, Period )/MA( V, Period )/Period * 100;
+Plot( FVE, "FVE", colorRed );
+GraphXSpace = 3;
+Buy = Cross( FVE, -5 ) AND
+LinRegSlope( FVE, 35 ) > 0 AND
+LinRegSlope( Close, 35 ) < 0;
+Sell = LinRegSlope( FVE, 25 ) < 0 OR Ref( Buy, -50 );

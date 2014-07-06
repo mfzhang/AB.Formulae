@@ -1,0 +1,84 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Modified Momentum Finder DDT-NB
+//  Author/Uploader: Frank Snay 
+//  E-mail:          fesnay@san.rr.com
+//  Date/Time Added: 2002-01-03 15:34:58
+//  Origin:          Modification to Dr. S. Nathan Berger's DDT-NB system, first step (Selection of stocks or funds)
+//  Keywords:        Ranking System   Momentum Finder
+//  Level:           basic
+//  Flags:           exploration
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=147
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=147
+//
+//------------------------------------------------------------------------------
+//
+//  A Ranking System for stocks or mutual funds that uses Rate of Change
+//  (momentum) for three time frames and Rate of Change of Rate of Change
+//  (acceleration) for two time frames. The system uses weighted Rate of
+//  Changes with the most recent periods having more weight. Combined with
+//  non-weighted acceleration, changes in momentum are detected earlier than
+//  with Rate of Change only.
+//
+//------------------------------------------------------------------------------
+
+/* Modified Momentum Finder by Frank Snay
+   Use to find stocks or mutual funds in First Step of Dr. S. Nathan Berger's
+   DDT-NB SYSTEM posted during the final week of 2001.
+   Please copy the following formula to the Automatic Analysis window AND
+   click on "Explore"*/
+
+/* The description of Dr. Berger's initial routine to "find" the mutual funds
+   based upon trying several different time periods, and writing down the results
+   for each.  This explore uses three time frames, a user defined Period for
+   the longest time frame, and computer derived half and quarter periods of
+   the Period.  Several expolres are now reduced to one. 
+
+/* Use any Watch list, use filter, n last days = 1.  
+   As I use a select watch list and want results for all stocks, I set the 
+   MinChange  to -100%.  User can reset this to any desired level. */
+   MinChange = -100  ; /* this is minimum percent change to be filtered */
+/* About 8 Trading Weeks for Scan.  User set to desired time */
+Period = 40; /* how many bars back */
+HalfPeriod = int(.5 + Period/2); // One-half of the period
+QuarterPeriod = int(.5 + Period/4);  // One-quarter of the period
+ROCPeriod = ROC(Close,Period); //full period rate of change
+ROCHalfPeriod = ROC(Close,HalfPeriod);  //Half period rate of change
+ROCQuarterPeriod = ROC(Close,QuarterPeriod);  //Quarter period rate of change
+
+/*  Now add the three, weighted for most recent data having most effect 
+    This is done by doubling the half, and 4 times the quarter values,
+    and dividing the grand total by 3  */
+TotalROC = (ROCPeriod + 2*ROCHalfPeriod + 4*ROCQuarterPeriod)/3;
+
+/*  The old physics lessons told us that momentum ( or velocity ) is a rate of
+    change per a unit of time.  In this case, closing price per period.  
+    The next step is to compute the rate of change of the rate of change.  Back
+    to the lessons, this is acceleration.  Acceleration shows the increasing or
+    decreasing momentum for a time unit.  To accomplish this, I will take the
+    ROCQuarterPeriod today, and subtract the ROCQuarterPeriod a quarter of a
+    period ago, ie, ROCQuarterPeriod - ref(ROCQuarterPeriod,-QuarterPeriod).
+    I will repeat the process for the ROCHalfPeriod. For ease of
+    display, I will call this final result AccTotal and display it before
+    TotalROC.  The AccTotal is the TotalROC with the above additivies for 
+    acceleration. 
+    Very Important - notice how the results based only upon  TotalROC
+    are changed by the AccTotal.  The addition of acceleration brings
+    the stocks or funds with the latest positive changes in ROC to the top of 
+    the list in AccTotal, and if the acceleration is negative, the stock will
+    have a lower ranking than with TotalROC.  By themselves per each stock or
+    mutual fund, the values in AccTotal and TotalROC mean little - it is ONLY 
+    when compared to other stocks or funds that the values take on a meaning. 
+    What this means is that the values in AccTotal and TotalROC ARE NOT the 
+    expected returns, BUT A RELATIVE RANKING COMPARED TO OTHER STOCKS OR FUNDS.*/
+AccTotal = TotalROC + ((ROCHalfPeriod) - Ref(ROCHalfPeriod,-HalfPeriod)) + (ROCQuarterPeriod - Ref(ROCQuarterPeriod,-QuarterPeriod)) ;        
+
+LastBar = Cum(1) == LastValue( Cum(1) );
+Filter = ROCPeriod  > MinChange AND LastBar;
+
+NumColumns =5;
+Column0 = AccTotal;Column0Name = "AccTotal";Column0Format = 1.2;
+Column1 = TotalROC;Column1Name = "TotalROC";Column1Format = 1.2;
+Column2 = ROCPeriod;Column2Name = "ROCPeriod";Column2Format = 1.2;
+Column3 = ROCHalfPeriod;Column3Name = "ROCHalfPeriod";Column3Format = 1.2;
+Column4 = ROCQuarterPeriod;Column4Name = "ROCQuarterPeriod";Column4Format = 1.2;

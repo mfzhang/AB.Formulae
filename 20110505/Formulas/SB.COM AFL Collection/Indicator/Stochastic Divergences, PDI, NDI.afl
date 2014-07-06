@@ -1,0 +1,57 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Stochastic Divergences, PDI, NDI
+//  Author/Uploader: Dimitris Tsokakis 
+//  E-mail:          
+//  Date/Time Added: 2002-03-25 04:12:25
+//  Origin:          
+//  Keywords:        
+//  Level:           advanced
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=180
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=180
+//
+//------------------------------------------------------------------------------
+//
+//  Definitions.
+//
+//  1. Positive Stochastic Divergence Issues (PDI) is the population of stocks
+//  that
+//
+//  presented a positive stochastic divergence, calculated on daily basis.
+//
+//  2. Negative Stochastic Divergence Issues (NDI) is the population of stocks
+//  that
+//
+//  presented a negative stochastic divergence, calculated on daily basis.
+//
+//------------------------------------------------------------------------------
+
+/*STOCHDIV*/
+ST33=StochD(14);
+TR1=LLVBars(ST33,4);
+TR2=IIf(ST33<30 AND TR1>0 AND Ref(TR1,-1)==0,Ref(ST33,-1),0);
+TRC=IIf(TR2>0,C,0);
+vs=ValueWhen(tr2, Ref(st33,-1), 1);
+dvs=vs-Ref(vs,-1);
+vc=ValueWhen(trc, LLV(C,3), 1);
+dvc=vc-Ref(vc,-1);
+diver=IIf(dvs>0 AND dvc<0,30,0);
+DAS=BarsSince(Ref(TR2,-1)>0);
+dd=IIf(DAS<20 AND C>=Ref(C,-1),DIVER,0);
+
+HTR1=HHVBars(ST33,4);
+HTR2=IIf(ST33>70 AND HTR1>0 AND Ref(HTR1,-1)==0,Ref(ST33,-1),0);
+HTRC=IIf(HTR2>0,C,0);
+Hvs=ValueWhen(Htr2, Ref(st33,-1), 1);
+Hdvs=Hvs-Ref(Hvs,-1);
+Hvc=ValueWhen(Htrc, HHV(H,3), 1);
+Hdvc=Hvc-Ref(Hvc,-1);
+Hdiver=IIf(Hdvs<0 AND Hdvc>0,90,0);
+HDAS=BarsSince(Ref(HTR2,-1)>0);
+hdd=IIf(HDAS<20 AND C<Ref(C,-1),HDIVER,0);
+values3 = dd>0;
+values4=hdd>0;
+AddToComposite(Values3,"~posstochdiv","V");
+AddToComposite(Values4,"~negstochdiv","V");
+Buy=0;

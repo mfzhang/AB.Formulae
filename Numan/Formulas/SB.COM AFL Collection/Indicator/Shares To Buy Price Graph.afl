@@ -1,0 +1,35 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Shares To Buy Price Graph
+//  Author/Uploader: Tommy Beard 
+//  E-mail:          tab321@yahoo.com
+//  Date/Time Added: 2004-12-02 17:08:43
+//  Origin:          
+//  Keywords:        Price Graph, Calculation, Shares to Purchase, Buy
+//  Level:           basic
+//  Flags:           system,indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=409
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=409
+//
+//------------------------------------------------------------------------------
+//
+//  The Shares to Buy Price Graph allows one to automatically see the number of
+//  shares that can be purchased based on the current price when the amount of
+//  money to be invested is already known. This is useful when using Dollar
+//  Weighted Positions such as investing 2000 Dollars in each position. It
+//  eliminates the need to drag out a calculator and see how many shares to
+//  place for the order. Use the Param Feature - it is Nice.
+//
+//------------------------------------------------------------------------------
+
+//The Shares to Buy Price Graph allows one to automatically see the number of shares that can be purchased based on the current price when the amount of money to be invested is already known.  This is useful when using Dollar Weighted Positions such as investing 2000 Dollars in each position.  It eliminates the need to drag out a calculator and see how many shares to place for the order.
+
+//Also, if you RIGHT CLICK your graph, you can easily change the Dollar Parameter by choosing "Parameters" and sliding the parameter bar.  Parameters can also be accessed via Ctrl+R on the Keyboard.  The Parameter Bar moves increments of 100 Dollars but you can type in any figure you desire and press "Enter" on your keyboard if you want to use an odd number such as 2846. 
+
+M=2000;//Enter Typical Amount Normally Used for Your Positions and This Figure will become the Default Value of the Parameter
+SM = Param("SM", M, 1000, 10000, 100 );
+MidRange=(H+L)/2;//Figure Used in Title for Middle of Price Range. 
+
+Plot(C, "Price", colorBlack, styleBar);
+
+Title = Name() + "   " + Date() + "     Price: " + C + "  O: " + O + "  H: " + H + "  L: " + L + EncodeColor( colorBlue ) + "   M:" + MidRange + " " + EncodeColor( colorBrown ) +"  Change"+ WriteVal(ROC( Close, 1) ) + "%" + "\n" +  EncodeColor( colorIndigo ) + WriteVal ( SM/C,(format=1.2)) + " Shares = " + " $" + WriteVal ( C*SM/C,(format=1.0));

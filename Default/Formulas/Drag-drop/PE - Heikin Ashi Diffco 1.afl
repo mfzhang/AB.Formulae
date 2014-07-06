@@ -1,0 +1,51 @@
+//|-----------------------------------------------------------------------------------------
+//|PatternExplorer.com - Heikin Ashi Indicator (HaDiffCO indicator)
+//|Copyright © 2007, PatternExplorer.com
+//|http://www.PatternExplorer.com
+//|e-mail: support@PatternExplorer.com
+//|-----------------------------------------------------------------------------------------
+FormulaName = "PE - Heikin Ashi Diffco";
+
+SetChartOptions( 0, chartShowDates | chartWrapTitle, chartGridmiddle == 0 );
+GraphXSpace = 10;
+#pragma nocache
+#include_once  <\PEInc\PatternExplorer_f0.afl>
+#Include_once "C:\Program Files (x86)\AmiBroker\Formulas\PatternExplorer\#Defaults & Mods\PE - Defaults.afl"
+#Include_once "C:\Program Files (x86)\AmiBroker\Formulas\PatternExplorer\#Defaults & Mods\PE - Mods.afl"
+/*******************************************************************************************/
+AddCustomCodeBeforePE();
+/*******************************************************************************************/
+_SECTION_BEGIN( "Main Parameters" );
+per = Param( "Average Period", 3, 3, 50, 1 );
+_SECTION_END();
+/*******************************************************************************************/
+_SECTION_BEGIN( "Styles" );
+HAstyle = ParamStyle( "Ha Diffco", styleThick );
+HADiffcostyle = ParamStyle( "Average HA Diffco", styleThick );
+_SECTION_END();
+/*******************************************************************************************/
+_SECTION_BEGIN( "Colors" );
+colorHA = ParamColor( "HA Diffco", def_colorHeikinAshi );
+colorMA = ParamColor( "Average HA Diffco", def_colorHeikinAshiDiffco );
+_SECTION_END();
+/*******************************************************************************************/
+AddGradientBackground( def_BGColorswitch, def_BgTopcolor, def_BgBottomcolor, def_titlebkcolor );
+/*******************************************************************************************/
+HaClose = ( O + H + L + C ) / 4;
+HaOpen = AMA( Ref( HaClose, -1 ), 0.5 );
+HaHigh = Max( H, Max( HaClose, HaOpen ) );
+HaLow = Min( L, Min( HaClose, HaOpen ) );
+HaDiffCO = HaClose - HaOpen;
+/*******************************************************************************************/
+Plot( HaDiffCo, "HaDiffCO", colorHA, HAstyle );
+Plot( MA( HaDiffCo, per ), "MA(" + per + ")", colorMA, HADiffcostyle );
+PlotGrid( 0, colorDefault );
+/*******************************************************************************************/
+Filter = def_Filter;
+AddColumn( HaDiffco, "HaDiffco" );
+/*******************************************************************************************/
+ToolTip = def_ToolTip;
+/*******************************************************************************************/
+AddCustomCodeAfterPE();
+/*******************************************************************************************/
+Title = "PatternExplorer.com - Heikin Ashi Diffco" + " - " +  Name() + " - " + EncodeColor( colorRed ) + Interval( 2 ) + EncodeColor() + "  - " + Date() + " - " + EncodeColor( ColorHA ) + "HaDiffCO = " + WriteVal( HaDiffCO, 1.2 ) + ", " + EncodeColor( ColorMA ) + "MA = " + WriteVal( MA( HaDiffCo, per ), 1.2 ) + " ";

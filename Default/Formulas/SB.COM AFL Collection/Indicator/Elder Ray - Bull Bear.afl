@@ -1,0 +1,39 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Elder Ray - Bull Bear
+//  Author/Uploader: Noor_Doodie 
+//  E-mail:          muhd.noor.sn@gmail.com
+//  Date/Time Added: 2006-02-23 12:10:44
+//  Origin:          
+//  Keywords:        
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=595
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=595
+//
+//------------------------------------------------------------------------------
+//
+//  I have constructed it in color and joined the two lines together instead.
+//  Violet = Bull, Orange = Bear.
+//
+//  If im not wrong, Dr. Elder's teaching goes like this:
+//
+//  In uptrends, use Elder Ray-Bull(Violet)
+//
+//  In Downtrends, use Elder Ray-Bear(Orange)
+//
+//  Pls correct me if im wrong.
+//
+//------------------------------------------------------------------------------
+
+_SECTION_BEGIN("Elder Ray");
+
+ERayBull= High - EMA(Close,13);
+ERayBear= Low - EMA(Close, 13);
+
+Plot(ERayBull,"Elder Bull", colorViolet, styleHistogram|styleThick);
+Plot(ERayBear,"Elder Bear", colorOrange, styleHistogram|styleThick);
+_SECTION_END();
+
+
+

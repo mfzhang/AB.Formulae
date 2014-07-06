@@ -1,0 +1,27 @@
+EnableScript("vbscript");
+<%
+function PFE(V,n,s)
+dim result()
+redim result(UBound(V))
+
+for i=1 to n-1
+x=x+sqr((V(i)-V(i-1))^2+1)
+next
+
+for i=n to UBound(V)
+x=x+sqr((V(i)-V(i-1))^2+1)-sqr((V(i-n+1)-V(i-n))^2+1)
+sign=(V(i)<V(i-n+1))*2+1
+result(i)=100*sign*sqr((V(i)-V(i-n+1))^2+n^2)/x
+next
+
+smooth=2/(s+1)
+
+for i=n to UBound(V)
+result(i)=smooth*result(i)+(1-smooth)*result(i-1)
+next
+
+PFE=result
+end function
+%>
+script=GetScriptObject();
+Graph0=script.PFE(C,10,5);

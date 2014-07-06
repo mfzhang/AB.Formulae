@@ -1,0 +1,89 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Rainbow Oscillator
+//  Author/Uploader: Anthony Faragasso 
+//  E-mail:          ajf1111@epix.net
+//  Date/Time Added: 2001-08-13 21:42:30
+//  Origin:          July 1997 TASC Traders Tips
+//  Keywords:        
+//  Level:           medium
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=101
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=101
+//
+//------------------------------------------------------------------------------
+//
+//  Very Good Visual with colored bars .
+//
+//  Imediately Identify Underlying Trend Of the Market.
+//
+//------------------------------------------------------------------------------
+
+/* Rainbow Oscillator */
+/* July 1997 TASC Traders Tips*/
+/* Coded by Anthony Faragasso */
+
+maxgraph =16;
+
+avg1= Max (Ma(C,2),
+           Max (Ma(Ma(C,2),2),
+           Max (Ma(Ma(Ma(C,2),2),2),
+           Max (Ma(Ma(Ma(Ma(C,2),2),2),2),
+           Max(Ma(Ma(Ma(Ma(Ma(C,2),2),2),2),2),
+           Max(Ma(Ma(Ma(Ma(Ma(Ma(C,2),2),2),2),2),2),
+           Max(Ma(Ma(Ma(Ma(Ma(Ma(Ma(C,2),2),2),2),2),2),2),
+           Max(Ma(Ma(Ma(Ma(Ma(Ma(Ma(Ma(C,2),2),2),2),2),2),2),2),
+           Max(Ma(Ma(Ma(Ma(Ma(Ma(Ma(Ma(Ma(C,2),2),2),2),2),2),2),2),2),
+           Ma(Ma(Ma(Ma(Ma(Ma(Ma(Ma(Ma(Ma(C,2),2),2),2),2),2),2),2),2),2))))))))));;;;;;;;;
+       
+
+
+avg2 = Min(Ma(C,2),
+            Min(Ma(Ma(C,2),2),
+            Min(Ma(Ma(Ma(C,2),2),2),
+            Min(Ma(Ma(Ma(Ma(C,2),2),2),2),
+            Min(Ma(Ma(Ma(Ma(Ma(C,2),2),2),2),2),
+            Min(Ma(Ma(Ma(Ma(Ma(Ma(C,2),2),2),2),2),2),
+            Min(Ma(Ma(Ma(Ma(Ma(Ma(Ma(C,2),2),2),2),2),2),2),
+            Min(Ma(Ma(Ma(Ma(Ma(Ma(Ma(Ma(C,2),2),2),2),2),2),2),2),
+            Min(Ma(Ma(Ma(Ma(Ma(Ma(Ma(Ma(Ma(C,2),2),2),2),2),2),2),2),2),
+            Ma(Ma(Ma(Ma(Ma(Ma(Ma(Ma(Ma(Ma(C,2),2),2),2),2),2),2),2),2),2))))))))));;;;;;;;;;
+
+               /*     Rainbow Oscillator */
+
+  graph0 =   100 * (CLOSE - ((Ma(C,2)+
+                    Ma(Ma(C,2),2)+
+                    Ma(Ma(Ma(C,2),2),2) + Ma(Ma(Ma(Ma(C,2),2),2),2) +
+                    Ma(Ma(Ma(Ma(Ma(C,2),2),2),2),2) +
+                    Ma(Ma(Ma(Ma(Ma(Ma(C,2),2),2),2),2),2) + 
+                    Ma(Ma(Ma(Ma(Ma(Ma(Ma(C,2),2),2),2),2),2),2)+
+                    Ma(Ma(Ma(Ma(Ma(Ma(Ma(Ma(C,2),2),2),2),2),2),2),2)+
+                    Ma(Ma(Ma(Ma(Ma(Ma(Ma(Ma(Ma(C,2),2),2),2),2),2),2),2),2)+
+                    Ma(Ma(Ma(Ma(Ma(Ma(Ma(Ma(Ma(Ma(C,2),2),2),2),2),2),2),2),2),2))
+                    /10))/(HHV(C,10)-LLV(C,10));
+
+                     
+
+                /*  Lower Rainbow Band */
+
+graph1 = -100  *( avg1 - avg2) /
+                    (HHV(C,10) - LLV(C,10));
+
+               /*     Upper Rainbow Band */
+
+graph2 =  100 * (avg1 - avg2) /
+                    (HHV(C,10) - LLV(C,10));
+
+graph0style = 3;
+graph2style = graph1style = 1;
+graph2color = graph1color =3;
+graph3 = 0;
+graph3color =8;
+
+downbar =graph0 <ref( graph3,-1);
+upbar = graph0 > ref(graph3,-1);
+barcolor = IIF( downbar,4, IIF( upbar, 6, 0 )  );
+graph0barcolor = ValueWhen( barcolor != 0, barcolor );
+
+
+title = name() +" Rainbow Oscillator : "+writeval(graph0,format=1.2) +" % ";

@@ -1,0 +1,88 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Ichimoku charts
+//  Author/Uploader: Tomasz Janeczko 
+//  E-mail:          tj@amibroker.com
+//  Date/Time Added: 2001-06-16 08:25:56
+//  Origin:          Presented in TASC magazine issue 10/2000
+//  Keywords:        japanese charting
+//  Level:           medium
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=11
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=11
+//
+//------------------------------------------------------------------------------
+//
+//  Ichimoku charts - yet another Japanese charting technique is enjoying new
+//  wave of popularity. Just a few months ago, in the October 2000 issue of
+//  Technical Analysis of Stocks and Commodities (TASC) magazine an article
+//  covering this charting method was presented. I will not dig into details -
+//  they are described fairly enough in the TASC magazine - instead I am going
+//  to focus on AFL implementation, but a bit of introduction is needed:
+//
+//  "Literally, ichimoku means 'one look'; a chart of this style is referred to
+//  as [...] the table of equilibrium prices at a glance. [..] All the
+//  computations involved no more than taking midpoints of historical highs and
+//  lows in various ways. Nevertheless, the completed chart presents a
+//  panoramic view of price movement"
+//
+//  OK. This sounds a little bit complicated, but in fact the whole algorithm
+//  is not difficult at all. An ichimoku chart consists of:
+//
+//  the standard line calculated as one half of the sum of highest high and
+//  lowest low price over past 26 days
+//
+//  the turning line calculated as one half of the sum of highest high and
+//  lowest low price over past 9 days
+//
+//  the delayed line which is close price shifted 25 days prior to today
+//
+//  the first preceding span line which is calculated as the average of
+//  standard line and turning line and then shifted 25 days ahead of today
+//
+//  the second preceding span line which is calculated as the average of
+//  highest high and lowest low prices over past 52 days and then shifted 26
+//  days ahead of today
+//
+//  Implementing above rules in AFL gives the following formula:
+//
+//  SL = ( HHV( H, 26 ) + LLV( L, 26) )/2;
+//
+//  TL = ( HHV( H, 9 ) + LLV( L, 9 ) )/2;
+//
+//  DL = Ref( C, 25 );
+//
+//  Span1 = Ref( ( SL + TL )/2, -25 );
+//
+//  Span2 = Ref( (HHV( H, 52) + LLV(L, 52))/2, -25);
+//
+//  where SL is the standard line, TL - turning line, DL - delayed line, Span1
+//  and Span2 - the first and the second preceding span lines.
+//
+//------------------------------------------------------------------------------
+
+SL = ( HHV( H, 26 ) + LLV( L, 26) )/2;
+TL = ( HHV( H, 9 ) + LLV( L, 9 ) )/2;
+DL = Ref( C, 25 );
+Span1 = Ref( ( SL + TL )/2, -25 );
+Span2 = Ref( (HHV( H, 52) + LLV(L, 52))/2, -25);
+
+
+maxgraph = 6;
+
+graph0 = SL;
+graph1 = TL;
+graph2 = DL;
+graph3 = Span1;
+graph4 = Span2;
+graph5 = close;
+
+graph0style = graph1style = graph2style = graph3style = graph4style = 1;
+graph5style = 5;
+
+graph0color = 7;
+graph1color = 5;
+graph2color = 13;
+graph3color = 6;
+graph4color = 6;
+graph5color = 2; 

@@ -1,0 +1,122 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Kagi Chart
+//  Author/Uploader: Graham Kavanagh 
+//  E-mail:          gkavanag@bigpond.net.au
+//  Date/Time Added: 2002-11-29 05:12:31
+//  Origin:          
+//  Keywords:        Kagi
+//  Level:           medium
+//  Flags:           system,indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=236
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=236
+//
+//------------------------------------------------------------------------------
+//
+//  Kagi swing chart with change based on share price. Swing ranges from 3 to
+//  5%.
+//
+//  Place in indicator builder.
+//
+//------------------------------------------------------------------------------
+
+//KAGI Chart (or Swing) for Amibroker Indicator window. 
+//Reverse swing is 3%.
+//Graham Kavanagh 16 Nov 2002
+
+SetBarsRequired(100000,100000);
+
+Close = IIf( C<10, round(C*10)/10, IIf( C>=10 AND C<50, int(C) + round(round(frac(C)*10)/5)*5/10, int(C)));
+
+Reverse = LastValue(IIf(C<50,0.05,IIf(C>=50 AND C<100,0.04,0.03)));
+
+
+EnableScript("jscript");
+<%
+
+Close = VBArray( AFL( "Close" ) ).toArray();
+
+KC = new Array();
+
+// initialize first element
+j = 0;
+KC[j] = Close[0];
+
+down = 1;    // By default the first bar is a down bar.
+up = 0;
+swap = 0;
+
+// perform the loop that produces Kagi Chart
+for( i = 1; i < Close.length; i++ )
+{
+ Reverse =AFL("Reverse");                        // percent reversal requirement
+
+ if( Close[i] <= KC[j] && down)         //continue down
+ {
+  KC[j] = Close[i];
+ }
+ else
+ {
+  if( Close[i] >= KC[j]*(1 + Reverse) && down)  //Change direction to up
+  {
+   j++;
+   swap = 1;
+
+   KC[j] = Close[i];
+  }
+ }
+ if( Close[i] >= KC[j] && up)         //Continue up
+ { 
+  KC[j] = Close[i];
+ }
+ else
+ {
+  if( Close[i] <= KC[j]*(1 - Reverse) && up)   //Change direction to down
+  {
+   j++;
+
+   KC[j] = Close[i];
+   swap = 1;
+  }
+ }
+ if( swap )
+ {
+  swap = 0;
+  if( up )
+  {
+   up = 0;
+   down = 1;
+  }
+  else
+  {
+   up = 1;
+   down = 0;
+  }
+ }
+}
+delta = Close.length - j-1;      //to get all of chart
+
+AFL.Var("KC") = KC;
+AFL.Var("delta") = delta;
+AFL.Var("Reverse") = Reverse;
+ 
+%>
+
+KC = Ref( KC, -delta );
+C = KC;
+L = LLV(C,2);
+H = HHV(C,2);
+
+MyColor = 
+IIf(C>Ref(H,-2),colorBlue, 
+IIf(C<Ref(L,-2),colorRed,
+colorBlack));
+Graph0BarColor = MyColor;
+Graph0Style = 512+4096;
+GraphXSpace = 5;
+Graph0 = C;
+Graph0Name = "Kagi Chart";
+Graph1BarColor = 1;
+Graph1Style = 16+2048+4096;
+Graph1 = Reverse*100;
+Graph1Name = "Reverse %";

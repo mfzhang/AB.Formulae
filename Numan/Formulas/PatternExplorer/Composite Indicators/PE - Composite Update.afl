@@ -1,0 +1,46 @@
+//|-----------------------------------------------------------------------------------------
+//|PatternExplorer.com - ~Composites update
+//|Copyright © 2007, PatternExplorer.com
+//|http://www.PatternExplorer.com
+//|e-mail: support@PatternExplorer.com
+//|-----------------------------------------------------------------------------------------
+FormulaName = "PE - Composite Update";
+
+#pragma nocache
+#include_once  <\PEInc\PatternExplorer_f0.afl>
+#Include_once "C:\Program Files (x86)\AmiBroker5\Formulas\PatternExplorer\#Defaults & Mods\PE - Defaults.afl"
+#Include_once "C:\Program Files (x86)\AmiBroker5\Formulas\PatternExplorer\#Defaults & Mods\PE - Mods.afl"
+/*******************************************************************************************/
+AddCustomCodeBeforePE();
+/*******************************************************************************************/
+_SECTION_BEGIN( "Indicator Periods" );
+period1 = Param( "Period 1", 5, 1, 30, 1 );
+period2 = Param( "Period 2", 8, 1, 30, 1 );
+_SECTION_END();
+/*******************************************************************************************/
+Taio = PeTaio( period1, period2 );
+/*******************************************************************************************/
+FilterCond = 1;//MA(V,5)>100000; Here you can define any filter.
+/*******************************************************************************************/
+Var0 = IIf( FilterCond, 1, Null );//Symbol counter
+Var1 = IIf( FilterCond, RelStrength( ParamStr( "Relative strength symbol", def_CompSymbol ), 1 ), Null );
+Var2 = IIf( FilterCond, TAIO > 0, Null );
+/*******************************************************************************************/
+Buy = 0;
+
+Filter = 1;
+AddColumn( Var1, "Var1" );
+AddColumn( Var2, "Var2" );
+/*******************************************************************************************/
+AddToComposite( Var0, "~Tickers_in_DB", "C", 1 + 2 );
+AddToComposite( Var0, "~i" + WriteVal( IndustryID(), 1.0 ) + " - " + IndustryID( 1 ), "C", 1 + 2 );
+AddToComposite( Var0, "~s" + WriteVal( SectorID(), 1.0 ) + " - " + SectorID( 1 ), "C", 1 + 2 );
+AddToComposite( Var1, "~i" + WriteVal( IndustryID(), 1.0 ) + " - " + IndustryID( 1 ), "L", 1 + 2 );
+AddToComposite( Var1, "~s" + WriteVal( SectorID(), 1.0 ) + " - " + SectorID( 1 ), "L", 1 + 2 );
+AddToComposite( Var2, "~i" + WriteVal( IndustryID(), 1.0 ) + " - " + IndustryID( 1 ), "H", 1 + 2 );
+AddToComposite( Var2, "~s" + WriteVal( SectorID(), 1.0 ) + " - " + SectorID( 1 ), "H", 1 + 2 );
+/*******************************************************************************************/
+
+/*******************************************************************************************/
+AddCustomCodeAfterPE();
+/*******************************************************************************************/

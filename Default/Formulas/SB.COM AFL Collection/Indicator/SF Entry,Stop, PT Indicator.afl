@@ -1,0 +1,52 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    SF Entry,Stop, PT Indicator
+//  Author/Uploader: Stefan-Georg Fuchs 
+//  E-mail:          sgfuchs@tradeshark.de
+//  Date/Time Added: 2001-10-13 08:59:11
+//  Origin:          Own - hope it works ;-)
+//  Keywords:        
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=124
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=124
+//
+//------------------------------------------------------------------------------
+//
+//  //For use with STO MACD Buy signals with Moneymanagement
+//
+//  maxgraph = 5;
+//
+//  graph0 = close;
+//
+//  graph0style=64;
+//
+//  graph0color=2;
+//
+//  graph1 = ema(CLOSE,5)-(ema(ATR(1),10)*1.50);
+//
+//  graph2 = ema(close,5)+(ema(ATR(1),10)*2.5);
+//
+//  graph2style = 1;
+//
+//  graph2color=3;
+//
+//  graph3 = ema(CLOSE,5)+(ema(ATR(1),10)/4);
+//
+//  graph3style = 1;
+//
+//  graph3colour =5;
+//
+//------------------------------------------------------------------------------
+
+maxgraph = 5;
+graph0 = close;
+graph0style=64;
+graph0color=2;
+graph1 = ema(CLOSE,5)-(ema(ATR(1),10)*1.50);
+graph2 = ema(close,5)+(ema(ATR(1),10)*2.5);
+graph2style = 1;
+graph2color=3;
+graph3 = ema(CLOSE,5)+(ema(ATR(1),10)/4);
+graph3style = 1;
+graph3colour =5;

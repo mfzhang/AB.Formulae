@@ -1,0 +1,31 @@
+// From: http://www.wisestocktrader.com/indicators/192-ichimoku-kinko-hyo-trading-system
+
+//=======================================================================
+SetChartOptions( 0, chartShowArrows | chartShowDates );
+_N( Title = StrFormat( "{{NAME}} - {{INTERVAL}} {{DATE}} Open %g, Hi %g, Lo %g, Close %g (%.1f%%) Vol " + WriteVal( V, 1.0 ) + " {{VALUES}}", O, H, L, C, SelectedValue( ROC( C, 1 ) ) ) );
+Plot( C, "Close", ParamColor( "Color", colorBlack ), styleNoTitle | ParamStyle( "Style" ) | GetPriceStyle() );
+
+if ( ParamToggle( "Tooltip shows", "All Values|Only Prices" ) )
+{
+    ToolTip = StrFormat( "Open: %g\nHigh: %g\nLow: %g\nClose: %g (%.1f%%)\nVolume: " + NumToStr( V, 1 ), O, H, L, C, SelectedValue( ROC( C, 1 ) ) );
+}
+
+SL = ( HHV( H, 26 ) + LLV( L, 26 ) ) / 2;
+
+TL = ( HHV( H, 9 ) + LLV( L, 9 ) ) / 2;
+DL = Ref( C, 26 );
+Span1 = ( ( SL + TL ) / 2 );
+Span2 = ( HHV( H, 52 ) + LLV( L, 52 ) ) / 2;
+
+Plot( SL, "SL", 2, styleThick ); // standard, base, or kijun-sen line
+Plot( TL, "TL", 2, styleThick ); // turning, conversion, or tenkan-sen line
+Plot( DL, "", colorLightBlue, styleLine ); // delayed, lagging, or chikou span
+Plot( Span1, "", colorGreen, 1, 0, 0, 26 ); // senkou span A, kumo, or white clouds
+Plot( Span2, "", colorSeaGreen, 1, 0, 0, 26 ); // senkou span B, kumo, or white clouds
+PlotOHLC( Span1, Span2, Span1, Span2, "", IIf( Span1 > Span2, 8, 9 ), styleCloud | 4096, 0, 0, 26 );
+
+Buy = Cross( TL, SL );
+Sell = Cross( SL, TL );
+shape = Buy * shapeUpArrow + Sell * shapeDownArrow;
+PlotShapes( shape, IIf( Buy, colorDarkGreen, colorRed ), 0, IIf( Buy, Low, High ) );
+//==========================================================

@@ -1,0 +1,22 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Bollinger oscillator
+//  Author/Uploader: Tomasz Janeczko 
+//  E-mail:          tj@amibroker.com
+//  Date/Time Added: 2001-06-16 08:01:18
+//  Origin:          Bollinger bands and related oscillators were developed by John Bollinger
+//  Keywords:        bollinger,standard deviation
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=4
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=4
+//
+//------------------------------------------------------------------------------
+//
+//  A simple example of using StDev function
+//
+//------------------------------------------------------------------------------
+
+/* Bollinger Oscillator	*/
+
+Graph0 = ( CLOSE - MA( CLOSE, 14 ) )/ StDev( CLOSE, 14); 

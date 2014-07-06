@@ -1,0 +1,24 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    IO
+//  Author/Uploader: Fred Tonetti 
+//  E-mail:          ftonetti@optonline.net
+//  Date/Time Added: 2005-04-18 18:07:19
+//  Origin:          
+//  Keywords:        artificial intelligent optimization walk forward
+//  Level:           advanced
+//  Flags:           system
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=458
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=458
+//
+//------------------------------------------------------------------------------
+//
+//  An artificially intelligent optimization driver for AmiBroker with full
+//  walk forward and sensitivity testing options.
+//
+//------------------------------------------------------------------------------
+
+// ----------------------------------
+// See the files section of AmiBroker 
+//     for IO.Zip
+// ----------------------------------

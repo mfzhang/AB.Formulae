@@ -1,0 +1,38 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    CCT FibAccordion
+//  Author/Uploader: Tomasz Janeczko 
+//  E-mail:          tj@amibroker.com
+//  Date/Time Added: 2001-07-20 09:49:12
+//  Origin:          Steve Karnish, http://www.cedarcreektrading.com
+//  Keywords:        
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=74
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=74
+//
+//------------------------------------------------------------------------------
+//
+//  Steve Karnish wrote:
+//
+//  "The FibAccordion is the difference between two moving averages that are
+//  assigned fibonacci numbers. Try building your own by taking any two moving
+//  averages with different fibonacci numbers and subtracting one from another
+//  and plotting the results. Use either a simple or exponential average and
+//  vary the fibonacci numbers until you build an oscillator that you are
+//  comfortable with."
+//
+//------------------------------------------------------------------------------
+
+/* CCT FibAccordion
+**
+** Originally developed by Steve Karnish 
+** http://www.cedarcreektrading.com
+**
+** AFL translation by Tomasz Janeczko
+**
+** Set scaling: Automatic
+** Grid: Middle
+*/
+
+graph0= EMA( C,13 ) - EMA( C, 144 );

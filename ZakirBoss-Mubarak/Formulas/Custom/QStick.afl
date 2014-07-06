@@ -1,0 +1,12 @@
+/* QStick from Tushar Chande. This indicator measures intraday momentum by 
+   using the distance between the open and close of price over "n periods".
+   It is set at the default ( 8 ) periods that Chande suggest. */
+
+MaxGraph=3;
+
+Graph0=MA( C-O,8);
+
+// The '0' line.
+Graph1=0;
+Graph1Style=5;
+Graph1Style=styleNoLabel;

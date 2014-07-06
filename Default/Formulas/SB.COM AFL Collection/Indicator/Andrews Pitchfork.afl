@@ -1,0 +1,164 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Andrews Pitchfork
+//  Author/Uploader: Bob Johnson 
+//  E-mail:          bjohnson314@kc.rr.com
+//  Date/Time Added: 2005-07-22 18:46:17
+//  Origin:          
+//  Keywords:        Andrews Andrew's Pitchfork
+//  Level:           semi-advanced
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=522
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=522
+//
+//------------------------------------------------------------------------------
+//
+//  Plots Andrews Pitchfork using peak()/trough() to identify 3 pivot points to
+//  use in determining the pitchfork. Accepts params for pct threshhold for
+//  peak and trough, number of bars to look back, i.e. how many bars must have
+//  past before the accepting a peak or trough pivot point and a shift param to
+//  move the pitchfork up/down from its original plot. Calculates the pitchfork
+//  as exponential curves so they plot as straight lines on a semilog chart.
+//
+//------------------------------------------------------------------------------
+
+// Andrews Pitchfork V.3
+// Use Peak() & Trough() to get peaks & troughs.
+// This version deals with adjacent peaks and adjacent
+// troughs, i.e. two peaks without an intervening trough or vice-versa.
+// It goes backwards from the selected bar until it has a set of 
+// peak,trough,peak or trough,peak,trough points to use for calulating
+// the pitchfork.  When 2 or more peaks or 2 or more troughs are adjacent
+// it only uses the last one, i.e. the rightmost one, of the series.
+//
+// This version plots the trendlines as exponential curves that plot as
+// straight lines on an semilog chart.
+//
+// 07/22/2005 By Bob Johnson with invaluable help from Graham Kavanagh getting
+// me pointed in the right direction on the exponential equation logic.
+
+SetBarsRequired( 999999,999999);
+
+bi=BarIndex();
+sbi=SelectedValue(bi);
+
+// How many bars to wait before believing the pivot.
+Lookbk=Param("LookBack",5,1,200,1);
+// Pct threshhold for peak() & trough()
+Zigpct1=Param("Zigpct1",3.0,1.0,30.0,0.1,0);
+// How many bars to extend the pitchfork past the selected bar.
+xtsn=Param("Extension",62,1,200,1);
+// Shift to move pitchfork up/down from original position one penny at time.
+shift=Param("Shift",0,-2000,2000,0.01);
+
+// The peak/trough lines will be used to determine the y coordinates
+// of the pitchfork's 3 determining points.
+
+pline1=Peak(H,Zigpct1,1);
+tline1=Trough(L,Zigpct1,1);
+
+// Identify the pivots
+pzag1=pline1 != Ref(pline1,-1);
+tzag1=tline1 != Ref(tline1,-1);
+
+// Get the x,y coordinates of the pivots skipping adjacent
+// peaks and troughs.  Go backwards from the current bar minus the lookback.
+
+// These will hold the x,y coordinates of the pivot points in arrays at the
+// sbi index.
+
+zagx1=0;
+zagx2=0;
+zagx3=0;
+zagy1=0;
+zagy2=0;
+zagy3=0;
+
+for ( i = sbi - Lookbk, zagfnd = 0, pzagfnd = 0, tzagfnd = 0 ; i >= 0 && zagfnd <= 3; i-- ) {
+    if ( pzag1[i] || tzag1[i] ) {
+        if ( pzag1[i] && NOT pzagfnd ) {
+             zagfnd=zagfnd+1;
+             pzagfnd=1;
+             tzagfnd=0;
+             if ( zagfnd == 1 ) {
+                 zagx1[sbi]=i;
+                 zagy1[sbi]=pline1[i];
+             } else if (zagfnd == 2) {
+                 zagx2[sbi]=i;
+                 zagy2[sbi]=pline1[i];
+             } else if (zagfnd == 3) {
+                 zagx3[sbi]=i;
+                 zagy3[sbi]=pline1[i];
+             }
+        } else if ( tzag1[i] && NOT tzagfnd ) {
+             zagfnd=zagfnd+1;
+             tzagfnd=1;
+             pzagfnd=0;
+             if ( zagfnd == 1 ) {
+                 zagx1[sbi]=i;
+                 zagy1[sbi]=tline1[i];
+             } else if (zagfnd == 2) {
+                 zagx2[sbi]=i;
+                 zagy2[sbi]=tline1[i];
+             } else if (zagfnd == 3) {
+                 zagx3[sbi]=i;
+                 zagy3[sbi]=tline1[i];
+             }
+        }
+    }
+}
+
+// Calculate the Pitchfork itself
+
+tslope=0;
+tline=0;
+midx=0;
+midy=0;
+Handle=0;
+Handle1=0;
+Top=0;
+top1=0;
+Bot=0;
+bot1=0;
+
+// Midpoint between the rightmost 2 pivots and the slope from the
+// leftmost pivot to the midpoint.
+
+Midx[sbi]=zagx2[sbi] + (zagx1[sbi]-zagx2[sbi]) / 2;
+Midy[sbi]=exp( log(zagy1[sbi]) - ( log(zagy1[sbi])-log(zagy2[sbi]) ) / 2);
+echng=(log(midy[sbi])-log(zagy3[sbi]))/(midx[sbi]-zagx3[sbi]);
+
+tslope[sbi]=(midy[sbi]-zagy3[sbi]) / (midx[sbi]-zagx3[sbi]);
+
+// Handle first
+
+for ( j=zagx3[sbi],n=0 ; j < Min(sbi+xtsn,BarCount) ; j++,n++ ) {
+   Handle[j]=exp(log(zagy3[sbi]) + n*echng) + shift;
+}
+
+// High & low median lines.
+
+if ( zagy2[sbi] > zagy1[sbi] ) {  // Which one is top?
+   for ( j=zagx2[sbi],n=0 ; j < Min(sbi+xtsn,BarCount) ; j++,n++ ) {
+      top[j]=exp(log(zagy2[sbi]) + n*echng) + shift;
+   }
+   for ( j=zagx1[sbi],n=0 ; j < Min(sbi+xtsn,BarCount) ; j++,n++ ) {
+      bot[j]=exp(log(zagy1[sbi]) + n*echng) + shift;
+   }
+} else {
+   for ( j=zagx2[sbi],n=0 ; j < Min(sbi+xtsn,BarCount) ; j++,n++ ) {
+      bot[j]=exp(log(zagy2[sbi]) + n*echng) + shift;
+   }
+   bot1 = exp( LineArray( zagx2[sbi], ln(zagy2[sbi]), Min(sbi + xtsn,BarCount), ln(zagy2[sbi] + n*tslope[sbi] + shift), 1, 1 ) );
+   for ( j=zagx1[sbi],n=0 ; j < Min(sbi+xtsn,BarCount) ; j++,n++ ) {
+      top[j]=exp(log(zagy1[sbi]) + n*echng) + shift;
+   }
+}
+
+// I'm using a white background, adjust to your own preferred background color
+Hcolor=IIf(Handle==0,colorWhite,IIf(Ref(handle,-1)== 0 AND handle != 0, colorWhite,colorRed));
+Tcolor=IIf(Top==0,colorWhite,IIf(Ref(top,-1)== 0 AND top != 0, colorWhite,colorRed));
+Bcolor=IIf(Bot==0,colorWhite,IIf(Ref(bot,-1)== 0 AND bot != 0, colorWhite,colorRed));
+Plot(Handle,"\nAndrews: pct="+Zigpct1+" lookback="+lookbk+" shift="+shift+" Handle",Hcolor,styleLine+styleDashed+styleNoRescale);
+Plot(Top,"MLH",Tcolor,styleLine+styleDashed+styleNoRescale);
+Plot(Bot,"MLL",Bcolor,styleLine+styleDashed+styleNoRescale);

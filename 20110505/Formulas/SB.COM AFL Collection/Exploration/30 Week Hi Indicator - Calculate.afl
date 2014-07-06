@@ -1,0 +1,61 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    30 Week Hi Indicator - Calculate
+//  Author/Uploader: Geoff Mulhall 
+//  E-mail:          geoffmulhall@optusnet.com.au
+//  Date/Time Added: 2003-05-03 22:12:35
+//  Origin:          
+//  Keywords:        30 Week High
+//  Level:           semi-advanced
+//  Flags:           exploration,indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=276
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=276
+//
+//------------------------------------------------------------------------------
+//
+//  Just as the advance decline line gives an indication of the overall
+//  strength of the market, so does the number or stocks makeing new 30 week
+//  high's. Refer Weinstein's "The Secret of Profiting in Bull and Bear
+//  Markets".
+//
+//  The attached scan ( _s.afl file) calculates two indices. The first index
+//  calculates the number of stocks making new 30 week highs based on the high
+//  of each stock. The second index calculates the number of stocks making new
+//  30 week high's - but calculated from the weekly close of each stock. You'll
+//  find there is little difference between the two.
+//
+//  The scan must be run first as it uses the AddToComposite function to create
+//  the two indices. It must be run over an entire market.
+//
+//  The indicator can then be plotted. Note that the scan is run against weekly
+//  data and therefore it only makes sense to display the results on a weekly
+//  chart.
+//
+//------------------------------------------------------------------------------
+
+/* Calculate indices of new 30 week high's vs new 30 week lows */
+/* Set the filter so as to scan a given market */
+/* Set Period to Weekly */
+/* The new indexes will be found in Group 253 */
+
+H1 = Close > Ref(HHV(Close,30),-1);
+H2 = High > Ref(HHV(High,30),-1);
+
+L1 = Close < Ref(LLV(Close,30),-1);
+L2 = Low < Ref(LLV(Low,30),-1);
+
+H_L_Array1 = H1 - L1;
+H_L_Array2 = H2 - L2;
+
+// Do not generate signals
+
+Buy = 0; 
+Filter = 0;
+
+AddToComposite( H_L_Array1, "~Idx30Wk_Close_HL", "X", 19);
+AddToComposite( H_L_Array2, "~Idx30Wk_Abs_HL", "X", 19);
+
+
+    
+                             
+                                                                           

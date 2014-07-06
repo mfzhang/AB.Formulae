@@ -1,0 +1,116 @@
+//|-----------------------------------------------------------------------------------------
+//|PatternExplorer.com - Rainbow Chart
+//|Copyright © 2007, PatternExplorer.com
+//|http://www.PatternExplorer.com
+//|e-mail: support@PatternExplorer.com
+//|-----------------------------------------------------------------------------------------
+FormulaName = "PE - Rainbow Chart";
+
+SetChartOptions( 0, chartShowDates | chartShowArrows | chartLogarithmic | chartWrapTitle );
+#pragma nocache
+#include_once  <\PEInc\PatternExplorer_f0.afl>
+#Include_once "C:\Program Files (x86)\AmiBroker\Formulas\PatternExplorer\#Defaults & Mods\PE - Defaults.afl"
+#Include_once "C:\Program Files (x86)\AmiBroker\Formulas\PatternExplorer\#Defaults & Mods\PE - Mods.afl"
+/*******************************************************************************************/
+AddCustomCodeBeforePE();
+/*******************************************************************************************/
+AddAlertParam( def_AudioAlert, def_EmailAlert, def_BarComplete );
+/*******************************************************************************************/
+_SECTION_BEGIN( "Main Parameters" );
+//AddparamUsefromChart(1);
+side = 1;
+AddAvgTypeParam( 1 );
+//if(InChart) StaticVarSet("B4G8C8",AvgType);if(inAA AND Usefromchart) AvgType = StaticVarGet("B4G8C8");
+PF = ParamField( "Price Field" );
+//PF parameter from chart not available automatically in AA. It has to be selected in AA if not close is used.
+increment = Param( "Increment", 2, 1, 10, 1 );
+//if(InChart) StaticVarSet("F6P4C8",increment);if(inAA AND Usefromchart) increment = StaticVarGet("F6P4C8");
+StartAvg = Param( "Fastest Average (Period)", 3, 1, 20, 1 );
+//if(InChart) StaticVarSet("W6O4D1",StartAvg);if(inAA AND Usefromchart) StartAvg = StaticVarGet("W6O4D1");
+LastAvg = Param( "Slowest Average (Max.Period)", 20, 1, 100, 1 );
+//if(InChart) StaticVarSet("G4C0A6",LastAvg);if(inAA AND Usefromchart) LastAvg = StaticVarGet("G4C0A6");
+_SECTION_END();
+/*******************************************************************************************/
+_SECTION_BEGIN( "Styles" );
+Effect = ParamToggle( "3D Effect", "No|Yes", 0 );
+DisplayType = ParamToggle( "Plot Style", "Lines,Shadows", def_LinesORShadows );
+LineStyle = ParamStyle( "Lines", styleThick, maskDefault );
+Shapes = ParamToggle( "Plot Shapes", "Off,On", 1 );
+Buyshape = Param( "Buy Shape Typ", def_BuyShape, 0, 50, 1 );
+SellShape = Param( "Sell Shape Typ", def_SellShape, 0, 50, 1 );
+_SECTION_END();
+/*******************************************************************************************/
+Count = 0;
+
+for ( i = StartAvg; i < LastAvg; i = i + increment )
+{
+    /*******************************************************************************************/
+    _SECTION_BEGIN( "Colors" );
+    Hue = Param( "Hue", 15, 1, 50, 1 ) * i;
+    Saturation = Param( "Saturation", 150, 0, 255 );
+    Brightness = side * Param( "Brightness", 200, 0, 255 );
+    Buyshapecolor = ParamColor( "Buy Shape Color", def_BuyShapeColor );
+    Sellshapecolor = ParamColor( "Sell Shape Color", def_SellShapeColor );
+    _SECTION_END();
+    /*******************************************************************************************/
+    up = Average( Pf, i, AvgType );
+    down = Average( Pf, i + increment, AvgType );
+
+    if ( Effect )
+        side = IIf( up <= down AND Ref( up <= down, 1 ), 0.6, 1 );
+
+    a = 0;
+
+    Count = Count + 1;
+
+    if ( DisplayType )
+    {
+        PlotOHLC( up, up, down, down, "Average" + i, ColorHSB( Hue, Saturation, Brightness ), styleCloud | styleNoLabel | styleNoTitle );
+    }
+    else
+    {
+        Plot( up, "Average" + i, ColorHSB( Hue, Saturation, Brightness ), LineStyle | styleNoLabel | styleNoTitle );
+    }
+}
+
+Fastest = Average( Pf, StartAvg, AvgType );
+
+SlowestPds = StartAVG + ( Count - 1 ) * Increment;
+Slowest = Average( Pf, SlowestPds, AvgType );
+/*******************************************************************************************/
+Buy = def_Buy AND Cross( fastest, slowest );
+Sell = def_Sell AND Cross( slowest, fastest );
+/*******************************************************************************************/
+/*
+BodySize = 0.1;
+HeikinAshiDoji = abs((HaClose-HaOpen))<(HaHigh-HaLow)/(1/BodySize);
+
+Buy = def_Buy AND Close < slowest AND HaClose>HaOpen AND Ref(HeikinAshiDoji,-1);//Heikin ashi doji outside from Rainbow
+Sell = def_Sell AND Close > slowest AND HaClose<HaOpen AND Ref(HeikinAshiDoji,-1);//Heikin ashi doji outside from Rainbow
+
+//Buy = def_Buy AND (Buy OR Cross(fastest,slowest));//Rainbow signal and HA doji
+//Sell = def_Sell AND (Sell OR Cross(slowest,fastest));//Rainbow signal and HA doji
+*/
+/*******************************************************************************************/
+PlotShapes( Buy*Buyshape*Shapes, Buyshapecolor, 0, L, -def_BuyShapeOffset - 5 );
+PlotShapes( Sell*Sellshape*Shapes, Sellshapecolor, 0, H, -def_SellShapeOffset - 5 );
+/*******************************************************************************************/
+AddAlert( Buy, Audio, Email, "Fastest Average crossed slowest Average", 1, BarComplete, def_BuySound1 );
+AddAlert( Sell, Audio, Email, "Slowest Average crossed Fastest Average", 2, BarComplete, def_SellSound1 );
+/*******************************************************************************************/
+Filter = def_Filter AND NOT GroupID() == 253;
+Filter = Filter AND ( Buy OR Sell );
+/*******************************************************************************************/
+Addefaultcolumns();
+Adddefaultcolumns( 2, 1 );
+AddTextColumn( FullName(), "Full name" );
+/*******************************************************************************************/
+ToolTip = def_ToolTip;
+Title = "PatternExplorer.com - Rainbow Chart " + Avgtext;
+/*******************************************************************************************/
+#include_once  <\PEInc\PatternExplorer_1.afl>
+/*******************************************************************************************/
+/*******************************************************************************************/
+AddCustomCodeAfterPE();
+/*******************************************************************************************/
+Title = Title + default_priceTitle + " ";

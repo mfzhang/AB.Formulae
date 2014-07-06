@@ -1,0 +1,52 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    The Saturation Indicator D_sat
+//  Author/Uploader: Dimitris Tsokakis 
+//  E-mail:          tsokakis@oneway.gr
+//  Date/Time Added: 2002-12-01 14:38:17
+//  Origin:          
+//  Keywords:        
+//  Level:           medium
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=238
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=238
+//
+//------------------------------------------------------------------------------
+//
+//  There are some discrete phases for a bullish trend. The beginning is
+//  usually sharp, the market changes direction quickly,
+//
+//  Short positions are covered with rush, Long entries may be obliged to
+//  follow gap ups etc.
+//
+//  The rate of change is becoming slower, premature profit taking appears as
+//  long as new buyers are added to the list.
+//
+//  Intermediate good market news keep on giving bullish pulses, buyers search
+//  for new opportunities not to loose the trend but not to buy expensive
+//  shares
+//
+//  and this makes a circular money transfer with an always repeated result :
+//  The directional movement of the market.
+//
+//  When the buying and selling pressure come to some equilibium, we have the
+//  saturation point and this is the end of the main trend.
+//
+//  Some stocks may moove higher for a while but the market has already
+//  prepared the next bearish phase.
+//
+//  Last summer I designed a nice indicator giving a graphic emphasis to this
+//  saturation phenomena of bullish movements.
+//
+//  It is the RSI of the smoothed CMO and it will be called D_sat .
+//
+//------------------------------------------------------------------------------
+
+/*The Saturation Indicator D_sat, by Dimitris Tsokakis, Dec 2002*/
+P=30;
+CMO30=100*((Sum(IIf(C>Ref(C,-1),(C-Ref(C,-1)),0),P))-(Sum(IIf(C<Ref(C,-1),(Ref(C,-1)-C),0),P)))/((Sum(IIf(C>Ref(C,-1),(C-Ref(C,-1)),0),P)+(Sum(IIf(C<Ref(C,-1),(Ref(C,-1)-C),0),P))));
+C1=DEMA(CMO30,30);
+D_sat10=RSIA(C1,10);
+D_sat5=RSIA(C1,5);
+Plot(D_sat10,"D_sat10",1,1);Plot(D_sat5,"D_sat5",5,1);Plot(D_sat5-D_sat10,"D_sat difference",9,2);
+ 

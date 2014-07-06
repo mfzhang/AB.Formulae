@@ -1,0 +1,10 @@
+SetChartOptions(0,chartShowArrows|chartShowDates);
+Ticker = ParamStr("Symbol", Name() );
+_N(Title = StrFormat("{{NAME}} - {{INTERVAL}} {{DATE}} Open %g, Hi %g, Lo %g, Close %g (%.1f%%) {{VALUES}}", O, H, L, C, SelectedValue( ROC( C, 1 ) ) ));
+Plot( C, "Close", ParamColor("Color", colorBlack ), styleNoTitle | ParamStyle("Style") | GetPriceStyle() ); 
+GfxSetOverlayMode(1);
+GfxSelectFont("Tahoma", Status("pxheight")/6 );
+GfxSetTextAlign( 6 );// center alignment
+GfxSetTextColor( ColorRGB( 200,200,200 ) );
+GfxSetBkMode(1); // transparent
+GfxTextOut( Ticker, Status("pxwidth")/2, Status("pxheight")/12 );

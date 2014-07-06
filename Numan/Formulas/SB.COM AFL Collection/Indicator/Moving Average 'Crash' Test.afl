@@ -1,0 +1,101 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Moving Average "Crash" Test
+//  Author/Uploader: Dimitris Tsokakis 
+//  E-mail:          tsokakis@oneway.gr
+//  Date/Time Added: 2001-09-09 11:20:39
+//  Origin:          
+//  Keywords:        
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=116
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=116
+//
+//------------------------------------------------------------------------------
+//
+//  3 basic model functions, useful to examine the
+//
+//  response of various moving averages.
+//
+//  The "step" model, gaps from 10 to 20 in one day,
+//
+//  stays at 20 the next 19 days and gaps to 10 again.
+//
+//  The "linear" model increases and decreases in linear
+//
+//  mode.
+//
+//  The "sinusoidal" approximates the reality, presenting
+//
+//  elementary inertia property. Change is not sharp, it is
+//
+//  difficult to begin and equally difficult to stop.
+//
+//  How to use them:
+//
+//  1.
+//
+//  Suppose that you want to test 8 and 18 periods simple
+//
+//  moving average and their response in gaps.
+//
+//  Since the step model is curve C1, add the following lines
+//
+//  GRAPH3=MA(C1,8);GRAPH3BARCOLOR=8;
+//
+//  GRAPH4=MA(C1,18);GRAPH4BARCOLOR=9;
+//
+//  and study the result.
+//
+//  2.
+//
+//  Suppose that you want to test 10 periods simple and
+//
+//  exponential moving average of sinusoidal function.
+//
+//  Add the lines
+//
+//  GRAPH3=MA(C0,10);GRAPH3BARCOLOR=8;
+//
+//  GRAPH4=EMA(C0,10);GRAPH4BARCOLOR=9;
+//
+//  and see the result.
+//
+//  Exponential is fast the first days, but reaches lower
+//
+//  maximum and has a long delay to "feel" that the movement
+//
+//  is over.
+//
+//  3.
+//
+//  You may see that MA(C0,7) AND EMA(C0,12) reach their
+//
+//  highest value the same day, 3 days after the sinusoidal
+//
+//  maximum, adding the lines
+//
+//  GRAPH3=MA(C0,7);GRAPH3BARCOLOR=8;
+//
+//  GRAPH4=EMA(C0,12);GRAPH4BARCOLOR=9;
+//
+//  The 3 models are placed everyday 50 days before the last bar of your data.
+//
+//------------------------------------------------------------------------------
+
+/*Moving Average "Crash" Test
+by Dimitris Tsokakis*/
+MAXGRAPH=10;
+PI=4*ATAN(1);X=CUM(1)-1;XL=LASTVALUE(CUM(1)-1);
+D1=IIF(X>XL-50,20,10);
+D11=MA(D1,10);
+D12=-REF(MA(D1,10),-10)+30;
+S=15+5*sin( 2*PI*0.05*(X+15));
+s1=ref(s,-(XL-50));
+C0=IIF(X>XL-50 AND X<XL-30,S1,10);      /*SINUSOIDAL*/
+C1=IIF(X>XL-50 AND X<XL-30,20,10);         /*STEP*/
+C2=IIF( X<XL-40,D11,D12);                        /*LINEAR*/
+GRAPH0=C0;
+GRAPH1=C1;
+GRAPH2=C2;
+GRAPH2STYLE=1;

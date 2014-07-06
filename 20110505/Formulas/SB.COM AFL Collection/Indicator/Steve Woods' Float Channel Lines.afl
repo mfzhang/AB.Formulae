@@ -1,0 +1,187 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Steve Woods' Float Channel Lines
+//  Author/Uploader: Eric Tangen 
+//  E-mail:          
+//  Date/Time Added: 2001-12-28 15:47:58
+//  Origin:          Steve Woods "The Precision Profit Float Indicator"
+//  Keywords:        Float Channel Steve Woods
+//  Level:           medium
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=145
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=145
+//
+//------------------------------------------------------------------------------
+//
+//  Channel lines define the highest high/close and lowest low/close during a
+//  period of time where the cumulative volume of shares traded equaled the
+//  float.
+//
+//  Implemented entirely in vbScript...is there an easier way to code this
+//  using AFL?
+//
+//------------------------------------------------------------------------------
+
+/* Implementation of Steve Woods' Upper and Lower Float Channels 
+   in AmiBroker...
+file: <put your file name here so you can see the name in the
+AFL editor>  
+
+  Plots channel bars of highest high and lowest low during the time
+  it took for the cumulative volume to be equal to the float
+  upper channel uses the highest high and the highest close
+  lower channel using lowest low and the lowest close 
+  (using the close is a new wrinkle for this indicator-
+   Steve Wood's uses only the high and the low.
+
+  RESTRICTIONS: requires QuotesPlus database for shares float data
+*/
+EnableScript("VBscript");
+// this is to show only one entry per stock //
+ticker = Name();
+AFL_float =  GetExtraData("SharesFloat");
+
+<%
+' VBscript code begins here
+
+' the 1000000 factor reconciles QP float with QP vol units
+vbfloat = 1000000*AFL("AFL_float") 
+vbvol = AFL("V")
+' price Array inputs
+vbH = AFL("H")
+vbL= AFL("L")
+vbC = AFL("C")
+
+' it looks like the only way to create/initialize
+' an array in VBscript is to set it 
+' equal to an AFL Array
+' so for arrays that I will pass back to AFL from  
+' vbscript, I will set them equal to 
+' OpenInterest, A field that isn't used by stock guys
+
+vbFTdays= AFL("OI") 
+' Create Channel Outputs Arrays
+vbUCUH = AFL("OI") ' upper Channel using Hi
+vbUCUC = AFL("OI") ' upper Channel using Cl
+vbLCUL = AFL("OI") ' lower Channel using Lo
+vbLCUC = AFL("OI") ' lower Channel using Cl
+' initialize the vbscript arrays 
+'(Belt+suspenders precaution if they 
+' aren't zeroed from the QP database)
+For i = Ubound(vbFTdays) to 0 step  -1
+    vbFTdays(i) = 0
+    vbUCUH(i) = 0
+    vbUCUC(i) = 0
+    vbLCUL(i) = 0
+    vbLCUC(i) = 0
+Next
+
+'calculates the number of days it took looking backward from
+'today for the float to turn over...
+'implemented as A Do While loop (for the Volume summation)
+'nested Inside A For-Next loop (to do this calculation for each
+'bar loaded)
+
+' zero = most distant bar, Ubound = most recent bar = largest positive integer
+For i = Ubound(vbvol) to 0 step  -1
+
+' vbFTdays array contains the number of days for the 
+' float to turn over
+
+VbFTdays(i) = 0
+Vbtempvolsum = 0
+j = i
+VbcountFTdays = 0
+' Add vol till you get one float
+Do While Vbtempvolsum < Vbfloat	
+    Vbtempvolsum = Vbtempvolsum+Vbvol(j)
+    VbcountFTdays = VbCountFTdays+1
+    j = j-1  ' decrement to set the index to the prior bar
+    If j <= 0 Then
+        Exit Do
+    End If
+Loop
+
+If Vbtempvolsum >= Vbfloat Then
+VbFTdays(i) = VbcountFTdays ' successful float turnover calc
+Else  
+VbFTdays(i) =0   ' unsuccessful float turnover calc - insufficient number of bars loaded
+End If
+Next 
+
+' end of float turnover bars calc
+
+' begin the float channels price calc
+' implemented by A for-next loop nested Inside another For-Next Loop
+' Outside loop is for the whole array, Inside loop scans for Min/Max
+' during the length of bars for A float turnover (float turnover bars
+' are in the vbFTdays array
+' zero = most distant bar, Ubound = most recent bar = largest positive integer
+
+For k = Ubound(vbFTdays) to 0 step  -1
+If vbFTdays(k) = 0 Then ' zero in this array means days for float turnover isn't calculatable (calc would overrun number of bars loaded)
+Exit For
+End IF
+vbTempFTdays = vbFTdays(k)
+' initialize scratchpad registers for minimum + maximum comparisons
+VbTempUpHi = 0 ' Upper Ch using Highs
+VbTempUpC = 0 ' Upper Ch using Closes
+VbTempBotLo = 1E8 ' Bottom Channel using Lows
+VbTempBotC = 1E8 ' Bottom Channel using Lows
+
+For m = k-vbTempFTdays to k step 1 ' this scans the array during an float turnover interval
+
+' four conditionals to check in creating the four float channels
+
+If  vbH(m) > VbTempUpHi  Then
+VbTempUpHi = VbH(m)
+VbUCUH(k) =  VbH(m) 
+End If
+
+If  vbC(m) > VbTempUpC  Then
+VbTempUpC = VbC(m)
+VbUCUC(k) =  VbC(m) 
+End If
+
+If  vbL(m) < VbTempBotLo  Then
+VbTempBotLo = VbL(m)
+VbLCUL(k) =  VbL(m) 
+End If
+
+If  vbC(m) < VbTempBotC  Then
+VbTempBotC = VbC(m)
+VbLCUC(k) =  VbC(m) 
+End If
+
+Next
+Next
+AFL.Var("UCUH") = VbUCUH
+AFL.Var("UCUC") = VbUCUC
+AFL.Var("LCUL") = VbLCUL
+AFL.Var("LCUC") = VbLCUC
+AFL.Var("Floatout") = 1000000*vbfloat
+AFL.Var("FTdays") = vbFTdays
+%>
+
+
+
+// graphing //
+MaxGraph = 5;
+Graph0 = Close;
+Graph0Style=64;
+Graph0Color=1;
+ 
+Graph1 = UCUH;
+Graph2 = UCUC;
+Graph3 = LCUL;
+Graph4 = LCUC;
+
+Graph1Style = Graph2Style = 4;
+Graph3Style = Graph4Style = 4;
+
+Graph1Color = 5;
+Graph2Color = 11;
+Graph3Color = 4;
+Graph4Color = 9;
+
+Title=Name()+" "+FullName()+" //Steve Wood's Float Channels// Close:"+WriteVal(Graph0)+" Upper Channels:"+WriteVal(Graph1) + WriteVal(Graph2)+" Lower Channels:" +WriteVal(Graph3)+WriteVal(Graph4) + " Float Shares (M): " +WriteVal(GetExtraData("SharesFloat")); 

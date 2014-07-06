@@ -1,0 +1,44 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Overbought issues, Oversold issues
+//  Author/Uploader: Dimitris Tsokakis 
+//  E-mail:          
+//  Date/Time Added: 2002-03-24 14:42:36
+//  Origin:          
+//  Keywords:        
+//  Level:           advanced
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=179
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=179
+//
+//------------------------------------------------------------------------------
+//
+//  Definitions
+//
+//  1. Overbought issues (OBI)
+//
+//  The population of overbought stocks, under any overbought criteria,
+//  calculated as a variable on daily basis.
+//
+//  Extension may be considered on weekly or monthly or yearly basis.
+//
+//  2. Oversold issues(OSI)
+//
+//  The population of oversold stocks, under any oversold criteria, calculated
+//  as a variable on daily basis.
+//
+//  Extension may be considered on weekly or monthly or yearly basis.
+//
+//  Calculation of OSI &amp; OBI under RSI(14) follows.
+//
+//------------------------------------------------------------------------------
+
+/*RSI OBI-OSI*/
+s1=RSI(14);
+os=s1<=35;
+ob=s1>65;
+values7 = os>0;
+values8 = ob>0;
+AddToComposite(Values7,"~rsiosi","V");
+AddToComposite(Values8,"~rsiobi","V");
+Buy=0;

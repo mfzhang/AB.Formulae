@@ -1,0 +1,38 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Quotes Plus Industry Index Format file
+//  Author/Uploader: Dennis 
+//  E-mail:          
+//  Date/Time Added: 2005-09-20 16:20:34
+//  Origin:          
+//  Keywords:        Quotes, Plus, Industry, Index
+//  Level:           basic
+//  Flags:           function
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=559
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=559
+//
+//------------------------------------------------------------------------------
+//
+//  This is the format file to import the Quotes Plus Industry Index
+//
+//  You have to add follwing line to the import.types file
+//
+//  Location:
+//
+//  AmiBroker\Formats\import.types
+//
+//  and save this file in the same folder
+//
+//------------------------------------------------------------------------------
+
+$FORMAT TICKER,INDUSTRY
+$SEPARATOR ,
+$OVERWRITE 1 
+$NOQUOTES 1
+$AUTOADD 1
+$BREAKONERR 0
+$CONT 1
+
+$DEBUG 1
+
+

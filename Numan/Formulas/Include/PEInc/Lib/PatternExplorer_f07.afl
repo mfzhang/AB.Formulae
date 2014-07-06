@@ -1,0 +1,118 @@
+//|-----------------------------------------------------------------------------------------
+//|PatternExplorer.com - PatternExplorer_f07
+//|Copyright © 2007, PatternExplorer.com
+//|http://www.PatternExplorer.com
+//|e-mail: support@PatternExplorer.com
+//|-----------------------------------------------------------------------------------------
+HH = HHV( H, 20 );
+LL = LLV( L, 20 );
+Mid = LL + ( ( HH - LL ) / 2 );
+Div = 100 - ( HH / ( 0.01 * Mid ) );
+Per = LastValue( abs( Div ) );
+x = Cum( 1 );
+TopInput = IIf( PatternPriceBasis, H, C );
+Top = ATRTopInput( TopInput, Bars, MinVertSize );
+TopHigh = ValueWhen( Top, TopInput );
+TopX = ValueWhen( Top, X );
+ValleyInput = IIf( PatternPriceBasis, L, C );
+Valley = ATRValleyInput( ValleyInput, Bars, MinVertSize );
+ValleyLow = ValueWhen( Valley, ValleyInput );
+ValleyX = ValueWhen( Valley, X );
+x = Cum( 1 );
+xb = LastValue( ValueWhen( Valley, x, 1 ) );
+xa = LastValue( ValueWhen( Valley, x, 2 ) );
+yb = LastValue( ValueWhen( Valley, IIf( PatternPriceBasis, L, C ), 1 ) );
+Ya = LastValue( ValueWhen( Valley, IIf( PatternPriceBasis, L, C ), 2 ) );
+xab_log = log( yb / yA ) / ( xb - xa );
+SL = exp( ( x - xb ) * xab_log ) * yb;
+RocSL = ROC( SL, 1 );
+xd = LastValue( ValueWhen( top, x, 1 ) );
+xc = LastValue( ValueWhen( top, x, 2 ) );
+yd = LastValue( ValueWhen( top, IIf( PatternPriceBasis, H, C ), 1 ) );
+Yc = LastValue( ValueWhen( top, IIf( PatternPriceBasis, H, C ), 2 ) );
+xcd_log = log( yd / yc ) / ( xd - xc );
+RL = exp( ( x - xd ) * xcd_log ) * yd;
+RocRL = ROC( RL, 1 );
+Low_Value = LastValue( Ref( LLV( IIf( PatternPriceBasis, L, C ), xd - xc ), -( x - xd ) ) );
+x2 = LastValue( ValueWhen( IIf( PatternPriceBasis, L, C ) == Low_Value &  x > xc & x < xd, x ) );
+PLL = IIf( LastValue( x ) - x2 > 5, exp( ( x - x2 ) * xcd_log ) * Low_Value, -1e10 );
+Hi_Value = LastValue( Ref( HHV( IIf( PatternPriceBasis, H, C ), xb - xa ), -( x - xb ) ) );
+x3 = LastValue( ValueWhen( IIf( PatternPriceBasis, H, C ) == Hi_Value & x > xa & x < xb, x ) );
+PHL = IIf( LastValue( x ) - x3 > 5, exp( ( x - x3 ) * xab_log ) * Hi_Value, -1e10 );
+AvgRoc = abs( MA( ROC( C, 1 ), 100 ) );
+Threshold_parallel = 15;
+Threshold_Trend = 0.001 * per;
+SLabs = SL - Ref( SL, -1 );
+RLabs = RL - Ref( RL, -1 );
+ROC2SL = ( SLabs / C ) * 100;
+ROC2RL = ( RLabs / C ) * 100;
+RSL = ROC2SL > Threshold_Trend;
+FlatSL = abs( ROC2SL ) < Threshold_Trend;
+FSL = ROC2SL < -Threshold_Trend;
+RRL = ROC2RL > Threshold_Trend;
+FlatRL = abs( ROC2RL ) < Threshold_Trend;
+FRL = ROC2RL < -Threshold_Trend;
+parallel = abs( ( ( RocSL / RocRL ) - 1 ) * 100 ) < Threshold_parallel;
+UT = RSL AND RRL AND parallel;
+DT = FSL AND FRL AND parallel;
+DT_UT = IIf ( DT, -1, IIf( UT, 1, 0 ) );
+Rectangle = parallel AND FlatSL AND FlatRL;
+Xm = xb - xa > 4 & xd - xc > 4;
+AscT = FlatRL & RSL & xa < xd & xc < xb & SL < RL;
+DscT = FlatSL & FRL & xa < xd & xc < xb & SL < RL;
+AT_DT = IIf( AscT, 1, IIf( DscT, -1, 0 ) );
+ST = RSL & FRL & RL > SL;
+ET = RRL & FSL & RL > SL;
+ST_ET = IIf( ST, 1, IIf( ET, -1, 0 ) );
+RW = RRL & RSL & RocSL > RocRL & SL < RL AND NOT parallel;
+FW = FSL & FRL & RocRL < RocSL & SL < RL AND NOT parallel;
+RW_FW = IIf ( RW, 1, IIf( FW, -1, 0 ) );
+Distance = 0.5 * ATR( 14 );
+Sup_break = Cross( SL, C ) & X > XB;
+Sup_pricejustabove = L < SL + Distance & L > SL & X > XB;
+Sup_confirmed = L <= SL & C > SL & X > XB;
+Res_break = Cross( C, RL ) & X > XD;
+Res_pricejustbelow = H > RL - Distance & H<RL & X>XD;
+Res_confirmed = H >= RL & C<RL & X>XD;
+PLL_break = Cross( PLL, C );
+PLL_pricejustabove = L < PLL + Distance & L > PLL;
+PLL_confirmed = L <= PLL & C > PLL;
+PHL_break = Cross( C, PHL );
+PHL_pricejustbelow = H > PHL - Distance & H < PHL;
+PHL_confirmed = H >= PHL & C < PHL;
+SupSignals = Sup_break | Sup_pricejustabove | Sup_confirmed;
+ResSignals = Res_break | Res_pricejustbelow | Res_confirmed;
+BS = Sup_confirmed OR Res_break;
+SS = Res_confirmed OR Sup_break;
+NS = Sup_pricejustabove OR Res_pricejustbelow;
+PatternDirection =
+    IIf( AscT | FW | UT, 1,
+         IIf( DscT | RW | DT, -1,
+              IIf( ST | ET | Rectangle, 0, 0 ) ) );
+PatternText =
+    WriteIf( LastValue( AscT ), "Ascending Triangle",
+             WriteIf( LastValue( DscT ), "Decending Triangle",
+                      WriteIf( LastValue( ST ), "Symmetrical Triangle",
+                               WriteIf( LastValue( ET ), "Expanding Triangle",
+                                        WriteIf( LastValue( RW ), "Rising Wedge",
+                                                 WriteIf( LastValue( FW ), "Falling Wedge",
+                                                          WriteIf( LastValue( UT ), "Up Channel",
+                                                                   WriteIf( LastValue( DT ), "Down Channel",
+                                                                            WriteIf( Rectangle, "Rectangle", "Not defined" ) ) ) ) ) ) ) ) );
+AnZ = ya == 0 OR yb == 0 OR yc == 0 OR yd == 0;
+BEGIN = Min( xa, xc );
+END = RL < SL;
+TRS = IIf( x >= BEGIN AND NOT END, SL, Null );
+TRR = IIf( x >= BEGIN AND NOT END, RL, Null );
+DRval = DisRange * LastValue( ATR( 10 ) );
+PLLd = LastValue( PLL ) > LastValue( C ) - DRval AND LastValue( PLL ) < LastValue( C ) + DRval;
+PHLd = LastValue( PHL ) > LastValue( C ) - DRval AND LastValue( PHL ) < LastValue( C ) + DRval;
+barvisible = Status( "barvisible" );
+firstvisiblebar = barvisible & NOT Ref( barvisible, -1 );
+HHvisible = LastValue( HighestSince( firstvisiblebar, High ) );
+LLvisible = LastValue( LowestSince( firstvisiblebar, Low ) );
+RaH = HHvisible * 1.50;
+RaL = LLVisible * 0.50;
+PLL_plot = IIf( x - x2 >= 0 & PLL > RaL & PLL < RaH & NOT AnZ AND PLLd, PLL, IIf( x - x2 >= 0 & RaL == 0 & PLLd & NOT AnZ, PLL, -1e10 ) );
+PHL_plot = IIf( x - x3 >= 0 & PHL > RaL & PHL < RaH & NOT AnZ AND PHLd, PHL, IIf( x - x3 >= 0 & RaL == 0 & PHLd & NOT AnZ, PHL, -1e10 ) );
+DefinedPatterns = AscT | DscT | ST | ET | RW | FW | UT | DT;

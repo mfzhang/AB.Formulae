@@ -1,0 +1,124 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    3 Price Break
+//  Author/Uploader: Bhcombo 
+//  E-mail:          
+//  Date/Time Added: 2004-12-05 17:16:00
+//  Origin:          
+//  Keywords:        Three Price Break
+//  Level:           medium
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=413
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=413
+//
+//------------------------------------------------------------------------------
+//
+//  3 Price Break can be used to verify trend and to set trailing stops.
+//
+//  This is a work in progress. I pefer to see the 3PB lines graphed against a
+//  candlestick chart versus the traditional 3PB representation. This will
+//  graph the price break line as green in an uptrend and red in a down trend.
+//  There are parameters for changing the number of price breaks (2 versus 3)
+//  and the number of bars to use to begin the study. If you don't see a plot,
+//  it is, probably because there are not enough bars to perform the study.
+//
+//  To be corrected - the method used to determine the seed is not correct, but
+//  it doesn't matter once the initial trend has been established.
+//
+//------------------------------------------------------------------------------
+
+Title = Name()+ " Price Break Indicator." ;
+//+ "  Trend is " + Trend_Text + ".  SEQUENCE IS " + Sequence_Text;
+Plot(C,Title,colorBlack,styleCandle);
+
+/////////   Parameters  ////////
+
+nBars_To_Scan = Param("Number of bars to Scan",20, 10,480, 10);		//Number of bars to include in scan
+PB_Interval = Param("Number of Bars for Price Break",3,2,3,1);
+
+/////////  Use Array of Prices and Price Breaks to Look Back and Determine What Price Break is For Current Bar
+Seedbar = nBars_To_Scan + 1;					//Need an initial value to start the PB process
+if (BarCount > Seedbar) 						//Make sure there are enough bars available to evaluate
+{
+											
+Price[0]= LastValue(Ref(C,-Seedbar));			//Seed the 0 Bar in the Array with Values
+Trend[0]=1;										//1 = Long, 0=Short
+Sequence[0]=0;									//Sequence counter - counts number of new price breaks
+Price_Break[0] = LastValue(Ref(C,-Seedbar));
+High_C1[0] = LastValue(Ref(C,-Seedbar));		//Highest Close 1 Ago
+High_C2[0]= LastValue(Ref(C,-Seedbar));			//Highest Close 2 Ago
+High_C3[0]= LastValue(Ref(C,-Seedbar));			//Highest Close 3 Ago
+Low_C1[0] = LastValue(Ref(C,-Seedbar));			//Lowest Close 1 Ago
+Low_C2[0] = LastValue(Ref(C,-Seedbar));			//Lowest Close 2 Ago
+Low_C3[0] = LastValue(Ref(C,-Seedbar));			//Lowest Close 3 Ago
+											
+for ( i=1; i < Seedbar ; i++) 			//Cycle through prices filling in price array and caculating price breaks 
+{											
+	Prior = i-1;									//Index for Prior entry in array.  Set the current array values to 
+	Trend[i]=Trend[Prior];						//prior values to make sure everything that isn't changed later
+	Price_Break[i] = Price_Break[Prior];			//gets carried forward to the next row in the array.
+			Low_C1[i] = Low_C1[Prior]; 			//Carryover current values
+			Low_C2[i] = Low_C2[Prior];
+			Low_C3[i] = Low_C3[Prior];  
+			High_C1[i] = High_C1[Prior];			//Carryover current values
+			High_C2[i] = High_C2[Prior];
+			High_C3[i] = High_C3[Prior];
+			Sequence[i] = Sequence[Prior];
+
+	Price[i] = LastValue (Ref (C,-(Seedbar-i)));	//Seedbar is the bar just in front of where I start the method.  Works since i starts at 1
+
+	if (Price[i] >Price[Prior] AND Trend[Prior] == 1 )	// If Close is Greater than the prior close And the Trend is Long
+	{		if (Price[i] >High_C1[Prior])			//If the Close is greater than the last highest close
+			{									//Test For Price Break.  The IIF is there to accomodate a 2 price or 3 price break option
+												//based on the PB_Interval parameter
+			Price_Break[i] = IIf(PB_Interval == 3,High_C3[Prior],IIf(PB_Interval == 2,High_C2[Prior],High_C3[Prior]));	
+												//The 3PB method says I take the highest close 4 ago as the new price break.
+			Sequence[i] = Sequence[i] + 1;		//Increment Sequence if Price Break
+			High_C3[i] = High_C2[Prior];			//Stacking the higher closes like this avoids having to go back and iterate through the.
+			High_C2[i] = High_C1[Prior];			//closes to find and count the higher closes.  They are just carried forward in the stack.
+			High_C1[i] = Price[i];				//When a higher close occurs, it is put on the top of the stack, each close below is
+			}									//pushed down in sequence, and the earliest (farthest back) close goes away.
+	}		
+
+	if (Price[i] >Price[Prior] AND Trend[Prior] == 0 )	// If Close is Greater than the prior close And the Trend is Short
+	{		if (Price[i] >Price_Break[Prior])		//If Close > Price Break in trend is Short, Reverse and go Long
+			{
+			High_C1[i] = High_C2[i] = High_C3[i] = Price[i];				//Initialize sequence of new Highs
+			Price_Break[i] = Price[i];				//Set new value for Price Break
+			Trend[i] = 1;							//Set the trend Long
+			Sequence = 0;
+			}
+	}		
+
+	if (Price[i] <Price[Prior] AND Trend[Prior] ==0)	// If The Close is less than the prior close And the Trend is Short
+	{		if (Price[i] <Low_C1[Prior])			//If the Close is less than the last lowest close
+			{
+			Price_Break[i] = IIf(PB_Interval == 3,Low_C3[Prior],IIf(PB_Interval == 2,Low_C2[Prior],Low_C3[Prior]));	//Test For Price Break
+			Sequence[i] = Sequence[i] + 1;		//Increment Sequence if Price Break
+			Low_C3[i] = Low_C2[Prior];			//Update sequence of new Lows
+			Low_C2[i] = Low_C1[Prior];
+			Low_C1[i] = Price [i];
+			}
+	}		
+
+	if (Price[i] <Price[Prior] AND Trend[Prior] ==1)	// If The Close is less than the prior close And the Trend is Long
+	{		if (Price[i] < Price_Break[Prior])				//If Close < Price Break in Long Trend, reverse and go Short
+			{
+			Low_C1[i] = Low_C2[i] = Low_C3[i] = Price[i];	//Initialize sequence of new Lows
+			Price_Break[i] = Price[i];							//Set new value for Price Break
+			Trend[i] = 0;								//Set Trend Short
+			Sequence = 0;
+			}
+	}		
+
+////  Plot the Price Breaks.
+Bar_x1=BarCount - (nBars_To_Scan - Prior );
+Bar_x2=BarCount - ( nBars_To_Scan - i);
+PB_Color = IIf(Trend[i] == 1,colorGreen, colorRed);
+Plot(LineArray(Bar_x1,Price_Break[i],Bar_x2,Price_Break[i],extend=0),"",PB_Color,styleThick);
+Sequence_Text = NumToStr(Sequence,format=1.0);
+Trend_Text = WriteIf(Trend[i] > 0, "Long","Short");
+
+}												//Close the For Loop
+
+}												//Close the first test for sufficient bars to do the study

@@ -1,0 +1,44 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    colored CCI
+//  Author/Uploader: Tom Supera 
+//  E-mail:          tom_supera@utanet.at
+//  Date/Time Added: 2001-07-20 15:46:27
+//  Origin:          
+//  Keywords:        
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=79
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=79
+//
+//------------------------------------------------------------------------------
+//
+//  CCI is a trend-indicator.
+//
+//  In my formula i use the original, but with colored bars.
+//
+//  So you can faster see, if there's a uptrend, downtrend, or trading-range.
+//
+//  red bars : downtrend
+//
+//  green bars: uptrend
+//
+//  blue bars : trading-range
+//
+//------------------------------------------------------------------------------
+
+T = 20;
+title = "301-4  " + name () + "   "  + fullname() + "  " 
++ "CCI" + "   " + "periods:" + writeval(T);
+maxgraph = 5;
+graph2 = CCI (T);
+
+Uptrend = 100;  Downtrend =  -100; 
+
+graph2barcolor = IIF (graph2 > uptrend, 5, 
+                                   IIF (graph2 < downtrend,4,6));
+
+
+graph4 = graph2;
+
+buy = cross (graph2, 0) and (ref (graph2,-1) < 0) and (ref (graph2,-2) < 0)and (ref (graph2,-3) < 0) and (LLV (rsi(9),10) < 30) and cross (rsi (9),50);

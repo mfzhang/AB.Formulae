@@ -1,0 +1,46 @@
+
+//-------------------------------------------------------------------------------------------------------------------------------------
+//SECTION 23 - Add custom code before PatternExplorer code. 
+//-------------------------------------------------------------------------------------------------------------------------------------
+//The following code allows you to add any custom code to any tool. Just use the Formula names as displayed in the workspace.
+
+procedure AddCustomCodeBeforePE()
+{
+   if(FormulaName == "PE - SI Relative Strength")
+	{
+		def_Filter = 1;//Filter set to 1 because common filter conditions are mostly not useful in the composite indicators.	   }
+	}
+	else
+		if(FormulaName == "PE - SI Trend")
+		{
+			def_Filter = 1;//Filter set to 1 because common filter conditions are mostly not useful in the composite indicators.
+		}
+		else
+			if(FormulaName == "PE - Candlesticks")
+			{
+//				AddColumn(MA(C, 5) > MA(C, 20), "MA(C, 5) > MA(C, 20)", 1.0);// Example to add a column before all the PatternExplorer columns, only in the Candlestick tool.				
+//				Plot(PeTaio(), "PeTaio", colorBlue, 1+styleOwnScale, -100, 100);//Example to overlay the TAIO indicator over the Price Chart in the Candlestick tool.
+			}
+			else
+			{
+//				do anything            
+			}
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+
+
+//	-------------------------------------------------------------------------------------------------------------------------------------
+//	SECTION 24 - Add custom code after PatternExplorer code. 
+//	-------------------------------------------------------------------------------------------------------------------------------------
+procedure AddCustomCodeAfterPE()
+{
+   if(FormulaName == "PE - Alert 1 - Price")
+	{
+//		AddColumn(H == HHV(H, 20), "H == HHV(H, 20)", 1.0);// Example to add a column after PatternExplorer columns in PE - Alert 1 - Price.
+	}
+//		AddColumn(RSI() < 30, "RSI() < 30");// Example to add a column after PatternExplorer columns in all tools.
+}
+//-------------------------------------------------------------------------------------------------------------------------------------
+
+
+//V3 - End of settings - Caution: Never change or remove this line !

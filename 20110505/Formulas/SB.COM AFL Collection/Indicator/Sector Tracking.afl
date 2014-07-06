@@ -1,0 +1,95 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Sector Tracking
+//  Author/Uploader: Ara Kaloustian 
+//  E-mail:          ara1@san.rr.com
+//  Date/Time Added: 2002-04-07 14:40:40
+//  Origin:          Written by Ara Kaloustian, 3/31/02
+//  Keywords:        Sectors
+//  Level:           medium
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=184
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=184
+//
+//------------------------------------------------------------------------------
+//
+//  Tracks normalized relative performance of the most heavily traded sectors 4
+//  sectors (XLE, XLK, XLB, XLF).
+//
+//  Performance is tracked by comparing the daily performance of the sector to
+//  the daily performance of the S&amp;P500, then a 13 day exp moving average
+//  and finally the sum of 9 days to smooth out the data.
+//
+//  CAUTION: You may need to edit the symbol for S&amp;P 500 index if different
+//  for your data source than what I have used (SP-500).
+//
+//------------------------------------------------------------------------------
+
+// Look for relative strength of sectors wrt their S&P
+// Plot the 13 week EMA of incremental differences
+// This is useful for finding strengthening sectors / industries
+// Normalize data
+
+
+Title = "TC2k-Sector vs. S&P-500: Energy - Technology - Finance - Materials";
+
+Sum_Filter = 9;
+Index_Value = Foreign("SP-500","close");
+
+Energy_Ratio      = Foreign("XLE","Close",fixup=1) / Index_Value;
+Tech_Ratio        = Foreign("XLK","Close",fixup=1) / Index_Value;
+Finance_Ratio     = Foreign("XLF","Close",fixup=1) / Index_Value;
+Materials_Ratio   = Foreign("XLB","Close",fixup=1) / Index_Value;
+
+Energy_Perf       = EMA(Energy_Ratio      - Ref(Energy_Ratio,-1),13) * 10000;
+Tech_Perf         = EMA(Tech_Ratio        - Ref(Tech_Ratio,-1),13) * 10000;
+Finance_Perf      = EMA(Finance_Ratio     - Ref(Finance_Ratio,-1),13) * 10000;
+Materials_Perf    = EMA(Materials_Ratio   - Ref(Materials_Ratio,-1),13) * 10000;
+
+N_Energy_Perf    = (Energy_Perf)    / Foreign("XLE","Close",fixup=1);
+N_Tech_Perf      = (Tech_Perf)      / Foreign("XLK","Close",fixup=1);
+N_Finance_Perf   = (Finance_Perf)   / Foreign("XLF","Close",fixup=1);
+N_Materials_Perf = (Materials_Perf) / Foreign("XLB","Close",fixup=1);
+
+Energy_Sum        = Sum(N_Energy_Perf,Sum_Filter);
+Tech_Sum          = Sum(N_Tech_Perf,Sum_Filter);
+Finance_Sum       = Sum(N_Finance_Perf,Sum_Filter);
+Materials_Sum     = Sum(N_Materials_Perf,Sum_Filter);
+
+
+/*
+Backtest performance by selectig top sector to buy
+Buy when rel performance above 0 and slope maximum
+Sell when slope decreass relative to another sector
+Always be in the market
+*/
+
+
+
+Filter = Close > 0;
+NumColumns = 4;
+Column0Name = "Energy";
+Column0     = Energy_Sum;
+Column1Name = "Tech";
+Column1     = Tech_Sum;
+Column2Name = "Finance";
+Column2     = Finance_Sum;
+Column3Name = "Materials";
+Column3     = MAterials_Sum;
+
+
+
+
+MaxGraph = 4;
+Graph0 = Energy_Sum;
+Graph0Color = 1;      //Black - Energy
+Graph1 = Tech_Sum;    
+Graph1Color = 2;      //White - Tech
+Graph2 = Finance_Sum;
+Graph2Color = 4;      //Red - Finance
+Graph3 = Materials_Sum;
+Graph3Color = 5;      //Green - Mater.
+Graph0Style = 4;
+Graph1Style = 4;
+Graph2Style = 4;
+Graph3Style = 4;

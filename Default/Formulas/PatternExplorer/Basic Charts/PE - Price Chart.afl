@@ -1,0 +1,73 @@
+//|-----------------------------------------------------------------------------------------
+//|PatternExplorer.com - Price chart
+//|Copyright © 2007, PatternExplorer.com
+//|http://www.PatternExplorer.com
+//|e-mail: support@PatternExplorer.com
+//|-----------------------------------------------------------------------------------------
+FormulaName = "PE - Price Chart";
+
+SetChartOptions( 0, chartShowDates | chartShowArrows | chartLogarithmic | chartWrapTitle );
+#pragma nocache
+#include_once  <\PEInc\PatternExplorer_f0.afl>
+#Include_once "C:\Program Files (x86)\AmiBroker5\Formulas\PatternExplorer\#Defaults & Mods\PE - Defaults.afl"
+#Include_once "C:\Program Files (x86)\AmiBroker5\Formulas\PatternExplorer\#Defaults & Mods\PE - Mods.afl"
+#include_once  <\PEInc\PatternExplorer_1.afl>
+/*******************************************************************************************/
+AddCustomCodeBeforePE();
+/*******************************************************************************************/
+Filter = def_Filter AND NOT GroupID() == 253;
+Addefaultcolumns();
+AddTextColumn( FullName(), "Full name" );
+/*******************************************************************************************/
+
+if ( inAA )
+{
+    _SECTION_BEGIN( "Fundamental Data" );
+
+    if ( ParamToggle( "Show Columns in AA", "Off,On", 1 ) )
+    {
+        AddColumn( GetFnData( "EPS" ), "EPS" );
+        AddColumn( GetFnData( "EPSEstCurrentYear" ), "EPS Est Current Year" );
+        AddColumn( GetFnData( "EPSEstNextYear" ), "EPS Est Next Year" );
+        AddColumn( GetFnData( "EPSEstNextQuarter" ), "EPS Est Next Quarter" );
+        AddColumn( GetFnData( "PEGRatio" ), "PEG Ratio" );
+        AddColumn( GetFnData( "SharesFloat" ), "Shares Float", 1.0 );
+        AddColumn( GetFnData( "SharesOut" ), "Shares Out", 1.0 );
+        //AddColumn(GetFnData("DividendPayDate"),"Dividend Pay Date");
+        //AddColumn(GetFnData("ExDividendDate"),"Ex Dividend Date");
+        AddColumn( GetFnData( "BookValuePerShare" ), "Book Value Per Share" );
+        AddColumn( GetFnData( "DividendPerShare" ), "Dividend Per Share" );
+        AddColumn( GetFnData( "ProfitMargin" ), "Profit Margin" );
+        AddColumn( GetFnData( "OperatingMargin" ), "Operating Margin" );
+        AddColumn( GetFnData( "OneYearTargetPrice" ), "One Year Target Price" );
+        AddColumn( GetFnData( "ReturnOnAssets" ), "Return On Assets" );
+        AddColumn( GetFnData( "ReturnOnEquity" ), "Return On Equity" );
+        AddColumn( GetFnData( "QtrlyRevenueGrowth" ), "Qtrly Revenue Growth" );
+        AddColumn( GetFnData( "GrossProfitPerShare" ), "Gross Profit Per Share" );
+        AddColumn( GetFnData( "SalesPerShare" ), "Sales Per Share" );
+        AddColumn( GetFnData( "EBITDAPerShare" ), "EBITDA Per Share" );
+        AddColumn( GetFnData( "QtrlyEarningsGrowth" ), "Qtrly Earnings Growth" );
+        AddColumn( GetFnData( "InsiderHoldPercent" ), "Insider Hold Percent" );
+        AddColumn( GetFnData( "InstitutionHoldPercent" ), "Institution Hold Percent" );
+        AddColumn( GetFnData( "SharesShort" ), "Shares Short", 1.0 );
+        AddColumn( GetFnData( "SharesShortPrevMonth" ), "Shares Short Prev Month", 1.0 );
+        AddColumn( GetFnData( "ForwardDividendPerShare" ), "Forward Dividend Per Share" );
+        AddColumn( GetFnData( "ForwardEPS" ), "Forward EPS" );
+        AddColumn( GetFnData( "OperatingCashFlow" ), "Operating Cash Flow", 1.0 );
+        AddColumn( GetFnData( "LeveredFreeCashFlow" ), "Levered Free Cash Flow", 1.0 );
+        AddColumn( GetFnData( "Beta" ), "Beta" );
+        AddColumn( GetFnData( "LastSplitRatio" ), "Last Split Ratio" );
+        //AddColumn(GetFnData("LastSplitDate"),"Last Split Date");
+    }
+
+    _SECTION_END();
+}
+
+/*******************************************************************************************/
+ToolTip = def_ToolTip;
+
+/*******************************************************************************************/
+AddCustomCodeAfterPE();
+
+/*******************************************************************************************/
+Title = "PatternExplorer.com - Price Chart" + default_priceTitle + " ";

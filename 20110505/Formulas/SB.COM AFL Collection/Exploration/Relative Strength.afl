@@ -1,0 +1,105 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Relative Strength
+//  Author/Uploader: Brian Mitchell 
+//  E-mail:          bmitchell@pobox.com
+//  Date/Time Added: 2004-01-17 00:59:58
+//  Origin:          
+//  Keywords:        
+//  Level:           advanced
+//  Flags:           exploration
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=323
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=323
+//
+//------------------------------------------------------------------------------
+//
+//  Comparative relative strength scoring/ranking. I use this to compare
+//  sectors in tc2000, but it could be used for just about anything. Point it
+//  at a watchlist (make sure to set watchlistnum variable appropriately) and
+//  it will rank everything in the watchlist relative to one another.
+//
+//------------------------------------------------------------------------------
+
+/*
+Simple Sector Rotation Model
+bmitchell@pobox.com
+
+This is a simple method for determining the strongest sectors at any given time. Use daily
+mode for intermediate term, and weekly for longer term. The basis of it is Daryl Guppy's
+Multiple Moving Averages (MMA) plot. Here, I seperate the moving averages into short term
+and long term averages, and give a point for each moving average above all the long term averages.
+
+I do this for every symbol in the watchlist except the index being scanned, then I generally
+sort the results based on the RS reading. To use this, you need to create a watchlist of
+symbols, and set WatchlistNum appropriately. Also, you want to define a filter so that you only
+scan this watchlist.
+
+This is intended only for sector rotation, and probably would not be terribly useful as a trading
+system in and of itself. I use TC2000's MG* sector indexes personally.
+*/
+
+EnableRotationalTrading();
+SetOption("WorstRankHeld", 5);
+PositionSize = -100;
+PositionScore = 0;
+WatchlistNum = 1;
+Filter=1;
+NumColumns=0;
+
+function CalculatePosition(st, Lt1, Lt2, Lt3, Lt4, Lt5, Lt6)
+{
+	score=0;
+
+	if(st > Lt1) score++;
+	if(st > Lt2) score++;
+	if(st > Lt3) score++;
+	if(st > Lt4) score++;
+	if(st > Lt5) score++;
+	if(st > Lt6) score++;
+	return score;
+}
+
+
+// walk through the watchlist grabbing all the symbols to calculate RS vs ourself.
+List = CategoryGetSymbols(categoryWatchlist, WatchlistNum);
+for(i=0; (sym = StrExtract(List, i)) != "";i++)
+{
+	if(sym != Name())
+	{
+		f = RelStrength(sym);
+
+		st3 = EMA(f, 3);
+		st5 = EMA(f, 5);
+		st8 = EMA(f, 8);
+		st12 = EMA(f, 12);
+		st15 = EMA(f, 15);
+
+		Lt30 = EMA(f, 30);
+		Lt35 = EMA(f, 35);
+		Lt40 = EMA(f, 40);
+		Lt45 = EMA(f, 45);
+		Lt50 = EMA(f, 50);
+		Lt60 = EMA(f, 60);
+
+		z=BarCount - 1;
+		// uncomment the following if you want to do some backtesting or if you like waiting around
+		// a long time for the exploration to complete
+		//for(z=0;z < BarCount;z++)
+		{
+
+		PositionScore[z] = PositionScore[z] + CalculatePosition(st3[z], Lt30[z], Lt35[z], Lt40[z], Lt45[z], Lt50[z], Lt60[z]);
+
+		PositionScore[z] = PositionScore[z] + CalculatePosition(st5[z], Lt30[z], Lt35[z], Lt40[z], Lt45[z], Lt50[z], Lt60[z]);
+
+		PositionScore[z] = PositionScore[z] + CalculatePosition(st8[z], Lt30[z], Lt35[z], Lt40[z], Lt45[z], Lt50[z], Lt60[z]);
+
+		PositionScore[z] = PositionScore[z] + CalculatePosition(st12[z], Lt30[z], Lt35[z], Lt40[z], Lt45[z], Lt50[z], Lt60[z]);
+
+		PositionScore[z] = PositionScore[z] + CalculatePosition(st15[z], Lt30[z], Lt35[z], Lt40[z], Lt45[z], Lt50[z], Lt60[z]);
+
+	}
+}
+}
+
+AddTextColumn(FullName(), "Name");
+AddColumn(PositionScore[BarCount - 1], "RS");

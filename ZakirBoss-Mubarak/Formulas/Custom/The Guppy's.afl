@@ -1,0 +1,22 @@
+//The Guppy's Multiple Moving Averages modified by A. Hull//
+ 
+MaxGraph = 12;
+/* blue lines */
+Graph0= EMA( Close, 3 );
+Graph1= EMA( Close, 5 );
+Graph2= EMA( Close, 7 );
+Graph3= EMA( Close, 9 );
+Graph4= EMA( Close, 11 );
+Graph5= EMA( Close, 15 );
+Graph0Style = Graph1Style = Graph2Style = Graph3Style =Graph4Style =Graph5Style = 1;
+Graph0Color = Graph1Color = Graph2Color = Graph3Color =Graph4Color =Graph5Color = 6;
+
+/* red lines */
+Graph6= EMA( Close, 21 );
+Graph7= EMA( Close, 24 );
+Graph8= EMA( Close, 27 );
+Graph9= EMA( Close, 30 );
+Graph10= EMA( Close, 33 );
+Graph11 = EMA( Close, 36 );
+Graph6Style = Graph7Style = Graph8Style =Graph9Style =Graph10Style = Graph11Style = 1;
+Graph6Color = Graph7Color = Graph8Color =Graph9Color =Graph10Color = Graph11Color = 4;

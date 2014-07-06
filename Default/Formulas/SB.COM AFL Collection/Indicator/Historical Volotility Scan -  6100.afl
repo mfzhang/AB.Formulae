@@ -1,0 +1,25 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Historical Volotility Scan -  6/100
+//  Author/Uploader: Dennis Skoblar 
+//  E-mail:          DennisAndLisa@sbcglobal.net
+//  Date/Time Added: 2005-06-15 16:30:22
+//  Origin:          Dave Landry On Swing Trading
+//  Keywords:        Dave Landry,Landry,historical volotility
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=474
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=474
+//
+//------------------------------------------------------------------------------
+//
+//  The is the 6/100 Historical Volotality Indicator as described in the book
+//  "Dave Landry On Swing Trading". The stock is poised to move when the 6/100
+//  Indicator reading is equal to or below .50 (50%)
+//
+//------------------------------------------------------------------------------
+
+_SECTION_BEGIN("HVSixOneHundred");
+HVSixOneHundred = (StDev(log(C/Ref(C,-1)),6)*100*sqrt(256)) / (StDev(log(C/Ref(C,-1)),100)*100*sqrt(256));
+Plot(HVSixOneHundred,"HV 6/100",colorOrange,styleLine);
+_SECTION_END();

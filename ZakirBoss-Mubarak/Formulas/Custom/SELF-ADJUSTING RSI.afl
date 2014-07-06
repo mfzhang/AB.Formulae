@@ -1,0 +1,11 @@
+p = Param("Periods", 14, 2, 100, 1 );
+r = RSI( p );
+w = 1.8 * StDev( r, p );
+Plot( r, "RSI(" + p +")", colorBlack, styleThick );
+Plot( 50 + w, "OB", colorLightBlue, styleThick );
+Plot( 50 - w, "OS", colorLightBlue, styleThick );
+allbars = LastValue( Cum(1) ) - 2 * p - 1;
+Plot( LastValue( MA( 50 + w, allbars ) ), "MeanOB",
+      colorRed, styleNoLabel );
+Plot( LastValue( MA( 50 - w, allbars ) ), "MeanOS",
+      colorRed, styleNoLabel  );

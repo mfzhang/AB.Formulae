@@ -1,0 +1,48 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Count Tickers in Watchlist
+//  Author/Uploader: Anthony Faragasso 
+//  E-mail:          ajf1111@epix.net
+//  Date/Time Added: 2003-07-05 09:27:55
+//  Origin:          
+//  Keywords:        
+//  Level:           medium
+//  Flags:           showemail,function
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=290
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=290
+//
+//------------------------------------------------------------------------------
+//
+//  This function will output the number of tickers in a selected watchlist
+//
+//------------------------------------------------------------------------------
+
+//Count tickers in watchlist function
+//Anthony Faragasso
+//July 4, 2003
+
+//Single watchlist output
+
+WatchlistNumber=0;//enter watchlist number
+
+function CountTickersInWatchList( Listnum )
+{
+// retrive comma-separated list of symbols in watch list
+list = GetCategorySymbols( categoryWatchlist, listnum );
+
+
+for( i = 0; ( sym = StrExtract( list, i ) ) != ""; i++ )
+{
+
+if( i == 0 ) i = 0;
+else i = i ;
+}
+
+return i; 
+}
+
+
+Filter=1;
+AddColumn(CountTickersInWatchList( WatchlistNumber),"Watchlist #"+WriteVal(watchlistnumber,1),1);
+
+

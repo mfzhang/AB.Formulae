@@ -1,0 +1,61 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Ehlers Laguerre RSI
+//  Author/Uploader: Not Too Swift 
+//  E-mail:          
+//  Date/Time Added: 2005-03-28 23:00:59
+//  Origin:          
+//  Keywords:        
+//  Level:           medium
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=450
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=450
+//
+//------------------------------------------------------------------------------
+//
+//  The Laguerre transform provides a time warp such that the low frequency
+//  components are delayed much more than the high frequency components. This
+//  enables very smooth filters to be built using a short amount of data.
+//
+//  The Laguerre RSI operates on four data points and is smoother than an
+//  RSI(4).
+//
+//------------------------------------------------------------------------------
+
+SetBarsRequired(200, 0);
+
+// Ehlers formulas
+// from Ehlers, John F. Cybernetic Analysis for Stocks and Futures. Wiley. 2004. 
+// Chapter 14, p. 213. Code on p. 221.
+
+function LRSI(array, gamma)
+// Figure 14.8 on p. 221.
+{
+  L0 = array;  // Initialize as array
+  L1 = array;
+  L2 = array;
+  L3 = array;
+  LRSIValue = array;
+
+  for(i = 1; i < BarCount; i++)
+  {
+     L0[i] = (1 - gamma)*array[i] + gamma*L0[i-1];
+     L1[i] = - gamma * L0[i] + L0[i-1] + gamma * L1[i-1];
+     L2[i] = - gamma * L1[i] + L1[i-1] + gamma * L2[i-1];
+     L3[i] = - gamma * L2[i] + L2[i-1] + gamma * L3[i-1];
+
+     CU = 0;
+     CD = 0;
+     if (L0[i] >= L1[i]) CU = L0[i] - L1[i]; else (CD = L1[i] - L0[i]);
+     if (L1[i] >= L2[i]) CU = CU + L1[i] - L2[i]; else CD = CD + L2[i] - L1[i];
+     if (L2[i] >= L3[i]) CU = CU + L2[i] - L3[i]; else CD = CD + L3[i] - L2[i];
+
+     if (CU + CD != 0) LRSIValue[i] = CU / (CU + CD);
+  }
+  return LRSIValue;
+}
+
+Plot(LRSI(C, 0.5), "Laguerre RSI", colorRed, styleLine);
+PlotGrid(.8);
+PlotGrid(.5);
+PlotGrid(.2);

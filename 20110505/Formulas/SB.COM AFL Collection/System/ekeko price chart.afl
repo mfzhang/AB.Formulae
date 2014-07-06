@@ -1,0 +1,405 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    ekeko price chart
+//  Author/Uploader: RAFAEL GOMEZ 
+//  E-mail:          
+//  Date/Time Added: 2006-03-17 01:00:42
+//  Origin:          Peru
+//  Keywords:        
+//  Level:           semi-advanced
+//  Flags:           system
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=598
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=598
+//
+//------------------------------------------------------------------------------
+//
+//  price chart with trade calls for aroon + sar signs
+//
+//------------------------------------------------------------------------------
+
+ScriptVersion = " explorativo del Main al 12 de set 2005";
+
+//////////////////// PRECIO //////////////////////////////////////////////
+
+Plot(C,"",colorBlack,styleCandle|styleNoLabel);
+
+Filter = Close > 10;
+AddColumn(Close,"Close");
+
+PositionSize = 100;
+
+///////////////////////	MEDIAS MOVILES///////////////////
+
+slope = Param("slope",2,2,100,1);
+Color20= IIf(LinRegSlope(MA(C,20),slope)<0,colorRed,colorBrightGreen);
+event1= LinRegSlope(MA(C,20),slope)<0;
+Plot( MA( C,  20), "",Color20 , styleLine);
+//Plot( event1, "", colorRose, styleArea|styleOwnScale);
+Color50= IIf(LinRegSlope(MA(C,50),slope)<0,colorRed,colorBlue); 
+Plot( MA( C, 50), "",Color50  , styleLine);
+Color100= IIf(LinRegSlope(MA(C,100),slope)<0,colorRed,colorYellow);
+Plot( MA( C,  100), "",Color100 , styleLine);
+Color150= IIf(LinRegSlope(MA(C,150),slope)<0,colorRed,10); 
+Plot( MA( C, 150), "",Color150  , styleLine);
+
+event1=Cross(MA(C,20),MA(C,50));
+PlotShapes( IIf(event1 ,shapeDigit1,0) ,5, 0, L,-30);
+
+event2=Cross(MA(C,50),MA(C,100));
+PlotShapes( IIf(event2 ,shapeDigit2,0) ,6, 0, L,-30);
+
+event3=Cross(MA(C,100),MA(C,150));
+PlotShapes( IIf(event3 ,shapeDigit3,0) ,7, 0, L,-30);
+
+event4=Cross(MA(C,50),MA(C,20));
+PlotShapes( IIf(event4 ,shapeDigit4,0) ,5, 0, H,30);
+
+event5=Cross(MA(C,100),MA(C,50));
+PlotShapes( IIf(event5 ,shapeDigit5,0) ,6, 0, H,30);
+
+event6=Cross(MA(C,150),MA(C,100));
+PlotShapes( IIf(event6 ,shapeDigit6,0) ,7, 0, H,30);
+
+event7=Cross(MA(C,5),MA(C,20));
+PlotShapes( IIf(event7 ,shapeDigit7,0) ,9, 0, L,-30);
+
+
+//////////////////////////////////MACD///////////////////////////////////
+
+MACDRequired=1; 
+FAST = Param("FAST",12,0,100,1);
+SLOW = Param("SLOW",26,0,100,1);
+SIG  = Param("SIG",9,0,100,1);
+
+MACDLine   = MACD(FAST,SLOW);
+MACDSignal = Signal(FAST,SLOW,SIG);
+MACDHisto  = MACDLine - MACDSignal;
+
+MIN10=   Param("X MACD10", 5,1,30,step=0.1);
+MIN60=   Param("X MACD60",10,1,30,step=0.1);
+MACDBACKBARS=Param("Lookback MACD",1,1,30,step=1);
+
+MinDir=      Param("DirChange",0.6,-5,5,step=0.01);
+NOEXCESS=    Param("Remove Excess Signals",1,0,1,step=1);
+
+if(Interval() <= 600 ) MACDRequired=MIN10;  // 10 minute +/-5 extreme
+if(Interval() >= 3600) MACDRequired=MIN60;  // 60 minute +/- 10
+
+/////////////////// HISTOGRAMA ////////////////////////////////
+
+MACDHisto  = MACDLine - MACDSignal;
+
+HistDivUp = Cross(LinRegSlope(MACDHisto,3),0);
+HistDivDn = Cross(0,LinRegSlope(MACDHisto,3));
+
+HBuy  = HistDivUp ;
+HSell = HistDivDn ;
+
+
+PlotShapes( IIf(HBuy ,3,0) ,colorBlue, 0,Graph0,-22 );
+PlotShapes( IIf(HSell,4,0) ,colorYellow, 0,Graph0,-22);
+
+
+//////////////////////       AROON       //////////////////////////////////
+
+Period = Param("Aroon Period",14,1,100,1);
+LLVBarsSince = LLVBars(L, Period) + 1;
+HHVBarsSince = HHVBars(H, Period) + 1;
+
+AD = 100 * (Period - LLVBarsSince) / (Period - 1);
+AU   = 100 * (Period - HHVBarsSince) / (Period - 1);
+AO  = AU - AD;
+
+MINAROONOSC= Param("AO  ",45,0,100,step=0.1);
+MINAROONSIG= Param("AV ",99.9,0,100,step=0.1);
+
+MINAROONOSC= Optimize("Aroon Osc  ",MINAROONOSC,0,100,step=1);
+MINAROONSIG= Optimize("Aroon Value",MINAROONSIG,0,100,step=1);
+
+event1 =Cross(MINAROONSIG,AD) AND AO <= -MINAROONOSC;
+event2=Cross(MINAROONSIG,AU)   AND AO >=  MINAROONOSC;
+
+// Include MACD / Signal Cross
+AroonMACD=MACD() >= Signal();
+event3=Cross(MINAROONSIG,AU)   AND AO >=  MINAROONOSC AND AroonMACD > 0;
+event4 =Cross(MINAROONSIG,AD) AND AO <= -MINAROONOSC ;
+//if(AroonBuy[BarCount-1]) PlotShapes( ( AroonBuy OR AroonSell )+5 ,IIf( AroonBuy, colorPaleGreen, colorPink ), 0 );
+event5=Cross(AO,0);
+event6= Cross(0,AO); 
+
+event7=Cross(AO,-50);
+event8= Cross(0,AO);
+
+event9= Cross(AU,AD); 
+event10=Cross(AD,AU);
+
+//Plot(AU  ,"AU" ,colorBrightGreen,styleLine); 
+//Plot(AD,"AD" ,colorRed  ,styleLine); 
+//Plot(AO ,"Osc",colorBlack,styleLine+styleOwnScale); 
+
+AroonBuy= event9;
+AroonSell=event10;
+
+PlotShapes( IIf(AroonBuy ,5,0) ,colorBlue, 0,L);
+PlotShapes( IIf(AroonSell,6,0) ,colorYellow, 0,H);
+
+
+////////////////////////////////   DMI //////////////////////////////////
+
+MACDLine   = MACD(FAST,SLOW);
+
+range=Param("R ADX ",14,1,50,step=1);
+//Prefs(49);
+
+MINADX=      Param("X ADX ",30,1,50,step=0.1);
+ADXBACKBARS= Param("LB ADX",3,1,30,step=1);
+
+
+// Find the direction of ADX
+ADXTipDirA  = LinRegSlope(ADX(range),2);  // Short term direction change
+ADXTipDir   = LinRegSlope(ADXTipDirA*4,3);    // Short term direction change
+ADXFastDir = LinRegSlope(ADX(range),3);  // Medium
+ADXSlowDir = LinRegSlope(ADX(range),6);  // Longer
+
+// Direction *CHANGE* of ADX at the 'extremes'
+ADXSlopeUp = Cross(ADXTipDir,0) AND ADX(range)<20;
+ADXSlopeDn = Cross(0,ADXTipDir) AND ADX(range)>MINADX;
+ADXHistory = ADX(range);
+
+ADXBuy1 =  ADXFastDir >0 AND ADX(range)> 20 AND ( PDI(range)>MDI(range)) AND MACDLine > 0;//TrendUp
+
+ADXSell2 =  ADXFastDir >0 AND ADX(range)> 20 AND ( MDI(range)>PDI(range)) AND MACDLine < 0; //TrendDown
+
+ADXBuy3=  ADXSlowDir >0; //AND ADX(range)< 20 AND ( PDI(range)>MDI(range));//WarnUp
+
+ADXSell4=  ADXSlowDir >0; //AND ADX(range)< 20 AND ( MDI(range)>PDI(range));//WarnDn  
+
+
+ADXBuy5=ADX(range)>MDI(range) AND MDI(range)>30;//MDIX
+ADXSell6=ADX(range)>PDI(range) AND PDI(range)>30;//PDIX
+
+ADXBuy7  = BarsSince(ADXTipDir<MinDIR)<BarsSince(ADXBuy1)+ADXBACKBARS AND ADX(range)>MINADX;
+ADXSell8 = BarsSince(ADXTipDir<MinDIR)<BarsSince(ADXSell6)+ADXBACKBARS AND ADX(range)>MINADX;
+
+ADXBuy9  = BarsSince(MACDLine < -MACDRequired)<MACDBACKBARS ;  // AND HistDivUp;
+ADXSell10 = BarsSince(MACDLine >  MACDRequired)<MACDBACKBARS;  //  AND HistDivDn;
+
+ADXBuy11  = ADXBuy5 AND ADXSlopeDn;
+ADXSell12 = ADXSell6 AND ADXSlopeDn;
+
+ADXBuy13  = ADXBuy5 AND ADXTipDir<0 AND Peak(ADXHistory,0.5,1)>ADX(range); //AND ADXSlopeDn;
+ADXSell14 = ADXSell6 AND ADXTipDir<0 AND Peak(ADXHistory,0.5,1)>ADX(range); //AND ADXSlopeDn;
+
+ADXBuy15  = ADXBuy5 AND ADXTipDir<0 AND ADXHistory[BarCount-10]<ADX(range); //AND ADXSlopeDn;
+ADXSell16 = ADXSell6 AND ADXTipDir<0 AND ADXHistory[BarCount-10]<ADX(range); //AND ADXSlopeDn;
+
+ADXBuy17  = ADXBuy5 AND ADXSlopeDn;
+
+ADXBuy18=Cross(PDI(range),MDI(range));
+ADXSell19=Cross(MDI(range),PDI(range));
+
+ADXBuy=ADXBuy18;
+ADXSell=ADXSell19;
+
+// Remove excess Buy/Sell Signals from ADX Based Signals
+if(NOEXCESS) ADXBuy  = ExRemSpan( ADXBuy, 5);
+if(NOEXCESS) ADXSell = ExRemSpan( ADXSell, 5); 
+
+
+PlotShapes( IIf(ADXBuy ,5,0) ,colorBlack, 0);
+PlotShapes( IIf(ADXSell,6,0) ,colorWhite, 0);
+
+
+//////////////////////  BOLLINGER BANDS ///////////////////////
+
+TopBand = BBandTop(Close, 20, 2);
+LowBand = BBandBot(Close, 20, 2);
+
+dirup= (BarsSince(Low<LowBand)<5);
+dirdn= (BarsSince(High>TopBand)<5);
+
+BBBuy=0;
+BBSell=0;
+
+///////////////////// ORDEN DE COMPRA ////////////////////////////////////
+
+//Buy = AroonBuy;
+//Sell = AroonSell;
+
+// Remove excess Buy/Sell Signals
+
+//Short = Sell;
+//Cover = Buy;
+
+//if(NOEXCESS) Buy  = ExRemSpan( Buy, 1 );
+//if(NOEXCESS) Sell = ExRemSpan( Sell, 1 ); 
+
+//PlotShapes( IIf(Buy ,1,0) ,colorBlue, 0,Graph0,-18 );
+//PlotShapes( IIf(Sell,2,0) ,colorYellow, 0,Graph0,-18 );
+
+//////////////////REGRESION LINEAL ///////////////////////////////////
+
+LookBack=Param("Lookback (RegressionChannel)",72,1,300);
+
+NH = LastValue(HHVBars(High,LookBack));   // lookback period  - can be set by the user if necessary
+NL = LastValue(LLVBars(Low ,LookBack));   // lookback period  - can be set by the user if necessary
+
+N=0;
+if(NL>NH) { N=NL; } else { N=NH; }
+ 
+Start = 1;
+
+X = Cum(Start);    // Set up the x cordinate array of the Linear Regression Line
+Y = Close;         // Set the y co-ordinate of the Linear Regression line    
+
+/* Calculate the slope (bconst) and the y intercept (aconst) of the line */
+
+SUMX    = LastValue(Sum(X,N));
+SUMY    = LastValue(Sum(Y,N));
+SUMXY   = LastValue(Sum(X*Y,N));
+SUMXSqd = LastValue(Sum(X*X,N));
+SUMSqdX = LastValue(SUMX * SUMX);
+
+bconst  = (N * SUMXY - SUMX * SUMY)/(N * SUMXSqd - SUMSqdX);
+aconst  = (SUMY - bconst * (SUMX))/N;
+
+/* Force the x value to be very negative so the graph does not apear before the
+lookback period */
+
+Domain =  IIf ( X > LastValue(X) - N, 1 , -1e10);   
+Xvar = X * Domain;
+
+/* Linear Regression Line */
+
+Yvar = aconst + bconst * Xvar;
+
+Plot(Yvar + LastValue(HHV(High - Yvar,N)),"Upper Channel",colorWhite,styleLine|styleNoLabel);
+Plot(Yvar,"Middle Channel",colorWhite,styleLine|styleNoLabel);
+Plot(Yvar - LastValue(HHV(Yvar - Low ,N)),"Lower Channel",colorWhite,styleLine|styleNoLabel);
+
+
+
+/////////////////   SAR ////////////////////////////////////////////////
+
+IAF = 0.02;       // acceleration factor
+MaxAF = 0.2;     // max acceleration
+
+psar = Close;		// initialize
+long = 1;        // assume long for initial conditions
+af = IAF;         // init acelleration factor
+ep = Low[ 0 ];   // init extreme point
+hp = High [ 0 ];
+lp = Low [ 0 ];
+
+for( i = 2; i < BarCount; i++ )
+{
+	if ( long )
+	{
+		psar [ i ] = psar [ i-1 ] + af * ( hp - psar [ i-1 ] );
+	}
+	else
+	{
+		psar [ i ] = psar [ i-1 ] + af * ( lp - psar [ i-1 ] );
+	}
+
+	reverse =  0;
+	//check for reversal
+	if ( long )
+	{
+		if ( Low [ i ] < psar [ i ]  )
+		{
+			long = 0; reverse = 1; // reverse position to Short
+			psar [ i ] =  hp;       // SAR is High point in prev trade
+			lp = Low [ i ];
+			af = IAF;
+		}
+	}
+	else
+	{
+		if ( High [ i ] > psar [ i ]  )
+		{
+			long = 1; reverse = 1;        //reverse position to long
+			psar [ i ] =  lp;
+			hp = High [ i ];
+			af = IAF;
+		}
+	}
+
+	if ( reverse == 0 )
+	{
+		if ( long )
+		{
+			if ( High [ i ] > hp ) 
+			{
+				hp = High [ i ]; 
+				af = af + IAF; 
+				if( af > MaxAF ) af = MaxAF; 
+			}
+             
+			if( Low[ i - 1 ] < psar[ i ] ) psar[ i ] = Low[ i - 1 ];
+			if( Low[ i - 2 ] < psar[ i ] ) psar[ i ] = Low[ i - 2 ];
+		}
+       else
+		{
+			if ( Low [ i ] < lp )  
+			{ 
+				lp = Low [ i ]; 
+				af = af + IAF; 
+				if( af > MaxAF ) af = MaxAF; 
+			}	
+				
+			if( High[ i - 1 ] > psar[ i ] ) psar[ i ] = High[ i - 1 ];
+			if( High[ i - 2 ] > psar[ i ] ) psar[ i ] = High[ i - 2 ];
+
+		}
+	}
+}
+
+Plot( psar, "SAR", colorSkyblue, styleDots | styleNoLine | styleThick );
+
+
+
+
+///////////// COMENTARIOS DE INTERPRETACION ///////////////////
+
+if( SelectedValue(ADXBuy1) OR SelectedValue(ADXSell2))
+{ 
+ if( SelectedValue(ADXBuy1)) { printf("We're in a uptrend."); };
+ if( SelectedValue(ADXSell2)) { printf("We're in a downtrend."); };
+}
+else
+{
+ printf("Falling ADX - watch for MACD Histogram Divergence");
+ if(SelectedValue(HistDivUp)) printf("(currently UP)");
+ if(SelectedValue(HistDivDn)) printf("(currently DOWN)");
+}
+
+if( SelectedValue(ADXFastDir)>0 )
+{
+ if(SelectedValue(ADXBuy5)) printf("Wait for retest of low, and then ADX turn down");
+ if(SelectedValue(ADXSell6)) printf("Wait for retest of high, and then ADX turn down");
+}
+
+
+WriteIf( BBBuy   ,"Bollinger Buy Signal  (usually good until 20EMA)","");
+WriteIf( BBSell  ,"Bollinger Sell Signal (usually good until 20EMA)","");
+
+WriteIf( ADXBuy3 ,"Watch out - could be a beginning uptrend.","");
+WriteIf( ADXSell4 ,"Watch out - could be a beginning downtrend.","");
+
+WriteIf( ADXBuy1 AND MACDLine <  1 AND HistDivDn, "*WARNING* Trend could fail to begin !","");
+WriteIf( ADXSell2 AND MACDLine > -1 AND HistDivUp, "*WARNING* Trend could fail to begin !","");
+
+
+WriteIf( ADX(range) < 20 , "Trading range, weak direction - watch for Histogram Divergences","");
+
+
+WriteIf( True ," ------- DEBUG -------","");
+WriteIf( HistDivUp  ,"Histogram divergence up  ","Hup wait");
+WriteIf( HistDivDn  ,"Histogram divergence down","Hdn wait");
+WriteIf( ADXSlopeUp  ,"ADX Up ","Aup wait");
+WriteIf( ADXSlopeDn  ,"ADX Dn ","Adn wait");
+WriteIf( MDI(range)>30  ,"MDI","DMI wait");
+WriteIf( PDI(range)>30  ,"PDI","DMI wait");
+WriteIf( ADXBuy5 ,"MDI-X","DMI wait");
+WriteIf( ADXSell6 ,"PDI-X","DMI wait");

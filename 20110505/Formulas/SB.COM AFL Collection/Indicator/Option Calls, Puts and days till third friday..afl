@@ -1,0 +1,287 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Option Calls, Puts and days till third friday.
+//  Author/Uploader: Vladimir Gaitanoff 
+//  E-mail:          spam@vglib.com
+//  Date/Time Added: 2006-05-06 14:09:53
+//  Origin:          
+//  Keywords:        Option Options Third  Friday
+//  Level:           medium
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=620
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=620
+//
+//------------------------------------------------------------------------------
+//
+//  // Initialization
+//
+//  _SECTION_BEGIN("Option Parameters");
+//
+//  StrikePrice = Param("Strike Price", 45, 0, 10000, 0.01);
+//
+//  InterestRate = Param("Interest Rate %", 6, 0, 100, 0.05);
+//
+//  //DaysToExpiration = Param("Days To Expiration", 30, 1, 365, 1);
+//
+//  Volatility = Param("Volatility", 0.3, 0, 1, 0.05);
+//
+//  _SECTION_END();
+//
+//  /*
+//
+//  Price = 56.25;
+//
+//  StrikePrice = 55;
+//
+//  Rate = 0.0285;
+//
+//  Time = 0.34;
+//
+//  Volatility = 0.28;
+//
+//  //expected: 456
+//
+//  */
+//
+//  // Function
+//
+//  function N(x)
+//
+//  {
+//
+//  b1 = 0.31938153;
+//
+//  b2 = -0.3565638;
+//
+//  b3 = 1.78147794;
+//
+//  b4 = -1.821256;
+//
+//  b5 = 1.33027443;
+//
+//  p = 0.2316419;
+//
+//  c2 = 0.3989423;
+//
+//  a = abs(x);
+//
+//  t = 1.0 / (1.0 + a * p);
+//
+//  b = c2 * exp(- x * x / 2.0);
+//
+//  m = ((((b5 * t + b4) * t + b3) * t + b2) * t + b1) * t;
+//
+//  m = 1.0 - b * m;
+//
+//  y = IIf(x >= 0.0, m, 1.0 - m);
+//
+//  return y;
+//
+//  }
+//
+//  function DaysInMonth(MonthNum,YearNum)
+//
+//  {
+//
+//  _Daysinmonth=IIf(MonthNum==1 OR MonthNum==3 OR MonthNum==5 OR MonthNum==7
+//  OR MonthNum==8 OR MonthNum==10 OR MonthNum==12,31,30);
+//
+//  Daysinmonthfeb=IIf(YearNum%4 == 0 AND YearNum%100!=0,29,28);
+//
+//  _Daysinmonth=IIf(MonthNum==2,Daysinmonthfeb,_Daysinmonth);
+//
+//  return _Daysinmonth;
+//
+//  }
+//
+//  function DaysToThirdFriday()
+//
+//  {
+//
+//  d = Day();
+//
+//  wd = DayOfWeek();
+//
+//  DaysToFriday = (5 - wd + 7) % 7;
+//
+//  FridayNumber = floor((d + DaysToFriday + 6) / 7);
+//
+//  ThirdFriday = d + DaysToFriday + (3 - FridayNumber) * 7;
+//
+//  _DaysToThirdFriday = IIf(ThirdFriday >= d, ThirdFriday - d, ThirdFriday - d
+//  + 28);
+//
+//  return _DaysToThirdFriday;
+//
+//  }
+//
+//  // Calculations
+//
+//  //Plot(DaysToFriday, "DaysToFriday", colorGreen);
+//
+//  //Plot(FridayNumber , "FridayNumber ", colorGreen);
+//
+//  //Plot(ThirdFriday, "ThirdFriday", colorGreen);
+//
+//  //Plot(_DaysToThirdFriday, "DaysToThirdFriday", colorGreen);
+//
+//  DaysToExpiration = DaysToThirdFriday();
+//
+//  Price = Close;
+//
+//  Rate = InterestRate / 100;
+//
+//  Time = DaysToExpiration / 365;
+//
+//  d1 = (ln(Price / StrikePrice) + (Rate + Volatility * Volatility / 2) *
+//  Time) / (Volatility * sqrt(Time));
+//
+//  d2 = d1 - Volatility * sqrt(Time);
+//
+//  ExpPowerMinusRt = exp(- Rate * Time);
+//
+//  CallPrice = Price * N(d1) - StrikePrice * ExpPowerMinusRt * N(d2);
+//
+//  PutPrice = StrikePrice * ExpPowerMinusRt * N(-d2) - Price * N(-d1);
+//
+//  _N(Title = StrFormat("{{DATE}} Strike %.2f, Days %g, Call %.2f, Put %.2f,
+//  Volatility %.2f %g" , StrikePrice, DaysToExpiration, CallPrice, PutPrice,
+//  Volatility, DayOfWeek() ));
+//
+//  //_N(Title = StrFormat("{{NAME}} - {{INTERVAL}} {{DATE}} Open %g, Hi %g, Lo
+//  %g, Close %g (%.1f%%) Vol " +WriteVal( V, 1.0 ) +" {{VALUES}}", O, H, L, C,
+//  SelectedValue( ROC( C, 1 )) ));
+//
+//  _SECTION_BEGIN("Call Option");
+//
+//  Plot(CallPrice, "Call = " + NumToStr(CallPrice, 1.2), ParamColor( "Color",
+//  colorGreen), ParamStyle("Style"));
+//
+//  _SECTION_END();
+//
+//  _SECTION_BEGIN("Put Option");
+//
+//  Plot(PutPrice, "Put = " + NumToStr(PutPrice, 1.2), ParamColor( "Color",
+//  colorRed), ParamStyle("Style"));
+//
+//  _SECTION_END();
+//
+//------------------------------------------------------------------------------
+
+// Initialization
+
+_SECTION_BEGIN("Option Parameters");
+StrikePrice = Param("Strike Price", 45, 0, 10000, 0.01);
+InterestRate = Param("Interest Rate %", 6, 0, 100, 0.05);
+//DaysToExpiration = Param("Days To Expiration", 30, 1, 365, 1);
+Volatility = Param("Volatility", 0.3, 0, 1, 0.05);
+_SECTION_END();
+
+/*
+Price = 56.25;
+StrikePrice = 55;
+Rate = 0.0285;
+Time = 0.34;
+Volatility = 0.28;
+//expected: 456
+*/
+// Function
+
+function N(x)
+{	
+	b1 = 0.31938153; 
+	b2 = -0.3565638; 
+	b3 = 1.78147794; 
+	b4 = -1.821256; 
+	b5 = 1.33027443; 
+	p = 0.2316419; 
+	c2 = 0.3989423;
+
+	a = abs(x);
+	t = 1.0 / (1.0 + a * p);
+	b = c2 * exp(- x * x / 2.0);
+	m = ((((b5 * t + b4) * t + b3) * t + b2) * t + b1) * t;
+	m = 1.0 - b * m;
+
+	y = IIf(x >= 0.0, m, 1.0 - m);
+	return y;
+}
+
+
+function DaysInMonth(MonthNum,YearNum)
+{
+	_Daysinmonth=IIf(MonthNum==1 OR MonthNum==3 OR MonthNum==5 OR MonthNum==7 OR MonthNum==8 OR MonthNum==10 OR MonthNum==12,31,30);
+	Daysinmonthfeb=IIf(YearNum%4 == 0 AND YearNum%100!=0,29,28);
+	_Daysinmonth=IIf(MonthNum==2,Daysinmonthfeb,_Daysinmonth);
+	return _Daysinmonth;
+}
+
+function DaysToThirdFriday()
+{
+	d = Day();
+	wd = DayOfWeek();
+	DaysToFriday = (5 - wd + 7) % 7;
+	ThirdFriday = d + DaysToFriday + (3 - floor((d + DaysToFriday) / 7)) * 7;
+	_DaysToThirdFriday = ThirdFriday - d;
+	
+	return _DaysToThirdFriday;
+}
+
+// Calculations
+
+	d = Day();
+	wd = DayOfWeek();
+	DaysToFriday = (5 - wd + 7) % 7;
+	FridayNumber = floor((d + DaysToFriday + 6) / 7);
+	ThirdFriday = d + DaysToFriday + (3 - FridayNumber) * 7;
+	_DaysToThirdFriday = ThirdFriday - d;
+
+//Plot(DaysToFriday, "DaysToFriday", colorGreen);
+//Plot(FridayNumber , "FridayNumber ", colorGreen);
+Plot(ThirdFriday, "ThirdFriday", colorGreen);
+Plot(DaysToThirdFriday , "DaysToThirdFriday", colorGreen);
+
+
+
+DaysToExpiration = DaysToThirdFriday();
+Price = Close;
+Rate = InterestRate / 100;
+Time = DaysToExpiration / 365;
+
+d1 = (ln(Price / StrikePrice) + (Rate + Volatility * Volatility / 2) * Time) / (Volatility * sqrt(Time));
+d2 = d1 - Volatility * sqrt(Time);
+
+ExpPowerMinusRt = exp(- Rate * Time);
+CallPrice = Price * N(d1) - StrikePrice * ExpPowerMinusRt * N(d2);
+PutPrice = StrikePrice * ExpPowerMinusRt * N(-d2) - Price * N(-d1);
+
+//_N(Title = StrFormat("Strike %.2f, Days %g, Call %.2f, Put %.2f, Volatility %.2f %g" , StrikePrice, DaysToExpiration, CallPrice, PutPrice, Volatility, DayOfWeek() ));
+
+//_N(Title = StrFormat("{{NAME}} - {{INTERVAL}} {{DATE}} Open %g, Hi %g, Lo %g, Close %g (%.1f%%) Vol " +WriteVal( V, 1.0 ) +" {{VALUES}}", O, H, L, C, SelectedValue( ROC( C, 1 )) ));
+
+_SECTION_BEGIN("Call Option");
+Plot(CallPrice, "Call = " + NumToStr(CallPrice, 1.2), ParamColor( "Color", colorGreen), ParamStyle("Style"));
+_SECTION_END();
+
+_SECTION_BEGIN("Put Option");
+Plot(PutPrice, "Put = " + NumToStr(PutPrice, 1.2), ParamColor( "Color", colorRed), ParamStyle("Style"));
+_SECTION_END();
+
+/*
+Plot(d1, "Value " + NumToStr(d1, 1.2), colorGreen);
+Plot(d2, "Value " + NumToStr(d2, 1.2), colorRed);
+Plot(N(d1), "Value " + NumToStr(d1, 1.6), colorGreen);
+Plot(N(d2), "Value " + NumToStr(d2, 1.6), colorRed);
+*/
+/*CallPrice = Price * N(d1) - StrikePrice * ExpPowerMinusRt * N(d2);
+
+Plot(StrikePrice * ExpPowerMinusRt * N(d2), "StrikePrice * ExpPowerMinusRt * N(d2)", colorRed);
+Plot(ExpPowerMinusRt, "ExpPowerMinusRt " + NumToStr(ExpPowerMinusRt, 1.6), colorRed);
+Plot(N(d2), "N(d2) " + NumToStr(N(d2), 1.6), colorRed);
+
+*/
+
+//PutPrice = StrikePriceExpPowerMinusRt* N(-d2) - Price * N(-d1);
+
+//Plot(CallPrice, "Call " + NumToStr(CallPrice, 1.6), colorGreen);
+//Plot(PutPrice, "Put = " + NumToStr(PutPrice, 1.2), colorRed);

@@ -1,0 +1,105 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Rea Time Daily Price Levels
+//  Author/Uploader: Ara Kaloustian 
+//  E-mail:          ara1@san.rr.com
+//  Date/Time Added: 2005-10-10 01:40:26
+//  Origin:          
+//  Keywords:        Real Time Daily Price Levels
+//  Level:           medium
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=564
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=564
+//
+//------------------------------------------------------------------------------
+//
+//  This program computes and plots prices levels fir real time data, for
+//  following parameters: Toda's Open, Prior Day Open, Clode, High, Low, First
+//  hour High, Low.
+//
+//------------------------------------------------------------------------------
+
+//File: Bruce Chart
+//August 5, 2005
+//
+//Program computes and displays various price values in real time 
+//
+// Today's Open
+// Prior Day High
+// Prior Day Low
+// Prior Day Open
+// Prior Day Close
+// Prior Day Middle 
+// First Hour High
+// First Hour Low
+
+PlotOHLC(Open,High,Low,Close,"",colorBlack,styleCandle);
+Bars  = 0;
+xpdh  = 90;
+
+//Levels = 1 activates program
+Levels     = Param("Levels",1,0,1,1);
+ExpFirst   = Param("ExpFirst",1,0,1,1); 
+
+if (Levels ==1)
+{
+//Convert data to daily
+Plot_Range = (TimeNum() >= 63000 AND TimeNum()<= 131500) AND (DateNum()==LastValue(DateNum()));
+FH_Range   = (TimeNum() >= 63000 AND TimeNum()<= 73000) AND (DateNum()==LastValue(DateNum()));
+
+FH_Prices  = High * FH_Range;
+FH_Marker  = BarsSince(FH_Range>0);
+
+//Find number of bars in 60 minutes 
+Num_Bars   = 3600 / Interval(1);  
+
+TimeFrameSet(inDaily);
+TOP_        = Open;
+PDH_        = Ref(High,-1);
+PDL_        = Ref(Low,-1);
+PDO_        = Ref(Open,-1);
+PDC_        = Ref(Close,-1);
+PDM_        = (PDH_+PDL_)/2;
+TimeFrameRestore();
+
+
+
+
+
+TOP         = TimeFrameExpand(TOP_,inDaily,expandFirst); 
+PDH         = TimeFrameExpand(PDH_,inDaily,expandFirst); 
+PDL         = TimeFrameExpand(PDL_,inDaily,expandFirst); 
+PDO         = TimeFrameExpand(PDO_,inDaily,expandFirst); 
+PDC         = TimeFrameExpand(PDC_,inDaily,expandFirst); 
+PDM         = TimeFrameExpand(PDM_,inDaily,expandFirst); 
+
+FHH        = Ref(HHV(High*FH_Range,Num_Bars),-FH_Marker);
+FHL        = Ref(LLV(Low,Num_Bars),-FH_Marker);
+
+Bars       = BarsSince(TimeNum() >= 62900 AND TimeNum() < 64400);//,BarIndex(),1); // AND DateNum()==LastValue(DateNum());
+
+x0         = BarCount-LastValue(Bars);
+
+x1         = BarCount-1;
+TOP_Line   = LineArray(x0,LastValue(TOP),x1,LastValue(TOP),0);
+PDH_Line   = LineArray(x0,LastValue(PDH),x1,LastValue(PDH),0);
+PDL_Line   = LineArray(x0,LastValue(PDL),x1,LastValue(PDL),0);
+PDC_Line   = LineArray(x0,LastValue(PDC),x1,LastValue(PDC),0);
+PDM_Line   = LineArray(x0,LastValue(PDM),x1,LastValue(PDM),0);
+FHH_Line   = LineArray(x0,LastValue(FHH),x1,LastValue(FHH),0);
+FHL_Line   = LineArray(x0,LastValue(FHL),x1,LastValue(FHL),0);
+
+Plot(TOP_Line,"",colorGreen,styleDashed|styleNoRescale);
+Plot(PDH_Line,"",colorPlum,styleLine|styleNoRescale);
+Plot(PDL_Line,"",colorRed,styleLine|styleNoRescale);
+Plot(PDC_Line,"",colorAqua,styleLine|styleNoRescale);
+Plot(PDM_Line,"",colorYellow,styleLine|styleNoRescale);
+Plot(FHH_Line,"",IIf(FH_Range==1,Null,colorBlue),styleLine|styleNoRescale);
+Plot(FHL_Line,"",IIf(FH_Range==1,Null,colorBlue),styleLine|styleNoRescale);
+
+}
+
+
+
+Title = Name() + "  Daily Levels Bruce 1   " + Interval(2) + "  " + WriteVal(TimeNum(),1.0) + "    Open: " + WriteVal(Open,1.2) + "   High: " + WriteVal(High,1.2) 
+				+ "   Low: " + WriteVal(Low,1.2) + "   Close: " + WriteVal(Close,1.2);

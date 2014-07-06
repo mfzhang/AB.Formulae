@@ -1,0 +1,1325 @@
+//|-----------------------------------------------------------------------------------------
+//|PatternExplorer.com - include file
+//|Copyright © 2007,  PatternExplorer.com
+//|http://www.PatternExplorer.com
+//|e-mail: support@PatternExplorer.com
+//|-----------------------------------------------------------------------------------------
+EnableTextOutput( False );
+
+procedure AddGradientBackground( def_BGColorswitch, def_BgTopcolor, def_BgBottomcolor, def_titlebkcolor )
+{
+    _SECTION_BEGIN( "Background" );
+    BGColorswitch = ParamToggle( "Set Background Color", "Off, On", def_BGColorswitch );
+    BgTopcolor = ParamColor( "Bg Top", def_BgTopcolor );
+    BgBottomcolor = ParamColor( "Bg Bottom", def_BgBottomcolor );
+    titlebkcolor = ParamColor( "Bg Title", def_titlebkcolor );
+
+    if ( BGColorswitch )
+        SetChartBkGradientFill( BgTopcolor, BgBottomcolor, titlebkcolor );
+
+    _SECTION_END();
+}
+
+procedure AddparamUsefromChart( defaultvalue )
+{
+    global UsefromChart;
+    global InChart;
+    global InAA;
+    InChart = Status( "Action" ) == 1;
+    InAA = Status( "Action" ) >= 3;
+
+    if ( inAA )
+        Usefromchart = ParamToggle( "Use Sensitivity parameter from chart", "No|Yes", defaultvalue );
+}
+
+procedure AddparamUsefromChart2( defaultvalue )
+{
+    global UsefromChart;
+    global InChart;
+    global InAA;
+    InChart = Status( "Action" ) == 1;
+    InAA = Status( "Action" )  >= 3;
+
+    if ( inAA )
+        Usefromchart = ParamToggle( "Use Sensitivity parameters from chart", "No|Yes", defaultvalue );
+}
+
+procedure AddparamUsefromChartFull( defaultvalue )
+{
+    global UsefromChart;
+    global InChart;
+    global InAA;
+    InChart = Status( "Action" ) == 1;
+    InAA = Status( "Action" )  >= 3;
+
+    if ( inAA )
+        Usefromchart = ParamToggle( "Use parameter from chart", "No|Yes", defaultvalue );
+}
+
+function Beta( BaseSymbol, N )
+{
+    Chg = ROC( C, 1 );
+    ChgBase = ROC( Foreign( BaseSymbol, "C" ), 1 );
+    return
+        ( N * Sum( Chg * ChgBase, N ) - Sum( Chg, N ) * Sum( ChgBase, N ) ) /
+        ( N * Sum( ChgBase ^ 2, N ) - Sum( ChgBase, N ) ^ 2 );
+}
+
+function TaioColor( Mode, period1, period2, upLevel, dnLevel, upbar, dnbar, up_color, RangePcolor, RangeNcolor, dn_color, SingleColor, defaultcolor )
+{
+    global Upbar_col;
+    global Dnbar_col;
+    Taio = PeTaio( period1, period2 );
+    TaioUp = Taio > upLevel & Taio > Ref( Taio, -1 );
+    TaioDn = Taio < -dnLevel & Taio < Ref( Taio, -1 );
+    TaioRp = Taio > 0 & Taio <= UpLevel;
+    TaioRn = Taio < 0 & Taio >= DnLevel;
+
+    if ( mode == 0 )
+        pricecolor = IIf( upbar, upbar_col, IIf( dnbar, dnbar_col, Defaultcolor ) );
+    else
+        if ( mode == 1 )
+        {
+            pricecolor = IIf( TaioUp, up_color, IIf( TaioDn, dn_color,
+                              IIf( Taio > 0 AND NOT TaioUP, RangePcolor, IIf( Taio < 0 AND NOT TaioDn, RangeNcolor, Defaultcolor ) ) ) );
+        }
+        else
+            if ( mode == 2 )
+            {
+                pricecolor =
+                    IIf( Taio > upLevel, up_color, IIf( Taio < -dnLevel, dn_color,
+                                                        IIf( TaioRp, RangePcolor, IIf( TaioRn, RangeNcolor, Defaultcolor ) ) ) );
+            }
+            else
+                if ( mode == 3 )
+                {
+                    pricecolor =
+                        IIf( Taio > Ref( Taio, -1 ), up_color, IIf( Taio < Ref( Taio, -1 ), dn_color, RangeNcolor ) );
+                }
+                else
+                    if ( mode == 4 )
+                        pricecolor = IIf( Taio > 0, up_color, IIf( Taio < 0, dn_color, RangeNcolor ) );
+                    else
+                        if ( mode == 5 )
+                            pricecolor = singlecolor;
+
+    return pricecolor;
+}
+
+function TaioTF2( Multiplier, expandmode )
+{
+    global Taio2upflip;
+    global Taio2dnflip;
+    global Period1;
+    global Period2;
+    TimeFrameSet( Multiplier*Interval() );
+    TaioTF2m = PeTaio( Period1, Period2 );
+    Taio2upflip = Ref( TaioTF2m, -1 ) == LLV( TaioTF2m, 3 );
+    Taio2dnflip = Ref( TaioTF2m, -1 ) == HHV( TaioTF2m, 3 );
+    TimeFrameRestore();
+    TaioTF2m = TimeFrameExpand( TaioTF2m, Multiplier * Interval(), expandmode );
+    Taio2upflip = TimeFrameExpand( Taio2upflip, Multiplier * Interval(), expandmode );
+    Taio2dnflip = TimeFrameExpand( Taio2dnflip, Multiplier * Interval(), expandmode );
+    return TaioTF2m;
+
+    /* the code above should be replaced by the code below if range bars are used
+    global Taio2upflip;
+    global Taio2dnflip;
+    Taio2upflip = 0;
+    Taio2dnflip = 0;
+    return 0;
+    */
+}
+
+function KAMA( P, Period )
+{
+    Direction = P - Ref( P, -period );
+    Volatility = Sum( abs( P - Ref( P, -1 ) ), period );
+    Volatility = IIf( Volatility > 0, Volatility, 0.00001 );
+    ER = abs( Direction / Volatility );
+    FastSC = 2 / ( 2 + 1 );
+    SlowSC = 2 / ( 30 + 1 );
+    SSC = ER * ( FastSC - SlowSC ) + SlowSC;
+    Constant = SSC ^ 2;
+    return AMA( P,  Constant );
+}
+
+procedure AddAvgTypeParam( type )
+{
+    global AvgText;
+    global AvgType;
+    global AvgTextname;
+    ParamAverage =
+        ParamList( "Type",
+                   List = "1 - GMA, 2 - SMA, 3 - EMA, 4 - WMA, 5 - DEMA, 6 - TEMA, 7 - WILDERS, 8 - LINEAR REGRESSION, 9 - TIME SERIES FORECAST, 10 - KAMA", type - 1 );
+
+    for ( i = 0; i < 10; i++ )
+        if ( StrExtract( List,  i ) == ParamAverage )
+            AvgType = i + 1;
+
+    if		( AvgType == 1 )
+        AvgTextname = "GMA";
+    else
+        if	( AvgType == 2 )
+            AvgTextname = "SMA";
+        else
+            if	( AvgType == 3 )
+                AvgTextname = "EMA";
+            else
+                if	( AvgType == 4 )
+                    AvgTextname = "WMA";
+                else
+                    if	( AvgType == 5 )
+                        AvgTextname = "DEMA";
+                    else
+                        if	( AvgType == 6 )
+                            AvgTextname = "TEMA";
+                        else
+                            if	( AvgType == 7 )
+                                AvgTextname = "WILDERS";
+                            else
+                                if	( AvgType == 8 )
+                                    AvgTextname = "LINEARREG";
+                                else
+                                    if	( AvgType == 9 )
+                                        AvgTextname = "TSF";
+                                    else
+                                        if	( AvgType == 10 )
+                                            AvgTextname = "KAMA";
+
+    AvgText = " - " + AvgTextname;
+}
+
+procedure Average( array, period, type )
+{
+    if		( Type == 1 )
+        Value = PeGMA( Array, Period );
+    else
+        if	( Type == 2 )
+            Value = MA ( Array, Period );
+        else
+            if	( Type == 3 )
+                Value = EMA( Array, Period );
+            else
+                if	( Type == 4 )
+                    Value = WMA( Array, Period );
+                else
+                    if	( Type == 5 )
+                        Value = DEMA( Array, Period );
+                    else
+                        if	( Type == 6 )
+                            Value = TEMA( Array, Period );
+                        else
+                            if	( Type == 7 )
+                                Value = Wilders( Array, Period );
+                            else
+                                if	( Type == 8 )
+                                    Value = LinearReg( Array, Period );
+                                else
+                                    if	( Type == 9 )
+                                        Value = TSF( Array, Period );
+                                    else
+                                        if	( Type == 10 )
+                                            Value = KAMA( Array, Period );
+
+    return Value;
+}
+
+
+procedure AddAverage( SectionText, DefaultPeriod, DefaultType, def_PriceField, Defaultshift, Defaultcolor, Defaultstyle, default_AvgSwitch )
+{
+    global PEaverage_switch;
+    global PEaverage;
+    _SECTION_BEGIN( SectionText );
+    PEaverage_switch = ParamToggle( "On/Off",  "Off|On", default_AvgSwitch );
+    AddAvgTypeParam( DefaultType );
+    P = ParamField( "Price field", def_PriceField );
+    Period = Param( "Periods", DefaultPeriod, 2, 250, 1 );
+    Shift = Param( "Shift", Defaultshift, -50, 50, 1 );
+    PEaverage = Average( P, Period, AvgType );
+    PEaverage_style = ParamStyle( "Style", Defaultstyle, maskAll );
+    PEaverage_color = ParamColor( "Color", Defaultcolor );
+
+    if ( PEaverage_switch )
+        Plot( PEaverage, _DEFAULT_NAME() + AvgText, PEaverage_color, PEaverage_style | styleNoRescale, Null, Null, shift );
+
+    _SECTION_END();
+}
+
+function STC( Cycle, SH, LG, type )
+{
+    Typical = ( H + L + C ) / 3;
+    MCD = Average( typical, SH, type ) - Average( typical, LG, type );
+    ST = ( ( MCD - LLV( MCD, Cycle ) ) / ( HHV( MCD, Cycle ) - LLV( MCD, Cycle ) ) ) * 100;
+    return Average( ST, Cycle / 2, type );
+}
+
+procedure STCp( Cycle, SH, LG )
+{
+    global TC;
+    global MA1;
+    global MA2;
+    Typical = ( H + L + C ) / 3;
+    MCD = EMA( typical, MA1 ) - EMA( typical, MA2 );
+    ST = ( ( MCD - LLV( MCD, Cycle ) ) / ( HHV( MCD, Cycle ) - LLV( MCD, Cycle ) ) ) * 100;
+    return EMA( ST, Cycle / 2 );
+}
+
+procedure AddICHIMOKU( p1, p2, p3 )
+{
+    global TL;
+    global SL;
+    global DL;
+    global Span1;
+    global Span2;
+    TL = ( HHV( H,  p1 ) + LLV( L,  p1 ) ) / 2;//also known as Kijun Sen
+    SL = ( HHV( H,  p2 ) + LLV( L,  p2 ) ) / 2;//also known as Tenkan Sen
+    DL = IIf( Cum( 1 ) <= LastValue( Cum( 1 ) ) - p3, Ref( C,  p3 + 1 ), Null );//also known as Chikou Span
+    Span1 = Ref( ( TL + SL ) / 2,  -p2 + 0 );
+    Span2 = Ref( ( HHV( H,  2 * p2 ) + LLV( L,  2 * p2 ) ) / 2,  -p2 + 0 );
+}
+
+procedure AddICHIMOKU2( p1, p2, p3, p4 )
+{
+    global TL;
+    global SL;
+    global DL;
+    global SpanA;
+    global SpanB;
+    global SpanA_ahead;
+    global SpanB_ahead;
+    global CloudLow;
+    global CloudHigh;
+    global RDL;
+    global FDL;
+    TL = ( HHV( H,  p1 ) + LLV( L,  p1 ) ) / 2;//also known as Kijun Sen
+    SL = ( HHV( H,  p2 ) + LLV( L,  p2 ) ) / 2;//also known as Tenkan Sen
+    DL = IIf( Cum( 1 ) <= LastValue( Cum( 1 ) ) - p3, Ref( C,  p3 + 1 ), Null );//also known as Chikou Span
+    SpanA = Ref( ( TL + SL ) / 2, -p4 );
+    SpanB  = Ref( ( HHV( H,  2 * p2 ) + LLV( L,  2 * p2 ) ) / 2, -p4 );
+    SpanA_ahead = Ref( ( TL + SL ) / 2, 0 );
+    SpanB_ahead  = Ref( ( HHV( H,  2 * p2 ) + LLV( L,  2 * p2 ) ) / 2, 0 );
+    CloudLow = Min( SpanA, SpanB );
+    CloudHigh = Max( SpanA, SpanB );
+    RDL = C > Ref( C, -p3 );
+    FDL = C < Ref( C, -p3 );
+    /*CloseAboveCloud
+    CloseBelowCloud
+    CloseInsideCloud*/
+}
+
+function TaioTF( Multiplier )
+{
+    global Taio2upflip;
+    global Taio2dnflip;
+    TimeFrameSet( Multiplier*Interval() );
+    Taio = PeTaio();
+    Taio2upflip = Ref( Taio, -1 ) == LLV( Taio, 3 );
+    Taio2dnflip = Ref( Taio, -1 ) == HHV( Taio, 3 );
+    TimeFrameRestore();
+    Taio = TimeFrameExpand( Taio, Multiplier * Interval(), expandFirst );
+    Taio2upflip = TimeFrameExpand( Taio2upflip, Multiplier * Interval(), expandFirst );
+    Taio2dnflip = TimeFrameExpand( Taio2dnflip, Multiplier * Interval(), expandFirst );
+    return Taio;
+}
+
+function TaioTimeFrame( pds1, pds2,  Multiplier, expandmode )
+{
+    global Taio2upflip;
+    global Taio2dnflip;
+    global Taio2direction;
+    TimeFrameSet( Multiplier*Interval() );
+    Ind = PeTaio( pds1, pds2 );
+    Taio2upflip = Ref( Ind, -1 ) == LLV( Ind, 3 )AND Ind > Ref( Ind, -1 );
+    Taio2dnflip = Ref( Ind, -1 ) == HHV( Ind, 3 )AND Ind < Ref( Ind, -1 );
+    Taio2direction = BarsSince( Taio2upflip ) < BarsSince( Taio2dnflip );
+    TimeFrameRestore();
+    Ind = TimeFrameExpand( Ind, Multiplier * Interval(), expandmode );
+    Taio2upflip = TimeFrameExpand( Taio2upflip, Multiplier * Interval(), expandmode );
+    Taio2dnflip = TimeFrameExpand( Taio2dnflip, Multiplier * Interval(), expandmode );
+    Taio2direction = TimeFrameExpand( Taio2direction, Multiplier * Interval(), expandmode );
+    return Ind;
+}
+
+function CondCounter( Condition )
+{
+    Cnt = 0;
+
+    for ( i = 1; i  <  BarCount; i++ )
+    {
+        if ( Condition[i] )
+            Cnt++;
+        else
+            Cnt = 0;
+
+        Count[i] = Cnt;
+    }
+
+    return Count;
+}
+
+procedure AddChannel( array1, array2, period, risk, shift, mode )
+{
+    global ChannelHigh;
+    global ChannelMiddle;
+    global ChannelLow;
+    global SLLongWithoutFlip;
+    global SLShortWithoutFlip;
+    global SLTrend;
+    global SLLong;
+    global SLShort;
+    global SLUp;
+    global SLDn;
+    global SLLongTrigger;
+    global SLShortTrigger;
+    ChannelHigh = HHV( Ref( array1, Shift ), period );
+    ChannelLow = LLV( Ref( array2, Shift ), period );
+    ChannelMiddle = ChannelLow + ( ChannelHigh - ChannelLow ) / 2;
+    SLUp = ChannelLow + Risk * ( ChannelHigh - ChannelLow );
+    SLDn = ChannelHigh - Risk * ( ChannelHigh - ChannelLow );
+
+    if ( mode )
+    {
+        Up = Cross( H, Ref( SLDn, -1 ) );
+        Up = Up OR H > Ref( SLDn, -1 ) AND Ref( H, -1 ) > Ref( SLDn, -1 )AND NOT L < Ref( SLDn, -1 );
+        Dn = Cross( Ref( SLup, -1 ), L );
+        Dn = Dn OR L < Ref( SLUp, -1 ) AND Ref( L, -1 ) < Ref( SLUp, -1 )AND NOT H > Ref( SLUp, -1 );
+        SLTrend = Flip( UP, DN );
+    }
+    else
+        SLTrend = Flip( Cross( C, Ref( SLDn, -1 ) ), Cross( Ref( SLup, -1 ), C ) );
+
+    SLTrend = IIf( SLTrend > 0, 1, -1 );
+
+    SLLong = IIf( SLTrend > 0, HighestSince( SLTrend > 0 AND Ref( SLTrend, -1 ) < 1, SLUp ), Null );
+
+    SLShort = IIf( SLTrend < 1, LowestSince( SLTrend < 1 AND Ref( SLTrend, -1 ) > 0, SLDn ), Null );
+
+    SLLongTrigger = SLTrend == 1 AND Ref( SLTrend, -1 ) == 0;
+
+    SLShortTrigger = SLTrend == 0 AND Ref( SLTrend, -1 ) == 1;
+}
+
+function PlotSignalText ( Condition, Text, AdText, AdTextArray, Distance, Array, TextColor, BGColor )
+{
+    Val = ( -1 * Distance ) * ATR( 10 );
+
+    for ( i = 0; i  <  BarCount; i++ )
+    {
+        if ( Condition[i] AND AdText[i] )
+            PlotText( Text + "\n@" + AdTextArray[ i ],  i,  Array[ i ] - Val[i],  TextColor, BGColor );
+        else
+            if ( Condition[i] &!  AdText[i] )
+                PlotText( Text,  i,  Array[ i ] - Val[i],  TextColor, BGColor );
+    }
+}
+
+procedure AddPivotlevels ( Pivottyp, TF )
+{
+    global Pivottype;
+    global TF;
+    global H1;
+    global L1;
+    global C1;
+    global R;
+    global x;
+    global ppflip;
+
+    TimeFrameSet( TF );
+    H1 = Ref( H, -1 );
+    L1 = Ref( L, -1 );
+    C1 = Ref( C, -1 );
+    O = O;
+    R = H1 - L1;// range
+    x = Cum( 1 );
+    global PP;
+    global S1;
+    global S2;
+    global S3;
+    global R1;
+    global R2;
+    global R3;
+    Pivottyp = Pivottyp + 1;
+
+    if ( Pivottyp == 1 )//Regular pivots
+    {
+        PP = ( L1 + H1 + C1 ) / 3;
+        S1 = ( 2 * PP ) - H1;
+        S2 = PP - ( H1 - L1 );
+        S3 = L1 - 2 * ( H1 - PP );
+        R1 = ( 2 * PP ) - L1;
+        R2 = PP + ( H1 - L1 );
+        R3 = 2 * ( PP - L1 ) + H1;
+    }
+    else
+        if ( Pivottyp == 2 )//Woodies FIB pivots
+        {
+            PP = ( H1 + L1 + O + O ) / 4;
+            S1 = PP - ( R * 0.38 );
+            S2 = PP - ( R * 0.62 );
+            S3 = Null;
+            R1 = PP + ( R * 0.38 );
+            R2 = PP + ( R * 0.62 );
+            R3 = Null;
+        }
+        else
+            if ( Pivottyp == 3 )//Woodies pivots
+            {
+                PP = ( H1 + L1 + O + O ) / 4;
+                S1 = ( 2 * PP ) - H1;
+                S2 = PP - ( H1 - L1 );
+                S3 = Null;
+                R1 = ( 2 * PP ) - L1;
+                R2 = PP + ( H1 - L1 );
+                R3 = Null;
+            }
+
+    global even;
+
+    global odd;
+    global	PP_even;
+    global	S1_even;
+    global	S2_even;
+    global	S3_even;
+    global	R1_even;
+    global	R2_even;
+    global	R3_even;
+    global	PP_odd;
+    global	S1_odd;
+    global	S2_odd;
+    global	S3_odd;
+    global	R1_odd;
+    global	R2_odd;
+    global	R3_odd;
+    even = frac( x / 2 ) == 0;
+    odd = frac( x / 2 ) == 0.5;
+    PP_even = IIf( even, PP, Null );
+    S1_even = IIf( even, S1, Null );
+    S2_even = IIf( even, S2, Null );
+    S3_even = IIf( even, S3, Null );
+    R1_even = IIf( even, R1, Null );
+    R2_even = IIf( even, R2, Null );
+    R3_even = IIf( even, R3, Null );
+    PP_odd = IIf( odd, PP, Null );
+    S1_odd = IIf( odd, S1, Null );
+    S2_odd = IIf( odd, S2, Null );
+    S3_odd = IIf( odd, S3, Null );
+    R1_odd = IIf( odd, R1, Null );
+    R2_odd = IIf( odd, R2, Null );
+    R3_odd = IIf( odd, R3, Null );
+    TimeFrameRestore();
+    PP = TimeFrameExpand( PP, TF, expandFirst );
+    S1 = TimeFrameExpand( S1, TF, expandFirst );
+    S2 = TimeFrameExpand( S2, TF, expandFirst );
+    S3 = TimeFrameExpand( S3, TF, expandFirst );
+    R1 = TimeFrameExpand( R1, TF, expandFirst );
+    R2 = TimeFrameExpand( R2, TF, expandFirst );
+    R3 = TimeFrameExpand( R3, TF, expandFirst );
+    even = TimeFrameExpand( even, TF, expandFirst );
+    odd  = TimeFrameExpand( Odd, TF, expandFirst );
+    PP_even = TimeFrameExpand( PP_even, TF, expandFirst );
+    S1_even = TimeFrameExpand( S1_even, TF, expandFirst );
+    S2_even = TimeFrameExpand( S2_even, TF, expandFirst );
+    S3_even = TimeFrameExpand( S3_even, TF, expandFirst );
+    R1_even = TimeFrameExpand( R1_even, TF, expandFirst );
+    R2_even = TimeFrameExpand( R2_even, TF, expandFirst );
+    R3_even = TimeFrameExpand( R3_even, TF, expandFirst );
+    PP_odd = TimeFrameExpand( PP_odd, TF, expandFirst );
+    S1_odd = TimeFrameExpand( S1_odd, TF, expandFirst );
+    S2_odd = TimeFrameExpand( S2_odd, TF, expandFirst );
+    S3_odd = TimeFrameExpand( S3_odd, TF, expandFirst );
+    R1_odd = TimeFrameExpand( R1_odd, TF, expandFirst );
+    R2_odd = TimeFrameExpand( R2_odd, TF, expandFirst );
+    R3_odd = TimeFrameExpand( R3_odd, TF, expandFirst );
+    ppflip = Flip( PP > Ref( PP, -1 ), PP < Ref( PP, -1 ) );
+}
+
+procedure PlotPivotLevels( LineMode, PivotLineMode, SColor, RColor, RPColor, FPColor, LineStyle, PivotStyle )
+{
+    SR3style = styleNoRescale;
+
+    if ( LineMode )
+    {
+        Plot( S1_even, "S1", Scolor, LineStyle );
+        Plot( S2_even, "S2", Scolor, LineStyle );
+        Plot( S3_even, "S3", Scolor, LineStyle + SR3style );
+        Plot( R1_even, "R1", Rcolor, LineStyle );
+        Plot( R2_even, "R2", Rcolor, LineStyle );
+        Plot( R3_even, "R3", Rcolor, LineStyle + SR3style );
+        Plot( PP_even, "PP", IIf( ppflip, RPcolor, FPcolor ), PivotStyle | styleNoLabel );
+        Plot( PP_odd, "PP", IIf( ppflip, RPcolor, FPcolor ), PivotStyle | styleNoLabel );
+        Plot( S1_odd, "S1", Scolor, LineStyle );
+        Plot( S2_odd, "S2", Scolor, LineStyle );
+        Plot( S3_odd, "S3", Scolor, LineStyle + SR3style );
+        Plot( R1_odd, "R1", Rcolor, LineStyle );
+        Plot( R2_odd, "R2", Rcolor, LineStyle );
+        Plot( R3_odd, "R3", Rcolor, LineStyle + SR3style );
+    }
+    else
+    {
+        Plot( S1, "S1", Scolor, LineStyle );
+        Plot( S2, "S2", Scolor, LineStyle );
+        Plot( S3, "S3", Scolor, LineStyle + SR3style );
+        Plot( PP, "PP", IIf( ppflip, RPcolor, FPcolor ), PivotStyle );
+        Plot( R1, "R1", Rcolor, LineStyle );
+        Plot( R2, "R2", Rcolor, LineStyle );
+        Plot( R3, "R3", Rcolor, LineStyle + SR3style );
+    }
+
+    if ( PivotLineMode )
+        Plot( PP, "PP", IIf( ppflip, RPcolor, FPcolor ), PivotStyle );
+}
+
+procedure PlotPivotLevel( Level, Color, LineStyle )
+{
+    if ( Level == "S1" )
+    {
+        Plot( S1_even, "S1", Color, LineStyle );
+        Plot( S1_odd, "S1", Color, LineStyle );
+    }
+    else
+        if ( Level == "S2" )
+        {
+            Plot( S2_even, "S2", Color, LineStyle );
+            Plot( S2_odd, "S2", Color, LineStyle );
+        }
+        else
+            if ( Level == "S3" )
+            {
+                Plot( S3_even, "S3", Color, LineStyle );
+                Plot( S3_odd, "S3", Color, LineStyle );
+            }
+            else
+                if ( Level == "PP" )
+                {
+                    Plot( PP_even, "PP", Color, LineStyle );
+                    Plot( PP_odd, "PP", Color, LineStyle );
+                }
+                else
+                    if ( Level == "R1" )
+                    {
+                        Plot( R1_even, "R1", Color, LineStyle );
+                        Plot( R1_odd, "R1", Color, LineStyle );
+                    }
+                    else
+                        if ( Level == "R2" )
+                        {
+                            Plot( R2_even, "R2", Color, LineStyle );
+                            Plot( R2_odd, "R2", Color, LineStyle );
+                        }
+                        else
+                            if ( Level == "R3" )
+                            {
+                                Plot( R3_even, "R3", Color, LineStyle );
+                                Plot( R3_odd, "R3", Color, LineStyle );
+                            }
+}
+
+procedure AddTfParam( defaultvalue )
+{
+    global TF;
+    PivotTF = ParamList( "Time Frame", List = "15 min, Hourly, 4 Hour, Daily, Weekly, Monthly", defaultvalue );
+
+    if ( PivotTF == "15 min" )
+        TF = in15Minute;
+    else
+        if ( PivotTF == "Hourly" )
+            TF = inHourly;
+        else
+            if ( PivotTF == "4 Hour" )
+                TF = inHourly * 4;
+            else
+                if ( PivotTF == "Daily" )
+                    TF = inDaily;
+                else
+                    if ( PivotTF == "Weekly" )
+                        TF = inWeekly;
+                    else
+                        if ( PivotTF == "Monthly" )
+                            TF = inMonthly;
+}
+
+function PLevel( defaultvalue )
+{
+    return ParamList( "Pivot Level", List = "OFF, R3, R2, R1, PP, S1, S2, S3", defaultvalue );
+}
+
+procedure AddSinglePivotLevel( Sectionname, def_PLevel, def_TF, def_color, style )
+{
+    _SECTION_BEGIN( Sectionname );
+    PL = PLevel( def_PLevel );
+    AddTfParam( def_TF );
+    PLColor = ParamColor( "Color", def_color );
+    AddPivotlevels( Pivottyp = 0, TF );
+    PlotPivotLevel( PL, PLColor, Style + styleNoTitle );
+    _SECTION_END();
+}
+
+procedure Adddefaultcolumns( part, width )
+{
+    global Buy;
+    global Sell;
+    global Short;
+    global Cover;
+
+    if ( part == 2 AND width = 1 )
+        AddColumn( IIf( Buy,  66, IIf( Sell,  83, Null ) ), "Buy/Sell", formatChar, IIf( Buy, colorGreen, IIf( Sell, colorRed, colorDefault ) ), colorDefault, width = 60 );
+    else
+        if ( part == 3 AND width = 1 )
+        {
+            AddColumn( IIf( Buy,  66, IIf( Sell,  83, Null ) ), "Buy/Sell", formatChar, IIf( Buy, colorGreen, IIf( Sell, colorRed, colorDefault ) ), colorDefault, width = 60 );
+            AddColumn( IIf( Cover,  67, IIf( Short,  83, Null ) ), "Short/Cover", formatChar, IIf( Cover, colorGreen, IIf( Short, colorRed, colorDefault ) ), colorDefault, width = 80 );
+        }
+}
+
+procedure AddAlertParam( DefaultAudio, DefaultEmail, DefaultBarComplete )
+{
+    global Audio;
+    global EMAil;
+    global BarComplete;
+    _SECTION_BEGIN( "Alerts" );
+    Audio = ParamToggle( "Audio", "Off|On", DefaultAudio );
+    Email = ParamToggle( "Email", "Off|On", DefaultEmail );
+    BarComplete = ParamToggle( "Bar Complete", "Off|On", DefaultBarComplete );
+    _SECTION_END();
+}
+
+procedure AddAlert( Condition, Audio, Email, Text, Type, BarComplete, Sound )
+{
+    global def_AudioAlertText;
+    global def_EmailAlertText;
+    LastDateTime = LastValue( DateTime() );
+    Cond = IIf( BarComplete, Ref( Condition, -1 ), Condition );
+
+    if ( Audio AND NOT Email )
+        AlertIf( Cond, Sound, Text + def_AudioAlertText, Type, 1 + 2 + 4 + 8, Lookback = 0 );
+    else
+        if ( Email AND NOT Audio )
+            AlertIf( Cond, "EMAIL", Text + def_EmailAlertText, Type, 1 + 2 + 4 + 8, Lookback = 0 );
+        else
+            if ( Audio AND Email AND LastDateTime > Nz( StaticVarGet( "AlertFlag" + Type + Name() ) ) )
+            {
+                StaticVarSet( "AlertFlag" + Type + Name(), LastDateTime );
+                AlertIf( Cond, Sound, Text + def_AudioAlertText, Type, 8, 1 );
+                AlertIf( Cond, "EMAIL", Text + def_EmailAlertText, Type, 8, 1 );
+            }
+}
+
+procedure SelCaPat( Ds, Hs, Hms, Sps, Ens, Hars, Pls, Mess )
+{
+    global Dojistar_s;
+    global Hammer_s;
+    global Hangingman_s;
+    global Spinningtop_s;
+    global Eng_s;
+    global Harami_s;
+    global Piercingline_s;
+    global Morning_evening_star_s;
+    Dojistar_s = Ds;
+    Hammer_s = Hs;
+    Hangingman_s = Hms;
+    Spinningtop_s = Sps;
+    Eng_s = Ens;
+    Harami_s = Hars;
+    Piercingline_s = Pls;
+    Morning_evening_star_s = Mess;
+}
+
+procedure AddVolaRatio( RatioPds1, RatioPds2, pds )
+{
+    global IV;
+    global IVabs;
+    global IV_abs_AVG;
+    global MAV1;
+    global MAV2;
+    global Ratio;
+    global VolaRatio;
+    IV = ( ( H / PeMp() ) - 1 ) * 100;//%
+    IV_abs = H / PeMp();
+    IV_abs_AVG = MA( IV_abs, pds );
+    MAV1 = MA( IV, RatioPds1 );
+    MAV2 = MA( IV, RatioPds2 );
+    Ratio = MAV1 / MAV2;
+    VolaRatio = 100 * ( Ratio - 1 );
+//	VolaRatio = Ratio;
+}
+
+SelCaPat( 1, 1, 1, 1, 1, 1, 1, 1 );
+
+procedure AddSensPerATR()
+{
+    global bars;
+    global Amount;
+    global SelectedMode;
+    _SECTION_BEGIN( "Sensitivity" );
+    ModeSel = ParamList( "Mode",  List = "Bars only, Bars and ATR, Bars and %", 0 );
+
+    for ( i = 0; i < 10; i++ )
+        if ( StrExtract( List,  i ) == ModeSel )
+            SelectedMode = i;
+
+    Bars = Param( "BARS", 4, 2, 20, 1 );
+
+    MinVertSize = Param( "Amount (ATR Multiplier / %)", 1, 0, 10.01, 0.05 );
+
+    _SECTION_END();
+}
+
+procedure BarValley( Input, bars )
+{
+    global bi;
+    bi = BarIndex();
+    Valley = Input == LLV( Input, 2 * bars ) AND Ref( LLV( Input, bars ), bars ) > Input;
+    return Valley AND LastValue( bi ) - ValueWhen( Valley, bi ) > bars;
+}
+
+procedure BarTop( Input, bars )
+{
+    global bi;
+    bi = BarIndex();
+    Top = Input == HHV( Input, 2 * bars ) AND Ref( HHV( Input, bars ), bars ) < Input;
+    return Top AND LastValue( bi ) - ValueWhen( Top, bi ) > bars;
+}
+
+procedure PerValley( Input, bars, percentage )
+{
+    Valley = BarValley( Input, bars );
+    ValleyLow = ValueWhen( Valley, Input );
+    ValleyX = ValueWhen( Valley, bi );
+    MinDistance = ( 1 + ( 0.01 * percentage ) ) * Ref( ValleyLow, bars );
+    Valleypercentage =
+        Valley AND HHV( Input, bars ) > MinDistance AND Ref( HHV( Input, bars ), bars ) > MinDistance;
+    return Valleypercentage;
+}
+
+procedure PerTop( Input, bars, percentage )
+{
+    Top = BarTop( Input, bars );
+    TopHigh = ValueWhen( Top, Input );
+    TopX = ValueWhen( Top, bi );
+    MinDistance = ( 1 - ( 0.01 * percentage ) ) * Ref( TopHigh, bars );
+    TopPercentage = Top AND LLV( Input, bars ) < MinDistance AND Ref( LLV( Input, bars ), bars ) < MinDistance;
+    return TopPercentage;
+}
+
+procedure ATRValley( Bars, ATRmultiplier )
+{
+    Valley = BarValley( L, bars );
+    ValleyLow = ValueWhen( Valley, L );
+    ValleyX = ValueWhen( Valley, bi );
+    MinDistance = ( ATRmultiplier * Ref( ValueWhen( Valley, ATR( 10 ) ), bars ) ) + Ref( ValleyLow, bars );
+    ValleyATR =
+        Valley AND HHV( L, bars ) > MinDistance AND Ref( HHV( L, bars ), bars ) > MinDistance;
+    //Plot(MinDistance, "Trigger", 5, 1);
+    return ValleyATR;
+}
+
+procedure ATRTop( Bars, ATRmultiplier )
+{
+    Top = BarTop( H, bars );
+    TopHigh = ValueWhen( Top, H );
+    TopX = ValueWhen( Top, bi );
+    MinDistance = Ref( TopHigh, bars ) - ( ATRmultiplier * Ref( ValueWhen( Top, ATR( 10 ) ), bars ) );
+    TopATR = Top AND LLV( H, bars ) < MinDistance AND Ref( LLV( H, bars ), bars ) < MinDistance;
+    //Plot(MinDistance, "Trigger", 5, 1);
+    return TopATR;
+}
+
+procedure ATRValleyInput( Input, Bars, ATRmultiplier )
+{
+    Valley = BarValley( Input, bars );
+    ValleyLow = ValueWhen( Valley, Input );
+    ValleyX = ValueWhen( Valley, bi );
+    MinDistance = ( ATRmultiplier * Ref( ValueWhen( Valley, ATR( 10 ) ), bars ) ) + Ref( ValleyLow, bars );
+    ValleyATR =
+        Valley AND HHV( Input, bars ) > MinDistance AND Ref( HHV( Input, bars ), bars ) > MinDistance;
+    return ValleyATR;
+}
+
+procedure ATRTopInput( Input, Bars, ATRmultiplier )
+{
+    Top = BarTop( Input, bars );
+    TopHigh = ValueWhen( Top, Input );
+    TopX = ValueWhen( Top, bi );
+    MinDistance = Ref( TopHigh, bars ) - ( ATRmultiplier * Ref( ValueWhen( Top, ATR( 10 ) ), bars ) );
+    TopATR = Top AND LLV( Input, bars ) < MinDistance AND Ref( LLV( H, bars ), bars ) < MinDistance;
+    return TopATR;
+}
+
+function PeValley( Bars, Amount, Mode )
+{
+    if ( Mode == 0 )
+        Valley = BarValley( L, bars );
+    else
+        if ( Mode == 1 )
+            Valley = ATRValley( Bars, Amount );
+        else
+            if ( Mode == 2 )
+                Valley = PerValley( Bars, Amount );
+
+    return Valley;
+}
+
+function PeTop( Bars, Amount, Mode )
+{
+    if ( Mode == 0 )
+        Top = BarTop( H, bars );
+    else
+        if ( Mode == 1 )
+            Top = ATRTop( Bars, Amount );
+        else
+            if ( Mode == 2 )
+                Top = PerTop( Bars, Amount );
+
+    return Top;
+}
+
+function PeValleyInput( Input, Bars, Amount, Mode )
+{
+    if ( Mode == 0 )
+        Valley = BarValley( Input, bars );
+    else
+        if ( Mode == 1 )
+            Valley = ATRValleyInput( Input, Bars, Amount );
+        else
+            if ( Mode == 2 )
+                Valley = PerValley( Input, Bars, Amount );
+
+    return Valley;
+}
+
+function PeTopInput( Input, Bars, Amount, Mode )
+{
+    if ( Mode == 0 )
+        Top = BarTop( Input, bars );
+    else
+        if ( Mode == 1 )
+            Top = ATRTopInput( Input, Bars, Amount );
+        else
+            if ( Mode == 2 )
+                Top = PerTop( Input, Bars, Amount );
+
+    return Top;
+}
+
+//|-----------------------------------------------------------------------------------------
+//|-----------------------------------------------------------------------------------------
+procedure CalcCandlePatterns()
+{
+    global CandlePatternRank;
+    global CandlePattern;
+
+    UT = H == HHV( H, 3 );
+    UT1 = Ref( UT, -1 );
+    DT = L == LLV( L, 3 );
+    DT1 = Ref( DT, -1 );
+    x = Cum( 1 );
+    B = abs( O - C );
+    B1 = Ref( B, -1 );
+    B2 = Ref( B, -2 );
+    BH = IIf( O > C, O, C );
+    BH1 = Ref( BH, -1 );
+    BH2 = Ref( BH, -2 );
+    BL  = IIf( O < C, O, C );
+    BL1 = Ref( BL, -1 );
+    BL2 = Ref( BL, -2 );
+    wD = C > O;
+    wD1 = Ref( WD, -1 );
+    wD2 = Ref( WD, -2 );
+    BD = C < O;
+    bD1 = Ref( bD, -1 );
+    bD2 = Ref( bD, -2 );
+    DR = H - L;
+    DR1 = Ref( DR, -1 );
+    R = DR / 100;
+    LL2 = L == LLV( L, 2 );
+    LL3 = L == LLV( L, 3 );
+    HH2 = H == HHV( H, 2 );
+    HH3 = H == HHV( H, 3 );
+    L1 = Ref( L, -1 );
+    L2 = Ref( L, -2 );
+    L3 = Ref( L, -3 );
+    H1 = Ref( H, -1 );
+    H2 = Ref( H, -2 );
+    H3 = Ref( H, -3 );
+    R1 = Ref( R, -1 );
+    R2 = Ref( R, -2 );
+    C1 = Ref( C, -1 );
+    O1 = Ref( O, -1 );
+    C2 = Ref( C, -2 );
+    UPshadow = H - BH;
+    DNshadow = BL - L;
+    longday = B > 40 * R;
+    wLD = Longday AND wD;
+    wLD1 = Ref ( wLD, -1 );
+    wLD2 = Ref ( wLD, -2 );
+    bLD = Longday AND bD;
+    bLD1 = Ref ( bLD, -1 );
+    bLD2 = Ref ( bLD, -2 );
+    doji = PeDoji();
+    HAMMER = Hammer_s & PeHammer() & DT;
+    SStar =  Hammer_s & BH  <  ( 35 * R + L ) AND BL  <  ( 25 * R + L ) AND B  > ( 10 * R );
+    SStar1 =  BH  <  ( 35 * R + L ) AND BL  <  ( 25 * R + L ) AND B  > ( 10 * R );
+    beSSTAR =  SStar & UT;
+    HangingMan = Hangingman_s & PeHammer() & UT;
+    InvertedHammer = Hangingman_s & BH < ( 35 * R + L ) & BL < ( 10 * R + L ) & B > ( 10 * R ) & DT;
+    SpinningTop = Spinningtop_s & BH  <  ( 75 * R + L ) AND BL  >  ( 25 * R + L )AND B  < ( 25 * R ) & H == HHV( H, 3 ) & L == HHV( L, 3 );
+    SpinningTop1 = BH  <  ( 75 * R + L ) AND BL  >  ( 25 * R + L )AND B  < ( 25 * R );
+    buENG = Eng_s & wd & bd1 & BH > BH1 & BL < BL1 & DT1;
+    beENG = Eng_s & bd & wd1 & BH > BH1 & BL < BL1 & UT1;
+    buHARAMI = Harami_s & bLD1 & wD & B < 0.5 * B1 & B > 0.25 * B1 & Inside() & BH  <  BH1 AND BL  >  BL1;
+    beHARAMI = Harami_s & wLD1 & bD & B < 0.5 * B1 & B > 0.25 * B1 & Inside() & BH  <  BH1 AND BL  >  BL1;
+    buHARAMICROSS = Harami_s & bLD1 & BH  <  BH1 & BL  >  BL1 & B < 0.25 * B1 & DT1;
+    beHARAMICROSS = Harami_s & wLD1 & BH  <  BH1 & BL  >  BL1 & B < 0.25 * B1 & UT1;
+    buDS = Dojistar_s & bLD1 & SpinningTop1 & H  <  L1 + ( DR1 / 2 ) & BH < BL1 & DT1;
+    beDS = Dojistar_s & wLD1 & SpinningTop1 & L  >  H1 - ( DR1 / 2 ) & BL > BH1 & UT1;
+    buPIERCINGLINE = Piercingline_s & bLD1 & wLD & C  >  ( ( B1 / 2 ) + BL1 ) & O  <  L1 & C < BH1 & DT1;
+    beDARKCLOUDCOVER = Piercingline_s & wLD1 & bld & C  <  ( B1 / 2 + BL1 ) & O > H1 & C > BL1 & UT1;
+    buMorningStar = Morning_evening_star_s & bLD2 & BH1 < BL2 + B2 / 3 & BL > L1 & wld & B1 > 0.25 * B2 & B1 < 0.5 * B2 & C > BL2 + B2 / 2;
+    buMorningDojiStar = Morning_evening_star_s & bLD2 & BH1 < BL2 + B2 / 3 & BL > L1 & wld & B1 < 0.25 * B2 & C > BL2 + B2 / 2;
+    beEveningStar = Morning_evening_star_s & wLD2 & BL1 > BH2 - B2 / 3 & B1 > 0.25 * B2 & B1 < 0.5 * B2 & BH < H1 & bld & C < BL2 + B2 / 2;
+    beEveningDojiStar = Morning_evening_star_s & wLD2 & BL1 > BH2 - B2 / 3 & B1 < 0.25 * B2 & BH < H1 & bld & C < BL2 + B2 / 2;
+    LongUPshadows = upshadow > 0.6 * DR & Ref( upshadow, -1 ) > 0.6 * DR1;
+    LongDNshadows = DNshadow > 0.6 * DR & Ref( DNshadow, -1 ) > 0.6 * DR1;
+    Pattern_1_Stick_BS = Hammer | InvertedHammer;
+    Pattern_1_Stick_SS = beSSTAR | HangingMan | SpinningTop;
+    Pattern_2_stick_BS = buENG | buHARAMI | buHARAMICROSS | buDS |  buPIERCINGLINE | buMorningStar | buMorningDojiStar;
+    Pattern_2_stick_SS = beENG | beHARAMI | beHARAMICROSS | beDS  | beDARKCLOUDCOVER | beEveningDojiStar | beEveningStar;
+    Pattern_3_stick_BS = 0;
+    Pattern_3_stick_SS = 0;
+    PR =
+        IIf( Pattern_1_Stick_BS, 1,
+             IIf( Pattern_2_Stick_BS, 2,
+                  IIf( Pattern_3_Stick_BS, 3,
+                       IIf( Pattern_1_Stick_SS, -1,
+                            IIf( Pattern_2_Stick_SS, -2,
+                                 IIf( Pattern_3_Stick_SS, -3, 0 ) ) ) ) ) );
+    CandlePatternRank = PR;
+    LBPR = LastValue( ValueWhen( PR > 0, PR ) );
+    LSPR = LastValue( ValueWhen( PR < 0, PR ) );
+    Buy_point = PR > 0 == 1;
+    Sell_point = PR < 0 == 1;
+    Sup_1 = LastValue( ValueWhen( Buy_point & LBPR == 1, L, 1 ) );
+    Sup_2 = LastValue( ValueWhen( Buy_point & LBPR == 2, LLV( L, 2 ), 1 ) );
+    Sup_3 = LastValue( ValueWhen( Buy_point & LBPR == 3, LLV( L, 3 ), 1 ) );
+    Support = IIf( LBPR == 1, Sup_1, IIf( LBPR == 2, Sup_2, IIf( LBPR == 3, Sup_3, -1e10 ) ) );
+    x_Buy = LastValue( ValueWhen( Buy_point, x, 1 ) );
+    Plot_Buy = IIf( LBPR == 1 & x >= x_Buy, Sup_1, IIf( LBPR == 2 & x >= x_Buy - 1, Support, IIf( LBPR == 3 & x >= x_Buy - 2, Support, -1e10 ) ) );
+    Res_1 = LastValue( ValueWhen( Sell_point & LSPR == -1, H, 1 ) );
+    Res_2 = LastValue( ValueWhen( Sell_point & LSPR == -2, HHV( H, 2 ), 1 ) );
+    Res_3 = LastValue( ValueWhen( Sell_point & LSPR == -3, HHV( H, 3 ), 1 ) );
+    Resistance = IIf( LSPR == -1, Res_1, IIf( LSPR == -2, Res_2, IIf( LSPR == -3, Res_3, -1e10 ) ) );
+    x_Sell = LastValue( ValueWhen( Sell_point, x, 1 ) );
+    Plot_Sell = IIf( LSPR == -1 & x >= x_Sell, Res_1, IIf( LSPR == -2 & x >= x_Sell - 1, Resistance, IIf( LSPR == -3 & x >= x_Sell - 2, Resistance, -1e10 ) ) );
+    CandlePattern =
+        WriteIf( Hammer, "Hammer",
+                 WriteIf( beSSTAR, "Shooting Star",
+                          WriteIf( InvertedHammer, "Inverted Hammer",
+                                   WriteIf( HangingMan, "Hanging Man",
+                                            WriteIf( SpinningTop AND NOT buDS, "Spinning Top",
+                                                     WriteIf( buENG, "Engulfing",
+                                                              WriteIf( beENG, "Engulfing",
+                                                                       WriteIf( buHARAMI, "Harami",
+                                                                                WriteIf( beHARAMI, "Harami",
+                                                                                         WriteIf( buHARAMICROSS, "Harami Cross",
+                                                                                                  WriteIf( beHARAMICROSS, "Harami Cross",
+                                                                                                           WriteIf( buDS, "Doji Star",
+                                                                                                                    WriteIf( beDS, "Doji Star",
+                                                                                                                             WriteIf( buPIERCINGLINE, "Piercingline",
+                                                                                                                                      WriteIf( beDARKCLOUDCOVER, "Dark Cloud Cover",
+                                                                                                                                               WriteIf( buMorningStar, "Morning Star",
+                                                                                                                                                        WriteIf( buMorningDojiStar, "Morning Doji Star",
+                                                                                                                                                                 WriteIf( beEveningStar, "Evening Star",
+                                                                                                                                                                          WriteIf( beEveningDojiStar, "Evening Doji Star",
+                                                                                                                                                                                   "" ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) );
+}
+
+//|-----------------------------------------------------------------------------------------
+//|-----------------------------------------------------------------------------------------
+RS = L;
+Tickers = C;
+CurrentTaio = PeTaio();
+
+if ( GroupID() == 253 AND StrLeft( Name(), 2 ) == "~i" )
+{
+    iRS = L;
+    iFT = C;
+    sRS = Null;
+    sFT = Null;
+}
+else
+    if ( GroupID() == 253 AND StrLeft( Name(), 2 ) == "~s" )
+    {
+        iRS = Null;
+        iFT = Null;
+        sRS = L;
+        sFT = C;
+    }
+    else
+    {
+        iRS = Foreign( "~i" + WriteVal( IndustryID(), 1.0 ) + " - " + IndustryID( 1 ), "L", 2 );
+        iFT = Foreign( "~i" + WriteVal( IndustryID(), 1.0 ) + " - " + IndustryID( 1 ), "C", 2 );
+        sRS = Foreign( "~s" + WriteVal( SectorID(), 1.0 ) + " - " + SectorID( 1 ), "L", 2 );
+        sFT = Foreign( "~s" + WriteVal( SectorID(), 1.0 ) + " - " + SectorID( 1 ), "C", 2 );
+    }
+
+iRSavg = iRS / iFT;
+
+sRSavg = sRS / sFT;
+SymF =  IIf( StrLeft( Name(), 1 ) == "~", StrLeft( Name(), 2 ) == "~s" OR StrLeft( Name(), 2 ) == "~i", 1 );
+SymFSI =  IIf( StrLeft( Name(), 1 ) == "~", StrLeft( Name(), 3 ) != "~s0" AND StrLeft( Name(), 3 ) != "~i0", Null );
+
+if ( GroupID() == 253 )
+{
+    if ( StrFind( Name(), "~s" ) )
+    {
+        sector = Name();
+        industry = "";
+    }
+    else
+        if ( StrFind( Name(), "~i" ) )
+        {
+            sector = "";
+            industry = Name();
+        }
+        else
+        {
+            sector = "";
+            industry = "";
+        }
+}
+else
+{
+    sector = SectorID( 1 );
+    industry = IndustryID( 1 );
+}
+
+//|-----------------------------------------------------------------------------------------
+//|-----------------------------------------------------------------------------------------
+Bulls =  H;
+
+Tickers = C;
+
+if ( GroupID() == 253 AND StrLeft( Name(), 2 ) == "~i" )
+{
+    sFBu = Null;
+    sFT = Null;
+    iFBu = H;
+    iFT   = C;
+}
+else
+    if ( GroupID() == 253 AND StrLeft( Name(), 2 ) == "~s" )
+    {
+        sFBu = H;
+        sFT = C;
+        iFBu = Null;
+        iFT = Null;
+    }
+    else
+    {
+        iFBu = Foreign( "~i" + WriteVal( IndustryID(), 1.0 ) + " - " + IndustryID( 1 ), "H", 2 );
+        iFT   = Foreign( "~i" + WriteVal( IndustryID(), 1.0 ) + " - " + IndustryID( 1 ), "C", 2 );
+        sFBu = Foreign( "~s" + WriteVal( SectorID(), 1.0 ) + " - " + SectorID( 1 ), "H", 2 );
+        sFT   = Foreign( "~s" + WriteVal( SectorID(), 1.0 ) + " - " + SectorID( 1 ), "C", 2 );
+    }
+
+sFBu_p = 100 * sFBu / sFT;
+
+sFBe_p = 100 - sFBu_p;
+iFBu_p = 100 * iFBu / iFT;
+iFBe_p = 100 - iFBu_P;
+TickersDB = Foreign( "~Tickers_in_DB", "C" );
+missing_quotes_filter = Highest( TickersDB ) - TickersDB  >  10;
+
+if ( GroupID() == 253 )
+{
+    if ( StrFind( Name(), "~s" ) )
+    {
+        sector = Name();
+        industry = "";
+    }
+    else
+        if ( StrFind( Name(), "~i" ) )
+        {
+            sector = "";
+            industry = Name();
+        }
+        else
+        {
+            sector = "";
+            industry = "";
+        }
+}
+else
+{
+    sector = SectorID( 1 );
+    industry = IndustryID( 1 );
+}
+
+SymF =  IIf( StrLeft( Name(), 1 ) == "~", StrLeft( Name(), 2 ) == "~s" OR StrLeft( Name(), 2 ) == "~i", 1 );
+
+SymFSI =  IIf( StrLeft( Name(), 1 ) == "~", StrLeft( Name(), 3 ) != "~s0" AND StrLeft( Name(), 3 ) != "~i0", Null );
+
+//|-----------------------------------------------------------------------------------------
+//|-----------------------------------------------------------------------------------------
+procedure AddFilterParameters()
+{
+    global def_PatternExplorerFilter;
+    global def_CustomFilter;
+    global def_FilterList;
+    global PE_LongFilter;
+    global PE_ShortFilter;
+    global def_LongFilter;
+    global def_ShortFilter;
+    global MainLongFilter;
+    global MainShortFilter;
+    global MainLSFilter;
+    global def_LFC1;
+    global def_LFC2;
+    global def_LFC3;
+    global def_LFC4;
+    global def_LFC5;
+    global def_SFC1;
+    global def_SFC2;
+    global def_SFC3;
+    global def_SFC4;
+    global def_SFC5;
+    Pe_LFC1 = CandlePatternRank > 0;
+    Pe_LFC2 = 0;
+    Pe_LFC3 = 0;
+    Pe_LFC4 = 0;
+    Pe_LFC5 = 0;
+    Pe_LFC6 = iFBu_p > 50;
+    Pe_LFC7 = iRSavg > SRSavg;
+    Pe_LFC8 = 0;
+    Pe_LFC9 = 0;
+    Pe_LFC10 = 0;
+    Pe_FilterList = "Off, Candlestick Patterns, Up Trend Filter I, Up Trend Filter II, Oversold, SI Trend up, RelStrength: Ind  >  Sec, Filter 7, Filter 8, Filter 9, Filter 10";
+    Pe_SFC1 = CandlePatternRank  <  0;
+    Pe_SFC2 = 0;
+    Pe_SFC3 = 0;
+    Pe_SFC4 = 0;
+    Pe_SFC5 = 0;
+    Pe_SFC6 = iFBu_p < 50;
+    Pe_SFC7 = iRSavg < SRSavg;
+    Pe_SFC8 = 0;
+    Pe_SFC9 = 0;
+    Pe_SFC10 = 0;
+
+    _SECTION_BEGIN( "Filter Conditions" );
+    PE_FilterCond = ParamList( "PatternExplorer Filter",  PE_FilterList, def_PatternExplorerFilter );
+    def_FilterCond = ParamList( "Custom Filter",  def_FilterList, def_CustomFilter );
+    _SECTION_END();
+
+    for ( i = 0; i < 11; i++ )
+    {
+        if ( StrExtract( PE_FilterList,  i ) == PE_FilterCond )
+            PE_FilterCondition = i;
+
+        if ( StrExtract( def_FilterList,  i ) == def_FilterCond )
+            def_FilterCondition = i;
+    }
+
+    PE_LongFilter =
+
+        IIf( PE_FilterCondition ==  0,  1,
+             IIf( PE_FilterCondition ==  1,  Pe_LFC1,
+                  IIf( PE_FilterCondition ==  2,  Pe_LFC2,
+                       IIf( PE_FilterCondition ==  3,  Pe_LFC3,
+                            IIf( PE_FilterCondition ==  4,  Pe_LFC4,
+                                 IIf( PE_FilterCondition ==  5,  Pe_LFC5,
+                                      IIf( PE_FilterCondition ==  6,  Pe_LFC6,
+                                           IIf( PE_FilterCondition ==  7,  Pe_LFC7,
+                                                IIf( PE_FilterCondition ==  8,  Pe_LFC8,
+                                                     IIf( PE_FilterCondition ==  9,  Pe_LFC9,
+                                                          IIf( PE_FilterCondition ==  10, Pe_LFC10, Null ) ) ) ) ) ) ) ) ) ) );
+    PE_ShortFilter =
+        IIf( PE_FilterCondition ==  0,  1,
+             IIf( PE_FilterCondition ==  1,  Pe_SFC1,
+                  IIf( PE_FilterCondition ==  2,  Pe_SFC2,
+                       IIf( PE_FilterCondition ==  3,  Pe_SFC3,
+                            IIf( PE_FilterCondition ==  4,  Pe_SFC4,
+                                 IIf( PE_FilterCondition ==  5,  Pe_SFC5,
+                                      IIf( PE_FilterCondition ==  6,  Pe_SFC6,
+                                           IIf( PE_FilterCondition ==  7,  Pe_SFC7,
+                                                IIf( PE_FilterCondition ==  8,  Pe_SFC8,
+                                                     IIf( PE_FilterCondition ==  9,  Pe_SFC9,
+                                                          IIf( PE_FilterCondition ==  10, Pe_SFC10, Null ) ) ) ) ) ) ) ) ) ) );
+    def_LongFilter =
+        IIf( def_FilterCondition ==  0,  1,
+             IIf( def_FilterCondition ==  1,  def_LFC1,
+                  IIf( def_FilterCondition ==  2,  def_LFC2,
+                       IIf( def_FilterCondition ==  3,  def_LFC3,
+                            IIf( def_FilterCondition ==  4,  def_LFC4,
+                                 IIf( def_FilterCondition ==  5,  def_LFC5, Null ) ) ) ) ) );
+    def_ShortFilter =
+        IIf( def_FilterCondition ==  0,  1,
+             IIf( def_FilterCondition ==  1,  def_SFC1,
+                  IIf( def_FilterCondition ==  2,  def_SFC2,
+                       IIf( def_FilterCondition ==  3,  def_SFC3,
+                            IIf( def_FilterCondition ==  4,  def_SFC4,
+                                 IIf( def_FilterCondition ==  5,  def_SFC5, Null ) ) ) ) ) );
+    MainLongFilter = PE_LongFilter AND def_LongFilter;
+    MainShortFilter = PE_ShortFilter AND def_ShortFilter;
+    MainLSFilter = MainLongFilter OR MainShortFilter;
+}
+
+procedure AddCandleColumn()
+{
+    global CandlePattern;
+    global CandlePatternRank;
+    global CandleColumnOn;
+    CalcCandlePatterns();
+    AddTextColumn( CandlePattern, "Candle Pattern", 1.2, IIf( CandlePatternRank > 0, colorGreen, colorRed ) );
+    CandleColumnOn = 1;
+}
+
+//Variables
+InChart = Status( "Action" ) == 1;
+InAA = Status( "Action" )  >= 3;
+AvgCalc200 = MovAvgC * 200;
+
+L1 = Ref( L, -1 );
+H1 = Ref( H, -1 );
+C1 = Ref( C, -1 );
+L2 = Ref( L, -2 );
+H2 = Ref( H, -2 );
+C2 = Ref( C, -2 );
+L3 = Ref( L, -3 );
+H3 = Ref( H, -3 );
+C3 = Ref( C, -3 );
+L4 = Ref( L, -4 );
+H4 = Ref( H, -4 );
+C4 = Ref( C, -4 );
+L5 = Ref( L, -5 );
+H5 = Ref( H, -5 );
+C5 = Ref( C, -5 );
+L6 = Ref( L, -6 );
+H6 = Ref( H, -6 );
+C6 = Ref( C, -6 );
+L7 = Ref( L, -7 );
+H7 = Ref( H, -7 );
+C7 = Ref( C, -7 );
+L8 = Ref( L, -8 );
+H8 = Ref( H, -8 );
+C8 = Ref( C, -8 );
+L9 = Ref( L, -9 );
+H9 = Ref( H, -9 );
+C9 = Ref( C, -9 );
+
+//---- heikin ashi
+HaClose = ( O + H + L + C ) / 4;
+HaOpen = AMA( Ref( HaClose,  -1 ),  0.5 );
+HaHigh = Max( H,  Max( HaClose,  HaOpen ) );
+HaLow = Min( L,  Min( HaClose,  HaOpen ) );
+
+def_PatternPriceBasisCPR = 1;
+def_PatternPriceBasisFractals = 1;
+def_Taio2TFMultiplier = 4;
+def_PlotVolume = 0;
+def_VolumeType = 2;
+def_VolumeUpColor = colorGreen;
+def_VolumeDnColor = colorRed;
+def_VolumeNeutralColor = colorLightBlue;
+def_VolumeHeight = 4;
+CandleColumnOn = 0;

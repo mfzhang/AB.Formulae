@@ -1,0 +1,69 @@
+/*Adaptive Zones OB/OS OSCILLATOR Modified*/
+/*Automatically Adjusts the overbought and oversold levels based on past
+performance*/
+/*Interpreted and coded by Anthony Faragasso*/
+/*Can be used with PrePackaged
+indicators,RSI,CCI,STOCHK,STOCHD,MFI,ULTIMATE,*/
+/*For ROC add the Close. ex.ROC(C,pds);*/
+
+MaxGraph=10;
+/*Input */
+Version(4.70);// You must use a version greater than this one
+Lookback=Param("Lookback",60,10,90,1);
+PerCent=Param("Pecentage of range",95,10,120,5);
+Pds=Param("Period",14,7,33,1);
+
+Var=MACD();
+Up=IIf(Var>Ref(Var,-1),abs(Var-Ref(Var,-1)),0);
+Dn=IIf(Var<Ref(Var,-1),abs(Var-Ref(Var,-1)),0);
+Ut=Wilders(Up,Pds);
+Dt=Wilders(Dn,Pds);
+RSIt=100*(Ut/(Ut+Dt));
+
+A1=RSIt;
+B2=RSI(pds);
+C3=CCI(pds);
+D4=StochK(pds);
+E5=StochD(pds);
+F6=MFI(pds);
+G7=Ultimate(pds);
+H8=ROC(C,pds);
+
+oc=ParamList("Oscillator choice",
+"RSI of MACD|RSI|CCI|StochK|StochD|Money Flow Index|Ultimate|ROC(Close)",
+2);
+Osc=
+IIf(oc=="RSI of MACD",A1,
+IIf(oc=="RSI",B2,
+IIf(oc=="CCI",C3,
+IIf(oc=="StochK",D4,
+IIf(oc=="StochD",E5,
+IIf(oc=="Money Flow Index",F6,
+IIf(oc=="Ultimate",G7,H8))))))); // else ROC
+
+V2=HHV(Osc,Lookback); // Highest AND Lowest Values of Osc during Lookback Period
+V3=LLV(Osc,Lookback);
+V4=V2-V3; // Range of Osc during Lookback Period
+V5=V4*(PerCent/100); // Define PerCent of Range to determine OB AND OS levels
+V6=V3+V5; // Over Bought level
+V7=V2-V5; // Over Sold level
+
+Buy=Cross(Osc,V7) AND Osc > Ref(Osc,-1);
+Sell=Cross(Osc,V6) AND Osc > Ref(Osc,-1);
+Short=Cross(V6,Osc) AND Osc < Ref(Osc,-1);
+Cover=Cross(V7,Osc) AND Osc < Ref(Osc,-1);
+
+// Exploration ...
+Filter=Buy OR Sell OR Short OR Cover;
+AddColumn(Buy,"Buy",1,colorDefault,IIf(Buy,colorPaleGreen,colorDefault));
+AddColumn(Sell,"Exit buy",1,colorDefault,IIf(Sell,colorPink,colorDefault));
+AddColumn(Short,"Short",1,colorDefault,IIf(Short,colorPaleGreen,colorDefault));
+AddColumn(Cover,"Exit short",1,colorDefault,IIf(Cover,colorPink,colorDefault));
+AddColumn(Osc, oc+" Lvl");
+AddColumn(V6, "O/B Lvl");
+AddColumn(V7, "O/S Lvl");
+
+Plot(Osc, oc,ParamColor("Oscillator",colorBlue),styleLine);
+Plot(V6," O/B",ParamColor("Upper - Sell",colorRed),styleLine);
+Plot(V7," O/S",ParamColor("Lower - Buy",colorGreen),styleLine);
+Plot(IIf(Osc<100 AND Osc>10,50,0)," Baseline",ParamColor("Baseline",colorYellow),styleLine);

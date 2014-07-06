@@ -1,0 +1,9 @@
+/* RSI Pointer - Determines specific buy and sell points */
+
+//Determines the Time length to be calculated
+Period = 25;
+
+//Graphs the oscillator
+Graph0= -(10000*( ( RSI( period ) - LLV( RSI( period ) , period ) ) / ( ( HHV( RSI(period ) , period ) )
+ - LLV(RSI( period ), period ) ) )* (Ma(close, 20) - Ma(close, 25))/ ((ma(close, 20) *100)));
+

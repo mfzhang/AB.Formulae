@@ -1,0 +1,50 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    The D_oscillator
+//  Author/Uploader: Dimitris Tsokakis 
+//  E-mail:          tsokakis@oneway.gr
+//  Date/Time Added: 2003-06-30 04:12:16
+//  Origin:          
+//  Keywords:        
+//  Level:           medium
+//  Flags:           system,indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=289
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=289
+//
+//------------------------------------------------------------------------------
+//
+//  The body of a candle C-O is divided by H+L to create a body to size ratio.
+//  To avoid any noise apply repetitive DEMA smoothing. Finally apply the RSI
+//  transformation to create the D_oscillator. The ^NDX OHLC data are used to
+//  produce Buy/Sell signals with interesting results for US stocks and the
+//  main European indexes. Equity curves seem to be independent of
+//  bullish/bearish environment. See also
+//
+//  http://groups.yahoo.com/group/amibroker/message/43405
+//
+//------------------------------------------------------------------------------
+
+// The D_oscillator and its application, by D. Tsokakis, June 2003
+O=Foreign("^NDX","O");
+H=Foreign("^NDX","H");
+L=Foreign("^NDX","L");
+C=Foreign("^NDX","C");
+t0=10;
+R0=DEMA((C-O)/(H+L),t0);
+R0=DEMA(R0,T0);
+R0=DEMA(R0,T0);
+R0=DEMA(R0,T0);
+R0=DEMA(R0,T0);
+R0=DEMA(R0,T0);
+R0=DEMA(R0,T0);
+R0=DEMA(R0,T0);
+R0=DEMA(R0,T0) ;
+R0=DEMA(R0,T0) ;
+D_oscillator=RSIA(R0,2*T0);
+X=30;Y=Optimize("Y",75,60,80,5);
+Buy=Cross(D_oscillator,X);Sell=Cross(D_oscillator,Y);
+Buy=ExRem(Buy,Sell);Sell=ExRem(Sell,Buy);
+// STOP=Optimize("STOP",20,20,100,20);ApplyStop(0,1,STOP,1);
+Plot(D_oscillator,"",1,1);Plot(30,"",8,1);Plot(75,"",8,1);
+Title=Name()+", D_oscillator = "+WriteVal(D_oscillator,1.2);
+ 

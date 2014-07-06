@@ -1,0 +1,35 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Time segment value
+//  Author/Uploader: ntk98 
+//  E-mail:          ntk98_2000@yahoo.co.uk
+//  Date/Time Added: 2004-05-22 17:34:18
+//  Origin:          
+//  Keywords:        AFL
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=358
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=358
+//
+//------------------------------------------------------------------------------
+//
+//  TJ has helped me translate the metastock formula of TSV(Time segment value)
+//  into AB language.
+//
+//  I thought I should share this formulas with other. This indicator uses
+//  volume and price, like OBV, but seems to be more reliable indicator then
+//  OBV.
+//
+//  In courtesy of The Wordens brothers I like to post the link for study on
+//  purpose and usage of this indicator.
+//
+//  http://www.tc2000.com/privuser2/ii12118p.htm
+//
+//------------------------------------------------------------------------------
+
+// Time segment value
+
+TSV=(Sum( IIf( C > Ref(C,-1), V * ( C-Ref(C,-1) ),
+IIf( C < Ref(C,-1),-V * ( C-Ref(C,-1) ), 0 ) ) ,18));
+
+Plot(TSV,"TSV",1,1);

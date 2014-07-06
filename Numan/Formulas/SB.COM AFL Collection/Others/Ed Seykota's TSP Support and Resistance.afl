@@ -1,0 +1,226 @@
+/*==============================================================================
+Global Settings
+==============================================================================*/
+SetFormulaName("TT Support Resistance 1.2");
+SetOption("InitialEquity", 1000000);
+SetOption("NoDefaultColumns", True );
+SetOption("CommissionMode", 2); //$$ per trade
+SetOption("CommissionAmount", 0);
+SetOption("MarginRequirement", 10);
+SetOption("UsePrevBarEquityForPosSizing", True);
+SetOption("UseCustomBacktestProc", True );
+
+SetTradeDelays( 0, 0, 0, 0 );
+
+/*==============================================================================
+User-defined Functions
+==============================================================================*/
+function Support(p)
+{
+sup = LLV(Low, p);
+sup[0] = Low[0];
+for (i = 1; i < p; i++)
+{
+if(Low[i] < sup[i-1]) sup[i] = Low[i];
+else sup[i] = sup[i-1];
+}
+return sup;
+}
+
+function Resistance(p)
+{
+res = HHV(High, p);
+res[0] = High[0];
+for (i = 1; i < p; i++)
+{
+if(High[i] > res[i-1]) res[i] = High[i];
+else res[i] = res[i-1];
+}
+return res;
+}
+
+function OptimizeNot(a1, a2, a3, a4, a5)
+{
+return a2;
+}
+
+/*==============================================================================
+Entry and Exit Rules
+==============================================================================*/
+fast = Optimize("Fast", 20, 5, 105, 5);
+slow = Optimize("Slow", 140, 20, 420, 20);
+FastRes = Resistance(fast);
+FastSup = Support(fast);
+SlowRes = Resistance(slow);
+SlowSup = Support(slow);
+heat = 0.05;
+
+// determine longer term trend
+// Note: could have problem if current bar is outside of all previous bars
+// the trend can also be calculated within main loop, but put here for clarity
+trend[0] = 0;
+for(bar= 1; bar < BarCount; bar++) // bar must start from 1, otherwise trend calculation is wrong
+{
+if(High[bar] > SlowRes[bar-1]) trend[bar] = 1;
+else if(Low[bar] < SlowSup[bar-1]) trend[bar] = -1;
+else trend[bar] = trend[bar-1];
+}
+
+LastPosition = 0; // 1 - long; -1 - short
+PositionRiskStop = 0;
+
+Buy = Sell = Short = Cover = 0; // this has to be set otherwise they are undefined!!! weird
+// main loop
+for(bar = 5; bar < BarCount-1; bar++) // give some bars for the system to stablize
+{
+// Exit position by protection stop
+if(LastPosition == 1)
+{
+// Sell at stop
+if(PositionRiskStop > Low[bar] ) // skip if the signal price only touch (=) the low
+{
+// We just calculate the exact price to simulate Ed's skid
+stopPrice = PositionRiskStop;
+ff = Min(Open[bar], stopPrice) - Low[bar];
+stopPrice = Min(Open[bar], stopPrice) - 0.5*ff;
+Sell[bar] = 1;
+SellPrice[bar] = stopPrice;
+TradePrice[bar] = stopPrice;
+LastPosition = 0;
+}
+else // move the protection stop
+{
+PositionRiskStop = FastSup[bar];
+}
+}
+else if(LastPosition == -1)
+{
+// Cover at stop
+if(PositionRiskStop < High[bar]) // skip if the signal price only touch (=) the high
+{
+stopPrice = PositionRiskStop;
+ff = High[bar] - Max(Open[bar], stopPrice);
+stopPrice = Max(Open[bar], stopPrice) + 0.5*ff;
+Cover[bar] = 1;
+CoverPrice[bar] = stopPrice;
+TradePrice[bar] = stopPrice;
+LastPosition = 0;
+}
+else // move the protection stop
+{
+PositionRiskStop = FastRes[bar];
+}
+}
+// Enter position only when last position has been closed
+else {
+if(trend[bar-1] == 1)
+{
+// buy at stop
+if( fastRes[bar-1] < High[bar])
+{
+ff = High[bar] - Max(Open[bar], FastRes[bar-1]);
+stopPrice = Max(Open[bar], FastRes[bar-1]) + 0.5*ff;
+f = heat/(FastRes[bar-1] - FastSup[bar-1]);
+Buy[bar] = 1;
+BuyPrice[bar] = stopPrice;
+PositionSize[bar] = f; //this value is passed to CBT for position sizing
+LastPosition = 1;
+PositionRiskStop = FastSup[bar];
+TradePrice[bar] = stopPrice;
+}
+}
+else if(trend[bar-1] == -1)
+{
+// short at stop
+if( FastSup[bar-1] > Low[bar])
+{
+ff = Min(Open[bar], FastSup[bar-1]) - Low[bar];
+stopPrice = Min(Open[bar], FastSup[bar-1]) - 0.5*ff;
+f = heat/(FastRes[bar-1] - FastSup[bar-1]);
+Short[bar] = 1;
+ShortPrice[bar] = stopPrice;
+PositionSize[bar] = f; //this value is passed to CBT for position sizing
+LastPosition = -1;
+PositionRiskStop = FastRes[bar];
+TradePrice[bar] = stopPrice;
+}
+}
+}
+}
+
+// close final day for accounting purpose
+bar = BarCount-1;
+if(LastPosition == 1) { Sell[bar] = 1; SellPrice[bar] = (Low[bar]+Close[bar])/2; }
+else if(LastPosition == -1) { Cover[bar] = 1; CoverPrice[bar] = (High[bar]+Close[bar])/2; }
+
+/*==============================================================================
+Automatic Analysis Action Options
+==============================================================================*/
+AAAction = Status("action");
+if(AAAction == actionIndicator)
+{
+Plot(FastRes, "FastRes", colorRed);
+Plot(SlowRes, "SlowRes", colorPink);
+Plot(FastSup, "FastSup", colorGreen);
+Plot(SlowSup, "SlowSup", colorBlue);
+}
+else if(AAAction == actionExplore)
+{
+Filter = 1;
+AddColumn( DateTime(), "Date", formatDateTime );
+AddColumn(O, "Open");
+AddColumn(H, "High");
+AddColumn(L, "Low");
+AddColumn(C, "Close");
+AddColumn(FastRes, "FastRes");
+AddColumn(SlowRes, "SlowRes");
+AddColumn(FastSup, "FastSup");
+AddColumn(SlowSup, "SlowSup");
+AddColumn(Trend, "Trend");
+AddColumn(IIf(Buy, Asc("B"), IIf(Sell, Asc("S"), IIf(Short, Asc("H"), IIf(Cover, Asc("C"), 0)))) , "Signal", formatChar);
+AddColumn(TradePrice, "TradePrice");
+}
+else if(AAAction == actionPortfolio)
+{
+bo = GetBacktesterObject();
+bo.PreProcess(); // Initialize backtester
+for( bar=0; bar < BarCount; bar++)
+{
+eq = bo.Equity;
+for ( sig=bo.GetFirstSignal(bar); sig; sig=bo.GetNextSignal(bar) )
+{
+if (sig.isExit())
+{
+if(bo.ExitTrade(bar,sig.symbol,sig.Price))
+{
+_TRACE("EXIT: " + sig.symbol + "@" + sig.Price);
+}
+}
+}
+
+// update stats after closing trades
+bo.UpdateStats(bar, 1 );
+
+for ( sig=bo.GetFirstSignal(bar); sig; sig=bo.GetNextSignal(bar))
+{
+if (sig.isEntry())
+{
+// sig.PosSize is passed from Phase I.
+shares = round((eq*sig.PosSize)/100)*100;
+ps = shares * sig.Price;
+
+if(bo.EnterTrade(bar, sig.symbol, sig.IsLong, sig.Price, ps, sig.PosScore,sig.RoundLotSize))
+{
+_TRACE("ENTRY: " + sig.symbol + " @" + sig.Price + " PosScore=" + sig.PosScore + " PosSize=" + ps);
+}
+}
+}
+
+bo.UpdateStats(bar,1); // MAE/MFE is updated when timeinbar is set to 1.
+bo.UpdateStats(bar,2);
+}
+bo.PostProcess(); // Finalize backtester
+}
+/*==============================================================================
+End of Formula
+==============================================================================*/

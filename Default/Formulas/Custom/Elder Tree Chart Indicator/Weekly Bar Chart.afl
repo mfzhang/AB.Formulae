@@ -1,0 +1,23 @@
+
+// Charts -- (cut and paste the chart/indicator to it's own window with it's own file Name AND remove the Remark Slashes "//", except
+// for the first line, this line desctibes the chart function. Example...leave "//Weekly Bar Chart" from the following first line as as.
+
+// Weekly Bar Chart
+_SECTION_BEGIN("Weekly Graph");
+TimeFrameSet( inWeekly );
+wo = O;
+wh = H;
+wl = L;
+wc = C;
+TimeFrameRestore(); 
+PlotOHLC( wo, wh, wl, wc, "Weekly Close", colorCustom9, styleBar );
+_SECTION_END();
+
+_SECTION_BEGIN("EMA");
+P = ParamField("Price field",-1);
+Periods = Param("Periods", 15, 2, 200, 1, 10 );
+Plot( EMA( P, Periods ), _DEFAULT_NAME(), ParamColor( "Color", colorYellow ), ParamStyle("Style") ); 
+_SECTION_END();
+
+//----------------------------------------------------------------------------------------------------------------------
+

@@ -1,0 +1,103 @@
+//|-----------------------------------------------------------------------------------------
+//|PatternExplorer.com - AT - Guppy Multiple Moving Average
+//|Copyright © 2007, PatternExplorer.com
+//|http://www.PatternExplorer.com
+//|e-mail: support@PatternExplorer.com
+//|-----------------------------------------------------------------------------------------
+FormulaName = "PE - Guppy MMA";
+
+SetChartOptions( 0, chartShowDates | chartShowArrows | chartLogarithmic | chartWrapTitle );
+#pragma nocache
+#include_once  <\PEInc\PatternExplorer_f0.afl>
+#Include_once "C:\Program Files (x86)\AmiBroker5\Formulas\PatternExplorer\#Defaults & Mods\PE - Defaults.afl"
+#Include_once "C:\Program Files (x86)\AmiBroker5\Formulas\PatternExplorer\#Defaults & Mods\PE - Mods.afl"
+/*******************************************************************************************/
+AddCustomCodeBeforePE();
+/*******************************************************************************************/
+AddAlertParam( def_AudioAlert, def_EmailAlert, def_BarComplete );
+/*******************************************************************************************/
+_SECTION_BEGIN( "Main Parameters" );
+AddAvgTypeParam( 3 );
+Shapes = ParamToggle( "Plot Shapes", "Off,On", 1 );
+_SECTION_END();
+/*******************************************************************************************/
+AvgTextname2 = AvgTextname;
+/*******************************************************************************************/
+_SECTION_BEGIN( "Section 1 - Periods" );
+P1 = Average( C, Param( "Avg 1", 3, 1, 100, 1 ), AvgType );
+P2 = Average( C, Param( "Avg 2", 5, 1, 100, 1 ), AvgType );
+P3 = Average( C, Param( "Avg 3", 8, 1, 100, 1 ), AvgType );
+P4 = Average( C, Param( "Avg 4", 10, 1, 100, 1 ), AvgType );
+P5 = Average( C, Param( "Avg 5", 12, 1, 100, 1 ), AvgType );
+P6 = Average( C, Param( "Avg 6", 15, 1, 100, 1 ), AvgType );
+_SECTION_END();
+/*******************************************************************************************/
+_SECTION_BEGIN( "Section 2 - Periods" );
+P7 = Average( C, Param( "Avg 7", 30, 1, 100, 1 ), AvgType );
+P8 = Average( C, Param( "Avg 8", 35, 1, 100, 1 ), AvgType );
+P9 = Average( C, Param( "Avg 9", 40, 1, 100, 1 ), AvgType );
+P10 = Average( C, Param( "Avg 10", 45, 1, 100, 1 ), AvgType );
+P11 = Average( C, Param( "Avg 11", 50, 1, 100, 1 ), AvgType );
+P12 = Average( C, Param( "Avg 12", 55, 1, 100, 1 ), AvgType );
+P13 = Average( C, Param( "Avg 13", 60, 1, 100, 1 ), AvgType );
+_SECTION_END();
+/*******************************************************************************************/
+_SECTION_BEGIN( "Styles" );
+Style1 = ParamStyle( "Section 1", def_GuppyLineStyle, maskAll );
+Style2 = ParamStyle( "Section 2", def_GuppyLineStyle, maskAll );
+_SECTION_END();
+/*******************************************************************************************/
+_SECTION_BEGIN( "Colors" );
+Color1 = ParamColor( "Section 1", def_GuppyLineColor1 );
+Color2 = ParamColor( "Section 2", def_GuppyLineColor2 );
+_SECTION_END();
+_SECTION_BEGIN( "Shape Types" );
+Buyshape = Param( "Buy", def_BuyShape, 0, 50, 1 );
+SellShape = Param( "Sell", def_SellShape, 0, 50, 1 );
+//ShortShape = Param("Short",def_ShortShape,0,50,1);
+//Covershape = Param("Cover",def_CoverShape,0,50,1);
+_SECTION_END();
+_SECTION_BEGIN( "Shape Colors" );
+Buyshapecolor = ParamColor( "Buy Shape", def_BuyShapeColor );
+Sellshapecolor = ParamColor( "Sell Shape", def_SellShapeColor );
+//Shortshapecolor = ParamColor("Short Shape",def_ShortShapeColor);
+//Covershapecolor = ParamColor("Cover Shape",def_CoverShapeColor);
+_SECTION_END();
+/*******************************************************************************************/
+Plot( P1, "Avg 1", Color1, style1 + styleNoTitle + styleNoLabel );
+Plot( P2, "Avg 2", Color1, style1 + styleNoTitle + styleNoLabel );
+Plot( P3, "Avg 3", Color1, style1 + styleNoTitle + styleNoLabel );
+Plot( P4, "Avg 4", Color1, style1 + styleNoTitle + styleNoLabel );
+Plot( P5, "Avg 5", Color1, style1 + styleNoTitle + styleNoLabel );
+Plot( P6, "Avg 6", Color1, style1 + styleNoTitle + styleNoLabel );
+Plot( P7, "Avg 7", Color2, style2 + styleNoTitle + styleNoLabel );
+Plot( P8, "Avg 8", Color2, style2 + styleNoTitle + styleNoLabel );
+Plot( P9, "Avg 9", Color2, style2 + styleNoTitle + styleNoLabel );
+Plot( P10, "Avg 10", Color2, style2 + styleNoTitle + styleNoLabel );
+Plot( P11, "Avg 11", Color2, style2 + styleNoTitle + styleNoLabel );
+Plot( P12, "Avg 12", Color2, style2 + styleNoTitle + styleNoLabel );
+Plot( P13, "Avg 13", Color2, style2 + styleNoTitle + styleNoLabel );
+/*******************************************************************************************/
+#include_once  <\PEInc\PatternExplorer_1.afl>
+/*******************************************************************************************/
+Buy = def_Buy AND Cross ( P1, P8 ) AND P1 > P13;
+Sell = def_Sell AND Cross( P8, P1 ) AND P1 < P13;
+/*******************************************************************************************/
+Filter = def_Filter AND NOT GroupID() == 253;
+Filter = Filter AND ( Buy OR Sell );
+Addefaultcolumns();
+Adddefaultcolumns( 2, 1 );
+AddTextColumn( FullName(), "Full name" );
+/*******************************************************************************************/
+//Equity(1,0);
+PlotShapes( IIf( Buy AND Shapes, Buyshape, Null ), Buyshapecolor, 0, L, -def_BuyShapeOffset );
+PlotShapes( IIf( Sell AND Shapes, Sellshape, Null ), Sellshapecolor, 0, H, -def_SellShapeOffset );
+
+AddAlert( Cross( P1, P8 ) AND P1 > P13, Audio, Email, "Traders-Average crossed Investors-Average", 1, BarComplete, def_BuySound1 );
+AddAlert( Cross( P8, P1 ) AND P1 < P13, Audio, Email, "Investors-Average crossed Traders-Average", 2, BarComplete, def_SellSound1 );
+/*******************************************************************************************/
+ToolTip = def_ToolTip;
+/*******************************************************************************************/
+AddCustomCodeAfterPE();
+/*******************************************************************************************/
+Title = "PatternExplorer.com - GMMA - " + EncodeColor( def_Color1 ) + "Type " + AvgTextname2 + EncodeColor( colorDefault ) + default_priceTitle + " ";

@@ -1,0 +1,172 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    3 Line Break
+//  Author/Uploader: Aron Pipa 
+//  E-mail:          
+//  Date/Time Added: 2006-03-17 12:31:03
+//  Origin:          
+//  Keywords:        
+//  Level:           medium
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=599
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=599
+//
+//------------------------------------------------------------------------------
+//
+//  TBL chart with adjustable reversal as desecribed by Steve Nison in "Beyond
+//  Candelsticks"
+//
+//  Thanks to Graham Kavanagh and Noname for the P&amp;F chart code which I
+//  used as base reference for construction of 3LineBreak chart.
+//
+//------------------------------------------------------------------------------
+
+/*---------------------------------------------------
+	3 Line Break 
+	Aron Pipa, March, 17, 2006
+--------------------------------------------------------*/
+
+GraphXSpace=7; 
+
+numline = Param("Break",2, 2, 10, 1);
+j =0;
+Line[j]= C[0];
+Op[j]= C[0]; 
+direction = 0; 
+up=0; // count up lines
+down=0;// count down lines
+Count=1; // count lines
+
+for( i = 1; i < BarCount; i++ )
+{
+
+if(direction[j] == 0) // continues down 
+{
+	if(C[i] < Line[j] ) 
+	{
+	j++; 
+	direction[j] = 0; 
+	Line[j] = C[i];
+	Op[j] =Line[j-1];
+	down++;
+	up=0;
+	Count++;
+	}
+	else
+	{
+	if(Count==1 &&	C[i] > OP[j] )// I-st reverse
+	{
+	j++; 
+	direction[j] = 1; 
+	Line[j] = C[i];
+	Op[j] = Op[j-1];
+	up++;
+	down=0;
+	Count++;
+	}
+	if(Count>1 && down  ==1 && C[i] > Line[j-1])//  reverse after 1 down line
+	{
+	j++; 
+	direction[j] = 1; 
+	Line[j] = C[i];
+	Op[j] = Op[j-1];
+	up++;
+	down=0;
+	Count++;
+	}
+	if(Count >1  && down  >1 && down < numline && C[i] > Op[j-1])//simple reverse 
+	{
+	j++; 
+	direction[j] = 1; 
+	Line[j] = C[i];
+	Op[j] = Op[j-1];
+	up++;
+	down=0;
+	Count++;
+	}
+	if(  down >= numline && C[i] > Op[j-(numline -1)]) // white trunaround line
+	{
+	j++; 
+	direction[j] = 1; 
+	Line[j] = C[i];
+	Op[j] = Op[j-1];
+	up++;
+	down=0;
+	Count++;
+	}
+	}
+	
+
+
+}
+else // continues up
+{
+	if(C[i] > Line[j]) 
+	{
+	j++; 
+	direction[j] = 1; 
+	Line[j] = C[i];
+	op[j] = Line[j-1];
+	up++;
+	down=0;
+	Count++;
+	} 
+	else
+	{
+	if(Count==1  &&	C[i] < OP[j] )// I-st reverse
+	{
+	j++; 
+	direction[j] = 0; 
+	Line[j] =C[i];
+	Op[j] = Op[j-1];
+	down++;
+	up=0;
+	Count++;
+
+	}
+	if(Count>1 && up  ==1 && C[i] < Line[j-1])//  reverse after 1 up line
+	{
+	j++; 
+	direction[j] = 0; 
+	Line[j] =C[i];
+	Op[j] = Op[j-1];
+	down++;
+	up=0;
+	Count++;
+	}
+	if( Count>1 && up  >1 && up < numline && C[i] < Op[j-1]) //simple reverse 
+	{
+	j++; 
+	direction[j] = 0; 
+	Line[j] =C[i];
+	Op[j] = Op[j-1];
+	down++;
+	up=0;
+	Count++;
+	}
+	if( up >= numline && C[i] < Op[j-(numline -1)])//black trunaround line
+
+	{
+	j++; 
+	direction[j] = 0; 
+	Line[j] =C[i];
+	Op[j] = Op[j-1];
+	down++;
+	up=0;
+	Count++;
+	}
+	}
+}
+}
+delta = BarCount - j -1;
+direction = Ref(direction, - delta); 
+C= Ref(Line, - delta); 
+O=(Ref(Op,-delta));
+H= L=C; 
+
+
+Plot(C,"", 39, styleCandle); 
+
+Title = Name() + "  Three Line Break" +"\n"+
+"Value = " + SelectedValue(C)  +"\n"+
+"Break = " + numline; 

@@ -1,0 +1,131 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Modified Darvas Box
+//  Author/Uploader: davis 
+//  E-mail:          
+//  Date/Time Added: 2006-03-21 04:46:07
+//  Origin:          
+//  Keywords:        Darvas Box
+//  Level:           basic
+//  Flags:           system
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=608
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=608
+//
+//------------------------------------------------------------------------------
+//
+//  After reference the Darvas Box code from Stephane, I added an additional
+//  rule of sell. So that the profit can increase a bit. The idea is the found
+//  the suitable selling point after we found the box top. When it meet the
+//  highest point and turn back, we sell if the different between the highest
+//  price and current close price is greater than a certain prestentage. Just
+//  like to share and hope can get comment from the others, since I am a
+//  beginner of TA.
+//
+//------------------------------------------------------------------------------
+
+
+
+//////////begin/////////
+
+box1=0;
+box2=0;
+SetBarsRequired(10000,10000);
+procedure fillDarvas(start,end,swap,top, bottom )
+{
+   for ( j = start; j < end; j++)
+   {
+       if( box1[j] == swap)
+  box1[j]= top ;
+else
+box1[j]= bottom;
+
+       if(box2[j] == swap)
+  box2[j]= bottom ;
+else
+box2[j]= top;
+   }
+}
+
+BoxArr1 = 0;
+BoxArr2 = 0;
+StateArray = 0;
+DBuy = 0;
+DSell = 0;
+TopArray = 0;
+BotArray = 0;
+tick=0;
+
+BoxTop = High[0];
+BoxBot = Low[0];
+swap=0;
+state = 0;
+BoxStart = 0;
+
+for (i=0; i<BarCount; i++)
+{
+ if (state==5)
+ {
+  TopArray[i]=BoxTop;
+  BotArray[i]=BoxBot;
+  if (Low[i]<(BoxBot*(1-tick/100)) || High[i]>(BoxTop*(1+tick/100)))
+  {
+fillDarvas(BoxStart,i,swap,BoxTop,BoxBot);
+
+  state = 1;
+  swap =  !swap;
+  BoxTop = High[i];
+  BoxStart = i;
+  }
+ }
+ else
+ {
+  if (High[i]<BoxTop)
+  {
+      if ((state<3) || (Low[i]>BoxBot))
+      {
+   state++;
+   }
+      else
+   {
+      state=3;
+   }
+      if (state==3)
+      BoxBot=Low[i];
+  }
+  else
+  {
+      state=1;
+      BoxTop=High[i];
+  }
+ }
+ StateArray[i] = state;
+}
+
+fillDarvas(BoxStart,BarCount,swap,BoxTop,BoxBot);
+
+
+Buyrule=H>Ref(box1,-1) AND H>Ref(box2,-1) AND Ref(statearray,-1)==5;
+Sellrule=L<Ref(box1,-1) AND L<Ref(box2,-1) AND Ref(statearray,-1)==5;
+
+
+
+_SECTION_BEGIN("Darvas box");
+Plot(C,"",1,64);
+Plot( box2, "" , 1 + statearray , styleLine );
+Plot( box1, " Status = "+WriteVal(statearray,1.0) , 1 + statearray, styleLine );
+_SECTION_END();
+
+
+Buy = Buyrule;
+statopt = Optimize("statopt var", 3, 1, 5, 1 ); 
+lossopt= Optimize("lossopt var", 5, 3, 10, 1 ); 
+//statopt=5;
+//lossopt=7;
+
+topvalue=IIf(box1>box2,box1,box2);
+Sellrule2 = (((topvalue-Close)*100/topvalue) > lossopt) AND (statearray == statopt);
+Sell = Sellrule OR Sellrule2;
+
+Short = Sell;
+Cover = Buy;
+

@@ -1,0 +1,44 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    AO+ Momentum indicator
+//  Author/Uploader: Steve Wiser 
+//  E-mail:          slwiserr@erols.com
+//  Date/Time Added: 2001-07-05 19:06:27
+//  Origin:          
+//  Keywords:        
+//  Level:           semi-advanced
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=55
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=55
+//
+//------------------------------------------------------------------------------
+//
+//  Supports the William's Alligator Trend following system
+//
+//------------------------------------------------------------------------------
+
+/* Exploration, System and Indicator */
+    Author: Steve Wiser
+   Email address: slwiserr@erols.com
+   May 5, 2001 */
+
+outsidebar = outside();
+insidebar = H <= Ref(H,-1) and L >= Ref(L,-1);
+upbar = H > ref(H,-1) and L >= ref(L, -1);
+downbar = L < ref(L,-1) and H <= ref(H,-1);
+barcolor=iif(outsidebar, 1, 
+               iif(downbar,   4, 
+               iif(upbar,        5, 
+               iif(insidebar,6, 0 ) ) ) );
+
+/*barcolor=
+      iif(outsidebar, 1, iif(downbar, 4, iif(upbar,5, 0) ) );*/
+
+
+var1=ma( A , 34);
+var2=ma( A,5);
+graph0=var2-var1;
+Graph0Style=2+4;
+graph1=wilders(var2-var1,5);
+Graph1Style=4+1;
+Graph0BarColor=Barcolor;

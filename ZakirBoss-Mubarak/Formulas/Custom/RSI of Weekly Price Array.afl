@@ -1,0 +1,36 @@
+//RSI of Weekly Price Array
+//Coded by Anthony Faragasso
+//Ver. 1.01 Update#1
+//Credit to Tomasz for some code help
+ 
+weekstart = DayOfWeek() < Ref( DayOfWeek(), -1 );
+weekend = DayOfWeek() > Ref( DayOfWeek(),1);
+
+/****** Weekly Values ***************/
+WeeklyOpen=ValueWhen(DayOfWeek()< Ref(DayOfWeek(),-1) ,Open);
+WeeklyHigh = ValueWhen( weekend, HighestSince( weekstart, High ) );
+WeeklyLow = ValueWhen( weekend, LowestSince( weekstart, Low ) );
+WeeklyClose=ValueWhen(DayOfWeek() > Ref( DayOfWeek(),1),Close);
+WeeklyVolume=ValueWhen(DayOfWeek() > Ref(DayOfWeek(),1),Sum(V,5));
+
+/***********************************/
+
+/*N-Day RSI of Weekly Price array*/
+/*Variable Identifiers*/
+A1=weeklyclose;
+b2=weeklyHigh;
+C3=weeklylow;
+D4=weeklyopen;
+e5=weeklyvolume;
+
+t=15;// Set Time in Multiples of 5 for weekly 
+Var=A1;//Insert Variable Identifier from Above
+Up=IIf(Var>Ref(Var,-1),abs(Var-Ref(Var,-1)),0); 
+Dn=IIf(Var<Ref(Var,-1),abs(Var-Ref(Var,-1)),0); 
+Ut=Wilders(Up,t); 
+Dt=Wilders(Dn,t); 
+RSIWeekly=100*(Ut/(Ut+Dt)); 
+Graph0=RSIweekly;
+Graph0Style=1;
+
+Title=Name()+"..."+" "+"("+WriteVal(t,1)+" )"+"...RSI_Weekly Of..."+EncodeColor(colorRed)+WriteIf(Var==A1,"WeeklyClose",WriteIf(Var==b2,"WeeklyHigh",WriteIf(Var==C3,"WeeklyLow",WriteIf(Var==d4,"WeeklyOpen",WriteIf(Var==e5,"WeeklyVolume","")))))+EncodeColor(colorBlack)+""+" = "+"(" +WriteVal(RSIweekly,1.2)+")"+"%";

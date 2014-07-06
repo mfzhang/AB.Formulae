@@ -1,0 +1,72 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Futures - Dollar Move Indicator
+//  Author/Uploader: Tommy Beard 
+//  E-mail:          tab321@yahoo.com
+//  Date/Time Added: 2005-05-23 04:53:11
+//  Origin:          
+//  Keywords:        futures commodities dollar-gain performance
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=463
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=463
+//
+//------------------------------------------------------------------------------
+//
+//  This AFL Code offers the same feature as Track N Trade Pro which allows
+//  quickly seeing the Dollar Amount of a move in a Futures Contract. The time
+//  period is selected by left clicking twice on the graph to select the
+//  beginng date and doing the same to select the end date. The time period is
+//  also displayed in the title. Symbols used are from BriteFutures data which
+//  is easily downloaded into Amibroker. The Point Value information should be
+//  correct but please confirm those values on your own.
+//
+//------------------------------------------------------------------------------
+
+//Title Shows: Ticker - Date - Price - Dollar Value of Move - Time Period of Move - Points Gained/Lost During Move - Point Value Used in Calculation.
+ 
+//Left Click Twice on the Graph to Select Begin Date.
+//Left Click Twick on the Graph to Select End Date.
+//Default Begin Date is first bar on graph.
+//Default End Date is last bar on graph
+
+//Future Symbols Data and Point Values
+//NOTE - Symbols are those used with BriteFutures
+//http://www.britefutures.com/home.asp 
+symbol = Name();
+char1 = StrLeft(symbol, 1);
+char2 = StrMid( symbol, 1, 1);
+if (char1 == "C") PointValue = 50; //Corn
+if (char1 == "O") PointValue = 100; //Oats
+if (char1 == "W") PointValue = 50; //Wheat
+if (char1 == "S") PointValue = 50; //Soybeans
+if (char1 == "B" AND char2 == "O") PointValue = 600;//Bean Oil
+if (char1 == "C" AND char2 == "O") PointValue = 10;//Cocoa
+if (char1 == "C" AND char2 == "T") PointValue = 500;//Cotton
+if (char1 == "F" AND char2 == "C") PointValue = 500;//FCattle
+if (char1 == "G" AND char2 == "C") PointValue = 100;//Gold
+if (char1 == "H" AND char2 == "G") PointValue = 250;//Copper
+if (char1 == "K" AND char2 == "C") PointValue = 375;//Coffee
+if (char1 == "K" AND char2 == "W") PointValue = 50;//KWheat
+if (char1 == "L" AND char2 == "C") PointValue = 400;//LCattle
+if (char1 == "L" AND char2 == "B") PointValue = 110;//Lumber
+if (char1 == "L" AND char2 == "H") PointValue = 400;//LHogs
+if (char1 == "O" AND char2 == "J") PointValue = 150;//OJuice
+if (char1 == "P" AND char2 == "A") PointValue = 100;//Palladium
+if (char1 == "P" AND char2 == "B") PointValue = 400;//PBelly
+if (char1 == "P" AND char2 == "L") PointValue = 50;//Platinum
+if (char1 == "S" AND char2 == "B") PointValue = 1120;//Sugar
+if (char1 == "S" AND char2 == "I") PointValue = 5000;//Silver
+if (char1 == "S" AND char2 == "M") PointValue = 100;//SBMeal
+
+BegPrice = BeginValue(C);//Price at left end of range
+EndPrice = EndValue(C);//Price at right end of range
+LastPrice = LastValue(C);//Price at last available bar 
+//Calculate gain during range
+TotPtGain = (EndPrice - BegPrice);
+Points = (TotPtGain*1);
+Money = (TotPtGain*PointValue);
+
+Plot(Close, "Price", colorBlack, styleBar);
+
+Title = Name() + "   " + Date() + "   Price: " + C + EncodeColor( colorDarkOliveGreen) + "   $ " +WriteVal(Money,format=1.2) + "    " +  EncodeColor( colorIndigo ) + WriteVal( BeginValue( DateTime() ), formatDateTime ) + " To " + WriteVal( EndValue( DateTime() ), formatDateTime ) + EncodeColor( colorDarkOliveGreen) + WriteVal(Points) + EncodeColor( colorBlue) + "  PV-" + WriteVal(PointValue, format=1.0);

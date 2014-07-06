@@ -1,0 +1,65 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Tom DeMark Trend Lines
+//  Author/Uploader: S M Jones 
+//  E-mail:          
+//  Date/Time Added: 2006-03-12 21:08:20
+//  Origin:          
+//  Keywords:        Trend Lines
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=597
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=597
+//
+//------------------------------------------------------------------------------
+//
+//  Just include this code in your chart that has your HLOC graph and adjust
+//  the percent field and it will draw TD Trend Lines, in any time frame.
+//
+//  I started with the example code I found in the help section for
+//  "LineArray".
+//
+//------------------------------------------------------------------------------
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+	THIS SECTION DRAWS TD TREND LINES */
+
+percent  = 0.01 * 1; /* Adjust this percent as necessary, I use .01 because FOREX is a 0.0000 number */
+firstpointL = 2;
+firstpointH = 2;
+
+y0=LastValue(Trough(L,percent,firstpointL)); 
+y1=LastValue(Trough(Ref(L,-1),percent,1));
+
+for( i = 1; i < BarCount AND y0 >= y1; i++ )
+{
+		
+		firstpointL++;	
+		y0=LastValue(Trough(L,percent,firstpointL));		 
+}
+
+x0=BarCount - 1 - LastValue(TroughBars(L,percent,firstpointL)); 
+x1=BarCount - 1 - LastValue(TroughBars(Ref(L,-1),percent,1)); 
+LineL = LineArray( x0, y0, x1, y1, 1 ); 
+/*
+Plot(C, "C", colorBlack, styleCandle); 
+*/
+Plot( LineL, " Support Trend line", colorWhite,4 +8 ); 
+
+
+yt0=LastValue(Peak(H,percent,firstpointH)); 
+yt1=LastValue(Peak(Ref(H,-1),percent,1));
+
+for(i = 1; i < BarCount AND yt0 <= yt1; i++ )
+{
+		
+		firstpointH++;		
+		yt0=LastValue(Peak(H,percent,firstpointH)); 
+}
+xt0=BarCount - 1 - LastValue(PeakBars(H,percent,firstpointH)); 
+xt1=BarCount - 1 - LastValue(PeakBars(Ref(H,-1),percent,1)); 
+LineH = LineArray( xt0, yt0, xt1, yt1, 1 ); 
+
+Plot( LineH, "Resistance Trend line", colorBrown,4 + 8 ); 
+
+/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/

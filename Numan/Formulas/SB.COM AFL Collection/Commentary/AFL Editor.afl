@@ -1,0 +1,510 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    AFL Editor
+//  Author/Uploader: Geoff Mulhall 
+//  E-mail:          gmulhall@urban.net.au
+//  Date/Time Added: 2003-01-01 04:18:09
+//  Origin:          
+//  Keywords:        
+//  Level:           advanced
+//  Flags:           commentary
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=247
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=247
+//
+//------------------------------------------------------------------------------
+//
+//  A excellent (free) programmers editor called ConTEXT is available from
+//
+//  http://www.fixedsys.com/context/
+//
+//  For a large AFL programming task this is very useful since ConTEXT can be
+//  made AFL sensitive by copying the attached file to c:\program
+//  files\context\highlighters.
+//
+//  Keywords, functions are then highlighted just as they are from within Ami
+//  but with the added advantage of having a fully functional editor at your
+//  disposal.
+//
+//------------------------------------------------------------------------------
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Amibroker Formula Language 
+//
+//////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////////
+// language name
+
+Language:               AFL
+
+
+//////////////////////////////////////////////////////////////////////////////
+// default file filter
+// note: if more than one extension is associated, eg:
+// C/C++ files (*.c,*.cpp,*.h,*.hpp)|*.c;*.cpp;*.h;*.hpp
+
+Filter:                 AFL files (*.afl)|*.afl
+
+
+//////////////////////////////////////////////////////////////////////////////
+// help file which will be invokend when F1 is pressed
+
+HelpFile:
+
+
+//////////////////////////////////////////////////////////////////////////////
+// language case sensitivity
+//                      0  - no
+//                      1  - yes
+
+CaseSensitive:          0
+
+
+//////////////////////////////////////////////////////////////////////////////
+// comment type: LineComment - comment to the end of line
+// BlockCommentBeg - block comment begin, it could be
+// multiline
+// BlockCommentEnd - block comment end
+
+LineComment:            //
+BlockCommentBeg:        /*
+BlockCommentEnd:        */
+
+
+//////////////////////////////////////////////////////////////////////////////
+// identifier characters
+// note: characters shouldn't be delimited, except arrays
+// array of chars could be defined as from_char..to_char
+
+IdentifierBegChars:     a..z A..Z 
+IdentifierChars:        a..z A..Z _ 0..9 
+
+//////////////////////////////////////////////////////////////////////////////
+// numeric constants begin characters
+// note: characters shouldn't be delimited, except arrays
+// array of chars could be defined as from_char..to_char
+// number always starts with 0..9 except when NumConstBeg
+// defines other
+
+NumConstBegChars:       0..9 
+
+
+//////////////////////////////////////////////////////////////////////////////
+// numeric constants characters
+// note: characters shouldn't be delimited, except arrays
+// array of chars could be defined as from_char..to_char
+// number always starts with 0..9 except when NumConstBeg
+// defines other
+
+NumConstChars:          0..9 A..Z . -
+
+
+//////////////////////////////////////////////////////////////////////////////
+// escape character
+
+EscapeChar:
+
+
+//////////////////////////////////////////////////////////////////////////////
+// keyword table
+// note: delimited with spaces, lines could be wrapped
+// you may divide keywords into two groups which can be
+// highlighted differently
+
+// reserved words
+
+KeyWords1:
+open o
+close c
+high h
+low l
+volume v
+openint oi
+average a
+
+// functions
+
+KeyWords2:
+
+ACCDIST
+ADDCOLUMN
+ADLINE
+ADDTEXTCOLUMN
+ADDTOCOMPOSITE
+ADVISSUES
+ADVVOLUME
+ADX
+ALERTIF
+AMA
+AMA2
+APPLYSTOP
+ATAN
+ATR
+BARSSINCE
+BBANDBOT
+BBANDTOP
+CEIL
+CHAIKIN
+CCI
+CORRELATION
+COS
+CREATEOBJECT
+CREATESTATICOBJECT
+CROSS
+CUM
+DATE
+DATENUM
+DAY
+DAYOFWEEK
+DECISSUES
+DECVOLUME
+DEMA
+EMA
+ENABLESCRIPT
+ENABLETEXTOUTPUT
+ENCODECOLOR
+EQUITY
+EXP
+EXREM
+EXREMSPAN
+FLIP
+FLOOR
+FRAC
+FOREIGN
+FULLNAME
+GAPDOWN
+GAPUP
+GETBASEINDEX
+GETEXTRADATA
+GETSCRIPTOBJECT
+GROUPID
+HHV
+HHVBARS
+HIGHEST
+HIGHESTBARS
+HIGHESTSINCE
+HIGHESTSINCEBARS
+HOLD
+HOUR
+IIF
+INDUSTRYID
+INSIDE
+INT
+INTERVAL
+INWATCHLIST
+ISEMPTY
+ISTRUE
+LASTVALUE
+LINEARREG
+LINREGINTERCEPT
+LINREGSLOPE
+LLV
+LLVBARS
+LOG
+LOG10
+LOWEST
+LOWESTBARS
+LOWESTSINCE
+LOWESTSINCEBARS
+MA
+MACD
+MARKETID
+MAX
+MDI
+MIN
+MINUTE
+MFI
+MONTH
+NAME
+NVI
+OBV
+OPTIMIZE
+OSCP
+OSCV
+OUTSIDE
+PEAK
+PEAKBARS
+PDI
+PLOT
+PLOTFOREIGN
+PLOTOHLC
+PVI
+PREC
+PREFS
+RANDOM
+REF
+RELSTRENGTH
+RMI
+RSI
+RSIa
+ROC
+ROUND
+RWI
+RWIHI
+RWILO
+SAR
+SECOND
+SECTORID
+SELECTEDVALUE
+SETBARSREQUIRED
+SETTRADEDELAYS
+SIGNAL
+SIN
+SQRT
+STATUS
+STDERR
+STDEV
+STOCHD
+STOCHK
+STRLEFT
+STRLEN
+STRMID
+STRRIGHT
+STUDY
+SUM
+TEMA
+TIMENUM
+TRIN
+TRIX
+TROUGH
+TROUGHBARS
+TSF
+ULTIMATE
+UNCISSUES
+UNCVOLUME
+VALUEWHEN
+VERSION
+WILDERS
+WMA
+WRITEIF
+WRITEVAL
+YEAR
+ZIG
+
+//Reserved variable names
+
+KeyWords3:
+
+buy
+sell
+short
+cover
+buyprice
+sellprice
+shortprice
+coverprice
+title
+maxgraph
+graph0 graph1 graph2 graph3 graph4 graph5 graph6 graph7 graph8 graph9
+graph0name graph1name graph2name graph3name graph4name graph5name graph6name graph7name graph8name graph9name
+graph0color graph1color graph2color graph3color graph4color graph5color graph6color graph7color graph8color graph9color
+graph0barcolor graph1barcolor graph2barcolor graph3barcolor graph4barcolor graph5barcolor graph6barcolor graph7barcolor graph8barcolor graph9barcolor
+graph0style graph1style graph2style graph3style graph4style graph5style graph6style graph7style graph8style graph9style
+
+colorBlack
+colorBrown
+colorDarkOliveGreen
+colorDarkGreen
+colorDarkTeal
+colorDarkBlue
+colorIndigo
+colorDarkGrey
+colorDarkRed
+colorOrange
+colorDarkYellow
+colorGreen
+colorTeal
+colorBlue
+colorBlueGrey
+colorGrey
+colorRed
+colorLightOrange
+colorLime
+colorSeaGreen
+colorAqua
+colorLightBlue
+colorViolet
+colorGrey
+colorPink
+colorGold
+colorYellow
+colorBrightGreen
+colorTurquoise
+colorSkyblue
+colorPlum
+colorLightGrey
+colorRose
+colorTan
+colorLightYellow
+colorPaleGreen
+colorPaleTurquoise
+colorPaleBlue
+colorLavender
+colorWhite
+
+styleLine
+styleHistogram
+styleThick
+styleDots
+styleNoLine
+styleLog
+styleCandle
+styleBar
+styleNoDraw
+styleStaircase
+styleSwingDots
+styleNoRescale
+styleNoLabel
+stylePointAndFigure
+
+styleArea
+styleOwnScale
+styleLeftAxisScale
+graphxspace
+graphzorder
+roundlotsize
+ticksize
+pointvalue
+margindeposit
+positionsize
+numcolumns
+filter
+
+column0 column1 column2 column3 column4 column5 column6 column7 column8 column9
+column0format column1format column2format column3format column4format column5format column6format column7format column8format column9format
+column0name column1name column2name column3name column4name column5name column6name column7name column8name column9name
+
+//////////////////////////////////////////////////////////////////////////////
+// string delimiter: StringBegChar - string begin char
+// StringEndChar - string end char
+// MultilineStrings - enables multiline strings, as perl
+// has it
+
+StringBegChar:          "
+StringEndChar:          "
+MultilineStrings:       0
+
+
+//////////////////////////////////////////////////////////////////////////////
+// use preprocessor: 0 - no
+// 1 - yes
+// note: if yes, '#' and statements after it will be
+// highlighted with Preprocessor defined colors
+
+UsePreprocessor:        0
+
+
+//////////////////////////////////////////////////////////////////////////////
+// highlight line: 0 - no
+// 1 - yes
+// note: if yes, current line will be highlighted
+
+CurrLineHighlighted:    0
+
+
+//////////////////////////////////////////////////////////////////////////////
+// colors
+// note:                first value is foreground, second is background color
+//                        and third (optional) represents font attribute:
+//                        B - bold
+//                        I - italic
+//                        U - underline
+//                        S - strike out
+//                        attributes can be combined: eg. B or BI
+//                      as value, it could be used any standard windows color:
+//                        clBlack, clMaroon, clGreen, clOlive, clNavy,
+//                        clPurple, clTeal, clGray, clSilver, clRed, clLime,
+//                        clYellow, clBlue, clFuchsia, clAqua, clLtGray,
+//                        clDkGray, clWhite, clScrollBar, clBackground,
+//                        clActiveCaption, clInactiveCaption, clMenu, clWindow,
+//                        clWindowFrame, clMenuText, clWindowText, clCaptionText,
+//                        clActiveBorder, clInactiveBorder, clAppWorkSpace,
+//                        clHighlight, clHighlightText, clBtnFace, clBtnShadow,
+//                        clGrayText, clBtnText, clInactiveCaptionText,
+//                        clBtnHighlight, cl3DDkShadow, cl3DLight, clInfoText,
+//                        clInfoBk
+//                      as value, it could be used hex numeric constant too:
+//                        $BBGGRR - BB: blue, GG: green, RR: red, eg: $FF6A00
+
+SpaceCol:               clWindowText clWindow
+Keyword1Col:            clBlack clWindow B
+Keyword2Col:            clBlue clWindow
+Keyword3Col:            clNavy clWindow B
+IdentifierCol:          clWindowText clWindow
+CommentCol:             clGreen clWindow
+NumberCol:              clRed clWindow
+StringCol:              clFuchsia clWindow
+SymbolCol:              clGray clWindow
+PreprocessorCol:        clBlue clWindow
+SelectionCol:           clWhite clNavy
+CurrentLineCol:         clBlack clYellow
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

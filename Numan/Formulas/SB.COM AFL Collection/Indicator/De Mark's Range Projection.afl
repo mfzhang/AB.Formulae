@@ -1,0 +1,41 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    De Mark's Range Projection
+//  Author/Uploader: Prakash Shenoi 
+//  E-mail:          
+//  Date/Time Added: 2006-08-09 06:59:19
+//  Origin:          Based on De Mark's formula
+//  Keywords:        
+//  Level:           basic
+//  Flags:           indicator,commentary
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=671
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=671
+//
+//------------------------------------------------------------------------------
+//
+//  De Mark's Range Projection based on market structure High, Low and close,
+//  takes into calculation the position of close in relation to Open and
+//  projects likely range of the High and Low for the next session.
+//
+//------------------------------------------------------------------------------
+
+/*De Mark's Range Projection */
+
+/* AFL code by Prakash Shenoi */
+
+MaxGraph=3;
+rph1=(H+C+2*L)/2-L;
+rph2=(2*H+L+C)/2-L;
+rph3=(H+L+2*C)/2-L;
+rpl1=(H+C+2*L)/2-H;
+rpl2=(2*H+L+C)/2-H;
+rpl3=(H+L+2*C)/2-H;
+rph=IIf((C<O),rph1,IIf((C>O),rph2,IIf((C=O),rph3,0)));
+rpl=IIf((C<O),rpl1,IIf((C>O),rpl2,IIf((C=O),rpl3,0)));
+Graph0=rph;
+Graph1=rpl;
+Graph2=C;
+Graph0Style=Graph1Style=16+8;
+Graph2Style=128;
+Graph2Color=3;
+Title=Name() + ", Close " + WriteVal(( Graph2 ),1.2)+ "  DeMark's Range Projection - Proj-H " + WriteVal(( Graph0),1.2) + ", Proj-L " + WriteVal(( Graph1 ),1.2);

@@ -1,0 +1,66 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    abosliman2005m
+//  Author/Uploader: ali 
+//  E-mail:          abosliman2005m@hotmail.com
+//  Date/Time Added: 2006-09-26 19:01:15
+//  Origin:          abosliman2005m
+//  Keywords:        
+//  Level:           advanced
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=718
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=718
+//
+//------------------------------------------------------------------------------
+//
+//  abosliman2005m
+//
+//------------------------------------------------------------------------------
+
+ScriptVersion = " explorativo del Main al 12 de set 2005";
+
+//////////////////// PRECIO //////////////////////////////////////////////
+
+Plot(C,"",colorBlack,styleCandle|styleNoLabel);
+
+Filter = Close > 5;
+AddColumn(Close,"Close");
+
+PositionSize = 50;
+
+///////////////////////	MEDIAS MOVILES///////////////////
+
+slope = Param("slope",2,2,100,1);
+Color20= IIf(LinRegSlope(MA(C,20),slope)<0,colorRed,colorBrightGreen);
+event1= LinRegSlope(MA(C,20),slope)<1;
+Plot( MA( C,  20), "",Color20 , styleLine);
+//Plot( event1, "", colorRose, styleArea|styleOwnScale);
+Color50= IIf(LinRegSlope(MA(C,50),slope)<0,colorRed,colorBlue); 
+Plot( MA( C, 50), "",Color50  , styleLine);
+Color100= IIf(LinRegSlope(MA(C,100),slope)<0,colorRed,colorYellow);
+Plot( MA( C,  100), "",Color100 , styleLine);
+Color150= IIf(LinRegSlope(MA(C,150),slope)<0,colorRed,10); 
+Plot( MA( C, 150), "",Color150  , styleLine);
+
+event1=Cross(MA(C,20),MA(C,50));
+PlotShapes( IIf(event1 ,shapeDigit1,0) ,5, 0, L,-30);
+
+event2=Cross(MA(C,50),MA(C,100));
+PlotShapes( IIf(event2 ,shapeDigit2,0) ,6, 0, L,-30);
+
+event3=Cross(MA(C,100),MA(C,150));
+PlotShapes( IIf(event3 ,shapeDigit3,0) ,7, 0, L,-30);
+
+event4=Cross(MA(C,50),MA(C,20));
+PlotShapes( IIf(event4 ,shapeDigit4,0) ,5, 0, H,30);
+
+event5=Cross(MA(C,100),MA(C,50));
+PlotShapes( IIf(event5 ,shapeDigit5,0) ,6, 0, H,30);
+
+event6=Cross(MA(C,150),MA(C,100));
+PlotShapes( IIf(event6 ,shapeDigit6,0) ,7, 0, H,30);
+
+event7=Cross(MA(C,5),MA(C,20));
+PlotShapes( IIf(event7 ,shapeDigit7,0) ,9, 0, L,-30);
+
+

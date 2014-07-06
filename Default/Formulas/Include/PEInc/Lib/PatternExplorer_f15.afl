@@ -1,0 +1,71 @@
+//|-----------------------------------------------------------------------------------------
+//|PatternExplorer.com - PatternExplorer_f15
+//|Copyright © 2007, PatternExplorer.com
+//|http://www.PatternExplorer.com
+//|e-mail: support@PatternExplorer.com
+//|-----------------------------------------------------------------------------------------
+IV_periods = 50;
+Middle_price = L + ( ( H - L ) / 2 );
+IV = ( ( H / Middle_price ) - 1 ) * 100;
+IV_AVG = MA( IV, IV_periods );
+per1 = LastValue( Sensitivity * LastValue( 0.2 * IV_AVG ) );
+per2 = LastValue( per1 * 3 );
+x = Cum( 1 );
+Tp1 = TroughBars( L, per1, 1 ) == 0;
+Pp1 = PeakBars  ( H, per1, 1 ) == 0;
+Tp2 = TroughBars( L, per2, 1 ) == 0;
+Pp2 = PeakBars  ( H, per2, 1 ) == 0;
+XT1 = LastValue( ValueWhen( Tp1, x, 1 ) );
+XT2 = LastValue( ValueWhen( Tp1, x, 2 ) );
+XT3 = LastValue( ValueWhen( Tp1, x, 3 ) );
+XT4 = LastValue( ValueWhen( Tp1, x, 4 ) );
+XT5 = LastValue( ValueWhen( Tp1, x, 5 ) );
+XT6 = LastValue( ValueWhen( Tp2, x, 1 ) );
+XT7 = LastValue( ValueWhen( Tp2, x, 2 ) );
+XP1 = LastValue( ValueWhen( Pp1, x, 1 ) );
+XP2 = LastValue( ValueWhen( Pp1, x, 2 ) );
+XP3 = LastValue( ValueWhen( Pp1, x, 3 ) );
+XP4 = LastValue( ValueWhen( Pp1, x, 4 ) );
+XP5 = LastValue( ValueWhen( Pp1, x, 5 ) );
+XP6 = LastValue( ValueWhen( Pp2, x, 1 ) );
+XP7 = LastValue( ValueWhen( Pp2, x, 2 ) );
+T1 = LastValue( ValueWhen( Tp1, L, 1 ) );
+T2 = LastValue( ValueWhen( Tp1, L, 2 ) );
+T3 = LastValue( ValueWhen( Tp1, L, 3 ) );
+T4 = LastValue( ValueWhen( Tp1, L, 4 ) );
+T5 = LastValue( ValueWhen( Tp1, L, 5 ) );
+T6 = LastValue( ValueWhen( Tp2, L, 1 ) );
+T7 = LastValue( ValueWhen( Tp2, L, 2 ) );
+P1  = LastValue( ValueWhen( Pp1, H, 1 ) );
+P2  = LastValue( ValueWhen( Pp1, H, 2 ) );
+P3  = LastValue( ValueWhen( Pp1, H, 3 ) );
+P4  = LastValue( ValueWhen( Pp1, H, 4 ) );
+P5 = LastValue( ValueWhen( Pp1, H, 5 ) );
+P6 = LastValue( ValueWhen( Pp2, H, 1 ) );
+P7 = LastValue( ValueWhen( Pp2, H, 2 ) );
+breakout_lasttrough_G1 = Cross( T1, C );
+breakout_lasttrough_G2 = Cross( T6, C );
+breakout_lastpeak_G1 =   Cross( C, P1 );
+breakout_lastpeak_G2 =   Cross( C, P6 );
+bu_breakout = Cross( C, P1 )  OR  Cross( C, P6 );
+be_breakout = Cross( T1, C )  OR  Cross( T6, C );
+break_G1_val = IIf( breakout_lasttrough_G1, -1, IIf( breakout_lastpeak_G1, 1, 0 ) );
+break_G2_val = IIf( breakout_lasttrough_G2, -1, IIf( breakout_lastpeak_G2, 1, 0 ) );
+posR = LastValue( C ) + DisRange * LastValue( ATR( 10 ) );
+nR = LastValue( C ) - DisRange * LastValue( ATR( 10 ) );
+RT1 = T1<posR & T1>nR;
+RT2 = T2<posR & T2>nR;
+RT3 = T3<posR & T3>nR;
+RT4 = T4<posR & T4>nR;
+RT5 = T5<posR & T5>nR;
+RP1 = P1<posR & P1>nR;
+RP2 = P2<posR & P2>nR;
+RP3 = P3<posR & P3>nR;
+RP4 = P4<posR & P4>nR;
+RP5 = P5<posR & P5>nR;
+RT6 = T6<posR & T6>nR;
+RT7 = T7<posR & T7>nR;
+RP6 = P6<posR & P6>nR;
+RP7 = P7<posR & P7>nR;
+AnZ = T1 == 0 & T2 == 0 & T3 == 0 & T4 == 0 & T5 == 0 & T6 == 0 & T7 == 0 & P1 == 0 & P2 == 0 & P3 == 0 & P4 == 0 & P5 == 0 & P6 == 0 & P7 == 0;
+LastBar = Cum( 1 ) == LastValue( Cum( 1 ) );

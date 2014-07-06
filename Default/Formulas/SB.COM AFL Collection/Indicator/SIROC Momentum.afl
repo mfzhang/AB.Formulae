@@ -1,0 +1,34 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    SIROC Momentum
+//  Author/Uploader: Geoff Mulhall 
+//  E-mail:          gmulhall@iprimus.com.au
+//  Date/Time Added: 2001-06-25 05:07:39
+//  Origin:          SIROC Momentum Indicator. Trading for a Living Dr Alexander
+//  Keywords:        SIROC Momentum Indicator
+//  Level:           semi-advanced
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=34
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=34
+//
+//------------------------------------------------------------------------------
+//
+//  /* Elders SIROC Indicator */
+//
+//  /* Set Scaling to Automatic, Show dates On, Percent On, Middle On */
+//
+//  graph0 = roc(ema(c,13),21);
+//
+//  graph0style = 1;
+//
+//  graph0color = 9;
+//
+//------------------------------------------------------------------------------
+
+/* Elders SIROC Indicator */
+/* Set Scaling to Automatic, Show dates On, Percent On, Middle On */
+
+graph0 = roc(ema(c,13),21);
+graph0style = 1; 
+graph0color = 9;
+

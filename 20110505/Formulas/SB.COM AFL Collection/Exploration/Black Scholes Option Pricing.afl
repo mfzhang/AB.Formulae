@@ -1,0 +1,108 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Black Scholes Option Pricing
+//  Author/Uploader: Anthony Faragasso 
+//  E-mail:          ajf1111@epix.net
+//  Date/Time Added: 2005-03-20 13:19:39
+//  Origin:          
+//  Keywords:        Options, Black Scholes
+//  Level:           advanced
+//  Flags:           exploration
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=447
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=447
+//
+//------------------------------------------------------------------------------
+//
+//  Black Scholes Option Pricing returns the Fair Value of call and put
+//  options.
+//
+//------------------------------------------------------------------------------
+
+//BLACK SHCOLES OPTION PRICING FORMULA
+//coded by Anthony Faragasso
+//1-01-03
+
+// User Variables
+ 
+StockPrice  = Param("stockPrice",81,1,200,1); //Stock Price 
+Timedays    = Param("DaysToExpire",30,1,300,1); //Time to expiry ( days to exp/365 )
+StrikePrice = Param("StrikePrice",75,1,300,1); //strike Price of Option to evaluate
+InterestRate= Param("InterestRate",0.06,0.01,0.11,0.001); //prevailing interest rate 
+VKnown =Param("Volatility",0.30,0.10,0.50,0.001);//You can insert Known volatility here , Implied Volatility. 
+
+//////////////////////////////////////////////////////
+
+time=timedays/365;// days to expire conversion formula
+
+
+//Formula variables below
+
+/*************************************************/
+// Solves for ( X )
+
+x = (ln(stockPrice/strikePrice) + (interestrate + Vknown*Vknown/2)*time)/(Vknown*sqrt(time)); 
+/*************************************************/
+
+P =  0.2316419;   
+bb1 = 0.31938153; 
+bb2 = -0.3565638; 
+bb3 = 1.78147794; 
+bb4 = -1.821256;
+bb5 = 1.33027443;
+
+pi = 3.141592654; // PI
+
+A2 = 1/sqrt(2*pi);
+A3 = exp(-(x^2)/2);
+y= a2*a3;
+A4 = exp(-interestrate*time);
+t1 = 1/(1+ P*x);
+A5=(bb1*t1)+(bb2*t1^2) +( bb3*t1^3)+(bb4*t1^4)+(bb5*t1^5);
+/************************************************************/
+//Standard Normal Distribution Function of ( x )
+
+
+N = 1- y *A5 ;
+
+/************************************************************/
+  // Solves for ( X1 )
+X1=x-Vknown*sqrt(TIME);
+
+y1=1/sqrt(2*pi);
+N0=exp(-(x1^2)/2);
+T2=1/(1+ P*X1);
+A6=(bb1*t2)+(bb2*t2^2) +( bb3*t2^3)+(bb4*t2^4)+(bb5*t2^5);
+A7=exp(-interestrate*time);
+y2=y1*n0;
+
+/************************************************************/
+/* Standard Normal Distribution Function OF ( x1 )*/
+/***********************************************************/
+N2= 1-y2 * A6;
+
+/************ CALL OPTION FAIR VALUE************/
+Call = stockPrice  * N - strikePrice *  A4  * N2;
+
+/************ PUT OPTION FAIR VALUE*************/
+
+Put =  Call - stockprice  + strikeprice*A7;
+
+ 
+Filter = 1;
+SetOption("nodefaultcolumns",1);
+AddColumn(stockPrice,"AssetP",2.2);
+AddColumn(strikeprice,"StrikeP",1.2);
+AddColumn(InterestRate*100,"InterestRate%",1.2);
+AddColumn(VKnown*100,"Volatility%",1.2);
+AddColumn(timedays,"DaysToExpire ",1);
+AddColumn(Call,"Call FV",1.2);
+AddColumn(put,"Put FV",1.2);
+
+//Notes
+/* AA window
+1. Select current symbol ( could be any stock, output is not associated
+with the current stock).
+2. n last quotations
+3. n = 1
+4. Use the Parameters button to make user selections
+5. Click explore */

@@ -1,0 +1,324 @@
+SetFormulaName( "NMN Bollinger Entry" );
+SetChartOptions( 1, chartShowDates | chartWrapTitle );
+
+_SECTION_BEGIN( "Bollinger Parameters" );
+P 		= ParamField( "Bollinger Band on", 3 );
+Pd1 	= Param( "BB 1 Period", 10, 3, 100, 1 );
+W1 		= Param( "BB 1 Width", 1.35, 0, 50, 0.01 );
+Pd2 	= Param( "BB 2 Period", 15, 3, 100, 1 );
+W2 		= Param( "BB 2 Width", 2, 0, 50, 0.01 );
+
+Plot( P, "Price Chart", IIf( O < C, colorBrightGreen, colorRed ), styleCandle );
+Plot( bb1 = BBandBot( P, Pd1, W1 ), "Inner/Top Bollinger", colorLightOrange, styleLine );
+Plot( bb2 = BBandBot( P, Pd2, W2 ), "Outer/Btm Bollinger", colorLightGrey, styleLine );
+_SECTION_END();
+
+_SECTION_BEGIN( "Candle-Bollinger positions" );
+
+DCT			= Param( "Down Candle triggger", 1.5, 0.01, 10, 0.01 );
+UCT			= Param( "Up Candle triggger", 1.5, 0.01, 10, 0.01 );
+
+DnCandle 	= ( O >= C );
+UpCandle 	= NOT DnCandle; // ( O < C )
+
+// Signals
+
+OpenAboveBB1 		= O > bb1;
+OpenBelowBB1 		= O < bb1;
+CloseAboveBB1 	= C > bb1;
+CloseBelowBB1 	= C < bb1;
+
+CloseBelowBB2		= C < bb2;
+CloseAboveBB2		= C > bb2;
+
+OpenBelowBB2 		= O < bb2;
+OpenAboveBB2		= O > bb2;
+
+OpenBetweenBB		= ( bb1 > O ) AND ( bb2 < O );
+CloseBetweenBB	= ( bb1 > C ) AND ( bb2 < C );
+
+CandleBetweenBB	= OpenBetweenBB AND CloseBetweenBB ;
+
+DnCandleAcrossBB	= ( O > bb1 ) AND ( bb2 > C ) ;
+UpCandleAcrossBB = ( C > bb1 ) AND ( bb2 > O ) ;
+
+CandleBelowBB2	= OpenBelowBB2 AND CloseBelowBB2 ;
+
+TotallyBelowBB1	= ( H < bb1 ) AND ( H > bb2 ) ; // without the 2nd condn. its same as 'TotallyBelowBB2'
+TotallyBelowBB2	= ( H < bb2 );
+TotallyBetweenBB	= ( H < bb1 ) AND ( L > bb2 );
+
+CandleBody = IIf( DnCandle, ( O - C ), ( C - O ) ); //CandleBody = IIf(CandleBody==0,0.000001,CandleBody);
+FullCandle = ( H - L );
+CandleWick = FullCandle - CandleBody;
+TopWick	=	H - IIf( DnCandle, O, C ) ;
+BtmWick	=	IIf( DnCandle, C, O ) - L ;
+
+LastIsDnCandle = Ref( DnCandle, -1 );
+LastIsUpCandle = Ref( UpCandle, -1 );
+
+BBGap = ( bb1 - bb2 ); // Gap between the overlapping bollinger-bands
+
+BB_Candle_ratio	= BBGap / CandleBody ;
+Candle_BB_ratio	= CandleBody / BBGap ;
+WickCandleRatio	= CandleWick / CandleBody ;
+CandleWickRatio	= CandleBody / CandleWick ;
+WickTopBtmRatio	= TopWick / BtmWick ;
+
+bb1topcut	= IIf( DnCandle, ( O - bb1 ), ( C - bb1 ) );
+bb2topcut	= IIf( DnCandle, ( O - bb2 ), ( C - bb2 ) );
+
+bb1cut 	= bb1topcut / CandleBody ;
+CandleCutByBB1 = IIf( DnCandle, ( bb1 > C ) AND ( bb1 < O ), ( bb1 > O ) AND ( bb1 < C ) ) ;
+bb1cutHi 	= ( abs( bb1cut ) <= ( Param( "High cut by BB1 (in %)", 30, 1, 100, 1 ) / 100 ) ) AND CandleCutByBB1 ;
+bb1cutLo 	= ( abs( bb1cut ) >= ( Param( "Low cut by BB1 (in %)", 50, 1, 100, 1 ) / 100 ) ) AND CandleCutByBB1 ;
+
+bb2cut 	= bb2topcut / CandleBody ;
+CandleCutByBB2 = IIf( DnCandle, ( bb2 > C ) AND ( bb2 < O ), ( bb2 > O ) AND ( bb2 < C ) );
+bb2cutHi 	= abs( bb2cut ) <= ( Param( "High cut by BB2 (in %)", 50, 1, 100, 1 ) / 100 ) AND CandleCutByBB2 ;
+bb2cutLo 	= abs( bb2cut ) >= ( Param( "Low cut by BB2 (in %)", 60, 1, 100, 1 ) / 100 ) AND CandleCutByBB2 ;
+
+// Down candle 'buy' logic-parts
+DnCandle_below_both_BB 	= DnCandle AND OpenBelowBB2 AND CloseBelowBB2 ;
+DnCandle_above_both_BB	= DnCandle AND CloseAboveBB1 AND OpenAboveBB1 ;
+DnCandle_between_BB 		= DnCandle AND CandleBetweenBB ;
+DnCandle_Across_BB 		= DnCandleAcrossBB AND ( CandleBody > ( BBGap * DCT ) ) ;
+//DnCandleSpansBB			= ( O > bb1 ) AND ( C < bb2 ) ;
+
+// Up Candle 'buy' logic-parts
+UpCandleBelowBothBB		=	UpCandle AND OpenBelowBB2 ;
+UpCandleAboveBothBB		=	UpCandle AND OpenAboveBB1 ;
+UpCandle_between_BB 		= 	UpCandle AND ( ( bb1 > C ) AND ( bb2 < C ) ) AND ( ( bb1 > O ) AND ( bb2 < O ) );
+UpCandleBetweenBB			=	UpCandle AND ( bb1 > O ) AND ( bb2 < O ) AND ( bb2 > C );
+UpCandle_Across_BB		=	UpCandleAcrossBB AND ( CandleBody > ( BBGap * UCT ) ) ;
+
+/*--------------------------------------------
+					TRADE LOGICS
+ ---------------------------------------------*/
+
+Buy0 = ( DnCandle AND bb1cut < 0.7 AND bb1cut > 0.0 AND WickCandleRatio > 0.75 AND WickCandleRatio < 1.0 ) OR
+       ( ( CandleBetweenBB OR CandleBelowBB2 ) AND ( CandleBody > 1 ) AND ( BBGap < 100 ) AND ( IIf( DnCandle, TopWick<BtmWick AND BtmWick > CandleBody * 2, TopWick > BtmWick AND TopWick > CandleBody * 2 ) ) ) OR
+       ( UpCandle AND ( TopWick > BtmWick ) AND ( TopWick > CandleBody * 2 ) AND ( ( CandleCutByBB1 AND C > bb2 ) OR CandleBetweenBB OR CandleBelowBB2 ) ) OR
+       ( UpCandle AND bb1cutHi AND bb2cutHi );
+
+Buy1 = DnCandle AND bb1cutHi AND BBGap <= CandleBody  ;
+Buy2 = OpenBelowBB1 AND DnCandle_Across_BB ;
+
+Buy3 = DnCandle_Across_BB AND ( ( bb1cut < .5 ) AND ( bb2cut > .5 ) ) ;
+Buy4 = DnCandle AND bb2cutHi ;
+
+Buy5 = TotallyBelowBB2 AND ( BBGap >= 30 ) AND GapDown();
+Buy6 = ( TotallyBelowBB2 OR ( UpCandle AND CloseBelowBB2 ) ) AND ( BBGap <= CandleBody );
+
+Buy7 = ( bb1cut < 0 AND bb2cut > 0 AND bb2cut <= 1.0 ) OR ( UpCandle_Across_BB AND bb2cut > 0.6 ) ;
+Buy8 = DnCandle_below_both_BB AND ( ( BBGap <= CandleBody ) OR ( CandleBody == 0 ) );
+
+Buy 		= Buy0 OR Buy1 OR Buy2 OR Buy3 OR Buy4 OR Buy5 OR Buy6 OR Buy7 OR Buy8;
+Sell 		= IIf( GroupID( 1 ) == "Z", Ref( Buy, -10 ), Ref( Buy, -3 ) );//( Ref( Buy, -10 ) AND (GroupID(1)== "Z") ) OR Ref( Buy, -3 );
+
+// back log : 4 day maturity profit/loss : it is a requirement in BD-DSE market
+Clog			= ( 100 * ( C - Ref( C, -3 ) ) / Ref( C, -3 ) );
+MaturedSince	= IIf( GroupID( 1 ) == "Z", Ref( C, -10 ), Ref( C, -3 ) );
+sYield 		= IIf( Buy, C - HHV( O, 15 ), C - MaturedSince );
+Ypercent		= ( sYield / MaturedSince ) * 100 ;
+YpcStr			= NumToStr( Ypercent, 12.2 ) + " %";
+Yrate			= Ypercent / IIf( GroupID( 1 ) == "Z", 11, 4 );
+YrateStr		= NumToStr( Yrate, 12.2 ) + " %" ;
+Strength 		= Buy0 + Buy1 + Buy2 + Buy3 + Buy4 + Buy5 + Buy6 + Buy7 + Buy8; // - Sell;
+Trade 			= WriteIf(  Buy == True, "Buy", WriteIf( Sell == True, "Sell", "N" ) );
+
+// [Indicator]
+
+shape0 = Buy0 * shapeUpTriangle ;
+shape1 = Buy1 * shapeSmallUpTriangle ;
+shape2 = Buy2 * shapeSmallUpTriangle ;
+shape3 = Buy3 * shapeSmallUpTriangle ;
+shape4 = Buy4 * shapeSmallUpTriangle ;
+shape5 = Buy5 * shapeSmallUpTriangle ;
+shape6 = Buy6 * shapeSmallUpTriangle ;
+shape7 = Buy7 * shapeSmallUpTriangle ;
+shape8 = Buy8 * shapeSmallUpTriangle ;
+sellshape = Sell * shapeDownArrow ;
+
+shape0color = colorViolet;
+shape1color = colorBrightGreen;
+shape2color = colorViolet;
+shape3color = colorGreen;
+shape4color = colorRed;
+shape5color = colorPink;
+shape6color = colorLavender;
+shape7color = colorAqua;
+shape8color = colorDarkRed;
+sellshapecolor = colorRose;
+
+BuySellLetter = IIf( Buy, colorDarkGreen, IIf( Sell, colorRed, colorDefault ) );
+BuySellBG		= IIf( Buy, colorPaleGreen, IIf( Sell, colorDarkRed, colorDefault ) );
+
+/*------------------------------------------
+				Automatic Analysis
+ -------------------------------------------*/
+TransmitOrder = False;  // Set to True to really trade!
+
+bi 	= BarIndex();
+cid 	= ( SelectedValue( bi ) - bi[ 0 ] );	// candle identification
+
+
+Filter = ( Buy OR Sell ) ;//AND Status( "lastbarinrange" ) ; // chooses only the last bar i.e., day or period
+
+AASettings = Status( "action" );
+
+if ( AASettings == actionIndicator )
+{
+    // [Indicator]
+
+    PlotShapes( shape0, shape0color, 0, L, -42 );
+    PlotShapes( shape1, shape1color, 0, L, -12 );
+    PlotShapes( shape2, shape2color, 0, L, -16 );
+    PlotShapes( shape3, shape3color, 0, L, -20 );
+    PlotShapes( shape4, shape4color, 0, L, -24 );
+    PlotShapes( shape5, shape5color, 0, L, -28 );
+    PlotShapes( shape6, shape6color, 0, L, -32 );
+    PlotShapes( shape7, shape7color, 0, L, -34 );
+    PlotShapes( shape8, shape8color, 0, L, -38 );
+
+    PlotShapes( sellshape, sellshapecolor, 0, H, -24 );
+
+}
+else
+    if ( AASettings == actionCommentary )
+    {
+        // [Commentary]
+        printf( "Study of parameters.\n---------------------------\n" );
+        printf( "High @ 		= %g\n", H ) ;
+
+        if ( DnCandle[cid] )
+        {
+            printf( "Open @ 		= %g\n", O ) ;
+            printf( "Close @ 		= %g	(4dM	%g)\n", C, sYield ) ;
+        }
+        else
+        {
+            printf( "Close @ 		= %g	(4dM	%g)\n", C, sYield ) ;
+            printf( "Open @ 		= %g\n", O ) ;
+        }
+
+        printf( "Low @ 		= %g\n\n", L ) ;
+
+        printf( "Volume		= %g\n\n", V ) ;
+
+        printf( "Body of the candle		= %g\n", CandleBody );
+        printf( "Top Wick Size 		= %g\n", TopWick );
+        printf( "Bottom Wick Size		= %g\n", BtmWick );
+        printf( "Wick Size 			= %g\n", CandleWick );
+        printf( "Full-candle Size 		= %g\n\n", FullCandle );
+        printf( "..........................\nCandle type		= " +
+                WriteIf( DnCandle, "Down / Red / Black\n\n", "Up / Green / White\n\n" ) );
+        printf( "Candle:wick ratio		= 1 : %g\n", CandleWickRatio );
+        printf( "Wick:candle ratio		= 1 : %g\n\n", WickCandleRatio );
+        printf( "TopWick:BtmWick ratio	= 1 : %g\n\n", WickTopBtmRatio );
+        printf( "Gap between Bollingers	= %g\n\n", BBGap );
+
+        printf( "Candle:BBGap ratio	= 1 : %g\n", round( Candle_BB_ratio * 100 ) / 100 );
+        printf( "BBGap:Candle ratio = 1 : %g\n\n", round( BB_Candle_ratio * 100 ) / 100 ) ;
+
+        printf( WriteIf( Candle_BB_ratio > 1.0, "The 'candle is larger' than the bollinger gap.\n", "" ) +
+                WriteIf( BB_Candle_ratio < 0,   "Candle is away from the Bollinger-gap\n", "" ) +
+                WriteIf( BB_Candle_ratio > 1.00, "The Bollinger gap is wide enough to hold the candle in.\n", "" ) +
+                WriteIf( CandleBetweenBB, "Candle is inside the bollinger band.\n", "" ) +
+                WriteIf( ( DnCandle AND OpenBelowBB2 ) OR ( UpCandle AND CloseBelowBB2 ), "The 'candle is outside' and 'below' the bollinger gap.\n", "" ) +
+                WriteIf( ( DnCandle AND CloseAboveBB1 ) OR ( UpCandle AND OpenAboveBB1 ), "The 'candle is outside' and 'above' the bollinger gap.\n", "" ) +
+                "..........................\n"
+              );
+
+        if ( DnCandle[cid] )
+        {
+            Commentary =  "\nBlack / Red / Down Candle :\n~~~~~~~~~~~~~~~~~~" ;
+
+            if ( CloseAboveBB1[cid] )
+                Commentary += "\nCandle closed above Top bollinger." ;
+            else
+                if ( OpenBelowBB2[cid] )
+                    Commentary += "\nCandle opens below Bottom Bollinger,\nthus a 'below bollinger candle'.";
+                else
+                    if ( CloseBetweenBB[cid] AND OpenAboveBB1[cid] )
+                        Commentary += "\nCandle is cut by the top bollinger\nand resides above bottom bollinger.";
+                    else
+                        if ( OpenBetweenBB[cid] AND CloseBelowBB2[cid] )
+                            Commentary += "\nCandle is cut by the bottom bollinger\nand resides below top bollinger.";
+                        else
+                            if ( OpenAboveBB1[cid] AND CloseBelowBB2[cid] )
+                                Commentary += "\nCandle cut by both bollingers.";
+                            else
+                                Commentary += "\nCandle is lying between the bollingers.";
+        }
+        else
+        {
+            Commentary =	  "\nWhite / Green / Up Candle :\n~~~~~~~~~~~~~~~~~~" ;
+
+            if ( OpenAboveBB1[cid] )
+                Commentary += "\nCandle started above Top bollinger." ;
+            else
+                if ( CloseBelowBB2[cid] )
+                    Commentary += "\nCandle closed below Bottom Bollinger.";
+                else
+                    if ( OpenBetweenBB[cid] AND CloseAboveBB1[cid] )
+                        Commentary += "\nCandle is cut by the top bollinger\nand starts above bottom bollinger.";
+                    else
+                        if ( CloseBetweenBB[cid] AND OpenBelowBB2[cid] )
+                            Commentary += "\nCandle is cut by the bottom bollinger\nand ends below top bollinger.";
+                        else
+                            if ( CloseAboveBB1[cid] AND OpenBelowBB2[cid] )
+                                Commentary += "\nCandle cut by both bollingers.";
+                            else
+                                Commentary += "\nCandle is lying between the bollingers.";
+        }
+
+        if ( DnCandle_between_BB[cid] )
+            Commentary += "\nCandle enclosed inside the Bollingers!";
+        else
+            if ( DnCandleAcrossBB[cid] OR UpCandleAcrossBB[cid] )
+                Commentary += "\nCandle spans across the Bollingers.";
+
+        printf( "\nbb1cut = %g%%	(O - bb1)	= %g", /**/bb1cut , bb1topcut );/** /round( bb1cut*10000 ) / 100, bb1topcut );/**/
+
+        printf( "\nbb2cut = %g%%	(O - bb2)	= %g\n", /**/bb2cut, bb2topcut );/** /round( bb2cut*10000 ) / 100, bb2topcut );/**/
+
+        printf( Commentary + "\n\n" );
+    }
+    else
+        if ( AASettings == actionScan )
+        {
+            // Scan
+        }
+        else
+            if ( AASettings == actionExplore )
+            {
+                // Exploration
+                AddTextColumn( GroupID( 1 ), "Cat", formatChar,  IIf( GroupID( 1 ) == "Z", colorWhite, colorDefault ), IIf( GroupID( 1 ) == "Z", colorRed, colorDefault ), 30 );
+
+                AddColumn( IIf( GroupID( 1 ) == "Z", Ref( C, -10 ), Ref( C, -3 ) ), "Start Price", 3.2, colorBlue, colorDefault, -1 );
+                AddColumn( C, "Close", 3.2, colorBlue, colorDefault, -1 );
+
+                AddColumn( V, "Total Vol.", 8 ) ;
+
+                AddColumn( Strength, "Strength", 1, colorRed, colorDefault, 40 );
+//                AddTextColumn( Trade, "Trade", 1, BuySellLetter,  BuySellBG, -1 );
+                AddTextColumn( WriteIf( Buy, "Buy", "" ), "Buy", 1, BuySellLetter,  IIf( Buy, colorPaleGreen, colorDefault ), -1 );
+                AddTextColumn( WriteIf( Sell, "Sell", "" ), "Sell", 1,  BuySellLetter, IIf( Sell, colorDarkRed, colorDefault ), -1 );
+
+                AddColumn( sYield, "Avg.Yield", 1.2, IIf( Buy, colorLightGrey, IIf( sYield < 0, colorRed, colorGreen ) ), colorDefault, -1 );
+                AddTextColumn( YpcStr, "Yield %", 1, IIf( Buy, colorLightGrey, IIf( Ypercent < 0, colorRed, colorGreen ) ), colorDefault, -1 );
+                AddTextColumn( YrateStr, "Yield rate", 1, IIf( Buy, colorLightGrey, IIf( Yrate < 0, colorRed, colorGreen ) ), colorDefault, -1 );
+
+                AddColumn( round( ROC( Close, 4 )*100 ) / 100, "ROC(4)", 1.2, colorDefault, colorDefault, -1 );
+
+            }
+            else
+                if ( AASettings == actionBacktest )
+                {
+                    // Backtest
+                }
+
+_SECTION_END();
+
+Title = "{{NAME}} - {{INTERVAL}} - {{DATE}} - {{VALUES}}" + "\n";

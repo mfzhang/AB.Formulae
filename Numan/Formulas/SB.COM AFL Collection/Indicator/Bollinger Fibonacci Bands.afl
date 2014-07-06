@@ -1,0 +1,53 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Bollinger Fibonacci Bands
+//  Author/Uploader: Beachie41 
+//  E-mail:          beachie41@ihug.com.au
+//  Date/Time Added: 2004-11-28 12:34:20
+//  Origin:          
+//  Keywords:        
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=407
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=407
+//
+//------------------------------------------------------------------------------
+//
+//  Boll-Fib bands as used on the VT Forex trading platform
+//
+//------------------------------------------------------------------------------
+
+// Bollinger Fibonacci Bands - Beachie41 26/11/04 //
+/* as used in the VT trading platform - 
+ see outline of FX trading system by mezarashii on
+Moneytec http://www.moneytec.com/forums/_showthread/_threadid-11630/_s-
+ */
+GraphXSpace = 3;
+per = Param("Period",20,10,55,1);
+TH =IIf(Ref(C,-1) > H,Ref(C,-1),H);
+
+TL=IIf(Ref(C,-1) < L,Ref(C,-1),L);
+TR = TH-TL;
+TRa= Wilders(TR,per);
+UpperBand3 =MA( C, per) + ( 4.2360 * TRa);
+UpperBand2=MA( C, per) + ( 2.6180 * TRa);
+UpperBand1=MA( C, per) + ( 1.6180 * TRa);
+
+MidPoint=MA(C, per);
+
+LowerBand1=MA( C, per) - ( 1.6180 * TRa);
+LowerBand2=MA( C, per) - ( 2.6180 * TRa);
+LowerBand3=MA( C, per) - ( 4.2360 * TRa);
+
+
+Plot(MidPoint,"",colorGreen,4);
+Plot(UpperBand1,"",colorRed,1);
+Plot(LowerBand1,"",colorRed,1);
+Plot(UpperBand2,"",colorAqua,1);
+Plot(LowerBand2,"",colorAqua,1);
+Plot(UpperBand3,"",colorYellow,1);
+Plot(LowerBand3,"",colorYellow,1);
+
+
+
+PlotOHLC(O,H,L,C,"",colorWhite,64);

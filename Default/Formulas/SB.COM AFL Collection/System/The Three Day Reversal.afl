@@ -1,0 +1,64 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    The Three Day Reversal
+//  Author/Uploader: Prashanth 
+//  E-mail:          prash454@Rediffmail.com
+//  Date/Time Added: 2005-08-30 23:42:41
+//  Origin:          
+//  Keywords:        
+//  Level:           basic
+//  Flags:           system
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=552
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=552
+//
+//------------------------------------------------------------------------------
+//
+//  The three day reversal is a very simple pattern. When the trend is Up or
+//  Long &amp;#8211; The Three Day Drop and When the trend is Down or Short
+//  &amp;#8211; The 3 Day Rise.
+//
+//------------------------------------------------------------------------------
+
+// 3 Day Reversal by Prashanth
+
+// Knowing the Current Trend
+
+P1 = Param("Period",10,0,100,1);
+
+MyPDI= PDI(P1);//Positive Directional Indicator
+MyMDI= MDI(P1);//Negative Directional Indicator (Minus)
+
+// Trend Conditions
+Cond1 = MyPDI > MyMDI;
+Cond2 = MyPDI < MyMDI;
+
+//Sell Conditions
+
+Cond3 = Ref(C,-1) > Ref(C,-2) AND Ref(C,-2) > Ref(C, -3) AND Ref(C, -3) > Ref(C, -4);
+Cond4 = C < Ref(C,-1) AND C < Ref(O, -1);
+A = H - C;
+B = ( ( 100 * A ) / C );
+D = (100 * 0.50 ) / H;
+E = (100 * 0.50 ) / L;
+
+Cond5 = O > (H - D); // AND B < 0.50; 
+Cond6 = C <= (L + E);
+
+Short = Cond1 AND Cond3 AND Cond4 AND Cond5 AND Cond6;
+Cover = C > ShortPrice;
+
+
+// Buy Conditions
+
+Cond7 = C > Ref(C,-1);
+Cond8 = O <= (L + E);
+Cond9 = C >= (H - D);
+
+Buy = Cond2 AND Cond7 AND Cond8 AND Cond9;
+Sell = C < BuyPrice;
+// ApplyStop(stopTypeLoss, stopModePercent, 3, 1);
+
+
+
+Buy = ExRem(Buy, BarsSince(Buy) > 5);
+Sell = ExRem(Sell, BarsSince(Sell) > 5);

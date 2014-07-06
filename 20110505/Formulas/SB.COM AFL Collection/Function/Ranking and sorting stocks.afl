@@ -1,0 +1,113 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Ranking and sorting stocks
+//  Author/Uploader: Herman van en Bergen 
+//  E-mail:          
+//  Date/Time Added: 2005-03-01 06:33:36
+//  Origin:          
+//  Keywords:        Ranking Scoring Sorting
+//  Level:           semi-advanced
+//  Flags:           function
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=434
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=434
+//
+//------------------------------------------------------------------------------
+//
+//  A function to rank stocks according to your scoring formula. The
+//  top-tickers can be listed on a chart for demo or the tickers/scores strings
+//  can be read by your code for other use. Slow on large watchlists!
+//
+//------------------------------------------------------------------------------
+
+function GetScore( )
+	{
+//	return RSI();
+	return C; 									// substitute C for easy verification
+	}
+
+function padString( InString, Length )
+	{
+	SpaceFill= "          ";
+	SL 		= StrLen(InString);
+	NS			= StrLeft(SpaceFill, Length-SL);
+	return NS+Instring;
+	}
+
+procedure getPositionScores( WatchList, BarNum, NumTickers )
+	{
+	global toptickerlist, TickerList;
+	TickerList		= GetCategorySymbols( categoryWatchlist, WatchList);
+
+	// Create zero-based Scores array in wrt to current data
+	for( n=0; (Ticker=StrExtract( TickerList, n)) != ""; n++)
+		{
+		SetForeign(Ticker);
+		Temp = LastValue(GetScore());
+		RestorePriceArrays();
+		TickerScores[n] 	= Temp;
+		TickerIndex[n] 	= n;
+		}
+
+	TickerCount= n;
+
+	// Sort Tickers by rank
+	for(i = n; i>=0; i--)
+		{
+		for (j = 1; j <= i; j++)
+			{
+			if (TickerScores[j-1] > TickerScores[j])
+				{
+				temp = TickerScores[j-1]; TickerScores[j-1] = TickerScores[j];
+				TickerScores[j] = temp;
+				temp = TickerIndex[j-1]; TickerIndex[j-1] = TickerIndex[j];
+				TickerIndex[j] = temp;
+				}
+			}
+		}
+
+	TopTickerList  = TopTickerNum = TopTickerScore = Toptickerlist 	= "";
+
+	if( NumTickers > TickerCount ) NumTickers = TickerCount;
+
+	// Format Top Tickers for Indicator Title verification
+	TickersCounted = 0; i=0; P=8; 
+	for(n=TickerCount; n>=TickerCount-NumTickers; n--)
+		{
+		T5[i++] 		= TickerIndex[n];
+		Ticker 		= StrExtract(Tickerlist,T5[i-1]);
+		Score  		= NumToStr(TickerScores[n],1.3);
+		TickerNum 	= NumToStr(TickerIndex[n],1.0);
+		StaticVarSet(Ticker+"Score",TickerScores[n]);
+		StaticVarSet(Ticker+"Number",TickerIndex[n]);
+		StaticVarSet(Ticker+"Rank",n);
+		TopTickerList 	= TopTickerList + PadString(Ticker,P)+",";
+		TopTickerScore = TopTickerScore + PadString(Score,P)+",";
+		TopTickerNum 	= TopTickerNum + PadString(TickerNum,P)+",";
+		}
+
+	StaticVarSetText("TopTickerList",TopTickerList);
+	StaticVarSetText("TopTickerScore",TopTickerScore );
+	StaticVarSetText("TopTickerNum ",TopTickerNum );
+	}
+
+
+BarNum = BarCount-1;
+Watchlist = Param("Watchlist Number",0,0,100,1);
+NumTickers = Param("Number Of symbols to show On the Chart",2,2,10,1);
+
+getPositionScores( WatchList, BarNum, NumTickers );
+
+TopTickerScore =StaticVarGetText("TopTickerScore");
+TopTickerList	=StaticVarGetText("TopTickerList");
+TopTickerNum 	=StaticVarGetText("TopTickerNum ");
+
+Plot(C,"",1,128);
+
+Tstr =
+"\nWatchlist Number: "+NumToStr(WatchList,1.0)+
+"\nPosition Scores: \n"+TopTickerList + "\n"+TopTickerScore;
+Title = StrLeft(Tstr,1000);
+
+Filter = Status("LastBarInRange");
+SetOption("NoDefaultColumns",False);
+AddColumn(getScore(),"Score",1.3);

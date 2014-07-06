@@ -1,0 +1,181 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Visualization of stoploses and profit in chart
+//  Author/Uploader: Marcus Davidsson 
+//  E-mail:          davidsson_marcus@hotmail.com
+//  Date/Time Added: 2006-07-31 09:09:04
+//  Origin:          
+//  Keywords:        
+//  Level:           basic
+//  Flags:           system,exploration,indicator,commentary,function
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=660
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=660
+//
+//------------------------------------------------------------------------------
+//
+//  Clear visualization of stoplosses, ordinary entry/exit signals, profit and
+//  closing prices in the chart !!!
+//
+//  Takes the analytical part of the backtesting to an entire new level in my
+//  opion (reduces the importance of backtesting
+//
+//------------------------------------------------------------------------------
+
+// Visualization of Buy/Sell levels, profit and exitsignals( ie stoplossses) in the chart////////////
+
+// Takes the analytical part of the backtesting to an entire new level in my opion (reduces the importance of backtesting)!
+// The code is far from complete and perfect but I dont have the energy to do more. Maybe someone
+// could countineou developing the code to include for example:
+
+// 1) an option in the parameter window, to show Buy/Sell/Cover statistics only 
+// if one would place the mousepointer on each "buy shapes". ( GetCursorYPosition() GetCursorXPosition() ) 
+// The display becomes quite messy if you display a Low time resolution Chart (monthly, yearly) One alternative would also to use
+// the code for displaying digits based on the diffrent sell signal (shapeDigit1). Then it would be sufficient
+// to display the profit/loss for each trade. 
+
+// 2) Another drawback is the parameter hiracy. Each parameter 
+// subcategories should only be able to work if the user choose Yes on the main category question. 
+// Now you have to set all sub-parameters equal to zero instead of activative/deactivating the major ones. 
+
+// 3) Some overal statistics displayed on the lefthand side of the chart
+// (# of trades, # winning/lossing trades, total profit/loss etc)
+
+
+//The following code works best with a black background
+//would also like to take the opportunity to thank Marcin Gorzynski for his help with this one
+
+
+//////////////////////////////  BASIC STRATEGY AND PLOTS ////////////////////
+
+Buy = Cross( Close, MA(Close, 35) ); 
+Short= Cross( MA(Close, 35), Close ); 
+Sell=LinRegSlope( MA(Close,18), 2 )<0; 
+Cover=LinRegSlope( MA(Close,18), 2 )>0; 
+
+Plot( Close, "C", colorWhite, styleLine); 
+Plot( MA(Close,100), "MA-100", colorRed, styleLine); 
+
+
+
+// I am sceptical to if the original applystop functions (trailing etc) really works!? 
+//I have therefor coded my own stop functions below.
+
+////////////////////////////// STOP LOSS PARAMETERS ////////////////////
+e = Equity(1,0);  /* Highly Important!!. "Removes all extra signals, evaluates 
+						stops AND writes BACK signals to Sell/Cover arrays". As it should be!!*/
+
+Lprofit = e - ValueWhen( Buy, e); 
+Sprofit = e - ValueWhen( Short, e); 
+
+
+/////////////////////////////// TRAILING PROFIT STOP////////////////////////////
+
+TL=ParamToggle("FANCY A TRAILING STOP?" , "No|Yes",0);
+TLL= ParamToggle("           DO YOU WANT TO PLOT PROFIT + CRITICAL TRAILING LINE IN GRAPH?" , "No|Yes",0);
+x2=Param("           SET MAX ACCEPTED DECLINE OF PROFIT IN PERCENT ",1 ,0 ,100 ,1);
+//x3=Param("           SET MAX ACCEPTED DECLINE OF PROFIT IN POINTS ",1 ,0 ,100 ,1);
+
+////////FOR LONG POSITION PERCENT////
+XXL=HighestSince( Buy==1, Lprofit, 1 ); //returns the highest profit since last buy signal. the basis for the trailing calculation. 
+XXXL= XXL*(1-(x2/100)); // if trailing turned on =ok otherwise =null
+ZL= ExRem( Cross(XXXL, Lprofit), Buy==1);	// Just first signal counts. highly important!!!!!!!! Also calculates critical sell levels
+Sell= IIf(ZL==1 AND TL==True, 4, 0);	// return a sell signal=4 if z1=1 and TL=true (yes)
+
+////////FOR SHORT POSITION PERCENT////
+XXS=HighestSince( Short==1, Sprofit, 1 );  // same as above
+XXXS= XXS*(1-(x2/100));
+ZS= ExRem( Cross(XXXS, Lprofit), Short==1);
+Cover= IIf(ZS==1 AND TL==True, 4, 0);	
+
+PlotShapes( Buy* shapeUpArrow , colorGreen, 0); 
+PlotShapes( Short* shapeDownArrow , colorGreen, 0);
+PlotShapes( Sell* shapeDigit1 , colorRed, 0);
+PlotShapes( Cover* shapeDigit2 , colorRed, 0);
+
+
+if(TLL==True AND TL=True)	Plot(Lprofit,"L PROFIT",colorYellow,styleLeftAxisScale, styleLine) AND
+									Plot(Sprofit,"S PROFIT",colorYellow,styleLeftAxisScale, styleLine) AND
+									Plot(XXXL, "L TRAILING LEVEL",colorGreen,styleLeftAxisScale, styleLine) AND
+ 									Plot(XXXS, "S TRAILING LEVEL",colorGreen,styleLeftAxisScale, styleLine);
+
+
+//////////ABSOLUTE PROFIT STOP////////////////////////////
+ML=ParamToggle("FANCY A MAX STOP IN PERCENT?", "No|Yes",0);
+x1=Param( "          SET MAX ACCEPTED LOSS PER TRADE IN PERCENT", 1, 0 ,50 ,1);
+XS =ExRem(Cross (1-(x1/100),e), Buy==1);
+Sell=IIf( XS==1 AND ML==True, 2, 0); 
+
+
+
+//////////////////////////////  SETTINGS AND BASIC DEFINITIONS ////////////////////
+
+
+SetOption("MaxOpenPositions", 2 ); 
+PositionSize = 10000;
+GraphXSpace=10;   /*"adds 10% extra space above AND below the graph line." In order to fit the extra text
+						"When GraphXSpace is NOT defined in the formula then default 2% is used."*/
+dist=200;
+bcolor=scolor=colorBlue;
+
+
+//////////////////////////////  EXIT AND ENTRY MARKERS DEFINED  ////////////////////
+PlotShapes( Buy* shapeUpArrow , bcolor, 0); 
+PlotShapes( Short* shapeDownArrow , scolor, 0); 
+
+sellshape = IIf( Sell == 1, shapeSquare + shapePositionAbove, 
+			  	IIf( Sell == 2, shapeSquare + shapePositionAbove, 
+			  	IIf( Sell == 3, shapeSquare + shapePositionAbove, 
+				IIf( Sell == 4, shapeSquare + shapePositionAbove, 
+				IIf( Sell == 5, shapeSquare + shapePositionAbove,0 ))))); 
+
+Covershape=	IIf( Cover == 1, shapeSquare, 
+			  	IIf( Cover == 2, shapeSquare, 
+			  	IIf( Cover == 3, shapeSquare, 
+				IIf( Cover == 4, shapeSquare, 
+				IIf( Cover == 5, shapeSquare,0 ))))); 
+
+LColor= IIf(Lprofit>0, colorGreen, colorRed);
+Scolor=IIf(Sprofit>0, colorGreen, colorRed);
+PlotShapes( SellShape, Lcolor, 0, C);
+PlotShapes( covershape, Scolor, 0, C);
+
+
+
+//////////////////////////////  FOR LOOP FOR PLOTING ENTRY AND EXIT TEXT ////////////////////
+for( i = 0; i < BarCount; i++ ) 
+{ 
+
+xx  = Sum(Buy,i ); // counting of long trades. xx will not get a higher value until a new long position is open
+						// therefor if we only allow one long and one short position (Exrem() ) xx can also be used as an identification 
+						//	number for the diffrent positions. 
+yy  = Sum(Short,i);
+	
+
+		if( Buy[i]==1)  PlotText("LONG : " + xx[i] + "\nBuyPrice: "+ BuyPrice[ i ], i, H[ i ]-dist, colorBlack, bcolor ); 
+   
+				if( Sell[i]==1 ) PlotText( "LONG : " +xx[i]+ "\nREGULAR EXIT\n"+ "Sell:     "+ SellPrice[ i ]+"\nP/ L:     " 
+				+Lprofit[ i ], i, H[ i ]+dist, colorBlack, Lcolor[i] ); 
+				if( Sell[i]==2 ) PlotText( "LONG : " +xx[i]+ "\nMAXIMUM LOSS\n"+ "Sell:     "+ SellPrice[ i ] +"\nP/ L:     " 
+				+Lprofit[ i ], i, H[ i ]+dist, colorBlack, Lcolor[i] ); 
+				if( Sell[i]==3 ) PlotText( "LONG : " +xx[i]+ "\nPROFIT TARGET\n"+ "Sell:    "+ SellPrice[ i ] +"\nP/ L:     " 
+				+Lprofit[ i ], i, H[ i ]+dist, colorBlack, Lcolor[i] ); 
+				if( Sell[i]==4 ) PlotText( "LONG : " +xx[i]+ "\nTRAILING STOP\n"+ "Sell:    "+ SellPrice[ i ] +"\nP/ L:     " 
+				+Lprofit[ i ], i, H[ i ]+dist, colorBlack, Lcolor[i] ); 
+				if( Sell[i]==5 ) PlotText( "LONG ; " +xx[i]+ "\nNBAR STOP\n"+ "Sell:        "+ SellPrice[ i ] +"\nP/ L:     " 
+				+Lprofit[ i ], i, H[ i ]+dist, colorBlack, Lcolor[i] ); 
+		
+	
+		if( Short[i]==1 ) PlotText( "SHORT : "+ yy[i]+ "\nShortprice: "+ ShortPrice[ i ], i, L[ i ]-dist, colorBlack, bcolor ); 
+
+				if( Cover[i]==1 ) PlotText( "SHORT : " +yy[i]+ "\nREGULAR EXIT\n"+ "Cover:    "+ CoverPrice[ i ]+"\nP/ L:    " 
+				+Sprofit[ i ], i, H[ i ]+dist, colorBlack, Scolor[i] ); 
+				if( Cover[i]==2 ) PlotText( "SHORT : " +yy[i]+ "\nMAXIMUM LOSS\n"+ "Cover:    "+ CoverPrice[ i ]+"\nP/ L:    " 
+				+Sprofit[ i ], i, H[ i ]+dist, colorBlack, Scolor[i] ); 
+				if( Cover[i]==3 ) PlotText( "SHORT : " +yy[i]+ "\nPROFIT TARGET\n"+ "Cover:   "+ CoverPrice[ i ]+"\nP/ L:    " 
+				+Sprofit[ i ], i, H[ i ]+dist, colorBlack, Scolor[i] ); 
+				if( Cover[i]==4 ) PlotText( "SHORT : " +yy[i]+ "\nTRAILING STOP\n"+ "Cover:   "+ CoverPrice[ i ]+"\nP/ L:    " 
+				+Sprofit[ i ], i, H[ i ]+dist, colorBlack, Scolor[i] ); 
+				if( Cover[i]==5 ) PlotText( "SHORT : " +yy[i]+ "\nNBAR STOP\n"+ "Cover:       "+ CoverPrice[ i ]+"\nP/ L:    " 
+				+Sprofit[ i ], i, H[ i ]+dist, colorBlack, Scolor[i] ); 
+
+} 

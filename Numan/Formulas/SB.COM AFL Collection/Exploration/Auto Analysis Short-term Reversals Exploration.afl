@@ -1,0 +1,88 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Auto Analysis Short-term Reversals Exploration
+//  Author/Uploader: Larry Lovrencic 
+//  E-mail:          lvl@firstpacific.net
+//  Date/Time Added: 2001-09-09 20:35:25
+//  Origin:          
+//  Keywords:        short term reversals closing price hook island gap
+//  Level:           basic
+//  Flags:           exploration
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=118
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=118
+//
+//------------------------------------------------------------------------------
+//
+//  Find Short Term Reversals - Closing Price, Hook, Island, Key, Open-Close
+//  and Pivot Point Reversals using automatic analysis
+//
+//------------------------------------------------------------------------------
+
+numcolumns =12;
+
+/*Closing Price Reversals Automatic Analysis
+by Larry Lovrencic*/
+
+CPRbuy=O<(L+0.2*(H-L)) AND C>(H-0.2*(H-L)) AND H<ref(H,-1) AND L<ref(L,-1) AND C>ref(C,-1);
+CPRsell=O>(L+0.8*(H-L)) AND C<(H-0.8*(H-L)) AND H>ref(H,-1) AND L>ref(L,-1) AND C<ref(C,-1);
+column0 = CPRbuy;
+column0name = "Closing Price Reversal BUY";
+column1= CPRsell;
+column1name= "Closing Price Reversal SELL";
+
+/*Hook Reversals Automatic Analysis
+by Larry Lovrencic*/
+
+HRbuy=O<(L+0.2*(H-L)) AND C>(H-0.2*(H-L)) AND H<ref(H,-1) AND L>ref(L,-1);
+HRsell=O>(L+0.8*(H-L)) AND C<(H-0.8*(H-L)) AND H<ref(H,-1) AND L>ref(L,-1);
+column2 = HRbuy;
+column2name = "Hook Reversal BUY";
+column3= HRsell;
+column3name= "Hook Reversal SELL";
+
+/*Island Reversals Automatic Analysis
+by Larry Lovrencic*/
+
+IRbuy=ref(L,-2)>ref(H,-1) AND L>ref(H,-1); 
+IRsell=ref(H,-2)<ref(L,-1) AND H<ref(L,-1);
+column4 = IRbuy;
+column4name = "Island Reversal BUY";
+column5= IRsell;
+column5name= "Island Reversal SELL";
+
+/*Key Reversals Automatic Analysis
+by Larry Lovrencic*/
+
+KRbuy=O<ref(C,-1) AND L<ref(L,-1) AND C>ref(H,-1);
+KRsell=O>ref(C,-1) AND H>ref(H,-1) AND C<ref(L,-1);
+column6 = KRbuy;
+column6name = "Key Reversal BUY";
+column7= KRsell;
+column7name= "Key Reversal SELL";
+
+/*Open/Close Reversals Automatic Analysis
+by Larry Lovrencic*/
+
+OCRbuy=O<(L+0.2*(H-L)) AND C>(H-0.2*(H-L)) AND H<ref(H,-1) AND L<ref(L,-1) AND C<ref(C,-1);
+OCRsell=O>(L+0.8*(H-L)) AND C<(H-0.8*(H-L)) AND H>ref(H,-1) AND L>ref(L,-1) AND C>ref(C,-1);
+column8 = OCRbuy;
+column8name = "Open Close Reversal BUY";
+column9= OCRsell;
+column9name= "Open Close Reversal SELL";
+
+/*Pivot Point Reversals Automatic Analysis
+by Larry Lovrencic*/
+
+PPRbuy=ref(L,-1)<ref(L,-2) AND ref(L,-1)<L AND C>ref(H,-1);
+PPRsell=ref(H,-1)>ref(H,-2) AND ref(H,-1)>H AND C<ref(L,-1);
+column10 = PPRbuy;
+column10name = "Pivot Point Reversal BUY";
+column11= PPRsell;
+column11name= "Pivot Point Reversal SELL"; 
+
+buy=CPRbuy or HRbuy or IRbuy or KRbuy or OCRbuy or PPRbuy;
+sell=CPRsell or HRsell or IRsell or KRsell or OCRsell or PPRsell;
+
+filter= CPRbuy OR CPRsell OR HRbuy OR HRsell OR IRbuy OR IRsell or KRbuy OR KRsell OR OCRbuy OR OCRsell OR PPRbuy OR PPRsell;
+
+

@@ -1,0 +1,76 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Plot Monthly,Weekly and Daily Moving average
+//  Author/Uploader: Anthony Faragasso 
+//  E-mail:          ajf1111@epix.net
+//  Date/Time Added: 2002-03-02 16:27:46
+//  Origin:          
+//  Keywords:        
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=168
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=168
+//
+//------------------------------------------------------------------------------
+//
+//  You can plot a Monthly , weekly and Daily Moving average
+//
+//  on your Daily custom price chart window without changing the view
+//
+//  settings. Also, Title information is included.
+//
+//------------------------------------------------------------------------------
+
+//Plot Monthly, Weekly and Daily Moving Average on Daily Price Chart
+//Ver.1.01 revision
+//3/02/02, coded by Anthony Faragasso
+//e-mail: ajf1111@epix.net
+
+MaxGraph=7;
+
+//Input Time periods for Monthly,Weekly and Daily Moving Averages
+MonthlyPds=10;//Months
+WeeklyPds=20;//Weeks
+DailyPds=10;//Days 
+/***********************************/
+//Input Price Variable ( open, high ,low, close);
+Price=C;
+
+MonthlyPrice=Price;
+WeeklyPrice=Price;
+DailyPrice=Price;
+/**********************************/
+
+/***Colors***/
+//Set to your Preference
+Color=6;//Price chart
+MthAvgColor=3;//Monthly AverageLine
+WklyAvgColor=5;//weekly AverageLine
+DlyAvgColor=4;//Daily AverageLine
+/**********************************/
+
+Weekly=ValueWhen(DayOfWeek() > Ref( DayOfWeek(),1),WeeklyPrice);
+Monthly=ValueWhen(Day() > Ref( Day(), 1 ),MonthlyPrice);
+
+MonthlyAvg=EMA(Monthly,MonthlyPds);
+WeeklyAvg=EMA(Weekly,WeeklyPds);
+DailyAvg=EMA(DailyPrice,DailyPds);
+
+Graph0=C;
+Graph0Style=64;
+Graph0Color=Color;
+
+Graph1=WeeklyAvg;
+Graph1Style=1+4;//Thick line
+Graph1Color=WklyAvgColor;
+
+Graph2=DailyAvg;
+Graph2Style=1;
+Graph2Color=DlyAvgColor;
+
+Graph3=MonthlyAvg;
+Graph3Style=1;
+Graph3Color=MthAvgColor;
+
+
+Title=Name()+"  "+"("+WriteVal(WeeklyPds,1)+")"+" Week Moving Average= "+"("+WriteVal(WeeklyAvg,1.2)+")"+" :: "+"("+WriteVal(DailyPds,1)+")"+" Period Moving Average= "+"("+WriteVal(DailyAvg,1.2)+")"+" :: "+"("+WriteVal(MonthlyPds,1)+")"+" Month Moving Average= "+"("+WriteVal(MonthlyAvg,1.2)+")";

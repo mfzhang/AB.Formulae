@@ -1,0 +1,21 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    CCI/DI+- COMBO indicator
+//  Author/Uploader: Mark Richter 
+//  E-mail:          dowtrader247@hotmail.com
+//  Date/Time Added: 2002-08-19 03:52:05
+//  Origin:          
+//  Keywords:        CCI
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=212
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=212
+//
+//------------------------------------------------------------------------------
+//
+//  This is a long term Buy/Sell indicator. Based on a MA of the CCI indicator
+//  and the DI+ and DI- indicators.
+//
+//------------------------------------------------------------------------------
+
+Graph0=MA((CCI(14)+((PDI()-MDI())-20)*30),45);

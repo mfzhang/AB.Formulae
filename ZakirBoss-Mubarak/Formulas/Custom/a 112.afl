@@ -1,0 +1,322 @@
+// TRADING THE MACD Ver 1.0 by Karthik Marar.
+
+_SECTION_BEGIN("MACD");
+r1 = Param( "Fast avg", 12, 2, 200, 1 );
+r2 = Param( "Slow avg", 26, 2, 200, 1 );
+r3 = Param( "Signal avg", 9, 2, 200, 1 );
+r4 = Param( "Wk slow", 17, 2, 200, 1 );
+r5 = Param( "Wk fast", 8, 2, 200, 1 );
+m1=MACD(r1,r2);
+s1=Signal(r1,r2,r3);
+GraphXSpace =20;
+
+mycolor=IIf(m1<0 AND m1>s1, 51,IIf(m1>0 AND m1>s1,colorLime,IIf(m1>0 AND m1<s1,colorOrange,colorRed)));
+Plot( m1, StrFormat(_SECTION_NAME()+"(%g,%g)", r1, r2), mycolor,ParamStyle("MACD style") );
+Plot( s1 ,"Signal" + _PARAM_VALUES(), ParamColor("Signal color", colorBlue ), ParamStyle("Signal style") );
+histcolor = IIf((m1-s1)-Ref((m1-s1),-1)> 0, colorLime, colorRed ); 
+
+TimeFrameSet( inDaily );// weekly 
+m1w=MACD(r4,r5);
+s1w=Signal(r4,r5,r3);
+kp=m1w-s1w;
+kph=Ref(kp,-1);
+TimeFrameRestore(); 
+
+kw=TimeFrameExpand( kp, inDaily ); // expand for display 
+khw=TimeFrameExpand( kph, inDaily ); // expand for display 
+mw=TimeFrameExpand( m1w, inDaily ); // expand for display 
+sw=TimeFrameExpand( s1w, inDaily ); // expand for display 
+
+hcolor=IIf(mw<0 AND mw>sw, 51,IIf(mw>0 AND mw>sw,colorLime,IIf(mw>0 AND mw<sw,colorOrange,colorRed)));
+gcolor=IIf(kw>khw,IIf(kw>0,colorDarkYellow,colorYellow),IIf(kw>0,colorSkyblue,colorBlue));
+
+
+Plot( m1-s1, "MACD Histogram",  mycolor, styleHistogram | styleThick| styleOwnScale  );
+
+_SECTION_END();
+
+_SECTION_BEGIN("Signals");
+//Zero crossover up
+
+j1=Cross(m1,0);
+PlotShapes(IIf(j1,shapeDigit1 ,Null),colorPaleGreen,0,Min(0,0),Min(0,0)); 
+PlotShapes(IIf(j1,shapeUpArrow,Null),colorGreen,0,Min(0,0),-10); 
+
+// crossover above zero
+
+j2=Cross(m1,s1) AND m1>0;
+PlotShapes(IIf(j2,shapeDigit2 ,Null),colorYellow,0,0,0); 
+PlotShapes(IIf(j2,shapeUpArrow,Null),colorGreen,0,0,-10); 
+
+//Zero crossover down
+
+j3=Cross(s1,m1) AND m1>0;
+PlotShapes(IIf(j3,shapeDigit3 ,Null),colorOrange,0,Min(0,0),0); 
+PlotShapes(IIf(j3,shapeDownArrow,Null),colorOrange,0,Min(0,0),-10); 
+
+// crossover below zero
+
+j4=Cross(0,m1);
+PlotShapes(IIf(j4,shapeDigit3 ,Null),colorRed,0,0,0); 
+PlotShapes(IIf(j4,shapeDownArrow,Null),colorRed,0,0,-10); 
+
+// Histogram peak and troughs
+pt=m1-s1;
+Tp = Ref(pT,-1) == HHV(pT,3);
+Vl = Ref(pT,-1)==LLV(pT,3);
+PlotShapes(IIf(Vl AND m1>s1 ,shapeSmallCircle+ shapePositionAbove,shapeNone),IIf(m1<0 ,colorYellow,colorLime),0,0,0);
+PlotShapes(IIf(Tp AND m1<s1 ,shapeSmallCircle+ shapePositionAbove,shapeNone),colorRed,0,0,0);
+
+//Zeroline reject bearish
+zd=BarsSince(j1);
+zlrd1=(zd<6 )AND j4;
+PlotShapes(IIf(zlrd1,shapeStar+ shapePositionAbove,shapeNone),colorDarkRed,0,0,20);
+
+//hooks bearish
+Hu=BarsSince(j2);
+Hu1=(Hu<6)AND j3;
+PlotShapes(IIf(Hu1,shapeStar+ shapePositionAbove,shapeNone),colorRed,0,0,20);
+
+//Zeroline reject Bullish
+zu=BarsSince(j4);
+zlru=zu<6 AND j1;
+PlotShapes(IIf(zlru,shapeStar+ shapePositionAbove,shapeNone),colorPink,0,0,20);
+
+//Hook Bullish
+Hd=BarsSince(j3);
+Hd1=Hd<6 AND j2;
+PlotShapes(IIf(Hd1,shapeStar+ shapePositionAbove,shapeNone),colorLime,0,0,20);
+
+//ADX related calculations
+plus=EMA(PDI(14),3)>Ref(EMA(PDI(14),3),-5);
+ap=EMA(ADX(14),3)>Ref(EMA(ADX(14),3),-5);
+Minus=EMA(MDI(14),3)>Ref(EMA(MDI(14),3),-5);
+
+//Power Dips - Bullish
+PDIp=ADX(14)>MDI(14) AND PDI(14)>MDI(14) AND ap AND Vl AND m1>s1 AND plus ;
+PlotShapes(IIf(PDIp,shapeHollowCircle+ shapePositionAbove,shapeNone),colorCustom12,0,0,0);
+
+//power buys
+pr2=ADX(14)>20 AND PDI(14)>20 AND ADX(14)>MDI(14) AND PDI(14)>MDI(14) AND plus AND j2;
+PlotShapes(IIf(pr2,shapeHollowCircle+ shapePositionAbove,shapeNone),colorCustom12,0,0,20);
+
+//Power Dips - Bearish
+PDIm=ADX(14)>PDI(14) AND MDI(14)>PDI(14) AND ap AND Tp AND m1<s1 AND Minus ;
+PlotShapes(IIf(PDIm,shapeHollowCircle+ shapePositionAbove,shapeNone),colorWhite,0,0,0);
+
+//Power shorts
+sr2=ADX(14)>20 AND MDI(14)>20 AND ADX(14)>PDI(14) AND MDI(14)>PDI(14) AND Minus AND j4;
+PlotShapes(IIf(sr2,shapeHollowCircle+ shapePositionAbove,shapeNone),colorRed,0,0,-20);
+
+//powerbuy2
+pr2a=ADX(14)>20 AND PDI(14)>20 AND ADX(14)>MDI(14) AND PDI(14)>MDI(14) AND  plus AND j1;
+PlotShapes(IIf(pr2a,shapeHollowCircle+ shapePositionAbove,shapeNone),colorCustom12,0,0,20);
+_SECTION_END();
+
+_SECTION_BEGIN("Exploration");
+Filter = j1 OR j2 OR j3 OR j4 OR PDIp OR PDIm OR pr2 OR sr2 ;
+
+AddColumn(j1,"ZL UP",1);
+AddColumn(J2,"MA Up",1);
+AddColumn(j3,"MA DN",1);
+AddColumn(J4,"ZL DN",1);
+AddColumn(PDIp,"PDIP UP",1);
+AddColumn(pr2,"PHK UP",1);
+AddColumn(PDIm,"PDIP DN",1);
+AddColumn(sr2,"PHk UP",1);
+_SECTION_END();
+
+_SECTION_BEGIN("Display the Signals");
+Title = "Trading the MACD" + " - " +  Name() + " - " + EncodeColor(colorRed)+ Interval(2) + EncodeColor() +
+
+ "  - " + Date() +" - " +EncodeColor(colorLime)+ "MACD= "+WriteVal(m1)+"--"+EncodeColor(colorYellow)+
+WriteIf (j1, " MACD Crossed above zero","")+
+WriteIf (j2, " Bullish crossover above zero","")+
+WriteIf (j4, " MACD Crossed below Zero","")+
+WriteIf (j3, " Bearish crossover above zero","")+
+WriteIf (PDIP, "  Bullish Power Dip","")+
+WriteIf (pr2, " & Power Buy","")+
+WriteIf (sr2, " & Power Short","")+
+WriteIf (PDIm, " Bearish Power Dip","")+
+WriteIf (Hd1, " & Bullish Hook","")+
+WriteIf (Hu1, " & Bearish Hook","")+
+WriteIf (zlrd1, " & Bearish zeroline Reject","")+
+WriteIf (zlru, " & Bullish Zeroline Reject","");
+_SECTION_END();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+_SECTION_BEGIN("Earth-2");
+//Copyright 9Trading.com
+VAR2=(High+Low+(Close)*(2))/(4);
+B = ((EMA((VAR2-LLV(VAR2,15))/(HHV(Low,15)-LLV(VAR2,15)),2))*(38));
+Plot(b, "", 4, 1+4);
+bot1 = ((((-1))*(EMA((VAR2-LLV(VAR2,15))/(HHV(Low,15)-LLV(VAR2,15)),2))+0.01)*(38));
+Plot(bot1, "", 4, 1+4);
+VAR22=((Close-LLV(Low,10))/(HHV(High,10)-LLV(Low,10)))*(100);
+VAR33=EMA(VAR22,10);
+VAR44=EMA(VAR33,10);
+VAR55=(3)*(VAR33)-(2)*(VAR44);
+VAR66=EMA(VAR55,5);
+BridgeT = (EMA(VAR66,1));
+Plot(bridget, "", IIf(bridget > Ref(bridget,-1),colorBlue,colorYellow), 1+4);
+Plot(-bridget, "", IIf(bridget > Ref(bridget,-1),colorBlue,colorYellow), 1+4);
+
+trend = (5)*(EMA(((Close-LLV(Low,27))/(HHV(High,27)-LLV(Low,27)))*(100),5))-
+    (3)*(EMA(EMA(((Close-LLV(Low,27))/(HHV(High,27)-LLV(Low,27)))*(100),5),3))-
+    EMA(EMA(EMA(((Close-LLV(Low,27))/(HHV(High,27)-LLV(Low,27)))*(100),5),3),2);
+Buy1 = Cross(trend,5);
+PlotShapes( IIf( Buy1, shapeSmallSquare, shapeNone ), colorGreen, layer = 0, yposition = 0, offset = 3  ); 
+PlotShapes( IIf( Buy1, shapeSmallSquare, shapeNone ),colorGreen, layer = 0, yposition = 0, offset = -4  ); 
+
+VARA1=((Close>=Ref(Close,-1)) AND (Ref(Close,-1)>=Ref(Close,-2)) AND (Ref(Close,-1)<=Ref(Close,-3)) 
+       AND (Ref(Close,-2)<=Ref(Close,-3)) AND ((Ref(Close,-4)>Ref(Close,-2)) OR (Ref(Close,-4)<=Ref(Close,-2)) 
+       AND (Ref(Close,-5)>=Ref(Close,-3))) OR (Close>=Ref(Close,-1)) AND (Ref(Close,-1)<=Ref(Close,-2)) 
+       AND (Close>=Ref(Close,-2)) AND ((Ref(Close,-3)>Ref(Close,-1)) OR (Ref(Close,-3)<=Ref(Close,-1)) 
+       AND (Ref(Close,-4)>=Ref(Close,-2))));
+VARA2=LLV(Low,5);
+VARA3=HHV(High,5);
+VARA4=EMA(((Close-VARA2)/(VARA3-VARA2))*(100),4);
+VARA5=EMA((0.66699999)*(Ref(VARA4,-1))+(0.333)*(VARA4),2);
+VARA6=(VARA5<24) AND (Open<MA(Close,20));
+
+Buy2 =IIf(VARA1 AND (VARA6),30,0);
+Plot(Buy2, "", 8,2+4);
+Plot(-Buy2, "", 8,2+4);
+
+_N(Title = StrFormat("\\c02.{{NAME}} | {{DATE}} | {{VALUES}}")+EncodeColor(colorBrightGreen)+WriteIf(Buy2==30,"BuySignal-A","" )+EncodeColor(colorBrightGreen)+WriteIf(Buy1==1," | BuySignal-B",""));
+
+
+_SECTION_BEGIN("Earth-3");
+n = Param("Periods", 14, 5, 25, 1 );
+var6=(2*Close+High+Low)/4;
+var7=LLV(L,n);
+var8=HHV(H,n);
+var9=EMA((var6-var7)/(var8-var7)*100,5);
+varA=EMA(0.333*Ref(var9,-1)+0.667*var9,3);
+UP=Var9; 
+DOWN=Vara;
+barcolor2=
+IIf( (Ref(up,-1)>Ref(down,-1) AND Ref(up,-1)>up AND up>down ) 
+  OR (Ref(up,-1)<Ref(down,-1) AND Ref(up,-1)<up AND up<down ) 
+  , colorBlue,
+  IIf(up>down,5,4));
+Plot(0,"",barcolor2,styleLine);
+
+_SECTION_END();
+
+_SECTION_BEGIN("Earth-1");
+EB1 = Close > Ref(Close, -1) AND Ref(Close, -1) > Ref(Close, -2) AND Ref(Close, -1) < Ref(Close, -3) AND IIf(Ref(Close, -3) < Ref(Close, -4), 1, IIf(Ref(Close, -4) < Ref(Close, -5),Ref(Close, -1) < Ref(Close, -4) OR( Ref(Close, -2) < Ref(Close, -4) AND Ref(Close, -3) >= Ref(Close, -5) ),IIf(Ref(Close, -5) < Ref(Close, -6), 1,Ref(Close, -6) < Ref(Close, -7))));
+ES1 = Close < Ref(Close, -1) AND Ref(Close, -1) < Ref(Close, -2) AND Ref(Close, -1) > Ref(Close, -3) AND IIf(Ref(Close, -3) > Ref(Close, -4), 1, IIf(Ref(Close, -4) > Ref(Close, -5),Ref(Close, -1) > Ref(Close, -4) OR( Ref(Close, -2) > Ref(Close, -4) AND Ref(Close, -3) <= Ref(Close, -5) ),IIf(Ref(Close, -5) > Ref(Close, -6), 1,Ref(Close, -6) > Ref(Close, -7))));
+PlotShapes( IIf( EB1, shapeHollowSmallSquare, shapeNone ), colorWhite, layer = 0, 0, 0  ); 
+PlotShapes( IIf( ES1, shapeHollowSmallSquare, shapeNone ), colorOrange, layer = 0, 0, 0 );
+_SECTION_END();
+
+_SECTION_BEGIN("Exploration");
+LastBar = Cum( 1 ) == LastValue( Cum( 1 ) );  
+Filter = LastBar; 
+
+pfrom = Param("Price From", 0, 0, 1000, 0.5 );
+pto = Param("Price To", 1000, 0, 1000, 0.5 );
+Minv = Param("Minimum Volume (K)", 500, 0, 1000, 50);
+dd = Param("Decimal Digits", 1.2, 1, 1.7, 0.1 );
+
+EB21= Buy1; 
+EB22=Buy2;
+//Filter = Buy AND C>pfrom AND C<pto AND V>1000*Minv;
+Color = IIf(Close>Open, colorGreen, colorRed);
+bcolor = IIf(Buy1 OR Buy2, colorGreen, 1);
+AddTextColumn(WriteIf(EB1,"Buy",WriteIf(ES1,"Sell","")),"Earth-1",colorDefault,-1);
+AddTextColumn(WriteIf(Buy1==1,"Buy-A"," "),"Earth-2a",colorDefault,-1);
+AddTextColumn(WriteIf(Buy2==30,"Buy-B"," "),"Earth-2b",colorDefault,-1);
+AddTextColumn(WriteIf(bridget > Ref(bridget,-1) AND Ref(bridget,-1)<Ref(bridget,-2),"Buy",WriteIf(bridget < Ref(bridget,-1) AND Ref(bridget,-1)>Ref(bridget,-2),"Sell","")),"Earth-2c",colorDefault,-1);
+AddTextColumn(WriteIf(barcolor2==colorBlue,"Modarate",WriteIf(barcolor2==4,"Buy",WriteIf(barcolor2==5,"Sell",""))),"Earth-3",colorDefault,-1);
+//AddColumn(Buy, "Buy" , 1.1, bcolor);
+//AddColumn(O, "Open", dd, textColor = Color);
+//AddColumn(C, "Close", dd, textColor = Color);
+//AddColumn(V, "Volume", 1, textColor = Color);
+//AddTextColumn(FullName(),"Name");
+_SECTION_END();
+
+
+
+
+
+
+
+
+
+
+// created by chandrakant
+//modified on 120309..credit goes to of Karthik sir 
+
+/*1. Here are some observations to keep in mind that will help assure
+you are in a good trending move which is detrimental to the success 
+of the trade moving higher before the inevitable over exhausted trend.
+ 
+2 Consider only going long on the 5M if the 30M (two rows above) is also blue.
+
+3 Consider the 1hr row as well being blue since it has an effect too.
+
+4 The 15M row has to be blue with NO exceptions
+
+5 The 30M row if blue has less effect on the trade as compared to the 15M row 
+but keep this in mind. The 30M row being blue helps the 15M row continue to stay blue. 
+
+6 The 1hr row has even less effect OR importance but it too keeps the 30M 
+from weakening to some minor degree. 
+*/
+// Define label bar (x) position location
+
+blankRightBars = 5; //insert actual blank right bars specified in Preferences 
+barsInView = Status("lastvisiblebarindex") - Status("firstvisiblebarindex") - blankRightBars;
+Offset = Param("Offset Bar", 0.95, 0, 1, 0.01);
+textOffset = BarCount - (Offset * barsInView);
+
+_SECTION_BEGIN("default");
+HaClose =EMA((O+H+L+C)/4,3); 
+HaOpen = AMA( Ref( HaClose, -1 ), 0.5 ); 
+HaHigh = Max( H, Max( HaClose, HaOpen ) ); 
+HaLow = Min( L, Min( HaClose, HaOpen ) );
+PlotText("Heinkein 4T tf :"+Interval(2), textoffset, 41.01, colorYellow);
+
+Color = IIf( Haopen > Haclose,4, IIf( Haopen == Haclose,colorYellow, 6));
+Plot(10,"", Color,  styleHistogram+styleThick|styleOwnScale|styleNoLabel, 0, 100 );
+Plot( 11,"",colorBlack,styleOwnScale|styleArea|styleNoLabel,0, 100 );
+
+_SECTION_BEGIN("4");
+Compress4= Param("Compression4",8,2,10,1); 
+TimeFrameSet(Compress4* Interval());
+HaClose4 =EMA((O+H+L+C)/4,3); 
+HaOpen4 = AMA( Ref( HaClose4, -1 ), 0.5 ); 
+HaHigh4 = Max( H, Max( HaClose4, HaOpen4 ) ); 
+HaLow4 = Min( L, Min( HaClose4, HaOpen4 ) ); 
+PlotText("Heinkein 4T tf :"+Interval(2), textoffset, 41.14, colorYellow);
+TimeFrameRestore();
+HAopen4f=TimeFrameExpand( Haopen4, Compress4* Interval());  
+Haclose4f=TimeFrameExpand( Haclose4, Compress4* Interval());
+HaHigh4f=TimeFrameExpand( Hahigh4, Compress4* Interval());
+HaLow4f=TimeFrameExpand( Halow4, Compress4* Interval());
+Color4 = IIf( Haopen4f > Haclose4f,4, IIf( Haopen4f == Haclose4f ,colorYellow, 6));
+Plot(10,"", Color4,  styleHistogram+styleThick|styleOwnScale|styleNoLabel, 0, 100 );
+Plot( 41,"",colorBlack,styleOwnScale|styleArea|styleNoLabel,0, 100 );
+_N(Title = "{{NAME}} - {{INTERVAL}} {{DATE}} "+_DEFAULT_NAME()+" : {{OHLCX}} {{VALUES}}" );

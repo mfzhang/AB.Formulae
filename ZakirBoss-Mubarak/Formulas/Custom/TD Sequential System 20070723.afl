@@ -1,0 +1,104 @@
+_SECTION_BEGIN("AAA TD Sequential");
+Title = Name() +" ("+ FullName()+ ")  - "+" O="+O+", H="+H+", L="+L+", C="+C+"\nDate:"+Date() +"\n";
+Compress= Param("Compress",1,1,100,1);
+TimeFrameSet(Compress* Interval()); 
+
+
+Style = ParamStyle("Style", styleBar, maskAll);
+HideNumbers= ParamToggle("Show 1-8 Numbers","No|Yes", 1);
+/////////////////////////////////////////////////////////////////////////////////////////
+// *** Buy 9 Signal ***
+//9 consecutive days closes less than the Close 4 days earlier
+Con = C < Ref(C, -4);
+Buy9Bars = BarsSince(BarsSince(Con));
+Buy9Signal = Buy9Bars==9;
+
+// **** Perfect 9 Buy ****
+//The Low of either day 8 OR 9 must be less than the lows of both days 6 AND 7.
+Lowst = IIf(Ref(L, -3)<Ref(L, -2), Ref(L, -3), Ref(L, -2));//find Lowest of 6 and 7
+Con1 = L < Lowst;//close of 9 < lowest
+Con2 = Ref(L, -1)<Lowst;// close of 8 < lowest
+Perf9Buy = Buy9Signal AND (Con1 OR Con2);
+/////////////////////////////////////////////////////////////////////////////////////////
+// *** Sell 9 Signal ***
+//9 consecutive days closes greater than the close 4 days earlier.
+Con = C >Ref(C, -4);
+Sell9Bars = BarsSince(BarsSince(Con));
+Sell9Signal = Sell9Bars==9;
+
+// *** Perfect 9 Sell ***
+//The high of either day 8 or 9 must be greater than the highs of both days 6 and 7.
+Highst = IIf(Ref(H, -3)>Ref(H, -2), Ref(H, -3), Ref(H, -2));// find highest of 6 and 7
+Con1 = H < Highst;
+Con2 = Ref(H, -1)>Highst;
+Perf9Sell = Sell9Signal AND (Con1 OR Con2);
+/////////////////////////////////////////////////////////////////////////////////////////
+if(StrToNum(NumToStr(Buy9Signal))) Sell9Signal = False;
+if(StrToNum(NumToStr(Sell9Signal))) Buy9Signal = False;
+BuySignal = Flip(Buy9Signal, Sell9Signal);
+/////////////////////////////////////////////////////////////////////////////////////////
+// *** Buy 13 Signal ***
+//13 days where each close is less than or equal to the low 2 days earlier.
+// Count starts after the completion of Perf9Buy
+Con = C < Ref(L, -2);
+Buy13Bars = Sum(Con AND BuySignal, BarsSince(Perf9Buy ));
+Con = BarsSince(Perf9Buy )<BarsSince(Perf9Sell );
+Buy13Signal = Buy13Bars > 13 AND Con;
+// *** Perfect 13 Buy ***
+//The low of day 13 must be less than or equal to the close of day 8.
+Con = L <= Ref(C, -5);
+Perf13Buy = Buy13Signal AND Con AND BuySignal;
+
+/////////////////////////////////////////////////////////////////////////////////////////
+// *** Sell 13 Signal ***
+//13 days where each close is greater than or equal to the low 2 days earlier.
+// Count starts after the completion of Perf9Sell
+Con = C > Ref(L, -2);
+Sell13Bars = Sum(Con AND NOT BuySignal, BarsSince(Perf9Sell ));
+Con = BarsSince(Perf9Buy )>BarsSince(Perf9Sell );
+Sell13Signal = Perf9Sell > 13 AND Con;
+// *** Perfect 13 Sell ***
+//The high of day 13 must be greater than or equal to the close of day 8.
+Con = H >= Ref(C, -5);
+Perf13Sell = Sell13Signal AND Con AND NOT BuySignal;
+
+/////////////////////////////////////////////////////////////////////////////////////////
+//Plotting area
+Color=IIf(O >= C, colorRed, colorBrightGreen);
+PlotOHLC(O, H, L, C, "", Color, Style);
+PlotShapes(IIf(Buy9signal OR Sell9Signal, shapeDigit9, shapeNone),colorBlue, 0, H, 20);
+if(!HideNumbers)
+PlotShapes(IIf(Buy9Bars==1, shapeDigit1,
+ 			 IIf(Buy9Bars==2, shapeDigit2,
+  			 IIf(Buy9Bars==3, shapeDigit3,
+  			 IIf(Buy9Bars==4, shapeDigit4,
+  			 IIf(Buy9Bars==5, shapeDigit5,
+  			 IIf(Buy9Bars==6, shapeDigit6,
+  			 IIf(Buy9Bars==7, shapeDigit7,
+  			 IIf(Buy9Bars==8, shapeDigit8,
+			 IIf(Buy9Bars >9, shapeStar,shapeNone))))))))),colorRed, 0, H, 20);
+if(!HideNumbers)
+PlotShapes(
+ 			IIf(Sell9Bars==1, shapeDigit1,
+ 			IIf(Sell9Bars==2, shapeDigit2,
+  			IIf(Sell9Bars==3, shapeDigit3,
+  			IIf(Sell9Bars==4, shapeDigit4,
+  			IIf(Sell9Bars==5, shapeDigit5,
+  			IIf(Sell9Bars==6, shapeDigit6,
+  			IIf(Sell9Bars==7, shapeDigit7,
+  			IIf(Sell9Bars==8, shapeDigit8,
+			IIf(sell9bars>9, shapeStar,shapeNone))))))))),colorGreen, 0, H, 20);
+
+PlotShapes(IIf(Sell13Bars==13 AND NOT BuySignal, shapeDownArrow, shapeNone), colorRed, 0, H, -40);
+PlotShapes(IIf(Buy13Bars==13 AND BuySignal, shapeUpArrow, shapeNone), colorGreen, 0, L, -40);
+
+i = SelectedValue(BarIndex());
+PlotText(WriteIf(BuySignal, "Buy Signal\nActive:"+Buy13Bars, "Sell Signal\nActive:"+Sell13Bars), i, L[i]-(L[i]*.01), colorGold);
+
+if(StrToNum(NumToStr(BuySignal)))
+bgColor = ColorRGB(0,66, 2);
+else
+bgColor = ColorRGB(66,2, 0);
+SetChartBkGradientFill( colorBlack, bgColor); 
+
+_SECTION_END();

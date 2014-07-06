@@ -1,0 +1,82 @@
+//Modified by Bobby Kular email: bobby.kular@yahoo.com
+//xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+_SECTION_BEGIN("Background");
+SetChartOptions(0,chartShowArrows|chartShowDates);
+
+priceTitle=StrFormat("---- {{NAME}} ---------- {{VALUES}}"); 
+
+Title ="Averages" + priceTitle;
+
+if( ParamToggle("Tooltip shows", "All Values|Only Prices" ) )
+{
+ ToolTip=StrFormat("Open: %g\nHigh:  %g\nLow:   %g\nClose:  %g
+(%.1f%%)\nVolume: "+NumToStr( V, 1 ), O, H, L, C, SelectedValue( ROC( C, 1
+)));
+}
+
+SetChartBkColor(ParamColor("Outer panel color ",colorDarkYellow )); // color of outer border 
+
+SetChartBkGradientFill( ParamColor("Inner panel color upperhalf",colorDarkYellow ),
+
+ParamColor("Inner panel color lower half",colorOrange )); //color of inner panel
+
+_SECTION_END();
+//xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+_SECTION_BEGIN("Average");
+P = ParamField("Field");
+Type = ParamList("Type", "Weighted,Lagless-21,Hull-26,Linear Regression-45,Exponential,Double Exponential,Tripple Exponential,Wilders,Simple");
+Periods = Param("Periods", 9, 2, 100 );
+Displacement = Param("Displacement", 1, -50, 50 );
+m = 0;
+
+if( Type == "Weighted" ) 				m=  WMA( P, Periods );
+if( Type == "Lagless-21"  )				m=  2*EMA(P, Periods)-EMA(EMA(P, Periods),
+Periods); 
+if( Type == "Hull-26"  )				m=  WMA(2*(WMA(P, Periods/2))-WMA(P, Periods) ,4
+);
+if( Type == "Linear Regression-45"  ) m=  LinearReg( P, Periods );
+if( Type == "Exponential" ) 			m = EMA( P, Periods );
+if( Type == "Double Exponential" ) 	m = DEMA( P, Periods );
+if( Type == "Tripple Exponential" ) 	m = TEMA( P, Periods );
+if( Type == "Wilders" ) 				m = Wilders( P, Periods );
+if( Type == "Simple" ) 					m = MA( P, Periods );
+
+
+Plot( m, _DEFAULT_NAME(), ParamColor("Color", colorWhite), styleThick, 0, 0,Displacement );
+
+
+//Plot Price
+barcolor = IIf(C > m, ParamColor("Up Color",colorBrightGreen), IIf(C==m,colorRed, ParamColor("Dn Color",colorRed))); 
+Plot( C, "Close", barcolor, ParamStyle("Style",styleThick+styleNoLabel) |
+GetPriceStyle());
+
+//xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+_SECTION_BEGIN("Price");
+Plot( C, "Close", ParamColor("Color", colorLightOrange ),styleNoLine|styleNoRescale ); 
+_SECTION_END();
+
+//xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+_SECTION_BEGIN("T3 Indicator");
+SetChartOptions(0,chartLogarithmic|chartWrapTitle);
+
+#include_once <T3_include.AFL>
+P = ParamField("Price field",-1);
+periods = Param( "Periods", 3, 1, 200, 1 );
+Plot(T3(P,Periods),_DEFAULT_NAME(),ParamColor("Color", Colorcycle),
+ParamStyle("Style"));
+_SECTION_END();
+
+_SECTION_BEGIN("Price");
+SetChartOptions(0,chartShowDates|chartShowArrows|chartLogarithmic|chartWrapTitle);
+_N(Title = StrFormat("{{NAME}} - {{INTERVAL}} {{DATE}} Open %g, Hi %g, Lo %g, Close %g (%.1f%%) {{VALUES}}", O, H, L, C, SelectedValue( ROC( C, 1 ) )));
+
+Plot( C, "", IIf(Close > Open, colorGreen, colorRed), styleBar + styleNoLabel);
+_SECTION_END();
+
+_SECTION_BEGIN("trending ribbon");
+uptrend=PDI()>MDI()AND Signal()<MACD();
+downtrend=MDI()>PDI()AND Signal()>MACD();
+Plot( 2, "",IIf( uptrend, colorGreen, IIf( downtrend, colorRed, 0 )), styleOwnScale|styleArea|styleNoLabel, -0.5, 100 );
+_SECTION_END();

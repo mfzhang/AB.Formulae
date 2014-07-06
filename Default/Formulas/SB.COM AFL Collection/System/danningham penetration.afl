@@ -1,0 +1,225 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    danningham penetration
+//  Author/Uploader: N. Sagi 
+//  E-mail:          april4000@hotmail.co.il
+//  Date/Time Added: 2004-03-17 13:48:49
+//  Origin:          
+//  Keywords:        danningham penetration vbscript
+//  Level:           semi-advanced
+//  Flags:           system
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=345
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=345
+//
+//------------------------------------------------------------------------------
+//
+//  this furmula try to simulate the
+//
+//  danningham penetration method, using
+//
+//  vbscript inside it.
+//
+//  if you find a way to improve it,
+//
+//  you can send the improvment back to me :)
+//
+//------------------------------------------------------------------------------
+
+////////////////////////////////////////////////
+//danningham penetration writen by SAGI. 2004.//
+//APRIL4000@hotmail.co.il                     //
+////////////////////////////////////////////////
+
+EnableScript("vbscript");
+
+//ApplyStop( 0, 1, Optimize( "loss", 2, 0, 3, 0.5 ), 0 );
+//ApplyStop( 2, 1, Optimize( "trailing", 2, 0, 15, 0.5 ), 0 );
+//ApplyStop( 1, 1, Optimize( "profit", 2, 0, 15, 0.5 ), 0 );
+ApplyStop( 0, 1, 3, 0 );//loss
+//ApplyStop( 2, 1, 2, 0 );//trailing
+//ApplyStop( 1, 1, 2, 0 );//profit
+//ApplyStop( 3, 1, 2, 0 );//bars
+
+
+Buy=Short=Sell=Cover=O;
+
+//start vbscript
+<%
+
+pbuy = AFL("buy")
+pshort = AFL("short")
+psell = AFL("sell")
+pcover = AFL("cover")
+pclose=AFL("close")
+popen=AFL("open")
+phigh=AFL("high")
+plow=AFL("low")
+
+Dayflag=0
+Dayopen=0
+Dayhigh=0
+Daylow=0
+Dayclose=0
+stoploos=0
+'
+Dayflags=0
+Dayopens=0
+Dayhighs=0
+Daylows=0
+Daycloses=0
+stoplooss=0
+
+ for i = 0 to UBound( pbuy )
+'=====Long============
+     'init arrays
+     pbuy ( i )=0
+     psell ( i )=0
+     
+     select Case Dayflag
+     Case 0
+      Dayflag=1
+      Dayopen=popen(i)
+      Dayhigh=phigh(i)
+      Daylow=plow(i)
+      Dayclose=pclose(i)
+
+     Case 1
+      if phigh(i)>dayhigh then
+       Dayopen=popen(i)
+       Dayhigh=phigh(i)
+       Daylow=plow(i)
+       Dayclose=pclose(i)
+      else
+       if phigh(i)<Daylow then
+        Dayflag=2
+        Dayopen=popen(i)
+        Dayhigh=phigh(i)
+        Daylow=plow(i)
+        Dayclose=pclose(i)
+        psell(i)=1
+        stoploos=0
+       end if
+      end if
+
+     Case 2
+      if plow(i)<Daylow then
+       Dayopen=popen(i)
+       Dayhigh=phigh(i)
+       Daylow=plow(i)
+       Dayclose=pclose(i)
+      else
+       if pclose(i)>Dayclose then
+        pbuy(i)=1
+        stoploos=plow(i)
+        Dayflag=0
+        Dayopen=0
+        Dayhigh=0
+        Daylow=0
+        Dayclose=0
+       end if
+      end if
+
+     end select
+     if stoploos>0 then
+      if stoploos > pclose(i) then
+       psell(i)=1
+       stoploos=0
+      end if
+     end if
+ 
+'===========Short==============
+'init arrays
+     
+     pshort ( i )=0
+     pcover ( i )=0
+
+     select Case Dayflags
+     Case 0
+      Dayflags=1
+      Dayopens=popen(i)
+      Dayhighs=phigh(i)
+      Daylows=plow(i)
+      Daycloses=pclose(i)
+
+     Case 1
+      if plow(i)<daylows then
+       Dayopens=popen(i)
+       Dayhighs=phigh(i)
+       Daylows=plow(i)
+       Daycloses=pclose(i)
+      else
+       if plow(i)>Dayhighs then
+        Dayflags=2
+        Dayopens=popen(i)
+        Dayhighs=phigh(i)
+        Daylows=plow(i)
+        Daycloses=pclose(i)
+        pcover(i)=1
+        stoplooss=0
+       end if
+      end if
+
+     Case 2
+      if phigh(i)>Dayhighs then
+       Dayopens=popen(i)
+       Dayhighs=phigh(i)
+       Daylows=plow(i)
+       Daycloses=pclose(i)
+      else
+       if pclose(i)<Daycloses then
+        pshort(i)=1
+        stoplooss=phigh(i)
+        Dayflags=0
+        Dayopens=0
+        Dayhighs=0
+        Daylows=0
+        Daycloses=0
+       end if
+      end if
+
+     end select
+     if stoplooss>0 then
+      if stoplooss < pclose(i) then
+       pcover(i)=1
+       stoplooss=0
+      end if
+     end if
+
+ next
+
+
+AFL("pbuy")=pbuy 
+AFL("pshort")=pshort 
+AFL("psell")=psell 
+AFL("pcover")=pcover
+%>
+//end vbscript
+
+
+//shot the signals
+Buy=pbuy AND (MA(C,9)>Ref(MA(C,9),-1)OR MA(C,20)>Ref(MA(C,20),-1));
+Sell=0 ;
+Short=pshort AND (MA(C,9)<Ref(MA(C,9),-1)OR MA(C,20)<Ref(MA(C,20),-1));
+Cover=0 ;
+  
+ 
+ 
+   
+ 
+ 
+ 
+ 
+ 
+ 
+           
+   
+ 
+ 
+         
+ 
+ 
+         
+     
+ 
+   
+ 

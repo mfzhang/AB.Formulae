@@ -1,0 +1,49 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Reverse EMA function
+//  Author/Uploader: Dimitris Tsokakis 
+//  E-mail:          tsokakis@oneway.gr
+//  Date/Time Added: 2003-06-13 03:44:35
+//  Origin:          
+//  Keywords:        
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=286
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=286
+//
+//------------------------------------------------------------------------------
+//
+//  EMA is a function of todays Close and yesterdays EMA.
+//
+//  The mechanism is analytically described in AFL>AFL Scripting
+//  Host>Examples>a) Indicator example - Exponential moving average
+//
+//  After the math transormation, we may solve for C and get the Reverse EMA
+//  function.
+//
+//  I will call it CLOSEviaEMA to be more expressive.
+//
+//  In Indicator builder paste the
+//
+//  // Reverse EMA function, by D.Tsokakis, June 2003
+//
+//  P=20;
+//
+//  CLOSEviaEMA=0.5*((P+1)*EMA(C,P)-(P-1)*Ref(EMA(C,P),-1));
+//
+//  Plot(C,"CLOSE",1,1);
+//
+//  Plot(CLOSEviaEMA,"CLOSEviaEMA",7,8);
+//
+//  to see actual Close and CLOSEviaEMA matching.
+//
+//  The Reverse EMA function is useful to anticipate next bar Close, if we
+//  suppose next bar EMA.
+//
+//------------------------------------------------------------------------------
+
+// Reverse EMA function, by D.Tsokakis, June 2003
+P=20;
+CLOSEviaEMA=0.5*((P+1)*EMA(C,P)-(P-1)*Ref(EMA(C,P),-1));
+Plot(C,"CLOSE",1,1);
+Plot(CLOSEviaEMA,"CLOSEviaEMA",7,8);

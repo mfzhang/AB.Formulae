@@ -1,0 +1,140 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    AFL Example - Enhanced
+//  Author/Uploader: Brian Fenske 
+//  E-mail:          brfenske@hotmail.com
+//  Date/Time Added: 2005-08-14 15:02:31
+//  Origin:          AFL Example from Graham
+//  Keywords:        sample example aa analysis indicator backtest scan
+//  Level:           basic
+//  Flags:           system,exploration,indicator,commentary
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=547
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=547
+//
+//------------------------------------------------------------------------------
+//
+//  Graham did a nice job of capturing much of the essence of a basic script.
+//  In working with a group of programmers we've come up with some enhancements
+//  to his formula that makes it useful in the Automatic Analysis (AA)
+//  component.
+//
+//------------------------------------------------------------------------------
+
+/*
+This is an attempt to provide a basic trading system AFL. The system is purely imaginary
+AND NOT provided as one that would make money. This is just to provide a guide to learners
+on the common components of writing AFL.
+
+ Prepared by Graham Kavanagh 12 Aug 2005
+ AB Write http://e - wire.net.au/~eb_kavan/ab_write.htm
+
+When you copy/paste ensure the existing continuous lines have not been wrapped. This wrapping
+can create error signals when you try to use the code. Click on the Check AFL button in the
+editor before trying to apply or scan.
+I have used slash - asterisk /* */ /* for my comments to get around the problem of wrapping,
+which could happen if you used double slash //
+
+I hope this helps the beginners in creating AFL code
+*/
+
+/*-------------------------------------
+	Initialize
+-------------------------------------*/
+Title = "{{NAME}} {{DATE}} {{INTERVAL}} " + _DEFAULT_NAME() + " Chart values : {{VALUES}}";
+/* 
+_DEFAULT_NAME()shows the section name or, if not present, the file name.
+The items in {{}} are Short cuts for the Title block.
+
+Alternatively, use:
+Title = Name() + " " + Date() + " " + "{{INTERVAL}}" + _DEFAULT_NAME() + " Chart values : " +
+" Close Price = " + C +
+" EMA(C, " + WriteVal(LongPer, 1) + ") = " + WriteVal(LongMA, 1.3) +
+" EMA(C, " + WriteVal(ShortPer, 1) + ") = " + WriteVal(ShortMA, 1.3) +
+" HHV(H, " + WriteVal(LongPer, 1) + ") = " + WriteVal(Ref(LastHigh, - 1), 1.3);
+*/
+
+PositionScore = 100 / C; /* Set the order for which stock trades when get multiple signals in one bar in backtesting */
+PositionSize = - 10; /* trade size will be 10% of available equty */
+SetBarsRequired(10000, 10000); /* this ensures that the charts include all bars AND NOT just those on screen */
+SetFormulaName("Sample System"); /* name it for backtest report identification */
+SetOption("CommissionAmount", 32.95); /* commissions AND cost */
+SetOption("CommissionMode", 2); /* set commissions AND costs as $ per trade */
+SetOption("InitialEquity", 100000); /* starting capital */
+SetOption("MaxOpenPositions", 6); /* I don't want to comit more than 60% of Equity at any one time */
+SetOption("PriceBoundChecking", 1); /* trade only within the chart bar's price range */
+SetOption("UsePrevBarEquityForPosSizing", 1); /* set the use of last bars equity for trade size */
+
+/*-------------------------------------
+	Calculate Indicators
+		Buy = when exp mov Avg crosses AND the High is Highest for 50 bars
+		Sell = when exp mov Avg crosses back
+		Cross = first variable moves above the Second variable
+-------------------------------------*/
+LongPer = Param("Long Period", 50, 30, 100, 5); /* select periods with parameter window */
+ShortPer = Param("Short Period", 5, 3, 10, 1);
+LongMA = EMA(C, LongPer);
+ShortMA = EMA(C, ShortPer);
+LastHigh = HHV(H, LongPer);
+
+/*-------------------------------------
+	Trade
+-------------------------------------*/
+Buy = Cross(ShortMA, LongMA)AND H > Ref(LastHigh, - 1);
+/* ref, - 1 is used for the high to have todays high greater than the previous 50 bar high.
+   To just use H = = LastHigh couold mean a previous high was equal to current high */
+Sell = Cross(LongMA, ShortMA);
+/* exrem is one method to remove surplus strade signals */
+Buy = ExRem(Buy, Sell);
+Sell = ExRem(Sell, Buy);
+
+/*-------------------------------------
+	Automatic Analysis (AA) Settings
+	This formula can be used for the following purposes:
+	1 - Indicator, 2 - Commentary, 3 - Scan, 4 - Exploration, 5 - Backtest, Optimize
+-------------------------------------*/
+TransmitOrder = False;  // Set to True to really trade!
+
+AASettings = Status("action");
+if (AASettings == 1) {
+	// [Indicator]
+	GraphXSpace = 10; /* create empty space of 10% top and bottom of chart */
+	Plot(C, " Close Price", colorGrey50, styleBar);
+	Plot(LongMA, " EMA(C, " + WriteVal(LongPer, 1) + ")", colorRed, styleLine|styleNoRescale);
+	Plot(ShortMA, " EMA(C, " + WriteVal(ShortPer, 1) + ")", colorGreen, styleLine|styleNoRescale);
+	Plot(Ref(Lasthigh, - 1), " HHV(H, " + WriteVal(LongPer, 1) + ")", colorBlue, styleNoLine|styleDots|styleNoRescale);
+
+	/* styleNoRescale in the plots stops the added plots from compressing the original bar chart to the middle of the pane */
+	PlotShapes(shapeUpArrow * Buy, colorGreen, 0, L, - 10);
+	PlotShapes(shapeDownArrow * Sell, colorRed, 0, H, - 10);
+
+} else if (AASettings == 2) {
+	// [Commentary]
+	"Closing price = " + WriteVal(Close);
+	"Change since yesterday = " + WriteVal(Close - Ref(Close, -1));
+	"Percent chg. since yesterday = " + WriteVal(ROC(Close, 1)) + " %";
+	"MACD = " + WriteVal(MACD()) + " , Signal line = " + WriteVal(Signal());
+
+} else if (AASettings == 3) {
+	// [Scan]
+	AlertIf(Buy, "SOUND C:\\PROGRAM FILES\\AMIBROKER\\BUY.WAV", "Buy", 3);
+	AlertIf(Sell, "SOUND C:\\PROGRAM FILES\\AMIBROKER\\SELL.WAV", "Sell", 3);
+
+} else if (AASettings == 4) {
+	// [Exploration]
+	/* We restrict results of exploration to when the Buy AND Sell signals occur */
+	/* You can use Filter = 1; to display every bar result */
+	Filter = Buy OR Sell;
+	AddTextColumn(FullName(), "Company Name");
+	AddColumn(Buy, "Buy", 1);
+	AddColumn(Sell, "Sell", 1);
+	AddColumn(C, "Close", 1.3);
+	AddColumn(H, "High", 1.3);
+	AddColumn(LastHigh, "HHV", 1.3);
+	AddColumn(LongMA, "Long MA", 1, 3);
+	AddColumn(ShortMA, "Short MA", 1, 3);
+
+} else if (AASettings == 5) {
+	// [Backtest] //
+	SetTradeDelays(1, 1, 1, 1);
+}
+

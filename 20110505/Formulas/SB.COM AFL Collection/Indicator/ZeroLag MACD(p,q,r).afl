@@ -1,0 +1,52 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    ZeroLag MACD(p,q,r)
+//  Author/Uploader: Nand Kishor 
+//  E-mail:          nkishor@dccnet.com
+//  Date/Time Added: 2003-04-27 01:33:18
+//  Origin:          
+//  Keywords:        
+//  Level:           medium
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=273
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=273
+//
+//------------------------------------------------------------------------------
+//
+//  Here is ZeroLag MACD(12,26,9). U can use the parameter
+//
+//  capability to tweak the periods. In comparison to AB's
+//
+//  built in MACD(12,26,9), ZeroLagMACD signals show up
+//
+//  a few days earlier, and divergences are quite pronounced.
+//
+//------------------------------------------------------------------------------
+
+/*Xero Lag MACD(p,q,r)*/
+//based on ZeroLag EMA - see Technical Analysis of Stocks and Commodities, April 2000
+p = Param("P",12,3,36,2);
+q = Param("Q",26,3,52,2);
+r = Param("R",9,3,15,1);
+
+EMA1= EMA(Close,p);
+EMA2= EMA(EMA1,p);
+Difference= EMA1 - EMA2;
+ZeroLagEMAp= EMA1 + Difference;
+//---------------------------------------
+EMA1= EMA(Close,q);
+EMA2= EMA(EMA1,q);
+Difference= EMA1 - EMA2;
+ZeroLagEMAq= EMA1 + Difference;
+//---------------------------------------
+ZeroLagMACD=ZeroLagEMAp - ZeroLagEMAq;
+//---------------------------------------
+// Signal line
+EMA1= EMA(ZeroLagMACD,r);
+EMA2= EMA(EMA1,r);
+Difference= EMA1 - EMA2;
+ZeroLagTRIG= EMA1 + Difference;
+
+Plot(zerolagMACD,"",5,4);
+Plot(zerolagtrig,"",7,4);
+//===========================end zeroLagMACD

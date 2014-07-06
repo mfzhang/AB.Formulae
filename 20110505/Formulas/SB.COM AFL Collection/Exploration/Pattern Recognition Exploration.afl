@@ -1,0 +1,111 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Pattern Recognition Exploration
+//  Author/Uploader: Dimitris Tsokakis 
+//  E-mail:          tsokakis@oneway.gr
+//  Date/Time Added: 2001-09-03 14:03:35
+//  Origin:          
+//  Keywords:        
+//  Level:           medium
+//  Flags:           exploration
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=105
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=105
+//
+//------------------------------------------------------------------------------
+//
+//  Paste the code in Automatic Analysis and Explore All Stocks for the last
+//  date of your data.
+//
+//  In Results click twice a label , for example "a TR" and you will collect
+//  all ascending Triangles marked with an "1".
+//
+//  This Exploration recognizes the following patterns:
+//
+//  +Ascending Wedges "aW"
+//
+//  +Descending Wedges "dW"
+//
+//  + ascending Triangles "a TR"
+//
+//  +descending Triangles "d TR"
+//
+//  +ascending channel "a ll"
+//
+//  +descending channel "d ll"
+//
+//  +almost horizontal channel "ll"
+//
+//  +Converging Support and Resistance
+//
+//  +Diverging Support and Resistance
+//
+//  +N/A, ie examples not belonging to any above category.
+//
+//  You may decrease sensitivity, changing
+//
+//  per=3;
+//
+//  with another percentage higher than 3.
+//
+//  For Indicator Builder paste the code in Comments.
+//
+//------------------------------------------------------------------------------
+
+/*Pattern Recognition Exploration
+by Dimitris Tsokakis*/
+x = cum(1);
+per = 3;
+s1=l;
+s11=h;
+pS = troughBars( s1, per, 1 ) == 0;
+endt= lastvalue(ValueWhen( pS, x, 1 ));
+startt=lastvalue(ValueWhen( pS, x, 2 ));
+dtS =endt-startt;
+endS = lastvalue(ValueWhen( pS, s1, 1 ) );
+startS = lastvalue( ValueWhen( pS, s1, 2  ));
+aS = (endS-startS)/dtS;
+pR = PEAKBars( s11, per, 1 ) == 0;
+endt1= lastvalue(ValueWhen( pR, x, 1 ));
+startt1=lastvalue(ValueWhen( pR, x, 2 ));
+dtR =endt1-startt1;
+endR = lastvalue(ValueWhen( pR, s11, 1 ) );
+startR = lastvalue( ValueWhen( pR, s11, 2  ));
+aR = (endR-startR)/dtR;
+filter=1;
+numcolumns=12;
+column0=aS;
+column1=aR;
+column0name="aSup";
+column1name="aRes";
+column2=ar>0 and as>3*ar;
+column2name="a W";
+column2format=1.0;
+column3=ar<3*as and as<0;
+column3name="d W";
+column3format=1.0;
+column4=abs(aR)<0.002 and aS>0;
+column4name="a TR";
+column4format=1.0;
+column5=abs(aS)<0.002 and ar<0;
+column5name="d TR";
+column5format=1.0;
+column6=abs(aR-aS)<0.1*aS;
+column6name="a ll";
+column6format=1.0;
+column7=abs(aR-aS)<0.1*abs(aR) and aR<0;
+column7name="d ll";
+column7format=1.0;
+column8=abs(aR-aS)<0.1*abs(aR) and abs(aR)<0.01;
+column8name=" ll ";
+column8format=1.0;
+column9=aR<0 and aS>0;
+column9name="Converging";
+column9format=1.0;
+column10=aR>0 and aS<0;
+column10name="Diverging";
+column10format=1.0;
+column11=column2==0 and column3==0 and column4==0 and 
+column5==0 and column6==0 and column7==0 and column8==0 
+and column9==0 and column10==0;
+COLUMN11NAME="N/A";
+COLUMN11FORMAT=1.0;

@@ -1,0 +1,27 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Relative strength comparison with moving average
+//  Author/Uploader: Don McKay 
+//  E-mail:          
+//  Date/Time Added: 2004-01-15 09:30:50
+//  Origin:          
+//  Keywords:        Relative strength comparison
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=322
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=322
+//
+//------------------------------------------------------------------------------
+//
+//  Compare current stock against another with a moving average.
+//
+//------------------------------------------------------------------------------
+
+/* Relative Strength Comparison with Relative Strength Moving Average*/
+
+RSTick = "^AORD"; //Replace with ticker of your choice
+
+WMAvalue = Param("RelStre WMA", 30, 1, 55, 1);
+Plot ( RelStrength( RSTick),"RelStrength "+ RSTick, -8 );// Plot Relative Strength 
+Plot (WMA( RelStrength( RSTick),WMAvalue)," RelStrength WMA "+ WMAvalue, colorBrightGreen, styleLine);
+

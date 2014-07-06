@@ -1,0 +1,84 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Volume Oscillator
+//  Author/Uploader: Steve Wiser 
+//  E-mail:          slwiserr@erols.com
+//  Date/Time Added: 2001-07-05 19:19:04
+//  Origin:          
+//  Keywords:        
+//  Level:           basic
+//  Flags:           system,exploration,indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=61
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=61
+//
+//------------------------------------------------------------------------------
+//
+//  Uses Volume oscillator to build a system test and indicator.
+//
+//------------------------------------------------------------------------------
+
+/* Volume Oscillator */
+/* Indicator, system, and exploration */
+/* Steve Wiser slwiserr@erols.com */
+
+PlusDM= IIf(HIGH>Ref(HIGH,-1) AND LOW>=Ref(LOW,-1), HIGH-Ref(HIGH,-1),
+                 IIf(HIGH>Ref(HIGH,-1) AND LOW<Ref(LOW,-1)
+                 AND HIGH-Ref(HIGH,-1)>Ref(LOW,-1)-LOW,
+                HIGH-Ref(HIGH,-1),0));
+
+Vm=Log(EMa(V,3));
+ 
+Buy= (C-L)*Vm+ (H-O)*Vm + 
+         IIf(C>O,(C-O)*Vm,0) + PlusDM*Vm + 
+         IIf(Ref(C,-1)<O,(O-Ref(C,-1))*Vm,0);
+
+MinDM = IIf(LOW<Ref(LOW,-1)   AND  HIGH<=Ref(HIGH,-1), Ref(LOW,-1)-LOW,
+               IIf(HIGH>Ref(HIGH,-1) AND LOW<Ref(LOW,-1)
+               AND HIGH-Ref(HIGH,-1)<Ref(LOW,-1)-LOW, Ref(LOW,-1)-LOW, 0));
+
+Sell= (H-C)*Vm + (O-L)*Vm + 
+         IIf(C<O,(O-C)*Vm,0) + MinDM*Vm + 
+         IIf(Ref(C,-1)>O,(Ref(C,-1)-O)*Vm,0);
+
+Wm=wilders(Wilders(buy,3)-Wilders(sell,3),3);
+
+Buy=cross(Wm,0);
+sell=cross(0,Wm);
+
+ 
+Graph1=Wm;
+/*Graph2=Wilders(Wm,30);*/
+Graph2=ma(Wm,8);
+
+Graph0=0;
+Graph0Style=Graph1Style=Graph2Style=5;
+Graph2Color=6;
+
+
+Filter= (Buy==1)  ;
+numcolumns = 6;
+column0 =ref(C+0.065,-1);
+column0format = 1.2;
+column0name = "Trigger Price";WriteVal(C+0.065);
+column1 = C; 
+column1name = "Close       ";WriteVal(C);
+column1format = 1.2;
+column2 = ma(v,17); 
+column2name = "17 Ma Vol   ";WriteVal(ma(v,17) );
+column2format = 1.0;
+column3 = ma(C,17)/ma(c,50); 
+column3name = "% 17/50 ";WriteVal(  ma(C,17)/ma(c,50) );
+column3format = 1.2;
+column3format = 1.2;
+column4= ma(c,17);
+column4name="17 C ma"; WriteVal(  ma(c,17) );
+column4format = 1.2;
+column4= ma(c,50);
+column4name="50 C ma"; WriteVal( ma(c,50) );
+column4format = 1.2;
+Column5=Wm;
+column5Name="Vol Osc"; WriteVal(Wm);
+Column5Format=1.2;  
+
+/*  End of Exploration Code. */
+

@@ -1,0 +1,91 @@
+_SECTION_BEGIN("LunaPhase");
+// Luna Phase Calculator.
+// Code converted from: http://home.att.net/~srschmitt/lunarphasecalc.html
+// OzFalconAB 
+
+// Get Day/Month/Year in number format (NOT array).
+Y = SelectedValue(Year()); M = SelectedValue(Month()); D = SelectedValue(Day());
+Hr = SelectedValue(Hour()); Mn = SelectedValue(Minute()); 
+
+
+// normalize values to range 0...1
+function normalize( Val )
+{
+
+    Val = Val - floor( Val ); 
+    if (Val < 0) {Val = Val + 1;}
+    return Val;
+}
+
+// Set Pi.
+PI = 3.1415926535897932385;
+
+// calculate the Julian Date at 12H UT
+YY = Y - floor( ( 12 - M ) / 10 );      
+MM = M + 9;
+if (MM >= 12) {MM = MM - 12;}
+
+K1 = floor( 365.25 * ( YY + 4712 ) );
+K2 = floor( 30.6 * MM + 0.5 );
+K3 = floor( floor( ( YY / 100 ) + 49 ) * 0.75 ) - 38;
+   
+JD = K1 + K2 + D + 59; //		for dates in Julian calendar
+if (JD > 2299160) {JD = JD - K3;} //		for Gregorian calendar
+        
+// calculate moon's age in days
+IP = normalize( ( JD - 2451550.1 ) / 29.530588853 );
+AG = IP*29.53;
+
+Phase = "NEW";
+if (AG < 27.68493) {Phase = "Waning crescent";S1=4;S2=8;}
+if (AG < 23.99361) {Phase = "Last quarter";S1=4;S2=12;}
+if (AG < 20.30228) {Phase = "Waning gibbous";S1=6;S2=14;}
+if (AG < 16.61096) {Phase = "FULL";S1=6;S2=15;}
+if (AG < 12.91963) {Phase = "Waxing gibbous";S1=6;S2=7;}
+if (AG <  9.22831) {Phase = "First quarter";S1=2;S2=3;}
+if (AG <  5.53699) {Phase = "Waxing crescent";S1=2;S2=1;}
+if (AG <  1.84566) {Phase = "NEW";S1=0;S2=0;}
+
+IP1 = IP;
+IP = IP*2*PI;		// Convert phase to radians
+
+// calculate moon's distance
+DP = 2*PI*normalize( ( JD - 2451562.2 ) / 27.55454988 );
+DI = 60.4 - 3.3*cos( DP ) - 0.6*cos( 2*IP - DP ) - 0.5*cos( 2*IP );
+
+// calculate moon's ecliptic latitude
+NP = 2*PI*normalize( ( JD - 2451565.2 ) / 27.212220817 );
+LA = 5.1*sin( NP );
+
+// calculate moon's ecliptic longitude
+RP = normalize( ( JD - 2451555.8 ) / 27.321582241 );
+LO = 360*RP + 6.3*sin( DP ) + 1.3*sin( 2*IP - DP ) + 0.7*sin( 2*IP );
+
+Zodiac = "Pisces";
+if (LO < 348.58) {Zodiac = "Aquarius";}
+if (LO < 311.72) {Zodiac = "Capricorn";}
+if (LO < 302.49) {Zodiac = "Sagittarius";}
+if (LO < 271.26) {Zodiac = "Scorpio";}
+if (LO < 242.57) {Zodiac = "Libra";}
+if (LO < 224.17) {Zodiac = "Virgo";}
+if (LO < 173.34) {Zodiac = "Leo";}
+if (LO < 135.30) {Zodiac = "Cancer";}
+if (LO < 119.48) {Zodiac = "Gemini";}
+if (LO <  93.44) {Zodiac = "Taurus";}
+if (LO <  51.16) {Zodiac = "Aries";}
+if (LO <  33.18) {Zodiac = "Pisces";}
+
+
+_N(Title = "Date = " + Y + "/" + M + "/" +D + " Hr:" + Hr + " Min:" + Mn + "\n" +
+	"Age: " + AG + "     Phase: " + Phase + "\n" +
+	"distance: " + DI + " earth radii\n" +
+	"ecliptic\n" + 
+	" latitude  = " + LA + "°\n" +
+	" longitude = " + LO + "°\n" +
+	"constellation = " + Zodiac+ "\n" + 
+	"IP: " + IP1);
+
+
+Color = IIf(O > C, colorBlack, colorYellow);
+Plot( Close, "Price", color, styleCandle | styleOwnScale );
+_SECTION_END();

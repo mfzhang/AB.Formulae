@@ -1,0 +1,35 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    RSI of volume weighted moving average
+//  Author/Uploader: Jim Wiehe 
+//  E-mail:          jimwiehe@indianadata.com
+//  Date/Time Added: 2006-07-21 06:38:21
+//  Origin:          John Bollinger interview in 2002 issue of TASC
+//  Keywords:        
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=636
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=636
+//
+//------------------------------------------------------------------------------
+//
+//  This afl uses the RSIa function upon a volume weighted moving average.
+//  There are parameters to adjust the RSIa periods, VWMA periods and an
+//  additional ema smoothing period. I think Bollinger liked the 9 period RSI
+//  and a couple of double bottoms below 30.
+//
+//------------------------------------------------------------------------------
+
+_SECTION_BEGIN("RSI of a Volume weighted moving average");
+
+periods=Param("VWMA periods ",5,2,200,1);
+
+smoothing=Param("exp. smoothing of VWMA",3,2,200,1);
+rsiperiods=Param("rsi periods",9,2,200,1);
+Vwma = Sum((Volume*Close),periods)/Sum (Volume,periods);
+svwma=EMA(Vwma,smoothing);
+Plot(RSIa(SVwma,rsiperiods),"RSI of  VWMA ",colorBlack,styleLine);
+Plot(70,"",colorRed,styleLine);
+Plot(30,"",colorGreen,styleLine);
+
+_SECTION_END();

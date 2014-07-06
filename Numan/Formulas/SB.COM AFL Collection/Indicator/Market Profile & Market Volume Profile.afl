@@ -1,0 +1,73 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Market Profile & Market Volume Profile
+//  Author/Uploader: noname 
+//  E-mail:          
+//  Date/Time Added: 2006-05-28 07:10:16
+//  Origin:          
+//  Keywords:        Market Profile
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=623
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=623
+//
+//------------------------------------------------------------------------------
+//
+//  Market Profile &amp; Market Volume Profile
+//
+//------------------------------------------------------------------------------
+
+//Market Profile
+GraphXSpace = 5;
+SetChartOptions(0, chartShowDates);
+
+//===========================
+
+Den = Param("Density", 40, 10, 100, 10);
+ShowMP = ParamToggle("Show MP", "No|Yes");
+ShowVP = ParamToggle("Show VP", "No|Yes");
+StyleMP = ParamStyle("style MP", styleLine, maskAll);
+StyleVP = ParamStyle("style VP", styleLine, maskAll);
+
+//===========================
+BarsInDay = BarsSince(Day() != Ref(Day(), -1)) + 1;
+
+//===========================
+NewDay = Day() != Ref(Day(), 1) OR Cum(1) == BarCount;
+
+//===========================
+Bot = TimeFrameGetPrice("L", inDaily, 0);
+Top = TimeFrameGetPrice("H", inDaily, 0);
+Vol = TimeFrameGetPrice("V", inDaily, 0);
+
+//===========================
+
+Range = Highest(Top-Bot);
+Box = Range/Den;
+VolumeUnit = Vol/BarsInDay;
+
+for (k = 0; k < Den; k++)            // loop through each line (price) starting at the Lowest price
+{
+	Line = Bot + k*Box;
+	detect = Line >= L & Line <= H;
+
+	if(ShowMP == True)
+	{
+		CountMPString = IIf(NewDay, Sum(detect, BarsInDay), 0);
+		CountMPString = Ref(ValueWhen(NewDay, CountMPString, 0), -1);
+		MpLine = IIf(CountMPString >= BarsInDay, Line, Null);
+
+		Plot(MPLine, "", colorRed, styleMP);
+	}
+
+if(ShowVP == True)
+	{
+		CountVPString = IIf(NewDay, Sum(detect*V, BarsInDay)/VolumeUnit, 0);
+		CountVPString = Ref(ValueWhen(NewDay, CountVPString, 0), -1);
+		VpLine = IIf(CountVPString >= BarsInDay, Line + Box/4, Null);
+//		Plot()
+		Plot(VPLine, "", colorBlue, styleVP);
+	}
+}
+
+Title = "{{NAME}} - {{INTERVAL}} {{DATE}} {{VALUES}} - \\c04 Market Profile  \\c06 Volume Profile";

@@ -1,0 +1,53 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Volatility Quality Index
+//  Author/Uploader: Vic Huebner 
+//  E-mail:          atlantic@engineer.com
+//  Date/Time Added: 2002-07-13 16:31:48
+//  Origin:          Thomas Stridsman in Active Trader - August 2002
+//  Keywords:        volatility, buy, sell, zig
+//  Level:           medium
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=205
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=205
+//
+//------------------------------------------------------------------------------
+//
+//  Plots the volatility quality index. I added a trend detector as a simple
+//  buy-sell indicator.
+//
+//------------------------------------------------------------------------------
+
+//Volatility Quality Index by Thomas Stridsman
+//Translated by Vic Huebner
+//True range is the greatest of H-L,Ref(C,-1)-H, or Ref(C,-1)-L
+TR=ATR(1);
+//Volatility quality index is the ratio of C-O compared to H-L. The higher the better.
+VQI=((C-Ref(C,-1)))/TR + (C - O)/(H-L)*.5;
+//Stridsman made it more sensitive by including the price changes
+VQI=abs(VQI)*(C-Ref(C,-1)+(C-O))*.5;
+SumVQI=Cum(VQI);
+MaxGraph=4;
+//VQI ranges between -1 and +1. It was offset to make it compatible with the zig function.
+Graph0=100*(SumVQI+100); //Red line
+Graph1=100*(MA(SumVQI,9)+100); //blue - 9 day moving average
+Graph2=100*(MA(SumVQI,200)+100); //black line - 200 day MA
+Graph2Style=1;
+Graph3Style=1;
+Graph3=Zig(Graph0,1); //yellow line indicates trend change
+Graph3Color=7;
+
+//Buy at the bottom zig peak for stocks over $4
+BuyIt=(C>4) AND (Graph3>Ref(Graph3,-1)) AND (Ref(Graph3,-2)>Ref(Graph3,-1));
+
+//Buy as before but only if the 200 day VQI is increasing. Stridsman considers it better if quality is improving. Comment out the next line to get more buy action.
+BuyIt= BuyIt AND(Graph2>Ref(Graph2,-5));
+
+Buy=BuyIt;
+
+//Sell signals are generated when the Zig Line is decreasing.
+Sell=(Graph3<(Ref(Graph3,-1))) AND (Ref(Graph3,-2)<Ref(Graph3,-1)) AND (C>3);
+
+//It is assumed that transactions are made the next day after a buy/sell signal.
+BuyPrice=ValueWhen(Ref(Buy,-1),Open,0);
+SellPrice=ValueWhen(Ref(Sell,-1),Open,0);

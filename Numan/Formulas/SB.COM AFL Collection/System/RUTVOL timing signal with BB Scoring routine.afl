@@ -1,0 +1,191 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    RUTVOL timing signal with BB Scoring routine
+//  Author/Uploader: Gary Serkhoshian 
+//  E-mail:          serkhoshian777@yahoo.com
+//  Date/Time Added: 2003-11-18 15:05:44
+//  Origin:          
+//  Keywords:        Russell 2000, RUTVOL, Scoring example
+//  Level:           semi-advanced
+//  Flags:           system
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=307
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=307
+//
+//------------------------------------------------------------------------------
+//
+//  RUVOL signal was developed by Werner Gansz who was kind enough to share it
+//  with the FT-Talk community. RUTVOL is an intermediate-term signal, and in
+//  this code example it is coupled with a Bollinger Band scoring routine as a
+//  selection methodology for stocks.
+//
+//------------------------------------------------------------------------------
+
+/*RUTVOL SIGNAL LOGIC FROM .INI FILES
+
+EXPLAINATION:  RUTVOL BASES THE FOLLOWING INDICATORS ON RUSSELL 2K INDEX.
+				 1.  STOCHASTICS
+				 2.  MACD
+				 3.  RSI
+
+				CALCULATIONS BASED ON THE NASDAQ TVOLQ,UVOLQ,DVOLQ AS FOLLOWS
+				1.	ACCUTRACK
+				2.	STOCHASTICS
+
+TRANSLATED:  8/18/03
+
+NOTE:	THIS IS A MODIFIED VERSION OF RUTVOL.  THIS VERSION PRODUCES MODESTLY BETTER RETURNS WITH SAME DD AS MEASURED AGAINST $RUT.  BELOW ARE THE CHANGES NEED TO CONVERT TO ORIGINAL RUTVOL.
+
+1. RUTTR_BUYCOND has no RSI filtering in the current RUTTR.
+
+2. Current version of RUTVOL does not use the volume AccuTrak in the volume buy condition
+*/
+
+// STEP #1:  ESTABLISH PARAMETERS
+RUT = Foreign("!RUT","C");
+//STOCHASTICS
+AVERAGE = 53; //Optimize("AVERAGE",53,27,80,5);
+SMOOTH = 49; //Optimize("SMOOTH",49,25,74,5);
+TRIGGER = 28; //Optimize("TRIGGER",28,14,42,5);
+BuyVALUE = 0;
+SellVALUE = 0;
+
+//MACD
+ShortMA = 45; //Optimize("SHORTMA",45,23,90,5);
+LONGMA = 90; //Optimize("LONGMA",90,45,135,5);
+SignalMA = 8;  //Optimize("SIGNALMA",8,4,12,1);
+BuyLEVEL = 0;
+SellLEVEL = 0;
+
+//RSI
+RSILEN = 14; //Optimize("RSILEN",14,7,21,1);
+BuyRSI = 63;
+SellRSI = 47;
+ShortRSI = 37;
+
+//VOLUME EMA
+VOLEMA1 = 60; //Optimize("VOLEMA1",60,30,90,5);
+VOLEMA2 = 120; //Optimize("VOLEMA2",120,60,180,5);
+
+//VOLUME ACCUTRACK
+ACCU_SHORTPERIOD = 11; //Optimize("ACCU_SHORTPERIOD",11,5,16,1);
+ACCU_LONGPERIOD = 44; //Optimize("ACCU_LONGPERIOD",44,22,66,3);
+
+//TOTAL VOLUME STOCH CALC
+TVOL_AVG = 41;  //Optimize("TVOL AVG",41,22,66,2);
+TVOL_SMOOTH = 10;  //Optimize("TVOL_SMOOTH",10,5,15,1);
+TVOL_TRIGGER = 8; //Optimize("TVOL_TRIGGER",8,4,12,1);
+
+//********RUTTR CALC*********//
+//STOCH CALC BEGIN
+KSTOCH = 100 * (RUT - LLV(RUT,AVERAGE)) / (HHV(RUT,AVERAGE) - LLV(RUT,AVERAGE));
+DSTOCH = EMA(KSTOCH,SMOOTH);
+SignalLINE = EMA(DSTOCH,TRIGGER);
+STOCH_HISTO = DSTOCH - SignalLINE;
+
+//MACD CALC BEGIN
+RUTMACD = EMA(RUT,ShortMA) - EMA(RUT,LONGMA);
+MACDSignalLINE = EMA(RUTMACD, SignalMA);
+MACD_HISTO = RUTMACD - MACDSIGNALLINE;
+
+//RSI FILTER BEGIN
+RSIFILTER_SELL = RSIa(RUT,RSILEN) < Ref(RSIa(RUT,RSILEN),-3) AND RUT < Ref(RUT,-1) AND RSIa(RUT,RSILEN) < SellRSI;
+
+RSIFILTER_BUY = RSIa(RUT,RSILEN) > BuyRSI;
+
+//RUTTR SIGNAL LOGIC
+
+//STEP#1:  BUY & SELL COND
+RUTTR_BUYCOND = (Stoch_HISTO > 0 AND MACD_HISTO > 0) OR RSIFILTER_BUY;
+RUTTR_SELLCOND = (Stoch_HISTO < 0 AND MACD_HISTO < 0)  AND RSIFILTER_SELL;
+
+//STEP#2: BUY & SELL STATE
+RUTTR_BUYSTATE = Flip(RUTTR_BUYCOND,RUTTR_SELLCOND);
+//RUTTR_SELLSTATE = Flip(RUTTR_SELLCOND,RUTTR_BUYCOND);
+RUTTR_SELLSTATE = NOT RUTTR_BUYSTATE;
+
+//*********RUTVOL CALC*********//
+
+TVOLQ = Foreign("!NQ-V","C");
+UVOLQ = Foreign("!NQ-AV","C");
+DVOLQ = Foreign("!NQ-DV","C");
+
+NQVOLEMA = EMA(TVOLQ,VOLEMA1);
+NQUVOLEMA = EMA(UVOLQ,VOLEMA2);
+NQDVOLEMA = EMA(DVOLQ,VOLEMA2);
+
+//ACCUTRACK CALC OF NQ UP/DN VOL
+UPVOLCHG = (NQUVOLEMA - Ref(NQUVOLEMA,-1)) / Ref(NQUVOLEMA,-1);
+DNVOLCHG = (NQDVOLEMA - Ref(NQDVOLEMA,-1)) / Ref(NQDVOLEMA,-1);
+UPVOL = EMA(UPVOLCHG, ACCU_LONGPERIOD);
+DNVOL = EMA(DNVOLCHG, ACCU_LONGPERIOD);
+VOL_DIFF = UPVOL - DNVOL;
+ACCU_UPDNVOL = EMA(VOL_DIFF,ACCU_SHORTPERIOD);
+
+ACCU_UPDNVOL_BUY = Cross(ACCU_UPDNVOL, 0); 
+//ACCU_UPDNVOL_SELL = Cross(0, ACCU_UPDNVOL); 
+
+// NASDAQ TOTAL VOLUME STOCHASTICS CALC
+NQVOL_KSTOCH = 100 * (NQVOLEMA - LLV(NQVOLEMA,TVOL_AVG)) / (HHV(NQVOLEMA,TVOL_AVG) - LLV(NQVOLEMA,TVOL_AVG));
+
+NQVOL_DSTOCH = EMA(NQVOL_KSTOCH,TVOL_SMOOTH);
+NQVOL_SIGNALLINE = EMA(NQVOL_DSTOCH,TVOL_TRIGGER);
+
+TVOL_STOCH_BUYCOND = Cross(NQVOL_DSTOCH,20) OR Cross(NQVOL_DSTOCH,80) OR ACCU_UPDNVOL_BUY;
+TVOL_STOCH_SELLCOND = Cross(20, NQVOL_DSTOCH) OR Cross(80,NQVOL_DSTOCH);
+
+TVOL_STOCH_BUYSTATE = Flip(TVOL_STOCH_BUYCOND,TVOL_STOCH_SELLCOND);
+
+//*********RUTVOL SIGNAL LOGIC*********//
+//CONDITIONS
+RUTVOL_BUYCOND = TVOL_STOCH_BUYSTATE AND RUTTR_BUYSTATE;
+RUTVOL_SELLCOND = NOT TVOL_STOCH_BUYSTATE OR NOT RUTTR_BUYSTATE;
+
+//STATES
+RUTVOL_BUYSTATE = Flip(RUTVOL_BUYCOND,RUTVOL_SELLCOND);
+
+//SIGNALS
+Buy = RUTVOL_BUYSTATE;
+Sell = NOT RUTVOL_BUYSTATE;
+
+//EXREM SIGNALS
+Buy = ExRem(Buy,Sell);
+Sell = ExRem(Sell,Buy);
+
+ApplyStop(stopTypeLoss,stopModePercent,Optimize("MaxLoss",10,1,20,1),True,True);
+
+
+//--------------------------------------------------  PORTFOLIO TRADING CODE BEGINS  ------------------------------------------------------------------
+
+//Set Trade Delays and Initial Equity
+SetOption("InitialEquity", 100000);
+SetTradeDelays(1,1,1,1);
+RoundLotSize = 100;
+
+//Position Size Info
+SetOption("MinShares",100);
+MaxPos = Optimize("Max Positions",5,1,15,1);
+SetOption("MaxOpenPositions",MaxPos);
+PositionSize = -100/MaxPos;
+
+//Scoring Routine Begins
+
+BBandWid = 2;
+UBBand   = BBandTop(Close, 21, BBandWid);
+LBBand   = BBandBot(Close, 21, BBandWid);
+PositionScore   = 100 - 100 * (Close - LBBand) / (UBBand - LBBand);//0 when C == Upper Band, 100 when C == Lower Band
+
+//********EXPLORE CODE*********//
+Filter = 1;//Status("LastBarInRange");
+RUTVOLSIG = IIf(RUTVOL_BUYSTATE == 1,1,0);
+AddToComposite(RUTVOLSIG,"~RUTVOL","X",atcFlagDefaults | atcFlagEnableInExplore);
+AddColumn(RUTVOLSIG,"RUTVOL STATE",8.0);
+AddColumn(RUTTR_BUYSTATE,"RUTTR",8.0, IIf(RUTTR_BUYSTATE == 1,colorGreen,colorDefault), colorDefault);
+AddColumn(TVOL_STOCH_BUYSTATE,"VOLUME",8.0,IIf(TVOL_STOCH_BUYSTATE == 1,colorGreen,colorDefault), colorDefault);
+AddColumn(Buy,"RUTVOL BUY",8.0,colorDefault,IIf(Buy == 1,colorGreen,colorDefault));
+AddColumn(Sell,"RUTVOL SELL",8.0,colorDefault,IIf(Sell == 1,colorYellow,colorDefault));
+
+//*********INDICATOR CODE*********//
+Title = "RUTVOL:   " + EncodeColor(colorBrightGreen) + "GREEN = BUY   " + EncodeColor(colorYellow) + "YELLOW = CASH";
+Plot(0,"",colorLightGrey,styleNoLine+styleNoLabel);
+PlotShapes(IIf(Buy ==1, shapeUpArrow,shapeNone),colorBrightGreen,0,0,10);
+PlotShapes(IIf(Sell ==1, shapeHollowUpArrow,shapeNone),colorYellow,0,0,10);

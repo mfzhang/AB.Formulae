@@ -1,0 +1,40 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Woodies CCI
+//  Author/Uploader: Mark 
+//  E-mail:          mleonsprint@yahoo.com
+//  Date/Time Added: 2004-10-30 20:39:54
+//  Origin:          www.woodiescciclub.com
+//  Keywords:        
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=393
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=393
+//
+//------------------------------------------------------------------------------
+//
+//  I didn't see it on the list so here is what I coded up, enjoy!
+//
+//  Thanks Woodie!!
+//
+//------------------------------------------------------------------------------
+
+Title = "Woodies CCI " + " " + FullName() + " " + Date( ) ;
+
+A=Param("CCI TURBO PERIODS",6,3,14,1);
+A1=Param("CCI 14 PERIODS",14,7,20,1);
+A2=ParamColor("CCI TURBO",colorBrightGreen);
+A3=ParamColor("CCI 14",colorRed);
+A4=CCI(A);
+A5=CCI(A1);
+A6=IIf(A5<0,colorBrightGreen,colorRed);
+A7=IIf(Ref(A5,-5) <0 AND Ref(A5,-4) <0 AND Ref(A5,-3) <0 AND Ref(A5,-2) <0 AND Ref(A5,-1) <0,colorRed,A6);
+A8=IIf(Ref(A5,-5) >0 AND Ref(A5,-4) >0 AND Ref(A5,-3) >0 AND Ref(A5,-2) >0 AND Ref(A5,-1) >0,colorBrightGreen,A7);
+Plot(A5,"CCI TURBO HISTOGRAM",A8,styleHistogram);
+Plot(A4,"CCI TURBO",A2,styleThick);
+Plot(A5,"CCI 14",A3,styleThick);
+Plot(0,"ZERO LINE",colorBlack,styleThick);
+Plot(100,"HUNDRED LINE",colorBlack,styleDots);
+Plot(-100,"MINUS LINE",colorBlack,styleDots);
+
+

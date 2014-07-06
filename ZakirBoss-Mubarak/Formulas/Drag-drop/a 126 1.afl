@@ -1,0 +1,419 @@
+
+_SECTION_BEGIN("Background_Setting");
+SetChartBkGradientFill( ParamColor("BgTop", colorBlack),
+
+ParamColor("BgBottom", colorBlack),ParamColor("titleblock",colorDarkGrey ));
+_SECTION_END();
+
+
+_SECTION_BEGIN("Flower");
+Show_color = ParamToggle("Display CandleColor", "No|Yes", 1);
+r1 = Param( "ColorFast avg", 5, 2, 200, 1 );
+r2 = Param( "ColorSlow avg", 10, 2, 200, 1 );
+r3 = Param( "ColorSignal avg", 5, 2, 200, 1 );
+
+Prd1=Param("ATR Period",4,1,20,1);
+Prd2=Param("Look Back",7,1,20,1);
+green = HHV(LLV(L,Prd1)+ATR(Prd1),Prd2);
+red = LLV(HHV(H,Prd1)-ATR(Prd1),Prd2);
+flowerClose = EMA((Open+High+Low+Close)/4,3) ;
+flowerOpen = EMA((Ref(Open,-1) + Ref(flowerClose,-1))/2,3);
+Temp = Max(High, flowerOpen);
+flowerHigh = EMA(Max(Temp, flowerClose),3);
+Temp = Min(Low,flowerOpen);
+flowerLow = EMA(Min(Temp, flowerClose),3);
+
+
+
+m1=MACD(r1,r2);
+s1=Signal(r1,r2,r3);
+mycolor=IIf(m1<0 AND m1>s1, colorYellow,IIf(m1>0 AND m1>s1,colorGreen,IIf(m1>0 AND m1<s1,colorCustom12,colorRed)));
+if(Show_color)
+{
+ColorHighliter = myColor;
+SetBarFillColor( ColorHighliter );
+
+
+}
+
+barColor=IIf(C>Green ,colorBrightGreen,IIf(C < RED,colorRed,colorWhite));
+
+
+PlotOHLC( IIf(flowerOpen<flowerClose, flowerOpen, flowerClose),flowerHigh,flowerLow,IIf(flowerOpen<flowerClose, flowerClose, flowerOpen), "Close", barColor, styleNoTitle | styleCandle);
+
+
+
+_SECTION_END();
+
+
+//**********************************************************************************
+//        Plot price horizontal line                                               *
+//**********************************************************************************/
+_SECTION_BEGIN("Price Line");
+
+PriceLineColor=ParamColor("PriceLineColor",ColorRGB(82,82,82));
+PriceLevel = ParamField("PriceField", field = 3 ); 
+
+Daysback    = Param("Bars Back",100,10,500,1); 
+FirstBar    = BarCount - DaysBack; 
+YY          = IIf(BarIndex() >= Firstbar,EndValue(PriceLevel),Null); 
+
+Plot(YY,"Current Price",PriceLineColor,ParamStyle("LineStyle",styleLine|styleDashed|styleNoTitle|styleNoLabel|styleThick,maskAll)); 
+
+
+side = Param("side",1,0,1000,1);
+
+dist = 0; 
+
+for( i = 0; i < BarCount; i++ ) 
+{ 
+ if(i+side== BarCount) PlotText( "\n    " + PriceLevel[ i ], i, YY[ i ]-dist[i], colorLightBlue ); 
+} 
+
+
+_SECTION_END();
+
+
+_SECTION_BEGIN("Color_Me_Bad");
+a =5; //Param("Average Pds", 5, 1, 10, 1 );
+n =8; //Param("Short Pds", 8, 5, 21, 1 );
+m =60; //Param("Long Pds", 60, 0, 90, 1 );
+
+Var4 =(Low+High+2*Close)/4; 
+OP = EMA(Var4,a);
+res1 = HHV(OP,n);
+
+res2 =HHV(OP,m); 
+sup2 =LLV(OP,m); 
+sup1 =LLV(OP,n);
+
+
+Linecolor1 = IIf(Op==sup1,ColorRGB(48,0,81),IIf(Op==res1,colorGreen,ColorRGB(80,80,80)));
+Linecolor2 = IIf(Op==sup1,ColorRGB(38,0,60),IIf(Op==res1,colorGreen,colorDarkGrey));
+Linecolor3 = IIf(Op==sup1,ColorRGB(27,0,70),IIf(Op==res1,colorGreen,ColorRGB(77,70,75)));
+_SECTION_END();
+
+_SECTION_BEGIN("ATR");
+ParmCloud1 = ParamToggle("TrailingCloud", "No|Yes", 1);
+Pp1=Param("Ray_Period1",2,1,20,1); // or 4
+Pp2=Param("ATR_Period1",3,1,20,1); // or 2
+
+avgClose = EMA((Open+High+Low+Close)/4,3) ;
+avgOpen = EMA((Ref(Open,-1) + Ref(avgClose,-1))/2,3);
+Temp = Max(High, avgOpen);
+avgHigh = EMA(Max(Temp, avgClose),3);
+Temp = Min(Low,avgOpen);
+avgLow = EMA(Min(Temp, avgClose),3);
+Plot(HHV(LLV(avgHigh,Pp1)-ATR(Pp2),4),"",Linecolor1 ,ParamStyle("styleLine 1",styleLine|styleThick|styleNoTitle|styleNoLabel,maskAll)); 
+Plot(HHV(LLV(avgHigh,Pp1)-ATR(Pp2),5),"",Linecolor2 ,ParamStyle("styleLine 2",styleLine|styleThick|styleNoTitle|styleNoLabel,maskAll)); 
+Plot(HHV(LLV(avgHigh,Pp1)-ATR(Pp2),6),"",Linecolor1 ,ParamStyle("styleLine 3",styleLine|styleThick|styleNoTitle|styleNoLabel,maskAll)); 
+Plot(HHV(LLV(avgHigh,Pp1)-ATR(Pp2),7),"",Linecolor1 ,ParamStyle("styleLine 4",styleLine|styleThick|styleNoTitle|styleNoLabel,maskAll)); 
+
+
+
+
+CS33=HHV(LLV(avgHigh,Pp1)-ATR(Pp2),4); 
+CR33=HHV(LLV(avgHigh,Pp1)-ATR(Pp2),5);
+CT33=HHV(LLV(avgHigh,Pp1)-ATR(Pp2),6);
+CM33=HHV(LLV(avgHigh,Pp1)-ATR(Pp2),7);
+
+if(parmCloud1 == 1)
+{
+PlotOHLC( CS33, CS33, CR33,CR33, "Band1", LineColor1, styleCloud | styleNoLabel|styleNoTitle);
+PlotOHLC( CR33, CR33, CT33, CT33, "Band2", LineColor2, styleCloud | styleNoLabel|styleNoTitle); 
+PlotOHLC( CR33, CR33, CM33, CM33, "Band3", LineColor3, styleCloud | styleNoLabel|styleNoTitle); 
+ 
+}
+
+
+_SECTION_END();
+
+_SECTION_BEGIN("Bands");
+
+SupResB =Param("Sup-Res Short",6,0,100,1);
+nn=SupResB;
+
+
+
+Bandlinecol=ParamColor("SupResLineColor",ColorRGB(82,82,82));
+ParmCloud = ParamToggle("Cloud", "No|Yes", 0);
+BoxCloudColor=ParamColor("BoxCloudColor",ColorRGB(27,27,27));
+
+
+Line2=Param("ResLineLength",100,2,500,0.1);
+Daysback1    = Line2; 
+FirstBar1    = BarCount - DaysBack1; 
+Hh=HHV(flowerHigh,nn);
+LL=LLV(flowerLow,nn);
+
+Res2=Hh;
+Sup2=LL;
+
+BandRes=IIf(BarIndex() >= Firstbar1,EndValue(Res2),Null);
+BandSup=IIf(BarIndex() >= Firstbar1,EndValue(Sup2),Null);
+Plot(BandRes,"",Bandlinecol,ParamStyle("ShortSupBand",styleLine|styleDashed|stylehidden|styleNoTitle|styleNoLabel|styleThick,maskAll));
+Plot(BandSup,"",Bandlinecol,ParamStyle("ShortResBand",styleLine|styleDashed|stylehidden|styleNoTitle|styleNoLabel|styleThick,maskAll));
+
+
+
+
+CS=BandRes;
+CR=BandSup;
+
+
+if(parmCloud == 1)
+{
+	PlotOHLC( CS, CS, CR,CR, "Band",BoxCloudColor, styleCloud | styleNoLabel|styleNoTitle); 
+}
+
+_SECTION_END();
+
+
+ 
+_SECTION_BEGIN("TSKPPIVOT4");
+CHiPr = 0;
+CLoPr = 9999999;
+blsLong = 0;
+PrevCOBar = 0;
+NumBars = 0;
+PrePP = 0;
+PrevLowVal = 9999999;
+BuySig = 0;
+blsShort = 0;
+PrevHiVal = 0;
+blsNewCO = 0;
+BarDif   = 0;
+
+KPA900Val = E_TSKPA900(Close);
+KPAutoStopVal = E_TSKPAUTOSTOP(High,Low,Close);
+
+// -- Create 0-initialized arrays the size of barcount
+aHPivs = H - H;
+aLPivs = L - L;
+aHiVal = H - H;
+aLoVal = L - L;
+
+
+Ctmpl = E_TSKPCOLORTMPL(Open,High,Low,Close,Volume);
+sctotal = 0;
+sctotal = sctotal  + IIf(tskp_colortmplcnd0 > 0, 1, -1); 
+sctotal = sctotal  + IIf(tskp_colortmplcnd1 > 0, 1, -1); 
+sctotal = sctotal  + IIf(tskp_colortmplcnd2 > 0, 1, -1); 
+sctotal = sctotal  + IIf(tskp_colortmplcnd3 > 0, 1, -1); 
+sctotal = sctotal  + IIf(tskp_colortmplcnd4 > 0, 1, -1); 
+sctotal = sctotal  + IIf(tskp_colortmplcnd5 > 0, 1, -1); 
+sctotal = sctotal  + IIf(tskp_colortmplcnd6 > 0, 1, -1); 
+sctotal = sctotal  + IIf(tskp_colortmplcnd7 > 0, 1, -1); 
+sctotal = sctotal  + IIf(tskp_colortmplcnd8 > 0, 1, -1); 
+
+
+for (curBar=0; curBar < BarCount-1; curBar++)
+{
+
+	if ( curBar == 0 )
+	{
+		CHiPr = flowerHigh[curBar];
+		CHiBar = curBar;
+		CLoPr = flowerLow[curBar];
+		CLoBar = curBar;
+		blsLong = 0;
+		blsShort = 0;
+		blsNewCO = 0;
+		PrePP = 0;
+		PrevCOBar = 0;
+		PrevHiVal =flowerHigh[curBar];
+		PrevLowVal = flowerLow[curBar];
+		BuySig = 0;
+		SellSig = 0;
+		blsLL  = 0;
+	}
+
+	if (flowerHigh[CurBar] >= CHiPr) {
+		CHiPr = flowerHigh[CurBar];
+		ChiBar = CurBar;
+	}
+
+	if (flowerLow[CurBar] <= CLoPr) {
+		CLoPr = flowerLow[CurBar];
+		CLoBar = CurBar;
+	}
+
+	if ( (KPA900Val[curBar] >= KPAutoStopVal[curbar]) AND (PrePP != -1) AND (blsLong != 1) ){
+		BarDif = CurBar - PrevCOBar;
+		if (BarDif >= NumBars) {
+			blsLong = 1;
+			blsShort = 0;
+			blsNewCO = 1;
+			PrevCOBar = CurBar;
+		}
+	}
+
+	if ( (KPA900Val[curBar] <= KPAutoStopVal[curbar]) AND (PrePP != 1) AND (blsShort != 1) ){
+		BarDif = CurBar - PrevCOBar;
+		if (BarDif >= NumBars) {
+			blsLong = 0;
+			blsShort = 1;
+			blsNewCO = 1;
+			PrevCOBar = CurBar;
+		}
+	}
+
+	if ( (blsNewCO == 1) AND (sctotal[CurBar] >= 5) AND (blsLong == 1) ) {
+		LVal = CurBar - CLoBar;
+		for (j= CLoBar-1; j <= CLoBar+1; j++)
+		{
+			if (j >=0) {
+				aLPivs[j] = 1;
+				aLoVal[j] = CLoPr;
+			}
+		}
+		PrePP = -1;
+		blsNewCO = 0;
+		CHiPr = flowerHigh[CurBar];
+		CHiBar = CurBar;
+		CLoPr = flowerLow[Curbar];
+		CLoBar = CurBar;
+		} 
+		else if ((blsNewCO == 1) AND (sctotal[CurBar] <= -5) AND (blsShort == 1) ) {
+		HVal = CurBar - CHiBar;
+		for (j= CHiBar-1; j <= CHiBar+1; j++)
+		{		
+			if (j >=0) {
+				aHPivs[j] = 1;
+				aHiVal[j] = CHiPr;
+			}
+		}
+		PrePP = 1;
+		blsNewCO = 0;
+		CHiPr = flowerHigh[CurBar];
+		CHiBar = CurBar;
+		CLoPr = flowerLow[Curbar];
+		CLoBar = CurBar;
+		} 
+}
+
+PlotShapes(
+IIf(aHPivs == 1,shapeHollowSmallCircle,shapeNone),colorYellow ,0, aHiVal+0.05, offset = 5);
+
+PlotShapes(
+IIf(aLPivs == 1,shapeHollowSmallCircle,shapeNone), colorPink,0, aLoVal-0.05, Offset = -5);
+_SECTION_END();
+
+
+
+
+_SECTION_BEGIN("SupRes_Short"); 
+supresshortcolor=ParamColor("SupResShort",ColorRGB(82,82,82));
+
+//this is for short term support line
+TimeFrameSet(inWeekly);
+ShortSupLenght=Param( "ShortResistLength", 4, 1, 55 ,1);
+ShortSupCond1=HHV(High,ShortSupLenght);
+ShortSupCond2=Close<Ref(LLV(Low,4),-1);
+ShortSupA=IIf(L>Ref(ShortSupCond2,-1),1,IIf(H<Ref(ShortSupCond1,-1),-1,0));
+ShortSupB=ValueWhen(ShortSupA!=0,ShortSupA,1);
+ShortSupResult=IIf(ShortSupB==1,ShortSupCond1,ShortSupCond2);
+TimeFrameRestore();
+FinalShortSup=TimeFrameExpand(ShortSupResult,inWeekly,expandFirst);
+
+Plot(FinalShortSup ,"ShortResistance",supresshortcolor,styleLine|styleStaircase|styleThick|styleNoRescale|styleNoLabel|styleNoTitle);
+
+ 
+//this is for short term resistance line
+TimeFrameSet(inWeekly);
+ShortResLenght=Param( "ShortSupportLenght", 4, 1, 55 ,1);
+ShortResCond1=Close>Ref(HHV(High,4),-1);
+ShortResCond2=LLV(Low,ShortResLenght);
+ShortResA=IIf(H>Ref(ShortResCond1,-1),1,IIf(L<Ref(ShortResCond2,-1),-1,0));
+ShortResB=ValueWhen(ShortResA!=0,ShortResA,1);
+ShortResResult=IIf(ShortResB==1,ShortResCond2,ShortResCond1);
+TimeFrameRestore();
+FinalShortRes=TimeFrameExpand(ShortResResult,inWeekly,expandFirst);
+Plot(FinalShortRes ,"ShortSupport",supresshortcolor,styleLine|styleThick|styleStaircase|styleNoRescale|styleNoLabel|styleNoTitle);
+
+CS=FinalShortSup;
+CR=FinalShortRes;
+
+Step = (CR-CS)/4; 
+KC = CS + Step;
+KB = KC + Step;
+KA = KB + Step;
+
+CloudColor1 = ParamColor("CloudColor1",ColorRGB(128,31,17));
+CloudColor2 = ParamColor("CloudColor2",ColorRGB(139,139,0));
+CloudColor3 = ParamColor("CloudColor3",ColorRGB(1,70,1));
+CloudColor4 = ParamColor("CloudColor4",ColorRGB(41,105,05));
+
+PlotOHLC( CS, CS, KC,KC, "Band", CloudColor1, styleCloud | styleNoLabel|styleNoTitle|styleNoRescale); 
+PlotOHLC( KC, KC, KB,KB, "Band", CloudColor2, styleCloud | styleNoLabel|styleNoTitle|styleNoRescale); 
+PlotOHLC( KB, KB, KA,KA, "Band", CloudColor3, styleCloud | styleNoLabel|styleNoTitle|styleNoRescale); 
+PlotOHLC( KA, KA, CR,CR, "Band", CloudColor4, styleCloud | styleNoLabel|styleNoTitle|styleNoRescale); 
+
+
+
+
+
+_SECTION_END();
+
+
+
+_SECTION_BEGIN("SupRes_Long"); 
+
+supreslongcolor=ParamColor("SupReslong",ColorRGB(0,0,234));
+
+
+//this is for long term resistance line
+TimeFrameSet(inWeekly);
+LongResLength=Param( "ResistanceLength", 30, 1, 55 ,1);
+LongResCond1=HHV(H,LongResLength);
+LongResCond2=Close<Ref(LLV(Low,4),-1);
+LongResA=IIf(L>Ref(LongResCond2,-1),1,IIf(H<Ref(LongResCond1,-1),-1,0));
+LongResB=ValueWhen(LongResA!=0,LongResA,1);
+LongResResult=IIf(LongResB==1,LongResCond1,LongResCond2);
+TimeFrameRestore();
+FinalResResult=TimeFrameExpand(LongResResult,inWeekly,expandFirst);
+
+Plot(FinalResResult ,"Resistance",supreslongcolor,styleLine|styleThick|styleNoRescale|styleNoLabel|styleNoTitle);
+ 
+
+//this is for long term support line
+TimeFrameSet(inWeekly);
+LongSupLenght=Param( "SupportLenght", 30, 1, 55 ,1);
+LongSupCond1=Close>Ref(HHV(High,4),-1);
+LongSupCond2=LLV(Low,LongSupLenght);
+LongSupA=IIf(H>Ref(LongSupCond1,-1),1,IIf(L<Ref(LongSupCond2,-1),-1,0));
+LongSupB=ValueWhen(LongSupA!=0,LongSupA,1);
+LongSupResult=IIf(LongSupB==1,LongSupCond2,LongSupCond1);
+TimeFrameRestore();
+FinalSupResult=TimeFrameExpand(LongSupResult,inWeekly,expandFirst);
+Plot(FinalSupResult ,"Support",supreslongcolor,styleLine|styleThick|styleNoRescale|styleNoLabel|styleNoTitle);
+
+
+
+CloudResColor=ParamColor("LongColor",ColorRGB(0,0,45));
+
+
+CS1=FinalResResult;
+CR1=FinalSupResult;
+
+	PlotOHLC( CS1, CS1, CR1,CR1, "", CloudResColor, styleCloud |styleStaircase|styleNoRescale| styleNoLabel|styleNoTitle); 
+
+
+
+
+_SECTION_END();
+
+_SECTION_BEGIN("PanDora");
+///////////////////////////////////
+Title =
+EncodeColor(colorWhite)+  Title = Name () + " | " 
++EncodeColor(colorYellow) + Date() + " | " 
+
++EncodeColor(colorTurquoise)+ "Open : "+ EncodeColor(colorLightGrey)+ O + " | "
++EncodeColor(colorTurquoise)+ "High : "+ EncodeColor(colorLightGrey)+ H + " | "
++EncodeColor(colorTurquoise)+ "Low : "+ EncodeColor(colorLightGrey)+ L + " | "
++EncodeColor(colorTurquoise)+ "Close : "+ WriteIf(C> Ref(C, -1),EncodeColor(colorBrightGreen),EncodeColor(colorRed))+ C + " | "
++EncodeColor(colorTurquoise)+ "Change : ("+ WriteIf(C> Ref(C, -1),EncodeColor(colorBrightGreen),EncodeColor(colorRed)) + WriteVal(C-Ref(C,-1))+" Tk."
++EncodeColor(colorTurquoise)+ " /"+ WriteIf(C> Ref(C, -1),EncodeColor(colorBrightGreen),EncodeColor(colorRed))+ WriteVal( ROC( C, 1 ))+""+ " % "
++EncodeColor(colorTurquoise)+ ") | Volume : " + WriteIf(V> Ref(V, -1),EncodeColor(colorBrightGreen),EncodeColor(colorRed))+ WriteVal(V,1)
+; 

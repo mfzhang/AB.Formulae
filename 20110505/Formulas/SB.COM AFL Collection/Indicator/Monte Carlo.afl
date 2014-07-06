@@ -1,0 +1,62 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Monte Carlo
+//  Author/Uploader: Aron 
+//  E-mail:          
+//  Date/Time Added: 2006-05-04 12:13:55
+//  Origin:          
+//  Keywords:        
+//  Level:           medium
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=619
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=619
+//
+//------------------------------------------------------------------------------
+//
+//  This simple tool shows where your account will be using fixed fractional
+//  money management.
+//
+//  Enjoy.
+//
+//------------------------------------------------------------------------------
+
+SetBarsRequired(10000,10000);
+
+balance = Param ( "Initial Balance $", 10000, 1000, 100000, 1000); 
+trades =Param("Number of Trades", 260, 100, 2600, 10); 
+expectancy= Param ( "Expectancy %", 50)/100;
+rr=  Param ( "Reward/Risk", 1, 0.1, 2, 0.1);
+ff= Param( "Fixed Fractional %", 2, 1, 50, 1)/100 ;
+Lock= ParamToggle("Lock Sequence", "No|Yes");
+n= IIf(Lock, 1,Null);
+
+result = Random(n); 
+stop = 0;
+winnig_trades=0;
+
+for (i = BarCount-1-trades; i<BarCount; i++)
+{
+
+if (result[i]<expectancy)
+{
+winnig_trades++;
+balance[i] = balance[i-1] + stop[i-1]*rr;
+
+}
+else
+{
+
+balance[i] = balance[i-1] - stop[i-1];
+}
+
+stop[i] = balance[i]*ff;
+}
+
+Plot (balance, "", 39); 
+
+
+Title = "Monte Carlo" +
+"\nNumber of Trades = "+ trades+
+"\nWinning Trades = " +winnig_trades+
+"\nProfitability = " +winnig_trades/trades*100 + " %"+
+"\nRisk/Reward = "+ 1+"/"+rr;

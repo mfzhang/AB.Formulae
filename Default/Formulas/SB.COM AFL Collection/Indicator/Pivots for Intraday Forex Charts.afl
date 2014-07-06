@@ -1,0 +1,80 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Pivots for Intraday Forex Charts
+//  Author/Uploader: Ron Boles 
+//  E-mail:          rjb1@catalog.net.au
+//  Date/Time Added: 2005-03-19 22:13:50
+//  Origin:          
+//  Keywords:        
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=440
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=440
+//
+//------------------------------------------------------------------------------
+//
+//  Heikin Ashi chart + pivots for intraday forex charting.
+//
+//  You can select 1 or 3 different pivot calculations.
+//
+//------------------------------------------------------------------------------
+
+/*======================================================
+		FOREX INTRADAY HEIKIN ASHI + PIVOT POINTS
+  ======================================================*/
+
+//---- heikin ashi
+HaClose = (O+H+L+C)/4; 
+HaOpen = AMA( Ref( HaClose, -1 ), 0.5 ); 
+HaHigh = Max( H, Max( HaClose, HaOpen ) ); 
+HaLow = Min( L, Min( HaClose, HaOpen ) ); 
+xDiff = (HaHigh - Halow) * IIf(StrFind(Name(),"JPY"),100,10000);
+barcolor = IIf(HaClose >= HaOpen,colorGreen,colorRed);
+PlotOHLC( HaOpen, HaHigh, HaLow, HaClose, "", barcolor, styleCandle ); 
+// Plot(EMA(HaClose,9),"",colorWhite, styleLine);
+// Plot(EMA(HaClose,18),"",colorBlack, styleLine);
+
+//---- pivot points
+DayH = TimeFrameGetPrice("H", inDaily, -1);		// yesterdays high
+DayL = TimeFrameGetPrice("L", inDaily, -1);		//				low
+DayC = TimeFrameGetPrice("C", inDaily, -1);		//				close
+DayO = TimeFrameGetPrice("O", inDaily);			// current day open
+
+// woodies FIB pivots
+if ( False )
+{
+R = DayH - DayL;	  // range
+PP = (DayH + DayL + DayO + DayO) / 4 ;
+R1 = PP + (R * 0.38);
+R2 = PP + (R * 0.62);
+S1 = PP - (R * 0.38);
+S2 = PP - (R * 0.62);
+}
+
+// woodies pivots
+if ( True )
+{
+PP = (DayH + DayL + DayO + DayO) / 4 ;
+R1  =  (2 * PP) - DayL;
+S1  =  (2 * PP) - DayH;
+R2  =  PP + (DayH - DayL);
+S2  =  PP - (DayH - DayL);
+}
+
+// regular pivots
+if ( False )
+{
+PP = (DayL + DayH + DayC)/3 ;
+R1  =  (2 * PP) - DayL;
+S1  =  (2 * PP)  - DayH;
+R2  =  (PP - S1) + R1;
+S2  =  PP - (R1 - S1);
+}
+
+Plot(R1, "",colorWhite,styleDots+styleNoLine+styleNoLabel);
+Plot(S1, "",colorDarkBlue,styleDots+styleNoLine+styleNoLabel);
+Plot(R2, "R2",colorWhite,styleDots+styleNoLine+styleNoLabel);
+Plot(S2, "S2",colorDarkBlue,styleDots+styleNoLine+styleNoLabel);
+Plot(PP, "",colorYellow,styleLine+styleNoLabel);
+//----
+Title = Name()+" Heikin Ashi "+Date();

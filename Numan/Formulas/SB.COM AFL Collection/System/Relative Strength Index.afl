@@ -1,0 +1,90 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Relative Strength Index
+//  Author/Uploader: Tomasz Janeczko 
+//  E-mail:          tj@amibroker.com
+//  Date/Time Added: 2001-06-16 08:50:34
+//  Origin:          Relative Strength Index was originally developed by Welles Wilder
+//  Keywords:        relative strength
+//  Level:           medium
+//  Flags:           system,commentary
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=20
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=20
+//
+//------------------------------------------------------------------------------
+//
+//  Sample commentary using RSI showing how to use WriteIF() and WriteVal()
+//  functions.
+//
+//  May be also used as a simple trading system.
+//
+//------------------------------------------------------------------------------
+
+/* File:          RSI Guru Commentary
+** Requirements:  AmiBroker 3.0 (AFL 1.1)
+** Last Modified: TJ, Mar 22nd, 1999 
+*/
+
+"Review of " + name() +" as of "+date();
+
+vrsi = rsi( 14 );
+
+buy = cross( vrsi, 30 );
+sell = cross( 70, vrsi );
+
+"\nThe current value for the 14 day RSI is " + WriteVal( vrsi );
+
+"\nThe RSI, written by J. Welles Wilder in 1978, can be used in several different ways to analyze a chart.\n";
+
+"Tops and Bottoms";
+"================\n";
+
+WriteIf( vrsi > 70, "The RSI is above 70.  This is where it usually tops.  The RSI usually forms tops and bottoms before the underlying security.",
+WriteIf( vrsi < 30, "The RSI is below 30.  This is where it usually bottoms.  The RSI usually forms tops and bottoms before the underlying security.",
+"The RSI is not currently in a topping (above 70) or bottoming (below 30) range. " 
++ WriteIf( cross( 70, vrsi ), "However, the RSI just crossed below 70 from a topping formation.  This is a bearish sign.",
+WriteIf( cross( vrsi, 30 ), "However, the RSI just crossed above 30 from a bottoming formation.  This is a bullish sign.", "" ) ) ) ); 
+
+bars30 = BarsSince( buy );
+bars70 = BarsSince( sell );
+
+"\nBuy/Sell signals";
+  "================\n";
+
+"A buy or sell signal is generated when the RSI moves out of an overbought/oversold area. \nThe last signal was a "+
+WriteIf( bars30 < bars70, "buy", WriteIf( bars30 > bars70, "sell", "" ))+
+WriteVal( min( bars30, bars70 ), 3.0 ) + " period(s) ago.";
+
+"\nChart Formations";
+  "================\n";
+
+"The RSI often forms chart patterns (such as head and shoulders or rising wedges) that may or may not be visible on the price chart.  "+
+"Since the analysis of chart patterns is subjective, the Guru Advisor cannot find them.  You will have to visually inspect the RSI indicator to look for such patterns.";
+
+"\nFailure Swings (also known as support or resistance penetrations or breakouts";
+  "=============================================================================\n";
+
+WriteIf( vrsi >= hhv( vrsi, 14 ), "The RSI has just reached its highest value in the last 14 period(s).  This is bullish.",
+WriteIf( vrsi <= llv( vrsi, 14 ), "The RSI has just reached its lowest value in the last 14 period(s).  This is bearish.",
+"The RSI does not currently show any Failure Swings." ) );
+
+"\nSupport and Resistance";
+  "======================\n";
+"The RSI shows, sometimes more clearly than the price chart, levels of support and resistance."+
+"As with chart formations, this is subjective, so you must visually inspect the chart to determine this.";
+
+"\nDivergence";
+  "==========\n";
+
+WriteIf( close >= hhv( close, 14 ) and vrsi < hhv( vrsi, 14 ), 
+"The security price has set a new 14-day high while the RSI has not.  This is a bearish divergence.",
+WriteIf( vrsi >= hhv( vrsi, 14 ) and close < hhv( close, 14 ), 
+"The RSI has set a new 14-day high while the security price has not.  This is a bullish divergence.",
+WriteIf( close <= llv( close, 14 ) and vrsi > llv( vrsi, 14 ), 
+"The security price has set a new 14-day low while the RSI has not.  This is a bullish divergence.",
+WriteIf( vrsi <= llv( vrsi, 14) and close > llv(close,14), 
+"The RSI has set a new 14-day low while the security price has not.  This is a bearish divergence.",
+"The RSI and price are not diverging." ) ) ) ); 
+
+"\n\nThis commentary is not a recommendation to buy or sell, but rather a guideline to interpreting the specified indicators.  
+The author accepts no liability whatsoever for any loss arising from any use of this expert or its contents.";

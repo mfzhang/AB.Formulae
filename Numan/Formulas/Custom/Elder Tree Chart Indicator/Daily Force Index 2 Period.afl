@@ -1,0 +1,9 @@
+// Daily Force Index 2 Period
+_SECTION_BEGIN("Force Index 2 Day");
+FI=EMA(V*(C-Ref(C,-1)),2);
+Plot(FI,"FI",colorCustom11,styleLine);
+Plot(0,"ZERO LINE",colorWhite,styleThick);
+_SECTION_END();
+
+// ----------------------------------------------------------------------------------------------------------------------
+

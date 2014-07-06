@@ -1,0 +1,88 @@
+/*
+|-----------------------------------------------------------------------------------------
+|PatternExplorer.com - Sector industry relative strength analysis
+|Copyright © 2007, PatternExplorer.com
+|http://www.PatternExplorer.com
+|e-mail: support@PatternExplorer.com
+|-----------------------------------------------------------------------------------------
+*/
+FormulaName = "PE - SI Relative Strength";
+
+SetChartOptions( 0, chartShowDates | chartWrapTitle );
+#pragma nocache
+#include_once  <\PEInc\PatternExplorer_f0.afl>
+#Include_once "C:\Program Files (x86)\AmiBroker5\Formulas\PatternExplorer\#Defaults & Mods\PE - Defaults.afl"
+#Include_once "C:\Program Files (x86)\AmiBroker5\Formulas\PatternExplorer\#Defaults & Mods\PE - Mods.afl"
+
+/*******************************************************************************************/
+AddCustomCodeBeforePE();
+/*******************************************************************************************/
+
+_SECTION_BEGIN( "Styles" );
+width = Param( "Sector ( Width )", 2.5, 0, 5, 0.5 );
+IndustryStyle = ParamStyle( "Industry", styleLine, maskAll );
+_SECTION_END();
+
+_SECTION_BEGIN( "Colors" );
+Sectorcolor = ParamColor( "Sector", def_Sectorcolor );
+IndustryColor = ParamColor( "Industry", def_Industrycolor );
+_SECTION_END();
+
+/*******************************************************************************************/
+
+AddGradientBackground( def_BGColorswitch, def_BgTopcolor, def_BgBottomcolor, def_titlebkcolor );
+
+/*******************************************************************************************/
+
+Plot( iRSavg, "", IndustryColor, IndustryStyle );
+PlotOHLC( sRSavg - ( width*0.01*sRSavg ), sRSavg + ( width*0.01*sRSavg ), sRSavg - ( width*0.01*sRSavg ), sRSavg, "", sectorcolor, styleCloud );
+
+/*******************************************************************************************/
+
+if ( inAA )
+{
+    _SECTION_BEGIN( "Automatic Analysis" );
+    FilterUndefined = ParamToggle( "Hide undefined Sectors and Industries", "No,Yes", 1 );
+    FilterCond = ParamToggle( "Display only Sectors and Industries", "No,Yes", 0 );
+    _SECTION_END();
+
+    /*******************************************************************************************/
+
+    if ( Filtercond == 0 )
+    {
+        Filter = def_Filter AND SymF AND IIf( FilterUndefined, IIf( StrLeft( Name(), 1 ) != "~", SectorID() > 0 AND IndustryID() > 0, SymFSI ), 1 );
+        Addefaultcolumns();
+        AddColumn( sRSavg, "RS(Sector)", 1.2, colorDefault, colorDefault, width = 70 );
+        AddColumn( iRSavg, "RS(Industry)", 1.2, colorDefault, colorDefault, width = 80 );
+        AddTextColumn( Sector, "Sector name" );
+        AddTextColumn( Industry, "Industry name" );
+        AddColumn( sFT, "Tickers in Sector", 1, colorDefault, colorDefault, width = 100 );
+        AddColumn( iFT, "Tickers in Industry", 1, colorDefault, colorDefault, width = 120 );
+        AddColumn( GetFnData( "InsiderHoldPercent" ), "Insider Hold Percent" );
+        AddColumn( GetFnData( "InstitutionHoldPercent" ), "Institution Hold Percent" );
+        AddTextColumn( FullName(), "Full name" );
+    }
+
+    if ( Filtercond == 1 )
+    {
+        Filter = def_Filter AND SymF AND GroupID() == 253 AND IIf( FilterUndefined, SymFSI, 1 );
+        AddColumn( sRSavg, "RS(Sector)", 1.2, colorDefault, colorDefault, width = 70 );
+        AddColumn( iRSavg, "RS(Industry)", 1.2, colorDefault, colorDefault, width = 80 );
+        AddColumn( sFT, "Tickers in Sector", 1.0, colorDefault, colorDefault, width = 100 );
+        AddColumn( iFT, "Tickers in Industry", 1.0, colorDefault, colorDefault, width = 120 );
+    }
+}
+
+/*******************************************************************************************/
+
+ToolTip = def_ToolTip;
+
+/*******************************************************************************************/
+AddCustomCodeAfterPE();
+
+/*******************************************************************************************/
+Title = "PatternExplorer.com - Sector Industry Strength Analysis - " + Name() + " - {{INTERVAL}}"
+        + EncodeColor( SectorColor ) + ", Sector " + SectorID( 1 ) + ", contains " + WriteVal( sFT, 1.0 ) + " Symbols, " + "Strength = " + WriteVal( sRSavg, 1.2 ) + ", "
+        + EncodeColor( IndustryColor ) + "Industry " + IndustryID( 1 ) + ", contains " + WriteVal( iFT, 1.0 ) + " Symbols, " + "Strength = " + WriteVal( iRSavg, 1.2 );
+
+//+", contains "+WriteVal(sFT,1.0)+ " Symbols, "+WriteVal(sFBu_p,1.0)+"% in UpTrend, "

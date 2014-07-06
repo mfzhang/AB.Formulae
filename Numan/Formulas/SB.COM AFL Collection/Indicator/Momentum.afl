@@ -1,0 +1,34 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Momentum
+//  Author/Uploader: Geoff Mulhall 
+//  E-mail:          gmulhall@urban.net.au
+//  Date/Time Added: 2002-05-25 07:36:40
+//  Origin:          Momentum Stock Selection by Jake Bernstein McGraw Hill College Div; ISBN: 0071376771
+//  Keywords:        Momentum
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=192
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=192
+//
+//------------------------------------------------------------------------------
+//
+//  This is a simple momentum formulae.
+//
+//  In his book Bernstein provides a simple but effective trading system based
+//  on momentum. Can be used for both short and long trades and provides
+//  simple, clear entry and exit criteria.
+//
+//------------------------------------------------------------------------------
+
+/* Bernstein Momentum Indicator */
+/* Set Scaling to Automatic, Show dates On, Percent On, Middle On */
+
+Title = "Bernstein MOM Close - Ref(Close,-28)"; 
+Graphxspace = 5;
+Graph0 = MA(Close - Ref(Close,-28),1); 
+Graph0Style = 1; 
+Graph0Color = 2;
+Graph1 = MA(Graph0,28);
+Graph1Style = 1;  
+Graph1Color = 5;

@@ -1,0 +1,64 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Using From and To dates from Auto Analysis in Code
+//  Author/Uploader: Bruce M. Moore 
+//  E-mail:          bmoore8702@sbcglobal.net
+//  Date/Time Added: 2005-06-06 22:40:53
+//  Origin:          Author
+//  Keywords:        Status, FirstBarInRange, LastBarInRange
+//  Level:           semi-advanced
+//  Flags:           exploration
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=466
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=466
+//
+//------------------------------------------------------------------------------
+//
+//  This code illustrates how to use the "From" and "To" date settings from
+//  Automatic Analyzer in AFL code. It is far faster to do it this way than to
+//  run your code from "0 to Barcount-1".
+//
+//  This method of extracting the dates and converting them to bar counts is
+//  rather convoluted, as you will see. I would like to see new keywords added
+//  to the AFL that allow the programmer to access the the "From" and "To" bar
+//  counts directly. In the meantime, this is the best work-around I've found.
+//
+//  The simple example given calculates a moving average, then plots price and
+//  the moving average.
+//
+//  Feedback is always welcome.
+//
+//------------------------------------------------------------------------------
+
+Periods=40;
+x=BarIndex();
+xMA=tcnt=tsum=Null;
+xfirst = LastValue(ValueWhen(Status("FirstBarInRange"), x, 1));
+xlast  = LastValue(ValueWhen(Status("LastBarInRange" ), x, 1));
+if(xfirst>Periods){
+	for (i = xfirst; i < xlast + 1; i++){
+		tcnt[i]=0;
+		tsum[i]=0;
+		for (j=0; j<Periods; j++){ 	
+			tcnt[i]++;
+			tsum[i]= tsum[i] + Close[i-j];
+		} 		                    
+		xMA[i]=tsum[i]/tcnt[i];
+}
+Title= "xFirst= " + WriteVal(xFirst,1.0) + ", xLast= " + WriteVal(xLast,1.0);
+Plot(Close,"Close",colorBlack,styleLine+styleThick);
+Plot(xMA,"xMA",colorRed,styleLine+styleThick);
+PlotShapes( IIf( xfirst==x, shapeCircle, shapeNone ), colorIndigo );
+PlotShapes( IIf( xlast==x, shapeCircle, shapeNone ), colorIndigo );
+Buy=Cross(C,xMA);
+Sell=Cross(xMA,C);
+Buy   = ExRem(Buy,  Sell);
+Sell  = ExRem(Sell, Buy);
+PlotShapes( IIf( Buy, shapeUpArrow, shapeNone ), colorGreen );
+PlotShapes( IIf( Sell, shapeDownArrow, shapeNone ), colorRed );
+
+
+
+Filter=  C>10;
+AddColumn(Close,       "Close"            , 1.2);
+AddColumn(Volume,      "Volume"           , 1.0);
+}

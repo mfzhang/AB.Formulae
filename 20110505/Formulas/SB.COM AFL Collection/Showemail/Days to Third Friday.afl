@@ -1,0 +1,53 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Days to Third Friday
+//  Author/Uploader: Ed Cottrell 
+//  E-mail:          emc@edcottrell.com
+//  Date/Time Added: 2006-03-17 14:10:39
+//  Origin:          Self-written
+//  Keywords:        third friday options expiration 3rd fri
+//  Level:           medium
+//  Flags:           showemail,function
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=601
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=601
+//
+//------------------------------------------------------------------------------
+//
+//  A function to determine the number of days left until the third Friday of
+//  the month, when U.S. options expire. By default, the function counts down
+//  to zero (on the third Friday), then starts counting down to the third
+//  Friday of the next month. Instructions on how to change this behavior
+//  (e.g., to make the counter stop at 0) are in the code.
+//
+//------------------------------------------------------------------------------
+
+function DaysInMonth(MonthNum,YearNum)
+{
+	_Daysinmonth=IIf(MonthNum==1 OR MonthNum==3 OR MonthNum==5 OR MonthNum==7 OR MonthNum==8 OR MonthNum==10 OR MonthNum==12,31,30);
+	Daysinmonthfeb=IIf(YearNum%4 == 0 AND YearNum%100!=0,29,28);
+	_Daysinmonth=IIf(MonthNum==2,Daysinmonthfeb,_Daysinmonth);
+	return _Daysinmonth;
+}
+
+function DaysToThirdFriday()
+{
+	d = Day();
+	wd = DayOfWeek();
+	DaysToFriday = IIf(5-wd<0, (12-wd) % 7, (5 - wd) % 7);
+	ThirdFriday = ((d + DaysToFriday) % 7)+14;
+	_DaysToThirdFriday = ThirdFriday - d;
+	
+	/* To change behavior after the third friday, but before the end of the month, 
+	to use zeroes, instead of counting down to next month, uncomment the second line, below */
+	_DaysToThirdFriday = IIf(_DaysToThirdFriday >= 0, _DaysToThirdFriday, ThirdFriday+IIf(ThirdFriday+14>DaysInMonth(Month(),Year()),28,35)-d);
+	//_DaysToThirdFriday = IIf(_DaysToThirdFriday >= 0, _DaysToThirdFriday, 0);
+
+	
+	return _DaysToThirdFriday;
+}
+
+Plot(DaysToThirdFriday(), "Days to 3rd Friday", colorBlack, styleLine);
+
+//
+
+//

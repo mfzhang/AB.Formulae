@@ -1,0 +1,86 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Trend Continuation Factor
+//  Author/Uploader: Dale butkowski 
+//  E-mail:          msc626@yahoo.com
+//  Date/Time Added: 2002-02-24 11:18:35
+//  Origin:          "Trend Continuation Factor", M.H.Pee March, 2002 TAS&C
+//  Keywords:        
+//  Level:           basic
+//  Flags:           system
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=163
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=163
+//
+//------------------------------------------------------------------------------
+//
+//  System to identify trend and its direction.
+//
+//------------------------------------------------------------------------------
+
+/*Trend Continuation Factor
+  MArch 2000 TAS&C */
+
+EnableScript("jscript");
+
+Length=Optimize("Length",35,1,100,1);
+
+Change= Close-Ref(Close,-1);
+PlusChange=IIf(Change>0,Change,0);
+MinusChange=IIf(Change<0,-Change,0);
+
+<%
+
+PlusChange=VBArray(AFL("PlusChange")).toArray();
+MinusChange=
+VBArray(AFL("MinusChange")).toArray();
+
+/*Make two new arrays*/
+var PlusCF=new Array ();
+var MinusCF=new Array();
+
+
+/*fill array "PlusCF"*/
+for (i=0; i<PlusChange.length; i++ )
+{
+   if (PlusChange[i]==0) {
+   PlusCF[i]=0;
+}
+else {
+   PlusCF[i]=PlusChange[i]+PlusCF[i-1];
+}
+}
+
+/*Fill array "MinusCF*/
+for (i=0; i<MinusChange.length; i++ )
+{
+   if (MinusChange[i]==0) {
+   MinusCF[i]=0;
+}
+else {
+  MinusCF[i]=MinusChange[i]+MinusCF[i-1];
+}
+}
+
+/*Convert to AFL variables*/
+AFL("PlusCF")=PlusCF;
+AFL("MinusCF")=MinusCF;
+
+%>
+
+PlusTCF=
+Sum(PlusChange-MinusCF,Length);
+MinusTCF=
+Sum(MinusChange-PlusCF,Length);
+
+Buy=PlusTCF>0;
+Sell=MinusTCF>0;
+Short=Sell;
+Cover=Buy;
+
+/*This is optional*/
+ApplyStop(2,1,Optimize("Stop Loss",12,1,15,1),1);
+
+Buy=ExRem(Buy,Sell);
+Sell=ExRem(Sell,Buy);
+Cover=ExRem(Cover,Short);
+Short=ExRem(Short,Cover);

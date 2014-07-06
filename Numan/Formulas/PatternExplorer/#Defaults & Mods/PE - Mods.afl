@@ -1,0 +1,54 @@
+//|-----------------------------------------------------------------------------------------
+//|PatternExplorer.com - PE - Mods
+//|Copyright © 2007, PatternExplorer.com
+//|http://www.PatternExplorer.com
+//|e-mail: support@PatternExplorer.com
+//|-----------------------------------------------------------------------------------------
+
+/*
+This file can be used to add custom code which will be available in all tools.
+The following example code would produce a filter for low Taio values combined with a hammer.
+Thereafter you could scan for uptrend channels combined with the Taio and hammer condition without
+modifying any other code. Just remove the // before the following filter line.
+*/
+
+//def_Filter = PeTaio()>0 AND PeHammer();
+
+
+/*
+The following Filter line would show only symbols with a beta value higher than 2.0
+Note: This requires to remove the // in the TB-Settings file and to define a base symbol if necessary.
+Default defined symbol = ^GSPC
+*/
+
+//def_Filter = abs(BetaValue) > 2.0;
+
+
+//The code below represents a simple strategy that produces buy and sell signals
+//when after a series of falling/rising closes
+//the current close is the highest/lowest of the last 3 bars.
+//Signals and alerts can be easily implemented to Alert 3 - Custom
+//Just use MyStrategy1Buy and MyStrategy1Sell for buy/sell conditions in the alert tool.
+//You can add all your other strategies to this file and make them available in the
+//alert tool. To start just unhide the the following code by removing the /* and */
+
+/*
+//my Strategy 1
+MinBars = 4;//define the number of rising/falling closes
+RisingClosesSeries = Sum(C>Ref(C,-1),MinBars)==MinBars;
+FallingClosesSeries = Sum(C<Ref(C,-1),MinBars)==MinBars;
+MyStrategy1Buy = Ref(FallingClosesSeries,-1) AND Close > Ref(C,-3);
+MyStrategy1Sell = Ref(RisingClosesSeries,-1) AND Close < Ref(C,-3);
+//end my Strategy 1
+*/
+// Issue name - collected by Numan
+procedure AddIssueTitleInsidePE()
+{
+					GfxSetOverlayMode(1);
+					GfxSelectFont("Tahoma", Status("pxheight")/6 );
+					GfxSetTextAlign( 6 );// center alignment
+					GfxSetTextColor( ColorRGB( 92, 92, 92 ) );
+					GfxSetBkMode(1); // transparent
+					GfxTextOut( Name(), Status("pxwidth")/2, Status("pxheight")/12 );
+}
+// Issue name - end.

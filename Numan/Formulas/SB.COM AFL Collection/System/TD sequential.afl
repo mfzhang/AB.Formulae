@@ -1,0 +1,109 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    TD sequential
+//  Author/Uploader: s.carrasset 
+//  E-mail:          s.carrasset@laposte.net
+//  Date/Time Added: 2004-11-02 04:57:37
+//  Origin:          
+//  Keywords:        
+//  Level:           basic
+//  Flags:           system
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=396
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=396
+//
+//------------------------------------------------------------------------------
+//
+//  Td sequential
+//
+//------------------------------------------------------------------------------
+
+Title= " Td seq I";
+/*TD seq long et short side full version*/
+
+/********Optimize***********/
+Opt1=Param("Opt1",9,5,21,1);
+Opt2=Param("Opt2",13,1,21,1);
+
+/*********Setup Buy*********/
+TD1=IIf(Close<Ref(Close,-4),1,0); 
+TD2=IIf(BarsSince(BarsSince(TD1))==Opt1, 1,0); //Sum(TD1,9)==9;
+TD3= Ref(H,-1)>=Ref(LLV(L,Opt1-4),-3);
+TD4= Ref(C,-Opt1)>=Ref(C,-Opt2);
+SetupBuy= TD3 AND TD2 AND TD4;
+
+/***********SetupSell************/
+TD1=IIf(Close>Ref(Close,-4),1,0); 
+TD2=IIf(BarsSince(BarsSince(TD1))==Opt1, 1,0); 
+TD3= Ref(L,-1)<=Ref(HHV(H,Opt1-4),-3);
+TD4= Ref(C,-Opt1)<=Ref(C,-Opt2);
+SetupSell= TD3 AND TD2 AND TD4 ;
+
+/*********Count Buy ********/
+CountBuy= Sum(IIf(C<Ref(C,-2),1,0),BarsSince(SetupBuy));
+//or C<Ref(H,-2)
+
+/*********Count Sell ********/
+CountSell= Sum(IIf(C>Ref(C,-2),1,0),BarsSince(SetupSell));
+//or C>Ref(L,-2)
+
+/***********A***********/
+B1= CountBuy >=Opt2; 
+B1= Hold(B1==0,2) AND B1;
+Timing=(BarsSince(SetUpbuy)< BarsSince(SetUpsell));
+Ccount=IIf(CountBuy >=Opt2,ValueWhen(B1,HHV(C,BarsSince(SetupBuy))),Null);
+Hsetup=IIf(CountBuy >=Opt2,ValueWhen(SetupBuy,HHV(H,Opt1)),Null);
+BuyA=B1 AND Timing AND Hsetup > Ccount;
+
+/******B**********/
+B2= CountBuy >Opt2 AND Close > Ref(Close,-4);
+B2=Hold(B2==0,2) AND B2;
+B2=ExRem(B2,B1);
+BuyB=B2  AND Timing  AND Hsetup > Ccount;
+
+/*************C***********/
+B3= CountBuy >Opt2 AND Close > Ref(High,-2);
+B3= Hold(B3==0,2) AND B3;
+B3=ExRem(B3,B1);
+BuyC= B3  AND Timing  AND Hsetup > Ccount;
+
+/************Buy Signal********/
+Buy=BuyB OR BuyC  ;
+
+////////////////////////////////
+//SHORT
+/////////////////////////////////
+
+/***********A***********/
+S1= CountSell >=Opt2; 
+S1= Hold(S1==0,2) AND S1;
+Timing=(BarsSince(SetUpSell)< BarsSince(SetUpbuy));
+Ccount=IIf(CountSell >=Opt2,ValueWhen(S1,LLV(C,BarsSince(SetupSell))),Null);
+Lsetup=IIf(CountSell >=Opt2,ValueWhen(SetupSell,LLV(L,Opt1)),Null);
+SellA=S1 AND Timing AND Lsetup < Ccount;
+
+/******B**********/
+S2= CountSell >Opt2 AND Close < Ref(Close,-4);
+S2=Hold(S2==0,2) AND S2;
+S2=ExRem(S2,S1);
+SellB=S2  AND Timing  AND Lsetup < Ccount;
+
+/*************C***********/
+S3= CountSell >Opt2 AND Close < Ref(Low,-2);
+S3= Hold(S3==0,2) AND S3;
+S3=ExRem(S3,S1);
+SellC= S3  AND Timing  AND Lsetup < Ccount;
+
+/***********Short Signal********/
+Short= SellB OR SellC  ;
+
+Plot(C,"",IIf(Short,colorYellow,IIf(Buy,colorGreen,1)),64);
+
+PlotShapes(IIf(Short,
+shapeDownArrow,shapeNone),colorYellow,0,H,-10); 
+PlotShapes(IIf(Buy,
+shapeUpArrow,shapeNone),colorGreen,0,L,-10);
+
+PlotShapes(IIf(SetupSell,
+shapeDigit9,shapeNone),colorRed,0,H,20);  
+PlotShapes(IIf(SetupBuy,
+shapeDigit9,shapeNone),colorBlue,0,L,-20); 

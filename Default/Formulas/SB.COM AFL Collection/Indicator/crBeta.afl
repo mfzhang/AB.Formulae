@@ -1,0 +1,51 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    crBeta
+//  Author/Uploader: Chuck Rademacher 
+//  E-mail:          chuck_rademacher@xtra.co.nz
+//  Date/Time Added: 2003-05-21 05:14:07
+//  Origin:          
+//  Keywords:        beta
+//  Level:           semi-advanced
+//  Flags:           system,exploration,indicator,function
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=281
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=281
+//
+//------------------------------------------------------------------------------
+//
+//  This function calculates beta for any stock against an index or another
+//  stock. Caution... beta calculations typically have long lookback periods.
+//  This could eat a lot of your data prior to generating any values. Most data
+//  providers use a five year lookback (1225 days). I think you can have
+//  meaningful beta figures using 125 to 250 days, particularly in the current
+//  market conditions.
+//
+//  Beta calculations usually take "risk-free returns" into consideration. This
+//  function does not, as most AmiBroker users probably do not have access to
+//  the relevant data. If there are enough people interested, I will release
+//  the version that does use risk-free returns as part of the formula.
+//
+//  The following is an example of calculating beta against the S&amp;P500
+//  index for 125 days:
+//
+//  ForeignClose = Foreign(".SPX","Close",Fixup=1);
+//
+//  Beta = crBeta(ForeignClose,Close,125);
+//
+//------------------------------------------------------------------------------
+
+function crBeta (Market,Stock, LB) {
+   MarketReturn = (Market-Ref(Market,-1)) / Ref(Market,-1);
+   StockReturn = (Stock-Ref(Stock,-1)) / Ref(Stock,-1);
+   MarketSquared = MarketReturn*MarketReturn;
+   StockSquared = StockReturn*StockReturn;
+   MS = MarketReturn * StockReturn;
+   AvgMarketDelta = Sum(MarketReturn,LB) / LB;
+   AvgStockDelta = Sum(StockReturn,LB) / LB;
+   SumOfMarketSquared = Sum(MarketSquared,LB);
+   SumofStockSquared = Sum(StockSquared,LB);
+   SumOfMS = Sum(MS,LB);
+   return (SumOfMS - (LB*AvgMarketDelta*AvgStockDelta)) / 
+                     SumOfMarketSquared - (LB*(AvgMarketDelta * AvgMarketDelta));
+}
+

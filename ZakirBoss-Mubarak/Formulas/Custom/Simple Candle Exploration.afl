@@ -1,0 +1,10 @@
+#include <CandleFunctionsInclude.afl>
+SetOption("NoDefaultColumns",False);
+Filter = Status("LastbarInTest");
+
+for(CP=0; Cp<=44; CP++)
+	{
+	PV = CandlePattern(CP);
+	AddColumn(PV,PatternName,1.0);
+	}
+

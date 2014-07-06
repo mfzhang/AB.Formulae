@@ -1,0 +1,56 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Constant Trendline Plot
+//  Author/Uploader: Rob Holloway 
+//  E-mail:          roblh3@yahoo.com
+//  Date/Time Added: 2005-02-07 17:12:00
+//  Origin:          
+//  Keywords:        
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=427
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=427
+//
+//------------------------------------------------------------------------------
+//
+//  THIS IS A TECHNIQUE FOR DRAWING TRENDLINES EVERYWHERE ON A CHART WITHOUT A
+//  LOOPING FORMULA. I developed this technique because, as far as I could
+//  tell, the trendline methods made readily available in Amibroker (e.g. the
+//  example in the LinReg formula in AFL reference section of help), are
+//  limited in that they can either plot only one trendline, or must be called
+//  by a looping formula. This is simply an alternative to a looping formula,
+//  and I think it is a pretty good method for plotting trendlines. My code
+//  plots a trendline between troughs of Perchg size. The line you see on the
+//  chart is an extension of a trendline starting at the low of the trough one
+//  trough prior to the one where the line begins. A new trendline is drawn
+//  every time a new trough occurs. There are lots of possible variations on
+//  this code and refinements which could define the trend more precisely and
+//  more robustly.
+//
+//------------------------------------------------------------------------------
+
+/*THIS IS A TECHNIQUE FOR DRAWING TRENDLINES EVERYWHERE ON A CHART WITHOUT A LOOPING FORMULA.  I developed this technique because, as far as I could tell, the trendline methods made readily available in Amibroker (e.g. the example in the LinReg formula in AFL reference section of help), are limited in that they can either plot only one trendline, or must be called by a looping formula. This is simply an alternative to a looping formula, and I think it is a pretty good method for plotting trendlines.  My code plots a trendline between troughs of Perchg size.  The line you see on the chart is an extension of a trendline starting at the low of the trough one trough prior to the one where the line begins.  A new trendline is drawn every time a new trough occurs.  There are lots of possible variations on this code and refinements which could define the trend more precisely and more robustly.*/
+
+//ESTABLISHES BARS BETWEEN TROUGHS
+
+Perchg = 10;
+//Bars since current trough
+Length1 = TroughBars(L,Perchg,1);
+//Bars since prev trough
+Length2 = TroughBars(L,Perchg,2);
+
+DistBetTroughs = Length2 - Length1;
+
+//ESTABLISHES PRICE DIFFERENCE BETWEEN TROUGHS
+
+PriceDiff = Trough(L,Perchg,1) - Trough(L,Perchg,2);
+
+//ESTABLISHES SLOPE BETWEEN TROUGHS
+
+Slope = PriceDiff/DistBetTroughs;
+
+//TRENDLINE FORMULA
+Trendline = (Length2 * Slope) + Trough(L,Perchg,2);
+
+Plot(Trendline,"Trendline",colorBlack,styleThick);
+PlotOHLC( Open, High, Low, Close, "Price", colorBrown,styleCandle); 

@@ -1,0 +1,33 @@
+MyPort = 5000;//Enter Default Portfolio Value
+HR=0.02;//HR is High Risk set at Two Percent of Portfolio
+LR=0.01;//LR is Low Risk set at One Percent of Portfolio
+PRisk=HR;//Enter High Risk (HR) or Low Risk (LR) as Default
+
+//The above values are easily changed using the Parameter Feature which is accessed by right clicking the Price Graph AND choosing Parameters OR you mayuse (Ctrl+R). 
+
+
+Port = Param("Portfolio", MyPort, 500, 35000, 50 );
+Risk = Param("Risk", HR, 0.01, 0.02, 0.01 );
+
+SL10=C-(C*0.10);
+
+MyATR=ATR(14);//Enter ATR Average or use the 14 Day Moving Average of ATR 
+
+MidRange=(H+L)/2;//Figure Used In Title. Middle Range of Price. 
+
+col = IIf( Close > Ref( Close, -1 ), colorGreen, colorRed );
+
+Plot( Close, "Price", col, styleBar );
+Plot( SL10, "10%", colorLightGrey, 256 );
+//SL10 is Price minus Ten Percent to use as a stop loss reference.  It is not actually plotted but its value can be seen as you mouse over the price bars.To Plot this value, replace (256) with (styleLine)
+
+Title = Name() + " " + Date() + " Price: " + C + " Open: " + O + " High: " + H
++ " Low: " + L + " M:" + MidRange + "" + WriteVal(ROC( Close, 1) ) + "%" + "\n"
++ EncodeColor(colorBlue) + "ATR " + WriteVal (MyATR,format=1.2) + "  3*ATR " +
+WriteVal (MyATR*3,format=1.2 )+ "\n" + EncodeColor(colorBlue) +"SL " + WriteVal
+( Close - (MyATR*3),(format=1.2)) + "   Risk " + WriteVal (
+(MyATR*3/Close)*100,format=1.2 ) + "%" + "\n" + "Shares  " + WriteVal
+((Port*Risk)/(MyATR*3),(format=1.2))+ "\n"+
+"$"+WriteVal(C*((Port*Risk)/(MyATR*3)),(format=1.0))+ " of" +" $"+ WriteVal
+(Port,format=1.0) + "\n" + WriteVal(Risk, format=1.2) + "   " +
+EncodeColor(colorIndigo)+ WriteVal(SL10, format=1.2);

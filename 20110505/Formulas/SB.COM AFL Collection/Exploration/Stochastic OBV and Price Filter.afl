@@ -1,0 +1,171 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Stochastic OBV and Price Filter
+//  Author/Uploader: Frank Snay 
+//  E-mail:          fesnay@san.rr.com
+//  Date/Time Added: 2001-06-24 19:25:04
+//  Origin:          Various Volume and Price Studies
+//  Keywords:        StochasticOBV StochasticPrice
+//  Level:           basic
+//  Flags:           exploration
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=33
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=33
+//
+//------------------------------------------------------------------------------
+//
+//  /*
+//
+//  Stochastic OBV and Price Filter - No graphing included.
+//
+//  User Set Stochastic OBV and Stochastic Price periods
+//
+//  Recommended Use - "Explore", Apply to "all stocks", Range, n last days n =
+//  0
+//
+//  StochasticOBV is the stochastic of OBV for the user set periods
+//
+//  StochasticPrice is stochk() for user set periods
+//
+//  Guidelines: One week is 5 days (trading days)
+//
+//  One month is 21 days
+//
+//  One quarter is 63 days
+//
+//  Half year is 126 days
+//
+//  One year is 252 days
+//
+//  Use sort ability of spreadsheet to find highest stochastic OBV stocks,
+//  stochastic price stocks, and the difference of stochasticOBV -
+//  stochasticPrice.
+//
+//  The last column if the difference column. Common practice says that volume
+//  leads price in moves, so this column, sorted so the arrow is pointing up
+//  (values decreasing down the column) shows stocks with the strongest OBV
+//  compared to price. If common practice is correct, price should follow
+//  volume and increase in value.
+//
+//  For short sellers, sort the difference column so the arrow is pointing down
+//  (increasing values down the column) shows stocks where there is very weak
+//  OBV supporting strong prices. Price may follow OBV down.
+//
+//  Check also for stocks with BOTH stochastic OBV and stochastic prices very
+//  high (low difference). These are stocks that are probably doing extremely
+//  well for momentum investors.
+//
+//  If both are very low with a low difference, the reverse may be true. These
+//  probably are very weak stocks.
+//
+//  If you want to check only "current stock", set the "n last days n = 10 "
+//  (or however many back days you want to check) to see the difference in
+//  relationship to past n days. Ensure the sort is on the date column with the
+//  arrow pointing down. If you sort on any other column (except Ticker), the
+//  dates will not be sequential.
+//
+//  Note: "Scan" and "Backtest" will not work because a filter is not set, and
+//  no Buy or Sell commands were given.
+//
+//  Nightly, I Explore "all stocks", placing the top 10 or so stocks into a
+//  watchlist (right click in the "Results" spreadsheet, watchlist option),
+//  switch to that watchlist, then check "current stock" under varying periods
+//  of time using the "n last days" selection. Think of the results as an
+//  oscillator, the shorter the period of time, the less duration expected in
+//  the possible move in price.
+//
+//  */
+//
+//  VolumePeriods = 63; // User can change number
+//
+//  PricePeriods = 63; // User can change number
+//
+//  HighOBV = hhv(obv(),VolumePeriods);
+//
+//  LowOBV = llv(obv(),VolumePeriods);
+//
+//  StochasticVolume = 100*(obv() - LowOBV)/(HighOBV - LowOBV);
+//
+//  StochasticPrice = stochk(PricePeriods);
+//
+//  VolumeMinusPrice = StochasticVolume - StochasticPrice;
+//
+//  Numcolumns = 4;
+//
+//  column0 = close;
+//
+//  column1 = StochasticVolume;
+//
+//  column2 = StochasticPrice;
+//
+//  column3 = VolumeMinusPrice;
+//
+//  column0name = "Close";
+//
+//  column1name = "StoOBV";
+//
+//  column2name = "StoPrice";
+//
+//  column3name = "Difference";
+//
+//  column0format = 1.2;
+//
+//  column1format = 1.2;
+//
+//  column2format = 1.2;
+//
+//  column3format = 1.2;
+//
+//  filter = close;
+//
+//------------------------------------------------------------------------------
+
+/*
+Stochastic OBV and Price Filter - No graphing included.
+User Set Stochastic OBV and Stochastic Price periods
+Recommended Use - "Explore", Apply to "all stocks", Range, n last days n = 0
+StochasticOBV is the stochastic of OBV for the user set periods
+StochasticPrice is stochk() for user set periods
+Guidelines:  One week is 5 days  (trading days)
+                   One month is 21 days
+                   One quarter is 63 days
+                   Half year is 126 days
+                   One year is 252 days
+Use sort ability of spreadsheet to find highest  stochastic OBV stocks, stochastic price stocks, and the difference of stochasticOBV - stochasticPrice.  
+The last column if the difference column.  Common practice says that volume leads price in moves, so this column, sorted so the arrow is pointing up (values decreasing down the column) shows stocks with the strongest OBV compared to price.  If common practice is correct, price should follow volume and increase in value.  
+For short sellers, sort the difference column so the arrow is pointing down (increasing values down the column) shows stocks where there is very weak OBV supporting strong prices.  Price may follow OBV down.
+Check also for stocks with BOTH stochastic OBV and stochastic prices very high (low difference).  These are stocks that are probably doing extremely well for momentum investors. 
+ If both are very low with a low difference, the reverse may be true.   These probably are very weak stocks.
+If you want to check only "current stock", set the "n last days n = 10 " (or however many back days you want to check) to see the difference in relationship to past n days.  Ensure the sort is on the date column with the arrow pointing down.  If you sort on any other column (except Ticker), the dates will not be sequential.
+Note: "Scan" and "Backtest" will not work because a filter is not set, and no Buy or Sell commands were given.
+Nightly, I Explore "all stocks", placing the top 10 or so stocks into a watchlist (right click in the "Results" spreadsheet, watchlist option), switch to that watchlist, then check "current stock" under varying periods of time using the "n last days" selection.  Think of the results as an oscillator, the shorter the period of time, the less duration expected in the possible move in price.
+*/
+
+VolumePeriods = 63;    // User can change number
+PricePeriods = 63;    // User can change number
+HighOBV = hhv(obv(),VolumePeriods);
+LowOBV = llv(obv(),VolumePeriods);
+
+StochasticVolume = 100*(obv() - LowOBV)/(HighOBV - LowOBV);
+
+StochasticPrice = stochk(PricePeriods);
+
+VolumeMinusPrice = StochasticVolume - StochasticPrice;
+ 
+Numcolumns = 4;
+
+column0 = close;
+column1 = StochasticVolume;
+column2 = StochasticPrice;
+column3 = VolumeMinusPrice;
+
+column0name = "Close";
+column1name = "StoOBV";
+column2name = "StoPrice";
+column3name = "Difference";
+
+column0format = 1.2;
+column1format = 1.2;
+column2format = 1.2;
+column3format = 1.2;
+
+filter = close;

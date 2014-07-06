@@ -1,0 +1,12 @@
+////////////////////////////////
+// RevEngEMARSI
+////////////////////////////////
+eper = Param("EMA periods", 65, 1, 1000, 1 );
+wper = Param("Wilder periods", 14, 1, 100, 1 );
+Value = EMA( RSI( wper ), eper );
+AUC = Wilders( Max( C - Ref( C, -1 ), 0 ), wper );
+ADC = Wilders( Max( Ref( C, -1 ) - C, 0 ), wper );
+x = ( wper - 1 )*( ADC * Value/(100-Value)-AUC);
+RevEndEMARSI = IIf( x >= 0, C + x, C + x*(100-Value)/Value );
+Plot( Close, Date() + ", Close", colorBlack, styleCandle );
+Plot( RevEndEMARSI, "Reverse EMARSI", colorRed );

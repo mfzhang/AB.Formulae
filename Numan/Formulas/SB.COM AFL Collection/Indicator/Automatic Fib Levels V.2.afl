@@ -1,0 +1,138 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Automatic Fib Levels V.2
+//  Author/Uploader: Aron Pipa 
+//  E-mail:          
+//  Date/Time Added: 2006-03-23 20:52:16
+//  Origin:          
+//  Keywords:        
+//  Level:           medium
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=609
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=609
+//
+//------------------------------------------------------------------------------
+//
+//  It is a little better than the previous one,
+//
+//  for points 1, 2, 3, on chart diplays retracements for 1-2 and 2-3.
+//
+//------------------------------------------------------------------------------
+
+/*---------------------------------------------------
+	Automatic Fib Levels V.2
+	Aron Pipa, March, 24, 2006
+--------------------------------------------------------*/
+shift =Param("Left Shift Chart ", 20, 10, 100, 2);
+Plot(C, "", 39, styleBar, Null, Null, -shift); 
+
+finishbar = BarCount;
+StartBar=SelectedValue(BarIndex())+shift ;
+bar = BarIndex();
+period = finishBar - StartBar;
+top =LastValue( HHV(H, period)) ; 
+bot =LastValue(LLV(L, period)) ; 
+retrace =0;
+x1=0;
+x2=0;
+x3=0;
+direction=0;
+Color=0;
+Line1 = Line2=Line3=Null;
+
+for (i =startbar; i<finishbar; i++)
+{
+	if (H[i] ==top)
+	{
+	x1=bar[i];
+	}
+	if (L[i] ==bot)
+	{
+	x2=bar[i];
+	}
+
+	if(x1<x2) //direction down
+	{
+	direction=-1;
+	Color= colorRed;
+	retrace = LastValue( HHV(H, finishbar -x2)); 
+	if(H[i] ==retrace)
+	x3=bar[i];
+	}
+	else
+	{
+	direction=1;
+	Color =colorGreen;
+	retrace = LastValue(LLV(L, finishbar -x1)); 
+	if(L[i] ==retrace)
+	x3=bar[i];
+	}
+}
+
+Line1 =LineArray(x1-shift, top, finishbar, top);
+Line2 =LineArray(x2-shift, bot, finishbar, bot);
+
+/*
+if(direction<0)
+trendline = LineArray(x2-shift, bot, x3-shift, retrace, 1);
+else
+trendline = LineArray(x1-shift, top, x3-shift, retrace, 1);
+Plot(trendline,"", color); 
+*/
+
+// calculate fib levels I
+distance= abs(top-bot);
+fib1 =distance *0.236;
+fib2 =distance *0.382;
+fib3 =distance *0.5;
+fib4 =distance *0.618;
+
+// calculate fib levels II
+distance1 = IIf(direction<0,abs(retrace-bot),abs(top-retrace))  ;
+fib11 =distance1 *0.236;
+fib12 =distance1 *0.382;
+fib13 =distance1 *0.5;
+fib14 =distance1 *0.618;
+
+n = Param(" Fiblines depth %", 50, 10, 90, 2)/100; 
+Maxfib = finishbar-round(shift*n);
+
+fibline1 = LineArray(Maxfib, IIf(direction<0, bot+fib1, top-fib1), finishbar, IIf(direction<0, bot+fib1, top-fib1));
+fibline2 = LineArray(Maxfib, IIf(direction<0, bot+fib2, top-fib2), finishbar, IIf(direction<0, bot+fib2, top-fib2));
+fibline3 = LineArray(Maxfib, IIf(direction<0, bot+fib3, top-fib3), finishbar, IIf(direction<0, bot+fib3, top-fib3));
+fibline4 = LineArray(Maxfib, IIf(direction<0, bot+fib4, top-fib4), finishbar, IIf(direction<0, bot+fib4, top-fib4));
+
+Minfib = finishbar-shift+1;
+fibline11 = LineArray(Minfib, IIf(direction<0, retrace-fib11, retrace+fib11), Maxfib, IIf(direction<0, retrace-fib11, retrace+fib11));
+fibline12 = LineArray(Minfib, IIf(direction<0, retrace-fib12, retrace+fib12), Maxfib, IIf(direction<0, retrace-fib12, retrace+fib12));
+fibline13 = LineArray(Minfib, IIf(direction<0, retrace-fib13, retrace+fib13), Maxfib, IIf(direction<0, retrace-fib13, retrace+fib13));
+fibline14 = LineArray(Minfib, IIf(direction<0, retrace-fib14, retrace+fib14), Maxfib, IIf(direction<0, retrace-fib14, retrace+fib14));
+Line3=LineArray(x3 -shift ,retrace, maxfib, retrace);
+Color3=IIf(color==colorGreen, colorRed, colorGreen);
+if(startbar<finishbar)
+{
+Plot(Line1,"", color); 
+Plot(Line2,"", color);
+Plot(Line3,"", Color3);
+Plot(fibLine1,"", Color);
+Plot(fibLine2,"", Color);
+Plot(fibLine3,"", Color);
+Plot(fibLine4,"", Color);
+Plot(fibLine11,"", Color3);
+Plot(fibLine12,"", Color3);
+Plot(fibLine13,"", Color3);
+Plot(fibLine14,"", Color3);
+}
+else
+{
+Null;
+}
+Title= Name() +"  Auto Fib V.2";
+
+
+
+
+
+
+
+ 

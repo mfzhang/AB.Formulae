@@ -1,0 +1,137 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Trend exploration with multiple timeframes
+//  Author/Uploader: Marcus Davidsson 
+//  E-mail:          davidsson_marcus@hotmail.com
+//  Date/Time Added: 2006-09-30 20:31:21
+//  Origin:          
+//  Keywords:        exploration, trend, moving average
+//  Level:           medium
+//  Flags:           exploration
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=724
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=724
+//
+//------------------------------------------------------------------------------
+//
+//  I started experimenting with Tradestations Radarscreen
+//
+//  when it struck me that Amibroker have the same function "Exploration" but
+//  100000$ much cheaper.
+//
+//  The formula is quite simple just load it in to Amibroker
+//
+//  and go to automatic analysis and push explore.
+//
+//  The formula will scan multiple moving averages and draw conclusions
+//  regarding overall trend phase, strenght etc. Enjoy!
+//
+//------------------------------------------------------------------------------
+
+/*Use daily data! You could use data with
+higher time resolution but then you have
+to include a timeframe parameters
+since 10 periods will become
+10 minutes (if you have one Minute data)*/ 
+
+//////////////////////////////////////////////////////////////
+
+Filter = 1; // all symbols and quotes accepted.
+DTL=140; // DTL = Define Trend Long
+DTM=60;	// DTM = Define Trend Medium
+DTS=8;  // DTS = Define Trend Short
+
+//////////////////////////////////////////////////////////////
+
+TL=LinRegSlope(MA(C, DTL),2);	 // TL = Trend Long
+TM=LinRegSlope(MA(C, DTM),2);  // TM = Trend Medium
+TS=LinRegSlope(MA(C, DTS),2);  // TS = Trend Short
+
+TLL=IIf(LinRegSlope(MA(C, DTL),2) > 0,True, False);		
+TMM=IIf(LinRegSlope(MA(C, DTM),2) > 0,True, False);		
+TSS=IIf(LinRegSlope(MA(C, DTS),2) > 0,True, False);		
+
+TLLL= 
+WriteIf(TL>0 AND TL<0.3,"+",
+WriteIf(TL>=0.3 AND TL<0.6 ,"+ +", 
+WriteIf(TL>=0.6,"+ + +", 
+WriteIf(TL<0 AND TL>-0.3,"-",
+WriteIf(TL<=-0.3 AND TL>-0.6 ,"- -",
+WriteIf(TL<=-0.6,"- - -",""))))));  
+
+TMMM=
+WriteIf(TM>0 AND TM<0.3,"+",
+WriteIf(TM>=0.3 AND TM<0.6 ,"+ +",
+WriteIf(TM>=0.6,"+ + +",
+WriteIf(TM<0 AND TM>-0.3,"-",
+WriteIf(TM<=-0.3 AND TM>-0.6 ,"- -",
+WriteIf(TM<=-0.6,"- - -",""))))));  
+
+TSSS=
+WriteIf(TS>0 AND TS<0.3,"+",
+WriteIf(TS>=0.3 AND TS<0.6 ,"+ +",
+WriteIf(TS>=0.6,"+ + +",
+WriteIf(TS<0 AND TS>-0.3,"-",
+WriteIf(TS<=-0.3 AND TS>-0.6 ,"- -",
+WriteIf(TS<=-0.6,"- - -",""))))));  
+
+//////////////////////////////////////////////////////////////
+
+AddTextColumn( TLLL, "MA"+-DTL, 1 , colorDefault,
+IIf( TLL==True, colorGreen, colorRed ),-1 );
+AddTextColumn( TMMM, "MA"+-DTM, 1 , colorDefault,
+IIf( TMM==True, colorGreen, colorRed ),-1 );
+AddTextColumn( TSSS, "MA"+-DTS, 1 , colorDefault,
+IIf( TSS==True, colorGreen, colorRed ),-1 );
+
+//////////////////////////////////////////////////////////////
+message=
+WriteIf(TL>=0.3 AND TM>=0.3 AND
+TS>=0.3, "Strong Up Trend",
+WriteIf(TL<=-0.3 AND TM<=-0.3 AND
+TS<=-0.3, "Strong Down Trend",
+WriteIf(TLL==True AND TMM==True AND
+TSS==True,"Up Trend",
+WriteIf(TLL==False AND TMM==False AND
+TSS==False,"Down Trend", "No Trend"))));
+
+
+AddTextColumn( message, "Overall Trend", 1 , 
+colorDefault,IIf(TLL==True AND TMM==True AND
+TSS==True, colorGreen, 
+IIf(TLL==False AND TMM==False AND
+TSS==False, colorRed, colorDefault )),-1 );
+
+//////////////////////////////////////////////////////////////
+
+x = IIf(Cross(LinRegSlope(MA(C, DTL),2),0) OR
+Cross(0, LinRegSlope(MA(C, DTL),2) ), True, False); 
+y = BarIndex()-ValueWhen(x==True, BarIndex(),1); 
+
+Phase=WriteIf(Y>=400,"Mature",WriteIf(Y>100 AND
+Y<400, "Progress", WriteIf(Y<=100, "Initial", "")));
+//AddColumn( y, "Trend Phase", 1 , colorDefault,  -1);
+AddTextColumn( Phase, "Trend Phase", 1 , colorDefault,  -1);
+
+//////////////////////////////////////////////////////////////
+Comments=
+WriteIf(Y>=400,"Mature trend with risk of bubble",
+WriteIf(y<400 AND TLL==True AND TMM==True AND TSS==True,
+"Keep on coming baby $",
+WriteIf(y<15 AND TLL==True AND TMM==True AND TSS==True OR
+TLL==False AND TMM==False AND TSS==False,
+"Are you going to grow up and become a big boy?",
+WriteIf(y<400 AND TLL==False AND TMM==False AND TSS==False,
+"Keep on coming baby $$",
+WriteIf(TLL==True AND TMM==True AND TSS==False OR 
+TLL==False AND TMM==False AND TSS==True,
+"Risk for short term reversal",
+WriteIf(TLL==True AND TMM==False AND TSS==True OR
+TLL==False AND TMM==True AND TSS==False,
+"trading range-avoid",
+"live to trade another day")))))); 
+			
+AddTextColumn( Comments, "Comments", 1 ,
+colorDefault,colorDefault,-1 );
+
+
+//////////////////////////////////////////////////////////////

@@ -1,0 +1,56 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Ehlers Center of Gravity Oscillator
+//  Author/Uploader: Not Too Swift 
+//  E-mail:          
+//  Date/Time Added: 2005-06-25 01:14:08
+//  Origin:          
+//  Keywords:        
+//  Level:           medium
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=484
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=484
+//
+//------------------------------------------------------------------------------
+//
+//  Ehlers Center of Gravity Oscillator is from Cybernetic Analysis for Stocks
+//  and Futures. Wiley. 2004.
+//
+//  This indicator represents the center of gravity of prices over the window
+//  of observation.
+//
+//------------------------------------------------------------------------------
+
+SetBarsRequired(200, 0);
+
+// Ehlers formulas
+// from Ehlers, John F. Cybernetic Analysis for Stocks and Futures. Wiley. 2004. 
+// Chapter 5, p. 47. Code on p. 49.
+
+function CGOscillator(array, length)
+// Figure 5.1 on p. 49.
+{
+  CGOValue = array;
+
+  for(i = length; i < BarCount; i++)
+  {
+    num = 0;
+    denom = 0;
+    for(j = 0; j < length; j++)
+    {
+      num = num + (1 + j) * array[i - j];
+      denom = denom + array[i - j];
+    }
+    if (denom != 0) CGOValue[i] = -num / denom + (length +1)/2;
+  }
+  return CGOValue;
+}
+
+med = (H + L) / 2;
+Period = Param("Period", 10, 1, 250, 1);
+
+Plot(CGOscillator(med, Period), "CG Oscillator", colorRed, styleLine);
+Plot(Ref(CGOscillator(med, Period), -1), "Trigger", colorBlue, styleLine);
+PlotGrid(.8);
+PlotGrid(.5);
+PlotGrid(.2);

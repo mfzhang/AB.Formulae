@@ -1,0 +1,63 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Weekly chart
+//  Author/Uploader: Graham Kavanagh 
+//  E-mail:          gkavanag@bigpond.net.au
+//  Date/Time Added: 2003-01-01 22:46:10
+//  Origin:          
+//  Keywords:        weekly
+//  Level:           medium
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=248
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=248
+//
+//------------------------------------------------------------------------------
+//
+//  Weekly chart to be shown in indicator window. This is for fixed weeks
+//  Monday to Friday.
+//
+//------------------------------------------------------------------------------
+
+firstday = ValueWhen( Cum(1)==1, DayOfWeek() );
+numweeks = IIf(LastValue(DayOfWeek())==firstday, LastValue(Cum(DayOfWeek()==firstday)),LastValue(Cum(DayOfWeek()==firstday))+1 );
+
+numweek = IIf(firstday==1, Cum( DayOfWeek() < Ref(DayOfWeek(),-1) ), IIf(firstday>1, Cum( DayOfWeek() < Ref(DayOfWeek(),-1) )+1 , 0 ));
+numweek = IIf(IsEmpty(numweek),1,numweek);
+
+firstbar = LastValue(Cum(1))-LastValue(numweek)+1;
+dayRef =  5-LastValue(DayOfWeek()) + 4*( Cum(1) - LastValue(Cum(1)) );
+xxx =  Min(0,5-LastValue(DayOfWeek()) + 4*( Cum(1) - LastValue(Cum(1)) ));
+
+wo = IIf(IsEmpty( Ref(DayOfWeek(),-DayOfWeek()) ), ValueWhen(DayOfWeek()==firstday,O), ValueWhen(DayOfWeek()==1,O ) );
+wh = HHV(H,Min(DayOfWeek(),5));
+wl = LLV(L,Min(DayOfWeek(),5));
+wc = C;
+
+weeko =Ref(wo,xxx);
+weekh = Ref(wh,xxx);
+weekl = Ref(wl,xxx);
+weekc = Ref(wc,xxx);
+
+
+
+PlotOHLC(weeko,weekh,weekl,weekc,"weekly",colorBlack,styleCandle);
+
+Filter=1;
+AddColumn(DayOfWeek(),"day",1.0);
+AddColumn(O,"oooo",1.1);
+AddColumn(H,"hhhh",1.1);
+AddColumn(L,"llll",1.1);
+AddColumn(C,"cccc",1.1);
+AddColumn(wo,"wo",1.1);
+AddColumn(wh,"wh",1.1);
+AddColumn(wl,"wl",1.1);
+AddColumn(wc,"wc",1.1);
+AddColumn(weeko,"wko",1.1);
+AddColumn(weekh,"wkh",1.1);
+AddColumn(weekl,"wkl",1.1);
+AddColumn(weekc,"wkc",1.1);
+AddColumn(firstbar ,"fstb",1.0);
+AddColumn(numweek ,"nwk",1.0);
+AddColumn(Cum(1),"cum1",1.0);
+AddColumn(xxx,"xxx",1.0);
+AddColumn(Ref(DateNum(),xxx),"refdate",1.0);

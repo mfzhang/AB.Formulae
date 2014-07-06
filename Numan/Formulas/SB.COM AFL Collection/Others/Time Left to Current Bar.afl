@@ -1,0 +1,13 @@
+//Time Left to Current BAr
+//3.5.2007  Jiri Cipr
+
+TC = Now(4);                                                      // current time
+TP = LastValue(Ref(TimeNum(),-1));                                // time previously bar
+RS = Interval()+3600*int(TP/10000)+60*(int(TP/100)%100)+TP%100
+     +60       -3600*int(TC/10000)-60*(int(TC/100)%100)-TC%100;   // time left (sec)
+HH = int(RS/3600);     // hours
+MM = int((RS-HH)/60);  // minutes
+SS = RS%60;            // seconds
+TL = WriteIf(        HH>9,"","0")+NumToStr(HH,1.0,0)+":"
+    +WriteIf(        MM>9,"","0")+NumToStr(MM,1.0,0)+":"
+    +WriteIf(SS<0 OR SS>9,"","0")+NumToStr(SS,1.0,0);             // time left (hh:mm:ss)

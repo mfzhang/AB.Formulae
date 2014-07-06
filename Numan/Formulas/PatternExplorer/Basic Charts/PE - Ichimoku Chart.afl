@@ -1,0 +1,181 @@
+//|-----------------------------------------------------------------------------------------
+//|PatternExplorer.com - Ichimoku Chart
+//|Copyright © 2007, PatternExplorer.com
+//|http://www.PatternExplorer.com
+//|e-mail: support@PatternExplorer.com
+//|-----------------------------------------------------------------------------------------
+FormulaName = "PE - Ichimoku Chart";
+
+SetChartOptions( 0, chartShowDates | chartShowArrows | chartLogarithmic | chartWrapTitle );
+#pragma nocache
+#include_once  <\PEInc\PatternExplorer_f0.afl>
+#Include_once "C:\Program Files (x86)\AmiBroker5\Formulas\PatternExplorer\#Defaults & Mods\PE - Defaults.afl"
+#Include_once "C:\Program Files (x86)\AmiBroker5\Formulas\PatternExplorer\#Defaults & Mods\PE - Mods.afl"
+/*******************************************************************************************/
+AddCustomCodeBeforePE();
+/*******************************************************************************************/
+AddAlertParam( def_AudioAlert, def_EmailAlert, def_BarComplete );
+/*******************************************************************************************/
+_SECTION_BEGIN( "Main Parameters" );
+p1 = Param( "Turning Line", 9, 5, 20, 1 );//also known as Kijun Sen
+p2 = Param( "Standard Line", 26, 5, 40, 1 );//also known as Tenkan Sen
+p3 = Param( "Delayed Line", 26, 0, 40, 1 );//also known as Chikou Span
+p4 = Param( "Cloud F-Bars", 26, 0, 40, 1 );//also known as Chikou Span
+_SECTION_END();
+/*******************************************************************************************/
+_SECTION_BEGIN( "Buy and Sell Signals" );
+Strategy = ParamList( "Strategy", List1 = "1: Tenkan Sen/Kijun Sen Cross" );//,2: ,3: ,4: ,5: ",0);
+MinStrength = ParamList( "Min Signal Strength", List2 = "1 - Weak,2 - Mid,3 - Strong,4 - Only best", 2 );
+
+for ( i = 0; i < 10; i++ )
+{
+    if ( StrExtract( List1, i ) == Strategy )
+        SelectedStrategy = i + 1;
+}
+
+for ( i = 0; i < 10; i++ )
+{
+    if ( StrExtract( List2, i ) == MinStrength )
+        SelectedMinStrength = i + 1;
+}
+
+BuyShape = Param( "Buy Shape Typ", def_BuyShape, 0, 50, 1 );
+
+SellShape = Param( "Sell Shape Typ", def_SellShape, 0, 50, 2 );
+Buyshapecolor = ParamColor( "Buy Shape Color", def_BuyShapeColor );
+Sellshapecolor = ParamColor( "Sell Shape Color", def_SellShapeColor );
+_SECTION_END();
+/*******************************************************************************************/
+_SECTION_BEGIN( "Styles" );
+TLstyle = ParamStyle( "Turning Line", styleThick );
+SLstyle = ParamStyle( "Standard Line", styleThick );
+DLstyle = ParamStyle( "Delayed Line", styleThick | styleNoTitle );
+_SECTION_END();
+/*******************************************************************************************/
+GraphZOrder = 0;
+AddICHIMOKU2( p1, p2, p3, p4 );
+HSB = 0;
+/*******************************************************************************************/
+
+if ( HSB )
+{
+    _SECTION_BEGIN( "Cloud 1" );
+    Hue = Param( "Hue", 90, 0, 255, 1 );
+    Saturation = Param( "Saturation", 255, 0, 255, 1 );
+    Brightness = Param( "Brightness", 60, 0, 255, 1 );
+    Cloud1color = ColorHSB( Hue, Saturation, Brightness );
+    _SECTION_END();
+
+    _SECTION_BEGIN( "Cloud 2" );
+    Hue = Param( "Hue", 0, 0, 255, 1 );
+    Saturation = Param( "Saturation", 180, 0, 255, 1 );
+    Brightness = Param( "Brightness", 125, 0, 255, 1 );
+    Cloud2color = ColorHSB( Hue, Saturation, Brightness );
+    _SECTION_END();
+}
+else
+{
+    _SECTION_BEGIN( "Colors" );
+    TLcolor = ParamColor( "Turning Line", def_Color3 );
+    SLcolor = ParamColor( "Standard Line", def_StandardLine );
+    DLcolor = ParamColor( "Delayed Line", colorGrey50 );
+    Cloud1color = ParamColor( "Cloud 1", def_Cloud1color );
+    Cloud2color = ParamColor( "Cloud 2", def_Cloud2color );
+    _SECTION_END();
+}
+
+/*******************************************************************************************/
+#include_once  <\PEInc\PatternExplorer_1.afl>
+GraphZOrder = 0;
+
+/*******************************************************************************************/
+//Strategy 1: Tenkan Sen/Kijun Sen Cross
+MinTLSL = Min( TL, SL );
+
+MaxTLSL = Max( TL, SL );
+
+BuyPositionTLSL_1 = IIf( MinTLSL > CloudHigh, 3, IIf( MinTLSL > CloudLow AND MaxTLSL < CloudHigh, 2, 1 ) );
+
+SellPositionTLSL_1 = IIf( MaxTLSL < CloudLow, 3, IIf( MinTLSL > CloudLow AND MaxTLSL < CloudHigh, 2, 1 ) );
+
+BuyStrength_1 =  BuyPositionTLSL_1 + IIf( RDL, 1, -1 );
+
+SellStrength_1 = SellPositionTLSL_1 + IIf( FDL, 1, -1 );
+
+Buy_1 = Cross( TL, SL ) AND BuyStrength_1 >= SelectedMinStrength;
+
+Sell_1 = Cross( SL, TL ) AND SellStrength_1 >= SelectedMinStrength;
+
+Strength_1 = IIf( Buy_1, BuyStrength_1, IIf( Sell_1, SellStrength_1, 0 ) );
+
+Interpretation = "\n" + "Strategy = " + "\n" + Strategy + "\n\n";
+
+BuyInterpretation1 =
+    WriteIf( BuyPositionTLSL_1 == 3, "The cross happend above the cloud, this is a strong signal and gives 3 ranking points.",
+             WriteIf( BuyPositionTLSL_1 == 2, "The cross happend inside the cloud, this is a mid signal and gives 2 ranking points.",
+                      WriteIf( BuyPositionTLSL_1 == 1, "The cross happend below the cloud, this is a weak signal and gives 1 ranking point.", "" ) ) );
+
+BuyInterpretation1 = BuyInterpretation1 +
+                     WriteIf( BuyStrength_1 == BuyPositionTLSL_1 + 1, "\n\nDelayed line is above past close. This shows rising prices and gives 1 ranking point.",
+                              WriteIf( BuyStrength_1 == BuyPositionTLSL_1 - 1, "\n\nDelayed line is below past close. This shows falling prices and gives -1 ranking point.", "" ) );
+
+SellInterpretation1 =
+    WriteIf( SellPositionTLSL_1 == 3, "The cross happend below the cloud, this is a strong signal and gives 3 ranking points.",
+             WriteIf( SellPositionTLSL_1 == 2, "The cross happend inside the cloud, this is a mid signal and gives 2 ranking points.",
+                      WriteIf( SellPositionTLSL_1 == 1, "The cross happend above the cloud, this is a weak signal and gives 1 ranking point.", "" ) ) );
+
+SellInterpretation1 = SellInterpretation1 +
+                      WriteIf( SellStrength_1 == SellPositionTLSL_1 + 1, "\n\nDelayed line is below past close. This shows falling prices and gives 1 ranking point.",
+                               WriteIf( SellStrength_1 == SellPositionTLSL_1 - 1, "\n\nDelayed line is above past close. This shows rising prices and gives -1 ranking point.", "" ) );
+
+Interpretation = Interpretation +
+                 WriteIf( Buy_1, Buyinterpretation1, WriteIf( Sell_1, Sellinterpretation1, "" ) );
+
+/*******************************************************************************************/
+Buy = def_Buy AND Buy_1;
+
+Sell = def_Sell AND Sell_1;
+
+/*******************************************************************************************/
+AddAlert( Buy, Audio, Email, "Standard line crossed Turning line", 1, BarComplete, def_BuySound1 );
+
+AddAlert( Sell, Audio, Email, "Turning line crossed Standard line", 2, BarComplete, def_SellSound1 );
+
+/*******************************************************************************************/
+_SECTION_BEGIN( "Lines" );
+
+Plot( TL, "TL", TLcolor, TLstyle );
+
+Plot( SL, "SL", SLcolor, SLstyle );
+
+Plot( DL, "DL", DLcolor, DLstyle );
+
+PlotOHLC( 0, SpanA_ahead, SpanB_ahead, SpanB_ahead, "Cloud", IIf( SpanA_ahead > SpanB_ahead, Cloud1color, Cloud2color ), styleCloud + styleNoTitle + styleNoLabel, Null, Null, p4 );
+
+PlotShapes( BuyShape*Buy, BuyShapecolor, 0, L, -def_BuyShapeOffset );
+
+PlotShapes( SellShape*Sell, SellShapecolor, 0, H, -def_SellShapeOffset );
+
+_SECTION_END();
+
+/*******************************************************************************************/
+Filter = def_Filter AND NOT GroupID() == 253;
+
+Filter = Filter AND ( Buy OR Sell );
+
+Addefaultcolumns();
+
+Adddefaultcolumns( 2, 1 );
+
+AddColumn( Strength_1, "Signal Strength", 1.0 );
+
+AddTextColumn( FullName(), "Full name" );
+
+/*******************************************************************************************/
+ToolTip = def_ToolTip + WriteIf( Buy, "\n\n" + "Signal = Buy, " + "Signal strength = " + WriteVal( Strength_1, 1.0 ), WriteIf( Sell, "\n\n" + "Signal = Sell, " + "Signal strength = " + WriteVal( Strength_1, 1.0 ), "" ) ) + "\n" + interpretation;
+
+/*******************************************************************************************/
+AddCustomCodeAfterPE();
+
+/*******************************************************************************************/
+Title = "PatternExplorer.com - Ichimoku Chart" + default_priceTitle + " ";

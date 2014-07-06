@@ -1,0 +1,65 @@
+_SECTION_BEGIN("Fibonacci And Gann Projections");
+Change = 5;
+GannIncrement = 0.0625;
+procedure PlotShapeAt( x, y, shape, shift )
+{
+  PlotShapes( IIf( BarIndex() == x, shape, 0 ), colorRed, 0, y, shift );
+}
+procedure PlotBlueDot( x, y )
+{
+  PlotShapes( IIf( BarIndex() == x, shapeSmallCircle, 0 ),
+              colorBlue, 0, y, 0  );
+ 
+  for( i = -2; i <= 2; i++ )
+  {
+   if( i != 0 )
+   {
+      yGann = ( sqrt( y ) + i * GannIncrement ) ^ 2;
+      PlotShapes( IIf( BarIndex() == x, shapeSmallCircle, 0 ),
+                  colorOrange, 0, yGann, 0  );
+   }
+  }
+}
+bi = BarIndex();
+sbi = SelectedValue( bi );
+GraphXSpace = 2;
+Plot( Zig( C, Change ), "Zigzag", colorGreen, styleThick );
+Plot( C, "Price", IIf( bi > sbi, colorLightGrey, colorBlack ), styleBar );
+upshift = 15;
+if( SelectedValue( PeakBars( C, Change ) < TroughBars( C, Change ) ) )
+{
+   pt1 = PeakBars( C, Change, 1 ) == 0 ;
+   pt2 = TroughBars( C, Change, 1 ) == 0 ;
+}
+else
+{
+   pt1 = TroughBars( C, Change, 1 ) == 0 ;
+   pt2 = PeakBars( C, Change, 1 ) == 0 ;
+   upshift = -upshift;
+}
+bpt1 = SelectedValue( ValueWhen( pt1, bi ) );
+bpt2 = SelectedValue( ValueWhen( pt2, bi ) );
+bpt3 = SelectedValue( ValueWhen( pt1, bi, 2 ) );
+bpt4 = SelectedValue( ValueWhen( pt2, bi, 2 ) );
+bpt5 = SelectedValue( ValueWhen( pt1, bi, 3 ) );
+bpt6 = SelectedValue( ValueWhen( pt2, bi, 3 ) );
+PlotShapeAt( bpt1, C, shapeDigit1, upshift );
+PlotShapeAt( bpt2, C, shapeDigit2, -upshift  );
+PlotShapeAt( bpt3, C, shapeDigit3, upshift );
+PlotShapeAt( bpt4, C, shapeDigit4, -upshift );
+PlotShapeAt( bpt5, C, shapeDigit5, upshift );
+PlotShapeAt( bpt6, C, shapeDigit6, -upshift );
+Level = SelectedValue( ValueWhen( pt1, C ) );
+PlotBlueDot( round( bpt1 + 1.618 * ( bpt1 - bpt2 ) ), Level );
+PlotBlueDot( round( bpt1 + 0.382 * ( bpt1 - bpt2 ) ), Level );
+PlotBlueDot( round( bpt1 + 0.5 * ( bpt2 - bpt3 ) ), Level );
+PlotBlueDot( round( bpt1 + 1.732 * ( bpt2 - bpt3 ) ), Level );
+PlotBlueDot( round( bpt1 + 0.618 * ( bpt4 - bpt5 ) ), Level );
+PlotBlueDot( round( bpt1 + 2 * ( bpt4 - bpt5 ) ), Level );
+PlotBlueDot( round( bpt2 + 0.6707 * ( bpt4 - bpt2 ) ), Level );
+PlotBlueDot( round( bpt2 + 2.618 * ( bpt4 - bpt2 ) ), Level );
+PlotBlueDot( round( bpt2 + 1 * ( bpt6 - bpt2 ) ), Level );
+PlotBlueDot( round( bpt2 + 3 * ( bpt6 - bpt2 ) ), Level );
+
+
+_SECTION_END();

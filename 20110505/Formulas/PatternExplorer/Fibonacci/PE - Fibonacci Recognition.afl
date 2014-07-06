@@ -1,0 +1,198 @@
+//|-----------------------------------------------------------------------------------------
+//|PatternExplorer.com - Fibonacci Recognition
+//|Copyright © 2007, PatternExplorer.com
+//|http://www.PatternExplorer.com
+//|e-mail: support@PatternExplorer.com
+//|-----------------------------------------------------------------------------------------
+FormulaName = "PE - Fibonacci Recognition";
+
+SetChartOptions( 0, chartShowDates | chartShowArrows | chartLogarithmic | chartWrapTitle );
+#pragma nocache
+#include_once  <\PEInc\PatternExplorer_f0.afl>
+#include_once "C:\Program Files (x86)\AmiBroker5\Formulas\PatternExplorer\#Defaults & Mods\PE - Defaults.afl"
+#include_once "C:\Program Files (x86)\AmiBroker5\Formulas\PatternExplorer\#Defaults & Mods\PE - Mods.afl"
+/*******************************************************************************************/
+AddCustomCodeBeforePE();
+/*******************************************************************************************/
+_SECTION_BEGIN( "Main Parameters" );
+AddparamUsefromChart( def_UseFromChart );
+Sensitivity = Param( "Sensitivity", 10, 0, 100, 1 );
+
+if ( InChart )
+    StaticVarSet( "P0O3U2", Sensitivity );
+
+if ( inAA AND Usefromchart )
+    Sensitivity = StaticVarGet( "P0O3U2" );
+
+Colorstyle = ParamToggle( "Color Mode", "S/R|Custom", 1 );
+
+Color_SL =  ParamColor( "Support (S/R Mode)", def_Color_SL );
+
+Color_RL =  ParamColor( "Resistance (S/R Mode)", def_Color_RL );
+
+_SECTION_END();
+
+/*******************************************************************************************/
+_SECTION_BEGIN( "Levels" );
+
+Level_1p = Param( "Level 1", 38.2, 0, 200, 1 );
+
+Level_2p = Param( "Level 2", 50.0, 0, 200, 1 );
+
+Level_3p = Param( "Level 3", 61.8, 0, 200, 1 );
+
+Level_4p = Param( "Level 4", 138.2, 0, 200, 1 );
+
+Level_5p = Param( "Level 5", 150, 0, 200, 1 );
+
+Level_6p = Param( "Level 6", 161.8, 0, 200, 1 );
+
+Level_7p = Param( "Level 7", 200, 0, 300, 1 );
+
+_SECTION_END();
+
+/*******************************************************************************************/
+_SECTION_BEGIN( "Styles" );
+
+SwingLow_style = ParamStyle( "Swing Low", styleLine + styleDots, maskAll );
+
+SwingHigh_style = ParamStyle( "Swing High", styleLine + styleDots, maskAll );
+
+L1_style = ParamStyle( "Level 1", styleLine + styleDashed, maskAll );
+
+L2_style = ParamStyle( "Level 2", styleLine, maskAll );
+
+L3_style = ParamStyle( "Level 3", styleLine + styleDashed, maskAll );
+
+L4_style = ParamStyle( "Level 4", styleLine + styleDashed, maskAll );
+
+L5_style = ParamStyle( "Level 5", styleLine, maskAll );
+
+L6_style = ParamStyle( "Level 6", styleLine + styleDashed, maskAll );
+
+L7_style = ParamStyle( "Level 7", styleLine + styleThick + styleDots, maskAll );
+
+_SECTION_END();
+
+/*******************************************************************************************/
+_SECTION_BEGIN( "Colors" );
+
+SwingLow_color = ParamColor( "Swing Low", def_SwingLow_color );
+
+SwingHigh_color = ParamColor( "Swing High", def_SwingHigh_color );
+
+L1_color = ParamColor( "Level 1", def_L1_color );
+
+L2_color = ParamColor( "Level 2", def_L2_color );
+
+L3_color = ParamColor( "Level 3", def_L3_color );
+
+L4_color = ParamColor( "Level 4", def_L4_color );
+
+L5_color = ParamColor( "Level 5", def_L5_color );
+
+L6_color = ParamColor( "Level 6", def_L6_color );
+
+L7_color = ParamColor( "Level 7", def_L7_color );
+
+_SECTION_END();
+
+/*******************************************************************************************/
+_SECTION_BEGIN( "Selection" );
+
+L1_switch = ParamToggle( "Plot Level 1", "Off|On", 1 );
+
+L2_switch = ParamToggle( "Plot Level 2", "Off|On", 1 );
+
+L3_switch = ParamToggle( "Plot Level 3", "Off|On", 1 );
+
+L4_switch = ParamToggle( "Plot Level 4", "Off|On", 1 );
+
+L5_switch = ParamToggle( "Plot Level 5", "Off|On", 1 );
+
+L6_switch = ParamToggle( "Plot Level 6", "Off|On", 1 );
+
+L7_switch = ParamToggle( "Plot Level 7", "Off|On", 1 );
+
+_SECTION_END();
+
+/*******************************************************************************************/
+#include_once  <\PEInc\Lib\PatternExplorer_f10.afl>
+#include_once  <\PEInc\PatternExplorer_1.afl>
+/*******************************************************************************************/
+Filter = def_Filter AND BarIndex() == LastValue( BarIndex() ) AND NOT GroupID() == 253;
+
+/*******************************************************************************************/
+Addefaultcolumns();
+
+AddColumn( CurrentRT_EXT, "Current RT/EXT %" );
+
+AddColumn( MaxRT_EXT, "Current max. RT/EXT %" );
+
+AddTextColumn(
+    WriteIf( Sup_pricejustabove, "Price just above",
+             WriteIf( Sup_confirmed, "Confirmed",
+                      WriteIf( Sup_break, "Break", "" ) ) ), "Swing Low", 1.2,
+    IIf( Sup_pricejustabove OR sup_confirmed, colorGreen, colorRed ) );
+
+AddTextColumn(
+    WriteIf( Res_pricejustbelow, "Price just below",
+             WriteIf( Res_confirmed, "Confirmed",
+                      WriteIf( Res_break, "Break", "" ) ) ), "Swing High", 1.2,
+    IIf( Res_pricejustbelow OR Res_confirmed, colorRed, colorGreen ) );
+
+AddTextColumn( FullName(), "Full name" );
+
+/*******************************************************************************************/
+Plot( IIf( x >= xa &NOT AnZ, ya, -1e10 ), "", SLcol, 1 + 8 + 2048 );
+
+Plot( IIf( x >= xb &NOT AnZ, yb, -1e10 ), "", SHcol, 1 + 8 + 2048 );
+
+Plot( IIf( x >= xab &NOT AnZ, Level_1, -1e10 ), "", L1col, L1_style + styleNoRescale );
+
+Plot( IIf( x >= xab &NOT AnZ, Level_2, -1e10 ), "", L2col, L2_style + styleNoRescale );
+
+Plot( IIf( x >= xab &NOT AnZ, Level_3, -1e10 ), "", L3col, L3_style + styleNoRescale );
+
+Plot( IIf( x >= xab &NOT AnZ, Level_4, -1e10 ), "", L4col, L4_style + styleNoRescale );
+
+Plot( IIf( x >= xab &NOT AnZ, Level_5, -1e10 ), "", L5col, L5_style + styleNoRescale );
+
+Plot( IIf( x >= xab &NOT AnZ, Level_6, -1e10 ), "", L6col, L6_style + styleNoRescale );
+
+Plot( IIf( x >= xab &NOT AnZ, Level_7, -1e10 ), "", L7col, L7_style + styleNoRescale );
+
+PlotText( WriteIf( L1_switch, "" + Level_1p + " %", "" ), LastValue( BarIndex() + 2 ), Level_1, L1col, colorDefault );
+
+PlotText( WriteIf( L2_switch, "" + Level_2p + " %", "" ), LastValue( BarIndex() + 2 ), Level_2, L2col, colorDefault );
+
+PlotText( WriteIf( L3_switch, "" + Level_3p + " %", "" ), LastValue( BarIndex() + 2 ), Level_3, L3col, colorDefault );
+
+PlotText( WriteIf( L4_switch, "" + Level_4p + " %", "" ), LastValue( BarIndex() + 2 ), Level_4, L4col, colorDefault );
+
+PlotText( WriteIf( L5_switch, "" + Level_5p + " %", "" ), LastValue( BarIndex() + 2 ), Level_5, L5col, colorDefault );
+
+PlotText( WriteIf( L6_switch, "" + Level_6p + " %", "" ), LastValue( BarIndex() + 2 ), Level_6, L6col, colorDefault );
+
+PlotText( WriteIf( L7_switch, "" + Level_7p + " %", "" ), LastValue( BarIndex() + 2 ), Level_7, L7col, colorDefault );
+
+PlotText( "100 %", LastValue( BarIndex() + 2 ), SwingLow, IIf( LastValue( up ), SwingLow_color, SwingHigh_color ), colorDefault );
+
+PlotText( "0 %", LastValue( BarIndex() + 2 ), Swinghigh, IIf( LastValue( dn ), SwingLow_color, SwingHigh_color ), colorDefault );
+
+/*******************************************************************************************/
+ToolTip = def_ToolTip;
+
+/*******************************************************************************************/
+AddCustomCodeAfterPE();
+
+/*******************************************************************************************/
+Title = "PatternExplorer.com - Fibonacci Recognition" + default_priceTitle + EncodeColor( IIf( NOT AnZ, def_Text2, colorRed ) ) + ", Sensitivity = " + WriteVal( Sensitivity, 1 ) + EncodeColor( colorRed ) + WriteIf( NOT AnZ, "", "  NO POINTS AVAILABLE -> REDUCE SENSITIVITY" ) + EncodeColor( IIf( LastValue( L ) > 0, Color_SL, Color_RL ) ) + ", Current Correction = " + WriteVal( CurrentRT_EXT, 1.0 ) + "%     ";
+
+/*******************************************************************************************/
+GfxSetOverlayMode(1);
+GfxSelectFont("Tahoma", Status("pxheight")/6 );
+GfxSetTextAlign( 6 );// center alignment
+GfxSetTextColor( ColorRGB( 200, 200, 200 ) );
+GfxSetBkMode(1); // transparent
+GfxTextOut( Name(), Status("pxwidth")/2, Status("pxheight")/12 );

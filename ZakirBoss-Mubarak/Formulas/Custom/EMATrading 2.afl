@@ -1,0 +1,1196 @@
+//Developed By ..Mrtq13,Southwind,SpEcTrA
+
+
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;Background;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+_SECTION_BEGIN("Background");
+SetChartOptions(0,chartShowArrows|chartShowDates);
+if( ParamToggle("Tooltip shows", "All Values|Only Prices" ) )
+{
+ ToolTip=StrFormat("Open: %g\nHigh:  %g\nLow:   %g\nClose:  %g
+(%.1f%%)\nVolume: "+NumToStr( V, 1 ), O, H, L, C, SelectedValue( ROC( C, 1
+)));
+}
+SetChartBkColor(ParamColor("Outer panel color ",colorBlack)); // color of outer border 
+SetChartBkGradientFill( ParamColor("Inner panel color upper half",colorBlack),
+ParamColor("Inner panel color lower half",colorBlack),ParamColor("Title Backcolor",ColorRGB(0,0,28)));
+_SECTION_END();
+
+
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;Clock;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+_SECTION_BEGIN("Text Options");
+FrontType =ParamList("front","DilleniaUPC|Times New Roman|Blackadder ITC|Academy Engraved LET|French Script MT|Lucida Calligraphy|Fiolex Girls");
+TextColor =ParamColor( "Text Color", colorYellow);
+CompanyTextColor=ParamColor( "Company Text Color", colorLavender);
+CompanyFrontSize=Param("Company Front Size",9,0,45,1);
+FrontSize = Param("Front Size",9,0,30,1);
+//FrontType = ParamList("front","Times New Roman|Blackadder ITC|Academy Engraved LET");
+X = Param("Text X",730,0,2000,1);
+Y =Param("Text Y",23,0,2000,1);
+XX1 = Param("Time X",5,0,2000,1);
+YY2 =Param("Time Y",16,0,2000,1);
+X3 = Param("CompanyText X",290,0,2000,1);
+Y3 =Param("Company Y",90,0,2000,1);
+GfxSetBkMode(1);  
+GfxSelectFont(FrontType, FrontSize, 700 );
+GfxSetTextColor(TextColor); 
+GfxTextOut("", X,Y ); 
+bb=Now(format = 0);
+GfxSetBkMode(1);  
+GfxSelectFont(FrontType, FrontSize, 700 );
+GfxSetTextColor(TextColor); 
+GfxTextOut(bb, XX1,YY2); 
+if( Status("redrawaction") ==1 ) 
+{ 
+_TRACE("nTIMED REFRESH"+Now()); 
+} 
+RequestTimedRefresh(1); 
+
+GfxSetOverlayMode(0);
+GfxSelectFont(FrontType, CompanyFrontSize );
+//GfxSetTextAlign( 6 );// center alignment
+GfxSetTextColor(CompanyTextColor  );
+GfxSetBkMode(1); // transparent
+//GfxTextOut( Name(), Status("pxwidth")/2, Status("pxheight")/12 );
+//GfxTextOut( Name(), X3, Y3);
+_SECTION_END();
+
+
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;ClandestcikModified;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+_SECTION_BEGIN("Flower");
+Prd1=Param("ATR Period",4,1,20,1);
+Prd2=Param("Look Back",7,1,20,1);
+green = HHV(LLV(L,Prd1)+ATR(Prd1),Prd2);
+red = LLV(HHV(H,Prd1)-ATR(Prd1),Prd2);
+flowerClose = EMA((Open+High+Low+Close)/4,3) ;
+flowerOpen = EMA((Ref(Open,-1) + Ref(flowerClose,-1))/2,3);
+Temp = Max(High, flowerOpen);
+flowerHigh = EMA(Max(Temp, flowerClose),3);
+Temp = Min(Low,flowerOpen);
+flowerLow = EMA(Min(Temp, flowerClose),3);
+barColor=IIf(C>Green ,colorBrightGreen,IIf(C < RED,colorRed,colorWhite));
+
+PlotOHLC( IIf(flowerOpen<flowerClose, flowerOpen, flowerClose),flowerHigh,flowerLow,IIf(flowerOpen<flowerClose, flowerClose, flowerOpen), "Close", barColor, styleNoTitle | styleCandle);
+
+
+
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;Breakout;;;;;;;;;;;;;;;;;;;;;
+
+
+_SECTION_BEGIN("Breaking Out");
+Buyperiods=Param("Breakout periods best is usually 18",20,1,100,1,1); //10 is good for adding
+Sellperiods=Param("Exit Breakout",6,1,100,1,1); //4 is good for adding
+Buy= C>Ref(HHV(H,Buyperiods),-1);
+Sell= O<Ref(LLV(O,Sellperiods),-1);
+/* exrem is one method to remove surplus strade signals. It removes excessive signals of arrow */
+Buy = ExRem(Buy, Sell);
+Sell = ExRem(Sell, Buy);
+PlotShapes(shapeUpArrow * Buy, ParamColor("Buy Arrow", colorYellow),0,flowerLow, - 22);
+_SECTION_END();
+
+
+
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;Pivot;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+_SECTION_BEGIN("Pivot");
+nBars = Param("Number of bars", 10, 3, 40);
+LP=Param("LookBack Period",250,1,500,1);
+bShowTCZ = Param("Show TCZ", 0, 0, 1);
+nExploreBarIdx = 0;
+nExploreDate = 0;
+nCurDateNum = 0;
+DN = DateNum();
+DT = DateTime();
+bTCZLong = False;
+bTCZShort = False;
+nAnchorPivIdx = 0;
+ADX8 = ADX(8);
+if(Status("action")==1) {
+bDraw = True;
+bUseLastVis = 1;
+} else {
+bDraw = False;
+bUseLastVis = False;
+bTrace = 1;
+nExploreDate = Status("rangetodate");
+for (i=LastValue(BarIndex());i>=0;i--) {
+nCurDateNum = DN[i];
+if (nCurDateNum == nExploreDate) {
+nExploreBarIdx = i;
+}
+}
+}
+
+if (bDraw) {
+}
+aHPivs = flowerHigh - flowerHigh;
+aLPivs = flowerLow - flowerLow;
+aHPivHighs = flowerHigh - flowerHigh;
+aLPivLows = flowerLow - flowerLow;
+aHPivIdxs = flowerHigh - flowerHigh;
+aLPivIdxs = flowerLow - flowerLow;
+aAddedHPivs = flowerHigh - flowerHigh;
+aAddedLPivs = flowerLow - flowerLow;
+aLegVol = flowerHigh - flowerHigh;
+aRetrcVol = flowerHigh - flowerHigh;
+nHPivs = 0;
+nLPivs = 0;
+lastHPIdx = 0;
+lastLPIdx = 0;
+lastHPH = 0;
+lastLPL = 0;
+curPivBarIdx = 0;
+aHHVBars = HHVBars(flowerHigh, nBars);
+aLLVBars = LLVBars(flowerLow, nBars);
+aHHV = HHV(flowerHigh, nBars);
+aLLV = LLV(flowerLow, nBars);
+nLastVisBar = LastValue(
+Highest(IIf(Status("barvisible"), BarIndex(), 0)));
+curBar = IIf(nlastVisBar > 0 AND bUseLastVis, nlastVisBar,
+IIf(Status("action")==4 AND nExploreBarIdx > 0, nExploreBarIdx,
+LastValue(BarIndex())));
+curTrend = "";
+if (aLLVBars[curBar] < aHHVBars[curBar])
+curTrend = "D";
+else
+curTrend = "U";
+if (curBar >= LP) {
+for (i=0; i<LP; i++) {
+curBar = IIf(nlastVisBar > 0 AND bUseLastVis,
+nlastVisBar-i,
+IIf(Status("action")==4 AND nExploreBarIdx > 0,
+nExploreBarIdx-i,
+LastValue(BarIndex())-i));
+if (aLLVBars[curBar] < aHHVBars[curBar]) {
+if (curTrend == "U") {
+curTrend = "D";
+curPivBarIdx = curBar - aLLVBars[curBar];
+aLPivs[curPivBarIdx] = 1;
+aLPivLows[nLPivs] = flowerLow[curPivBarIdx];
+aLPivIdxs[nLPivs] = curPivBarIdx;
+nLPivs++;
+}
+} else {
+if (curTrend == "D") {
+curTrend = "U";
+curPivBarIdx = curBar - aHHVBars[curBar];
+aHPivs[curPivBarIdx] = 1;
+aHPivHighs[nHPivs] = flowerHigh[curPivBarIdx];
+aHPivIdxs[nHPivs] = curPivBarIdx;
+nHPivs++;
+}
+}
+}
+}
+curBar =
+IIf(nlastVisBar > 0 AND bUseLastVis,
+nlastVisBar,
+IIf(Status("action")==4 AND nExploreBarIdx > 0,
+nExploreBarIdx,
+LastValue(BarIndex()))
+);
+if (nHPivs >= 2 AND nLPivs >= 2) {
+lastLPIdx = aLPivIdxs[0];
+lastLPL = aLPivLows[0];
+lastHPIdx = aHPivIdxs[0];
+lastHPH = aHPivHighs[0];
+nLastHOrLPivIdx = Max(lastLPIdx, lastHPIdx);
+nAddPivsRng = curBar - nLastHOrLPivIdx;
+aLLVAfterLastPiv = LLV(flowerLow, nAddPivsRng);
+nLLVAfterLastPiv = aLLVAfterLastPiv[curBar];
+aLLVIdxAfterLastPiv = LLVBars(flowerLow, nAddPivsRng);
+nLLVIdxAfterLastPiv = curBar - aLLVIdxAfterLastPiv[curBar];
+aHHVAfterLastPiv = HHV(flowerHigh, nAddPivsRng);
+nHHVAfterLastPiv = aHHVAfterLastPiv[curBar];
+aHHVIdxAfterLastPiv = HHVBars(flowerHigh, nAddPivsRng);
+nHHVIdxAfterLastPiv = curBar - aHHVIdxAfterLastPiv[curBar];
+if (lastHPIdx > lastLPIdx) {
+
+/* There are at least two possibilities here. One is that
+the previous high was higher, indicating that this is a
+possible short retracement or one in the making.
+The other is that the previous high was lower, indicating
+that this is a possible long retracement in the working.
+However, both depend on opposing pivots. E.g., if I find
+higher highs, what if I have lower lows?
+
+If the highs are descending, then I can consider:
+- a lower low, and leave it at that
+- a higher high and higher low
+- a lower low and another lower high
+*/
+if (aHPivHighs[0] < aHPivHighs[1]) {
+
+if (nLLVAfterLastPiv < aLPivLows[0] AND
+(nLLVIdxAfterLastPiv - lastHPIdx - 1) >= 1
+AND nLLVIdxAfterLastPiv != curBar ) {
+
+// -- OK, we'll add this as a pivot.
+// Mark it for plotting...
+aLPivs[nLLVIdxAfterLastPiv] = 1;
+aAddedLPivs[nLLVIdxAfterLastPiv] = 1;
+
+// ...and then rearrange elements in the
+// pivot information arrays
+for (j=0; j<nLPivs; j++) {
+aLPivLows[nLPivs-j] = aLPivLows[nLPivs-(j+1)];
+aLPivIdxs[nLPivs-j] = aLPivIdxs[nLPivs-(j+1)];
+}
+aLPivLows[0] = nLLVAfterLastPiv;
+aLPivIdxs[0] = nLLVIdxAfterLastPiv;
+nLPivs++;
+
+// -- Test whether to add piv given last piv is high
+// AND we have lower highs
+}
+
+// -- Here, the last piv is a high piv, and we have
+// higher-highs. The most likely addition is a
+// Low piv that is a retracement.
+} else {
+
+if (nLLVAfterLastPiv > aLPivLows[0] AND
+(nLLVIdxAfterLastPiv - lastHPIdx - 1) >= 1
+AND nLLVIdxAfterLastPiv != curBar ) {
+
+// -- OK, we'll add this as a pivot.
+// Mark it for plotting...
+aLPivs[nLLVIdxAfterLastPiv] = 1;
+aAddedLPivs[nLLVIdxAfterLastPiv] = 1;
+
+// ...and then rearrange elements in the
+// pivot information arrays
+for (j=0; j<nLPivs; j++) {
+aLPivLows[nLPivs-j] = aLPivLows[nLPivs-(j+1)];
+aLPivIdxs[nLPivs-j] = aLPivIdxs[nLPivs-(j+1)];
+}
+aLPivLows[0] = nLLVAfterLastPiv;
+aLPivIdxs[0] = nLLVIdxAfterLastPiv;
+nLPivs++;
+
+// -- Test whether to add piv given last piv is high
+// AND we have lower highs
+}
+// -- The last piv is a high and we have higher highs
+// OR lower highs
+}
+
+/* ****************************************************************
+Still finding missed pivot(s). Here, the last piv is a low piv.
+**************************************************************** */
+} else {
+
+// -- First case, lower highs
+if (aHPivHighs[0] < aHPivHighs[1]) {
+
+if (nHHVAfterLastPiv < aHPivHighs[0] AND
+(nHHVIdxAfterLastPiv - lastLPIdx - 1) >= 1
+AND nHHVIdxAfterLastPiv != curBar ) {
+
+// -- OK, we'll add this as a pivot.
+// Mark that for plotting
+aHPivs[nHHVIdxAfterLastPiv] = 1;
+aAddedHPivs[nHHVIdxAfterLastPiv] = 1;
+
+// ...and then rearrange elements in the
+// pivot information arrays
+for (j=0; j<nHPivs; j++) {
+aHPivHighs[nHPivs-j] = aHPivHighs[nHPivs-(j+1)];
+aHPivIdxs[nHPivs-j] = aHPivIdxs[nhPivs-(j+1)];
+}
+aHPivHighs[0] = nHHVAfterLastPiv;
+aHPivIdxs[0] = nHHVIdxAfterLastPiv;
+nHPivs++;
+
+// -- Test whether to add piv given last piv is high
+// AND we have lower highs
+}
+
+// -- Second case when last piv is a low piv, higher highs
+// Most likely addition is high piv that is a retracement.
+// Considering adding a high piv as long as it is higher
+} else {
+
+// -- Where I have higher highs,
+if (nHHVAfterLastPiv > aHPivHighs[0] AND
+(nHHVIdxAfterLastPiv - lastLPIdx - 1) >= 1
+AND nHHVIdxAfterLastPiv != curBar ) {
+
+// -- OK, we'll add this as a pivot.
+// Mark it for plotting...
+aHPivs[nHHVIdxAfterLastPiv] = 1;
+aAddedHPivs[nHHVIdxAfterLastPiv] = 1;
+
+// ...and then rearrange elements in the
+// pivot information arrays
+for (j=0; j<nHPivs; j++) {
+aHPivHighs[nHPivs-j] = aHPivHighs[nHPivs-(j+1)];
+aHPivIdxs[nHPivs-j] = aHPivIdxs[nhPivs-(j+1)];
+}
+aHPivHighs[0] = nHHVAfterLastPiv;
+aHPivIdxs[0] = nHHVIdxAfterLastPiv;
+nHPivs++;
+
+// -- Test whether to add piv given last piv is high
+// AND we have lower highs
+}
+
+}
+
+}
+
+// -- If there are at least two of each
+}
+
+/* ****************************************
+// -- Done with finding pivots
+***************************************** */
+
+
+if (bDraw) {
+
+// -- OK, let's plot the pivots using arrows
+
+PlotShapes( IIf(aHPivs==1, shapeSquare, shapeNone), colorRed, layer = 0, yposition = flowerHigh, offset = 10);
+PlotShapes( IIf(aHPivs==1, shapeSquare, shapeNone), colorBlack, layer = 0, yposition = flowerHigh, offset = 16);
+
+PlotShapes( IIf(aAddedHPivs==1, shapeSquare, shapeNone), colorCustom12,layer = 0, yposition = flowerHigh, offset = 10);
+PlotShapes( IIf(aAddedHPivs==1, shapeSquare, shapeNone), colorBlack, layer = 0, yposition = flowerHigh, offset = 14);
+PlotShapes( IIf(aAddedHPivs==1, shapeSmallCircle, shapeNone), colorCustom12, layer = 0, yposition = flowerHigh, offset = 9);
+
+PlotShapes( IIf(aLPivs==1, shapeSquare, shapeNone), colorBrightGreen, layer = 0, yposition = flowerLow, offset = -10);
+PlotShapes( IIf(aLPivs==1, shapeSquare, shapeNone), colorBlack, layer = 0, yposition = flowerLow, offset = -16);
+
+
+
+PlotShapes( IIf(aAddedLPivs==1, shapeSquare, shapeNone), colorYellow, layer = 0, yposition = flowerLow, offset = -10);
+PlotShapes( IIf(aAddedLPivs==1, shapeSquare, shapeNone), colorBlack, layer = 0, yposition = flowerLow, offset = -14);
+PlotShapes( IIf(aAddedLPivs==1, shapeSmallCircle, shapeNone), colorYellow, layer = 0, yposition = flowerLow, offset = -9);
+}
+
+
+/* ****************************************
+// -- Done with discovering and plotting pivots
+***************************************** */
+
+// -- I'm going to want to look for possible retracement
+risk = 0;
+profInc = 0;
+nLeg0Pts = 0;
+nLeg0Bars = 0;
+nLeg0Vol = 0;
+nLeg1Pts = 0;
+nLeg1Bars = 0;
+nLeg1Vol = 0;
+nLegBarsDiff = 0;
+nRtrc0Pts = 0;
+nRtrc0Bars = 0;
+nRtrc0Vol = 0;
+nRtrc1Pts = 0;
+nRtrc1Bars = 0;
+nRtrc1Vol = 0;
+
+minRtrc = 0;
+maxRtrc = 0;
+minLine = 0;
+maxLine = 0;
+triggerLine = 0;
+firstProfitLine = 0;
+triggerInc = 0;
+triggerPrc = 0;
+firstProfitPrc = 0;
+retrcPrc = 0;
+retrcBar = 0;
+retrcBarIdx = 0;
+retrcRng = 0;
+aRetrcPrc = flowerHigh-flowerHigh;
+aRetrcPrcBars = flowerHigh-flowerHigh;
+aRetrcClose = flowerClose;
+retrcClose = 0;
+
+// -- Do TCZ calcs. Arrangement of pivs very specific
+// for this setup.
+if (nHPivs >= 2 AND
+nLPivs >=2 AND
+aHPivHighs[0] > aHPivHighs[1] AND
+aLPivLows[0] > aLPivLows[1]) {
+
+tcz500 =
+(aHPivHighs[0] -
+(.5 * (aHPivHighs[0] - aLPivLows[1])));
+
+tcz618 =
+(aHPivHighs[0] -
+(.618 * (aHPivHighs[0] - aLPivLows[1])));
+
+tcz786 =
+(aHPivHighs[0] -
+(.786 * (aHPivHighs[0] - aLPivLows[0])));
+
+retrcRng = curBar - aHPivIdxs[0];
+aRetrcPrc = LLV(flowerLow, retrcRng);
+aRetrcPrcBars = LLVBars(flowerLow, retrcRng);
+
+retrcPrc = aRetrcPrc[curBar];
+retrcBarIdx = curBar - aRetrcPrcBars[curBar];
+retrcClose = aRetrcClose[retrcBarIdx];
+
+// -- bTCZLong setup?
+bTCZLong = (
+
+// -- Are retracement levels arranged in
+// tcz order?
+
+// .500 is above .786 for long setups
+tcz500 >= (tcz786 * (1 - .005))
+AND
+// .681 is below .786 for long setups
+tcz618 <= (tcz786 * (1 + .005))
+AND
+
+// -- Is the low in the tcz range
+// -- Is the close >= low of tcz range
+// and low <= high of tcz range
+retrcClose >= ((1 - .01) * tcz618)
+AND
+retrcPrc <= ((1 + .01) * tcz500)
+);
+
+// -- risk would be high of signal bar minus low of zone
+//risk = 0;
+
+// -- lower highs and lower lows
+} else if (nHPivs >= 2 AND nLPivs >=2
+AND aHPivHighs[0] < aHPivHighs[1]
+AND aLPivLows[0] < aLPivLows[1]) {
+
+tcz500 =
+(aHPivHighs[1] -
+(.5 * (aHPivHighs[1] - aLPivLows[0])));
+
+tcz618 =
+(aHPivHighs[0] -
+(.618 * (aHPivHighs[1] - aLPivLows[0])));
+
+tcz786 =
+(aHPivHighs[0] -
+(.786 * (aHPivHighs[0] - aLPivLows[0])));
+
+retrcRng = curBar - aLPivIdxs[0];
+aRetrcPrc = HHV(flowerHigh, retrcRng);
+retrcPrc = aRetrcPrc[curBar];
+aRetrcPrcBars = HHVBars(flowerHigh, retrcRng);
+retrcBarIdx = curBar - aRetrcPrcBars[curBar];
+retrcClose = aRetrcClose[retrcBarIdx];
+
+bTCZShort = (
+// -- Are retracement levels arranged in
+// tcz order?
+
+// .500 is below .786 for short setups
+tcz500 <= (tcz786 * (1 + .005))
+AND
+// .681 is above .786 for short setups
+tcz618 >= (tcz786 * (1 - .005))
+AND
+
+// -- Is the close <= high of tcz range
+// and high >= low of tcz range
+retrcClose <= ((1 + .01) * tcz618)
+AND
+retrcPrc >= ((1 - .01) * tcz500)
+);
+
+// -- Risk would be top of zone - low of signal bar
+//risk = 0;
+}
+
+// -- Show zone if present
+if (bTCZShort OR bTCZLong) {
+
+// -- Be prepared to see symmetry
+if (bTCZShort) {
+if (aLPivIdxs[0] > aHPivIdxs[0]) {
+// -- Valuable, useful symmetry information
+nRtrc0Pts = aHPivHighs[0] - aLPivLows[1];
+nRtrc0Bars = aHPivIdxs[0] - aLPivIdxs[1] + 1;
+nRtrc1Pts = retrcPrc - aLPivLows[0];
+nRtrc1Bars = retrcBarIdx - aLPivIdxs[0] + 1;
+} else {
+nRtrc0Pts = aHPivHighs[1] - aLPivLows[1];
+nRtrc0Bars = aHPivIdxs[1] - aLPivIdxs[1] + 1;
+nRtrc1Pts = aHPivHighs[0] - aLPivLows[0];
+nRtrc1Bars = aHPivIdxs[0] - aLPivIdxs[0] + 1;
+}
+} else { // bLongSetup
+if (aLPivIdxs[0] > aHPivIdxs[0]) {
+nRtrc0Pts = aHPivHighs[0] - aLPivLows[1];
+nRtrc0Bars = aHPivIdxs[0] - aLPivIdxs[1] + 1;
+nRtrc1Pts = retrcPrc - aLPivLows[0];
+nRtrc1Bars = retrcBarIdx - aLPivIdxs[0] + 1;
+} else {
+nRtrc0Pts = aHPivHighs[1] - aLPivLows[0];
+nRtrc0Bars = aLPivIdxs[0] - aHPivIdxs[1] + 1;
+nRtrc1Pts = aHPivHighs[0] - aLPivLows[0];
+nRtrc1Bars = aLPivIdxs[0] - aHPivIdxs[0] + 1;
+}
+}
+
+if (bShowTCZ) {
+Plot(
+LineArray( IIf(bTCZLong, aHPivIdxs[0], aLPivIdxs[0]),
+tcz500, curBar, tcz500 , 0),
+"tcz500", colorPaleBlue, styleLine);
+Plot(
+LineArray( IIf(bTCZLong, aHPivIdxs[0], aLPivIdxs[0]),
+tcz618, curBar, tcz618, 0),
+"tcz618", colorPaleBlue, styleLine);
+Plot(
+LineArray( IIf(bTCZLong, aHPivIdxs[0], aLPivIdxs[0]),
+tcz786, curBar, tcz786, 0),
+"tcz786", colorTurquoise, styleLine);
+}
+
+// -- if (bShowTCZ)
+}
+
+
+
+_SECTION_END();
+
+_SECTION_BEGIN("Parameters");
+LB1= Param("Long LookBack Periods",42,1,60,1);
+LB3= Param("Mid LookBack Periods",18,1,30,1);
+LB2= Param("Short LookBack Periods",6,1,30,1);
+
+_SECTION_END();
+
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;Support Resistance;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+_SECTION_BEGIN("ResistanceLong");
+
+RsColor=ParamColor("LongResColor",colorOrange);
+BrCount=Param("LongBarLength",65,1,500,1);
+for (i=0;i<BarCount-BrCount;i++) //hide the line except most recent 10 bars
+{
+	RsColor[i] = colorBlack;
+}
+
+flowerClose = EMA((Open+High+Low+Close)/4,3) ;
+flowerOpen = EMA((Ref(Open,-1) + Ref(flowerClose,-1))/2,3);
+Temp = Max(High, flowerOpen);
+flowerHigh = EMA(Max(Temp, flowerClose),3);
+Temp = Min(Low,flowerOpen);
+flowerLow = EMA(Min(Temp, flowerClose),3);
+
+R=ValueWhen(Cross(MA(flowerClose,LB1),C),HHV(flowerHigh,LB1),-1);
+Plot(R,"Resistance",RsColor,ParamStyle("LongResStyle",styleNoTitle|styleLine|styleDots|styleStaircase|styleThick,maskAll));
+_SECTION_END();
+
+_SECTION_BEGIN("ResistanceMid");
+Rs3Color=ParamColor("MidResColor",colorCustom4);
+BrCount3=Param("MidBarLength",40,1,500,1);
+for (i=0;i<BarCount-BrCount3;i++) //hide the line except most recent 10 bars
+{
+	Rs3Color[i] =colorBlack;
+}
+
+flowerClose = EMA((Open+High+Low+Close)/4,3) ;
+flowerOpen = EMA((Ref(Open,-1) + Ref(flowerClose,-1))/2,3);
+Temp = Max(High, flowerOpen);
+flowerHigh = EMA(Max(Temp, flowerClose),3);
+Temp = Min(Low,flowerOpen);
+flowerLow = EMA(Min(Temp, flowerClose),3);
+
+RM2=ValueWhen(Cross(EMA(flowerClose,LB3),C),HHV(flowerHigh,LB3),-1);
+Plot(RM2,"MidRes",Rs3Color,ParamStyle("MidResStyle",styleLine|styleStaircase|styleNoTitle,maskAll));
+_SECTION_END();
+
+_SECTION_BEGIN("ResistanceShort");
+Rs2Color=ParamColor("ShortResColor",colorCustom12);
+BrCount2=Param("ShortResLength",12,1,500,1);
+for (i=0;i<BarCount-BrCount2;i++) //hide the line except most recent 10 bars
+{
+	Rs2Color[i] = colorBlack;
+}
+
+flowerClose = EMA((Open+High+Low+Close)/4,3) ;
+flowerOpen = EMA((Ref(Open,-1) + Ref(flowerClose,-1))/2,3);
+Temp = Max(High, flowerOpen);
+flowerHigh = EMA(Max(Temp, flowerClose),3);
+Temp = Min(Low,flowerOpen);
+flowerLow = EMA(Min(Temp, flowerClose),3);
+
+RM=ValueWhen(Cross(TEMA(flowerClose,LB2),C),HHV(flowerHigh,LB2),-1);
+Plot(RM,"ShortRes",Rs2Color,ParamStyle("ShortResStyle",styleDashed|styleThick|styleNoTitle|styleStaircase,maskAll));
+_SECTION_END();
+
+
+
+
+_SECTION_BEGIN("SupportLong");
+Sup1Color=ParamColor("LongSupColor",colorBlue);
+BrCount4=Param("LongSupBarLength",65,1,500,1);
+for (i=0;i<BarCount-BrCount4;i++) //hide the line except most recent 10 bars
+{
+	Sup1Color[i] =colorBlack;
+}
+
+flowerClose = EMA((Open+High+Low+Close)/4,3) ;
+flowerOpen = EMA((Ref(Open,-1) + Ref(flowerClose,-1))/2,3);
+Temp = Max(High, flowerOpen);
+flowerHigh = EMA(Max(Temp, flowerClose),3);
+Temp = Min(Low,flowerOpen);
+flowerLow = EMA(Min(Temp, flowerClose),3);
+
+S=ValueWhen(Cross(MA(flowerClose,LB1),C),LLV(flowerLow,LB1),-1);
+Plot(s,"Support",Sup1Color,ParamStyle("SupStyle",styleLine|styleDots|styleStaircase|styleThick|styleNoTitle,maskAll));
+_SECTION_END();
+
+_SECTION_BEGIN("SupportMid");
+Sup3Color=ParamColor("MidSupColor",colorDarkYellow);
+BrCount6=Param("MidBarLength",40,1,500,1);
+for (i=0;i<BarCount-BrCount6;i++) //hide the line except most recent 10 bars
+{
+	Sup3Color[i] =colorBlack;
+}
+
+flowerClose = EMA((Open+High+Low+Close)/4,3) ;
+flowerOpen = EMA((Ref(Open,-1) + Ref(flowerClose,-1))/2,3);
+Temp = Max(High, flowerOpen);
+flowerHigh = EMA(Max(Temp, flowerClose),3);
+Temp = Min(Low,flowerOpen);
+flowerLow = EMA(Min(Temp, flowerClose),3);
+
+SM2=ValueWhen(Cross(EMA(flowerClose,LB3),C),LLV(flowerLow,LB3),-1);
+Plot(SM2,"MidSup",Sup3Color,ParamStyle("MidSupStyle",styleLine|styleStaircase|styleNoTitle,maskAll));
+_SECTION_END();
+
+_SECTION_BEGIN("SupportShort");
+Sup2Color=ParamColor("ShortSupColor",colorPink);
+BrCount5=Param("ShortSupBarLength",12,1,500,1);
+for (i=0;i<BarCount-BrCount5;i++) //hide the line except most recent 10 bars
+{
+	Sup2Color[i] =colorBlack;
+}
+
+
+flowerClose = EMA((Open+High+Low+Close)/4,3) ;
+flowerOpen = EMA((Ref(Open,-1) + Ref(flowerClose,-1))/2,3);
+Temp = Max(High, flowerOpen);
+flowerHigh = EMA(Max(Temp, flowerClose),3);
+Temp = Min(Low,flowerOpen);
+flowerLow = EMA(Min(Temp, flowerClose),3);
+
+SM=ValueWhen(Cross(TEMA(flowerClose,LB2),C),LLV(flowerLow,LB2),-1);
+Plot(SM,"ShortSup",Sup2Color,ParamStyle("ShortSupStyle",styleDashed|styleThick|styleNoTitle|styleStaircase,maskAll));
+_SECTION_END();
+
+
+
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;Cloud;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+_SECTION_BEGIN("Cloud Setting");
+//Cloud
+ParmCloud = ParamToggle("Cloud", "No|Yes", 1);
+
+CloudResColor=ParamColor("CloudResColor",colorDarkTeal);
+BrCount7=Param("CloudResLength",15,1,500,1);
+for (i=0;i<BarCount-BrCount7;i++) //hide the line except most recent 10 bars
+{
+	CloudResColor[i] = colorBlack;
+}
+
+flowerClose = EMA((Open+High+Low+Close)/4,3) ;
+flowerOpen = EMA((Ref(Open,-1) + Ref(flowerClose,-1))/2,3);
+Temp = Max(High, flowerOpen);
+flowerHigh = EMA(Max(Temp, flowerClose),3);
+Temp = Min(Low,flowerOpen);
+flowerLow = EMA(Min(Temp, flowerClose),3);
+
+CS=ValueWhen(Cross(WMA(flowerClose,LB2),C),LLV(flowerLow,LB2),-1);
+CR=ValueWhen(Cross(WMA(flowerClose,LB2),C),HHV(flowerHigh,LB2),-1);
+
+
+if(parmCloud == 1)
+{
+	PlotOHLC( CS, CS, CR,CR, "Band", CloudResColor, styleCloud | styleNoLabel|styleNoTitle); 
+}
+
+_SECTION_END();
+
+
+
+
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;Indicators;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+_SECTION_BEGIN("MFI");
+//P = ParamField("Price field");
+periods = Param("Periods", 15, 2, 300, 1, 10 );
+MIM=(MFI(periods));
+_N( MPM = WriteVal( periods, 1.0 ));
+_SECTION_END();
+
+_SECTION_BEGIN("RSI");
+//P = ParamField("Price field");
+periods = Param("Periods", 15, 2, 300, 1, 10 );
+MIR=(RSI(periods));
+_N( RPM = WriteVal( periods, 1.0 ));
+_SECTION_END();
+
+
+_SECTION_BEGIN("ADX");
+range = Param("Periods", 14, 2, 200, 1 );
+_N( APM = WriteVal( range, 1.0 ));
+IOI=PDI( range  ) >= MDI( range );
+KoK=ADX(range)>20;
+_SECTION_END();
+
+_SECTION_BEGIN("ROC");
+P = ParamField( "Price field" );
+periods = Param("Periods", 15, 1, 200, 1 );
+RPP=ROC( P, periods);
+_N( ROPM = WriteVal( periods, 1.0 ));
+
+_SECTION_END();
+
+
+
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;Trend Detect;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+_SECTION_BEGIN("trend_detector");
+Smoother = Param("Smooth", 6, 5, 20);
+n=Smoother;
+ys1=(High+Low+Close*2)/4;
+rk3=EMA(ys1,n);
+rk4=StDev(ys1,n);
+rk5=(ys1-rk3)*100/rk4;
+rk6=EMA(rk5,n);
+UP=EMA(rk6,n);
+DOWN=EMA(up,n);
+Oo=IIf(up<down,up,down);
+Hh=Oo;
+Ll=IIf(up<down,down,up);
+Cc=Ll;
+barcolor2=IIf(Ref(oo,-1)<Oo AND Cc<Ref(Cc,-1),colorBlue,IIf(up>down,colorGreen,colorRed));
+
+Cc= Ref(oo,-1)<Oo AND Cc<Ref(Cc,-1);
+dd= up>down;
+Hi=up<down;
+
+_SECTION_END();
+
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;Average;;;;;;;;;;;;;;;;;;;;;;;;
+
+_SECTION_BEGIN("Average 1");
+P = ParamField("Field");
+Periods_W = Param("Periods_W", 15, 2, 200 );
+Periods_E = Param("Periods_E", 15, 2, 200 );
+m1 = 0;
+m5=0;
+m1=  WMA( P, Periods_W );
+m5 = EMA( P, Periods_E );
+			//m1 = MA( P, Periods );
+_N( m111= WriteVal( periods_W, 1.0 ));
+_N( m15= WriteVal( periods_E, 1.0 ));
+_SECTION_END();
+
+_SECTION_BEGIN("Average 2");
+P = ParamField("Field");
+Periods_W2 = Param("Periods_W2", 20, 2, 200 );
+Periods_E2 = Param("Periods_E2", 20, 2, 200 );
+m2 = 0;
+m52=0;
+m2=  WMA( P, Periods_W2 );
+m52 = EMA( P, Periods_E2 );
+			//m1 = MA( P, Periods );
+_N( m122= WriteVal( periods_W2, 1.0 ));
+_N( m152= WriteVal( periods_E2, 1.0 ));
+_SECTION_END();
+
+_SECTION_BEGIN("Average 3");
+P = ParamField("Field");
+Periods_W3 = Param("Periods_W3", 30, 2, 200 );
+Periods_E3 = Param("Periods_E3", 30, 2, 200 );
+m3 = 0;
+m53=0;
+m3=  WMA( P, Periods_W3 );
+m53 = EMA( P, Periods_E3 );
+			//m1 = MA( P, Periods );
+_N( m133= WriteVal( periods_W3, 1.0 ));
+_N( m153= WriteVal( periods_E3, 1.0 ));
+_SECTION_END();
+
+
+_SECTION_BEGIN("Average 4");
+P = ParamField("Field");
+Periods_W4 = Param("Periods_W4", 40, 2, 200 );
+Periods_E4 = Param("Periods_E4", 40, 2, 200 );
+m4 = 0;
+m54=0;
+m4=  WMA( P, Periods_W4 );
+m54 = EMA( P, Periods_E4 );
+			//m1 = MA( P, Periods );
+_N( m144= WriteVal( periods_W4, 1.0 ));
+_N( m154= WriteVal( periods_E4, 1.0 ));
+_SECTION_END();
+
+_SECTION_BEGIN("Average 5");
+P = ParamField("Field");
+Periods_W5 = Param("Periods_W5", 50, 2, 200 );
+Periods_E5 = Param("Periods_M5", 50, 2, 200 );
+m5 = 0;
+m55=0;
+m5=  WMA( P, Periods_W5 );
+m55 = MA( P, Periods_E5 );
+			//m1 = MA( P, Periods );
+_N( m155= WriteVal( periods_W5, 1.0 ));
+_N( m156= WriteVal( periods_E5, 1.0 ));
+_SECTION_END();
+
+
+
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;Plotline;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+_SECTION_BEGIN ("Ave1");
+
+
+Averagetype1=ParamToggle("On/Off","No|Yes",0);
+
+
+Type1=ParamList("Type","1_EMA|2_MA",0);
+P = ParamField("Price field");
+periods1 = Param("Periods", 8, 2, 200, 1, 0 );
+Color100=ParamColor("Color",colorCustom5);
+
+
+EMI0=(EMA(P,periods1));
+MI0=(MA(P,periods1));
+
+if(Averagetype1){
+if(Type1=="1_EMA"){
+
+Plot(EMA(C,periods1),"EMA", color100); 
+
+}
+
+if(Type1=="2_MA"){
+Plot(MA(C,periods1),"MA", color100 ); 
+
+}}
+_N( MPF0 = WriteVal( periods1, 1.0 ));
+_N( EPF0 = WriteVal( periods1, 1.0 ));
+
+
+
+
+_SECTION_BEGIN ("Average2");
+
+
+Averagetype2=ParamToggle("On/Off","No|Yes", 0);
+
+
+Type2=ParamList("Type","1_EMA|2_MA",0);
+P = ParamField("Price field");
+periods1 = Param("Periods", 13, 2, 300, 1, 0 );
+Color1001=ParamColor("Color",colorBlue);
+
+
+EMI1=(EMA(P,periods1));
+MI1=(MA(P,periods1));
+
+if(Averagetype2){
+if(Type2=="1_EMA"){
+
+Plot(EMA(C,periods1),"EMA", color1001 ); 
+
+}
+
+if(Type2=="2_MA"){
+Plot(MA(C,periods1),"MA", color1001,styleThick ); 
+
+}}
+_N( MPF1 = WriteVal( periods1, 1.0 ));
+_N( EPF1 = WriteVal( periods1, 1.0 ));
+
+
+
+_SECTION_BEGIN ("Ave3");
+
+
+Averagetype3=ParamToggle("On/Off","No|Yes", 0);
+
+
+Type3=ParamList("Type","1_EMA|2_MA",0);
+P = ParamField("Price field");
+periods3 = Param("Periods", 21, 2, 300, 1, 0 );
+Color1003=ParamColor("Color",colorWhite);
+
+
+EMI3=(EMA(P,periods3));
+MI3=(MA(P,periods3));
+
+if(Averagetype3){
+if(Type3=="1_EMA"){
+
+Plot(EMA(C,periods3),"EMA", color1003,styleThick ); 
+
+}
+
+if(Type3=="2_MA"){
+Plot(MA(C,periods3),"MA", color1003,styleThick ); 
+
+}}
+_N( MPF3 = WriteVal( periods3, 1.0 ));
+_N( EPF3 = WriteVal( periods3, 1.0 ));
+
+_SECTION_BEGIN ("Average4");
+Averagetype4=ParamToggle("On/Off","No|Yes", 0);
+
+
+Type4=ParamList("Type","1_EMA|2_MA",0);
+P = ParamField("Price field");
+periods4 = Param("Periods", 50, 2, 300, 1, 0 );
+Color1004=ParamColor("Color",colorYellow);
+
+
+EMI4=(EMA(P,periods4));
+MI4=(MA(P,periods4));
+
+if(Averagetype4){
+if(Type4=="1_EMA"){
+
+Plot(EMA(C,periods4),"EMA", color1004,styleThick ); 
+
+}
+
+if(Type4=="2_MA"){
+Plot(MA(C,periods4),"MA", color1004,styleThick ); 
+
+}
+
+}
+_N( MPF4 = WriteVal( periods4, 1.0 ));
+_N( EPF4 = WriteVal( periods4, 1.0 ));
+
+
+_SECTION_BEGIN ("Average5");
+Averagetype5=ParamToggle("On/Off","No|Yes", 0);
+
+
+Type5=ParamList("Type","1_EMA|2_MA",0);
+P = ParamField("Price field");
+periods5 = Param("Periods", 89, 2, 300, 1, 0 );
+Color1005=ParamColor("Color",colorCustom12);
+
+
+EMI5=(EMA(P,periods5));
+MI5=(MA(P,periods5));
+
+if(Averagetype5){
+if(Type5=="1_EMA"){
+
+Plot(EMA(C,periods5),"EMA", color1005,styleThick ); 
+
+}
+
+if(Type5=="2_MA"){
+Plot(MA(C,periods5),"MA", color1005,styleThick ); 
+
+}
+
+}
+_N( MPF5 = WriteVal( periods5, 1.0 ));
+_N( EPF5 = WriteVal( periods5, 1.0 ));
+
+
+
+_SECTION_BEGIN ("Average 6");
+Averagetype6=ParamToggle("On/Off","No|Yes", 0);
+
+
+Type6=ParamList("Type","1_EMA|2_MA",1);
+P = ParamField("Price field");
+periods6 = Param("Periods", 200, 2, 300, 1, 0 );
+Color1006=ParamColor("Color",colorRed);
+
+
+EMI6=(EMA(P,periods6));
+MI6=(MA(P,periods6));
+
+if(Averagetype6){
+if(Type6=="1_EMA"){
+
+Plot(EMA(C,periods6),"EMA", color1006,styleThick ); 
+
+}
+
+if(Type6=="2_MA"){
+Plot(MA(C,periods6),"MA", color1006,styleThick ); 
+
+}
+
+}
+_N( MPF6 = WriteVal( periods6, 1.0 ));
+_N( EPF6 = WriteVal( periods6, 1.0 ));
+
+
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;Title;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+Title =Name() +"..."+EncodeColor( colorPaleTurquoise  )+
+	WriteVal( SelectedValue( DateTime() ), formatDateTime) +
+   EncodeColor( colorBrightGreen  )+" Open: " + Open +
+   EncodeColor( colorOrange)+ "  High: " + High + 
+   EncodeColor( colorOrange )+",  Low: " + Low + 
+   EncodeColor( colorAqua  )+", Close: " + Close + " ( " + 
+           NumToStr((C - Ref(C, -1)), 4.2) + " / " +
+	        NumToStr((((C - Ref(C, -1)) / Ref(C, -1)) * 100), 2.1) + 	"% )  " +
+
+
+
+//WriteIf(Averagetype1,
+WriteIf(Type1=="1_EMA",WriteIf(EMI1<C,EncodeColor( colorBrightGreen )+" Ave1 EMA(" + EPF0 + ") = " +WriteVal(EMI0,1.2),
+EncodeColor( colorRed )+ " Ave1 EMA(" + EPF0 + ") = " +WriteVal(EMI0,1.2)),
+WriteIf(MI0<C,EncodeColor( colorBrightGreen )+ " Ave1 MA(" + MPF1 + ") = " +WriteVal(MI0,1.2),
+EncodeColor( colorRed)+" Ave1 MA(" + MPF0 + ") = " +WriteVal(MI0,1.2)))+" |"+
+
+//WriteIf(Averagetype2,
+WriteIf(Type2=="1_EMA",WriteIf(EMI1<C,EncodeColor( colorBrightGreen )+" Ave2EMA(" + EPF1 + ") = " +WriteVal(EMI1,1.2),
+EncodeColor( colorRed )+ " Ave2EMA(" + EPF1 + ") = " +WriteVal(EMI1,1.2)),
+WriteIf(MI1<C,EncodeColor( colorBrightGreen )+ " Ave2MA(" + MPF1 + ") = " +WriteVal(MI1,1.2),
+EncodeColor( colorRed)+" Ave2MA(" + MPF1 + ") = " +WriteVal(MI1,1.2)))+" "+
+
+
+//WriteIf(Averagetype3,
+WriteIf(Type3=="1_EMA",WriteIf(EMI3<C,EncodeColor( colorBrightGreen )+" Ave3 EMA(" + EPF3 + ") = " +WriteVal(EMI3,1.2),
+EncodeColor( colorRed )+ " Ave3 EMA(" + EPF3 + ") = " +WriteVal(EMI3,1.2)),
+WriteIf(MI3<C,EncodeColor( colorBrightGreen )+ " Ave3 MA(" + MPF3 + ") = " +WriteVal(MI3,1.2),
+EncodeColor( colorRed)+" Ave3 MA(" + MPF3 + ") = " +WriteVal(MI3,1.2)))+" "+
+ 
+//WriteIf(Averagetype4,
+WriteIf(Type4=="1_EMA",WriteIf(EMI4<C,EncodeColor( colorBrightGreen )+" Ave4EMA(" + EPF4 + ") = " +WriteVal(EMI4,1.2),
+EncodeColor( colorRed )+ "Ave4EMA(" + EPF4 + ") = " +WriteVal(EMI4,1.2)),
+WriteIf(MI4<C,EncodeColor( colorBrightGreen )+ " Ave4MA(" + MPF4 + ") = " +WriteVal(MI4,1.2),
+EncodeColor( colorRed)+" Ave4MA(" + MPF4 + ") = " +WriteVal(MI4,1.2)))+" "+
+
+
+//WriteIf(Averagetype5,
+WriteIf(Type5=="1_EMA",WriteIf(EMI5<C,EncodeColor( colorBrightGreen )+" Ave4EMA(" + EPF5 + ") = " +WriteVal(EMI5,1.2),
+EncodeColor( colorRed )+ "Ave4EMA(" + EPF5 + ") = " +WriteVal(EMI5,1.2)),
+WriteIf(MI5<C,EncodeColor( colorBrightGreen )+ " Ave4MA(" + MPF5 + ") = " +WriteVal(MI5,1.2),
+EncodeColor( colorRed)+" Ave4MA(" + MPF5 + ") = " +WriteVal(MI5,1.2)));
+
+//WriteIf(Averagetype6,
+WriteIf(Type6=="1_EMA",WriteIf(EMI6<C,EncodeColor( colorBrightGreen )+" Ave5EMA(" + EPF6 + ") = " +WriteVal(EMI6,1.2),
+EncodeColor( colorRed )+ "Ave5EMA(" + EPF6 + ") = " +WriteVal(EMI6,1.2)),
+WriteIf(MI6<C,EncodeColor( colorBrightGreen )+ " Ave4MA(" + MPF6 + ") = " +WriteVal(MI6,1.2),
+EncodeColor( colorRed)+" Ave5MA(" + MPF6 + ") = " +WriteVal(MI6,1.2)));
+
+
+
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;Title;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+Title =Name() +".....SpEcTrA....."+EncodeColor( colorPaleTurquoise  )+
+	WriteVal( SelectedValue( DateTime() ), formatDateTime) +
+   EncodeColor( colorWhite )+" Open: " + Open +
+   EncodeColor( colorYellow)+ "  High: " + High + 
+   EncodeColor( colorYellow )+",  Low: " + Low + WriteIf(Close>Open,
+   EncodeColor( colorBrightGreen  )+", Close: " + Close,EncodeColor( colorRed )+", Close: " + Close) + " ( " + 
+           NumToStr((C - Ref(C, -1)), 4.2) + " / " +
+	        NumToStr((((C - Ref(C, -1)) / Ref(C, -1)) * 100), 2.1) + 	"% )  " +
+
+
+
+WriteIf( C > Ref(C,-1),EncodeColor( colorBrightGreen )+  "Volume:  " +WriteVal( Volume,1.0),WriteIf(C <Ref(C,-1), EncodeColor( colorRed ) + "Volume:  " +WriteVal( Volume,1.0),EncodeColor( colorBlue ) + "Volume:  " +WriteVal( Volume,1.0)))+" \n" + 
+ 
+EncodeColor(colorWhite)+
+""+"\n" +
+"\n"+EncodeColor( colorWhite )+"DSE-GEN:::"+Foreign( "00DSEGEN", "Close" ) +"\n"+
+EncodeColor(colorWhite)+
+"-----------------------------"+"\n" +
+
+
+
+WriteIf(KoK,EncodeColor( colorBrightGreen )+ "ADX("+ APM +")=" +WriteVal(ADX(range),1.2), EncodeColor( colorRed )+"ADX("+APM+")="+ WriteVal(ADX(range)))+"\n" +
+
+
+WriteIf(IOI,EncodeColor( colorBrightGreen ) + "Plus:DI = " +WriteVal(PDI(range),1.2)+"\n"+
+"Minus:DI =" +WriteVal(MDI(range)), EncodeColor( colorRed )+ "Plus:DI = " +WriteVal(PDI(range),1.2)+"\n"+ "Minus:DI =" +WriteVal(MDI(range)))+"\n"+
+EncodeColor(colorWhite)+
+"-----------------------------"+"\n" +
+
+WriteIf(MFI( 15)>=40,EncodeColor( colorBrightGreen )+"MFI(" + MPM + ") = " +WriteVal(MIM,1.2),EncodeColor( colorRed )+"MFI(" + MPM + ") ="+WriteVal(MIM,1.2))+
+WriteIf(RSI( 15)>=40,EncodeColor( colorBrightGreen )+ "\n" +"RSI(" + RPM+ ") = " +WriteVal(MIR,1.2),EncodeColor( colorRed )+"\n" +"RSI(" + RPM + ") ="+WriteVal(MIR,1.2))+
+
+"\n" +  
+WriteIf(RPP>=0,EncodeColor(colorBrightGreen)+"ROC(" + ROPM + ") ="+WriteVal(RPP,1.2),EncodeColor(colorRed)+"ROC(" + ROPM + ") =" +WriteVal(RPP,1.2))+" \n"+
+    
+   
+   
+EncodeColor(colorWhite)+"Trend = " +
+WriteIf(dd,EncodeColor(colorBrightGreen)+ "Up Trend  ","")+WriteIf(Hi,EncodeColor(colorRed)+" Down Trend ","") +WriteIf(Cc,EncodeColor(colorBlue)+ "", "")+"\n"+
+EncodeColor(colorWhite)+
+
+
+
+
+
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;Ave;;;;;;;;;;;;;;;;;;;;;
+
+"-----------------------------"+"\n"+
+
+//WriteIf(Averagetype1,
+WriteIf(Type1=="1_EMA",WriteIf(EMI1<C,EncodeColor( colorBrightGreen )+" Ave1 EMA(" + EPF0 + ") = " +WriteVal(EMI0,1.2),
+EncodeColor( colorRed )+ "Ave1 EMA(" + EPF0 + ")= " +WriteVal(EMI0,1.2)),
+WriteIf(MI0<C,EncodeColor( colorBrightGreen )+ " Ave1 MA(" + MPF1 + ") = " +WriteVal(MI0,1.2),
+EncodeColor( colorRed)+"Ave1 MA(" + MPF0 + ")= " +WriteVal(MI0,1.2)))+" "+"\n"+
+
+
+//WriteIf(Averagetype2,
+WriteIf(Type2=="1_EMA",WriteIf(EMI1<C,EncodeColor( colorBrightGreen )+" Ave2 EMA(" + EPF1 + ") = " +WriteVal(EMI1,1.2),
+EncodeColor( colorRed )+ "Ave2 EMA(" + EPF1 + ")= " +WriteVal(EMI1,1.2)),
+WriteIf(MI1<C,EncodeColor( colorBrightGreen )+ " Ave2MA(" + MPF1 + ") = " +WriteVal(MI1,1.2),
+EncodeColor( colorRed)+"Ave2MA(" + MPF1 + ")= " +WriteVal(MI1,1.2)))+" "+"\n"+
+
+
+
+//WriteIf(Averagetype3,
+WriteIf(Type3=="1_EMA",WriteIf(EMI3<C,EncodeColor( colorBrightGreen )+" Ave3 EMA(" + EPF3 + ") = " +WriteVal(EMI3,1.2),
+EncodeColor( colorRed )+ "Ave3 EMA(" + EPF3 + ")= " +WriteVal(EMI3,1.2)),
+WriteIf(MI3<C,EncodeColor( colorBrightGreen )+ " Ave3 MA(" + MPF3 + ") = " +WriteVal(MI3,1.2),
+EncodeColor( colorRed)+" Ave3 MA(" + MPF3 + ")= " +WriteVal(MI3,1.2)))+" "+"\n"+
+
+ 
+//WriteIf(Averagetype4,
+WriteIf(Type4=="1_EMA",WriteIf(EMI4<C,EncodeColor( colorBrightGreen )+" Ave4 EMA(" + EPF4 + ") = " +WriteVal(EMI4,1.2),
+EncodeColor( colorRed )+ "Ave4 EMA(" + EPF4 + ")= " +WriteVal(EMI4,1.2)),
+WriteIf(MI4<C,EncodeColor( colorBrightGreen )+ " Ave4MA(" + MPF4 + ") = " +WriteVal(MI4,1.2),
+EncodeColor( colorRed)+" Ave4 MA(" + MPF4 + ") = " +WriteVal(MI4,1.2)))+" "+"\n"+
+
+
+
+//WriteIf(Averagetype5,
+WriteIf(Type5=="1_EMA",WriteIf(EMI5<C,EncodeColor( colorBrightGreen )+" Ave5 EMA(" + EPF5 + ") = " +WriteVal(EMI5,1.2),
+EncodeColor( colorRed )+ "Ave5 EMA(" + EPF5 + ")= " +WriteVal(EMI5,1.2)),
+WriteIf(MI5<C,EncodeColor( colorBrightGreen )+ " Ave5MA(" + MPF5 + ") = " +WriteVal(MI5,1.2),
+EncodeColor( colorRed)+"Ave 5MA(" + MPF5 + ") = " +WriteVal(MI5,1.2)))+"\n"+
+
+
+//WriteIf(Averagetype6,
+WriteIf(Type6=="1_EMA",WriteIf(EMI6<C,EncodeColor( colorBrightGreen )+" Ave6 EMA(" + EPF6 + ") = " +WriteVal(EMI6,1.2),
+EncodeColor( colorRed )+ "Ave6EMA(" + EPF6 + ")= " +WriteVal(EMI6,1.2)),
+WriteIf(MI6<C,EncodeColor( colorBrightGreen )+ " Ave6MA(" + MPF6 + ") = " +WriteVal(MI6,1.2),
+EncodeColor( colorRed)+"Ave6MA(" + MPF6 + ")= " +WriteVal(MI6,1.2)));
+
+_SECTION_END();
+
+
+_SECTION_BEGIN("Graphics");
+GrpPrm=Param("Graphic Space",0,-30,50);
+GraphXSpace=GrpPrm;
+_SECTION_END();

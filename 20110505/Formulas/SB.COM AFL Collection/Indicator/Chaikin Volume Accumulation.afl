@@ -1,0 +1,24 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Chaikin Volume Accumulation
+//  Author/Uploader: Tomasz Janeczko 
+//  E-mail:          tj@amibroker.com
+//  Date/Time Added: 2001-06-16 08:15:07
+//  Origin:          Originally developed by Marc Chaikin
+//  Keywords:        accumulation
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=8
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=8
+//
+//------------------------------------------------------------------------------
+//
+//  A simple example of using HHV, LLV functions
+//
+//------------------------------------------------------------------------------
+
+/* Chaikin Volume Accumulation */
+
+cv = 25; 
+Graph0 = ((( CLOSE-LLV( CLOSE,cv )) - (HHV(CLOSE,cv)-CLOSE)) / (HHV(CLOSE,cv) - LLV(CLOSE,cv))) * VOLUME;
+ 

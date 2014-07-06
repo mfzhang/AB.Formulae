@@ -1,0 +1,197 @@
+                 /*  Color Display */
+numbars = LastValue(Cum(Status("barvisible")));
+X = IIf(numbars >= 56, floor(numbars / 56), 1);
+
+Plot( 20, "", int(Cum(1/X)%56 ), styleOwnScale | styleArea |
+styleNoLabel,0,100);
+Plot(28*X*sin(Cum(0.112/X)),"", SelectedValue(int(Cum(1/X)%56)),styleOwnScale |
+styleLine, -X*50, X*40);
+Plot(Cum(1)%(56*X) - 28*X,"num",SelectedValue(int(Cum(1/X)%56)),styleOwnScale |
+styleHistogram | styleNoLabel, -X*50, X*40);
+
+n = SelectedValue(int(Cum(1/X)%56));
+colorstring = 	      WriteIf(n ==0,   "colorCustom1 - number 0",
+						WriteIf(n ==1,   "colorCustom2 - number 1",
+						WriteIf(n ==2,   "colorCustom3 - number 2",
+						WriteIf(n ==3,   "colorCustom4 - number 3",
+						WriteIf(n ==4,   "colorCustom5 - number 4",
+						WriteIf(n ==5,   "colorCustom6 - number 5",
+						WriteIf(n ==6,   "colorCustom7 - number 6",
+						WriteIf(n ==7,   "colorCustom8 - number 7",
+						WriteIf(n ==8,   "colorCustom9 - number 8",
+						WriteIf(n ==9,   "colorCustom10 - number 9",
+						WriteIf(n ==10, "colorCustom11 - number 10",
+						WriteIf(n ==11, "colorCustom12 - number 11",
+						WriteIf(n ==12, "colorCustom13 - number 12",
+						WriteIf(n ==13, "colorCustom14 - number 13",
+						WriteIf(n ==14, "colorCustom15 - number 14",
+						WriteIf(n ==15, "colorCustom16 - number 15",
+						WriteIf(n ==16, "colorBlack - number 16",
+						WriteIf(n ==17, "colorBrown - number 17",
+						WriteIf(n ==18, "colorDarkOliveGreen - number 18",
+						WriteIf(n ==19, "colorDarkGreen - number 19",
+						WriteIf(n ==20, "colorDarkTeal - number 20",
+						WriteIf(n ==21, "colorDarkBlue - number 21",
+						WriteIf(n ==22, "colorIndigo - number 22",
+						WriteIf(n ==23, "colorDarkGrey - number 23",
+						WriteIf(n ==24, "colorDarkRed - number 24",
+						WriteIf(n ==25, "colorOrange - number 25",
+						WriteIf(n ==26, "colorDarkYellow - number 26",
+						WriteIf(n ==27, "colorGreen - number 27",
+						WriteIf(n ==28, "colorTeal - number 28",
+						WriteIf(n ==29, "colorBlue - number 29",
+						WriteIf(n ==30, "colorBlueGrey - number 30",
+						WriteIf(n ==31, "colorGrey40 - number 31",
+						WriteIf(n ==32, "colorRed - number 32",
+						WriteIf(n ==33, "colorLightOrange - number 33",
+						WriteIf(n ==34, "colorLime - number 34",
+						WriteIf(n ==35, "colorSeaGreen - number 35",
+						WriteIf(n ==36, "colorAqua - number 36",
+						WriteIf(n ==37, "colorLightBlue - number 37",
+						WriteIf(n ==38, "colorViolet - number 38",
+						WriteIf(n ==39, "colorGrey50 - number 39",
+						WriteIf(n ==40, "colorPink - number 40",
+						WriteIf(n ==41, "colorGold - number 41",
+						WriteIf(n ==42, "colorYellow - number 42",
+						WriteIf(n ==43, "colorBrightGreen - number 43",
+						WriteIf(n ==44, "colorTurquoise - number 44",
+						WriteIf(n ==45, "colorSkyblue - number 45",
+						WriteIf(n ==46, "colorPlum - number 46",
+						WriteIf(n ==47, "colorLightGrey - number 47",
+						WriteIf(n ==48, "colorRose - number 48",
+						WriteIf(n ==49, "colorTan - number 49",
+						WriteIf(n ==50, "colorLightYellow - number 50",
+						WriteIf(n ==51, "colorPaleGreen - number 51",
+						WriteIf(n ==52, "colorPaleTurquoise - number 52",
+						WriteIf(n ==53, "colorPaleBlue - number 53",
+						WriteIf(n ==54, "colorLavender - number 54",
+						WriteIf(n ==55, "colorWhite - number 55", 
+						""))))))))))))))))))))))))))))))))))))))))))))))))))))))));
+Title = EncodeColor(n)+"Bars per Color = "+X+ "                  The current
+selection is  "+ColorString;
+
+	//|-----------------------------------------------------------------------------------------
+	//|PatternExplorer.com - Candlestick Recognition
+	//|Copyright © 2007, PatternExplorer.com
+	//|http://www.PatternExplorer.com
+	//|e-mail: support@PatternExplorer.com
+	//|-----------------------------------------------------------------------------------------
+	FormulaName = "PE - Candlesticks";
+
+	SetChartOptions(0,chartShowDates|chartLogarithmic|chartWrapTitle);
+	#pragma nocache
+	#include_once  <\PEInc\PatternExplorer_f0.afl>
+	#Include_once "C:\Program Files\AmiBroker\Formulas\PatternExplorer\#Defaults & Mods\PE - Defaults.afl"
+	#Include_once "C:\Program Files\AmiBroker\Formulas\PatternExplorer\#Defaults & Mods\PE - Mods.afl"
+	/*******************************************************************************************/
+	AddCustomCodeBeforePE();
+	/*******************************************************************************************/
+	def_PE_AB_Style = 0; //PatternExplorer style:0 //Amibroker style: 1
+	def_pricestyle = styleCandle;// + styleThick; //can be used at PatternExplorer mode
+	def_Band_switch = 1;//Off:0 //On:1
+	def_BandTyp = 0;//Off:0 //Bollinger Bands:1 //Headley Acceleration Bands:2 //Keltner Channel:3 //Price Channel:4 
+	/*******************************************************************************************/
+	//AddparamUsefromChart(1);
+	AddAlertParam(def_AudioAlert,def_EmailAlert,def_BarComplete);
+	/*******************************************************************************************/
+	_SECTION_BEGIN("Main Parameters");
+	ActTrendFilter = ParamToggle("Trend Filter","Off,On",0);
+	SRplot = ParamToggle("Plot S/R","Off,On",1);
+	TextPlot = ParamToggle("Plot Signal Text","Off,On",0);
+	Buyshape = Param("Buy Shape Typ",def_BuyShape,1,60,1);
+	Sellshape = Param("Sell Shape Typ",def_SellShape,1,60,1);
+	BuyColor = ParamColor("Buy Signals",def_BuyShapeColor);
+	SellColor = ParamColor("Sell Signals",def_SellShapeColor);
+	_SECTION_END();
+	/*******************************************************************************************/
+	_SECTION_BEGIN("Pattern Selection");
+	Dojistar_s= ParamToggle("Doji Star","Off,On",1);
+	Hammer_s= ParamToggle("Hammer/Shooting Star","Off,On",1);
+	Hangingman_s= ParamToggle("Hanging Man/Inverted Hammer","Off,On",1);
+	Spinningtop_s= ParamToggle("Spinning Top","Off,On",1);
+	Eng_s= ParamToggle("Engulfing","Off,On",1);
+	Harami_s= ParamToggle("Harami","Off,On",1);
+	Piercingline_s= ParamToggle("Piercing Line/Dark Cloud Cover","Off,On",1);
+	Morning_evening_star_s= ParamToggle("Morning Star/Evening Star","Off,On",1); 
+	_SECTION_END();
+	/*Static - currently not support by amibroker 
+	if(InChart)StaticVarSet("PQQAWN",Dojistar_s);if(inAA AND Usefromchart) Dojistar_s = StaticVarGet("PQQAWN"); 
+	if(InChart)StaticVarSet("ONLDUM",Hammer_s);if(inAA AND Usefromchart) Hammer_s = StaticVarGet("ONLDUM"); 
+	if(InChart)StaticVarSet("CPAWNL",Hangingman_s);if(inAA AND Usefromchart) Hangingman_s = StaticVarGet("CPAWNL"); 
+	if(InChart)StaticVarSet("MNHCWV",Spinningtop_s);if(inAA AND Usefromchart) Spinningtop_s = StaticVarGet("MNHCWV"); 
+	if(InChart)StaticVarSet("FLXSHT",Eng_s);if(inAA AND Usefromchart) Eng_s = StaticVarGet("FLXSHT"); 
+	if(InChart)StaticVarSet("FBDBRN",Harami_s);if(inAA AND Usefromchart) Harami_s = StaticVarGet("FBDBRN"); 
+	if(InChart)StaticVarSet("OVITBK",Piercingline_s);if(inAA AND Usefromchart) Piercingline_s = StaticVarGet("OVITBK"); 
+	if(InChart)StaticVarSet("VHVRAB",Morning_evening_star_s);if(inAA AND Usefromchart) Morning_evening_star_s = StaticVarGet("VHVRAB"); 
+	*/
+	/*******************************************************************************************/
+	#include_once  <\PEInc\Lib\PatternExplorer_f01.afl>
+	#include_once  <\PEInc\PatternExplorer_1.afl>
+	/*******************************************************************************************/
+	if(ActTrendFilter==0)
+	{
+	Buy = def_Buy AND CandlePatternRank>0;
+	Sell = def_Sell AND CandlePatternRank<0;
+	}
+
+	if(ActTrendFilter)
+	{
+	Buy = def_Buy AND CandlePatternRank>0
+	AND PeTaio()>0 
+	AND TaioTimeFrame(5,6,4,expandLast)>0
+	AND Taio2direction == 1; //define your conditions for the Trendfilter here.
+
+	Sell = def_Sell AND CandlePatternRank<0
+	AND PeTaio()<0 
+	AND TaioTimeFrame(5,6,4,expandLast)<0
+	AND Taio2direction == 0; //define your conditions for the Trendfilter here.
+	}
+	/*******************************************************************************************/
+	Filter = def_Filter  AND NOT GroupID()==253;
+	Filter = Filter AND (Buy OR Sell);
+	/*******************************************************************************************/
+	Addefaultcolumns();
+	Adddefaultcolumns(2,1);
+	if(CandleColumnOn==0)
+	AddCandleColumn();
+	AddTextColumn(FullName(),"Full name");
+	/*******************************************************************************************/
+	PlotShapes(
+	IIf(Buy,Buyshape,
+	IIf(Sell,Sellshape,Null)),
+	IIf(Buy,BuyColor,SellColor),0,
+	IIf(Buy,L,H),IIf(Buy,-def_BuyShapeOffset,-def_SellShapeOffset));
+	Plot(IIf(SRplot,Plot_Buy,Null),"Support",Buycolor,1+styleNoTitle);
+	Plot(IIf(SRplot,Plot_Sell,Null),"Resistance",Sellcolor,1+styleNoTitle);
+	/*******************************************************************************************/
+	if(TextPlot){
+	//PlotSignalText (Condition,Text,AdText,AdTextArray,Distance,Array,TextColor,BGColor);
+	PlotSignalText (PR>0,"Buy",0,L,-0.8,L,BuyColor,colorDefault);
+	PlotSignalText (PR<0,"Sell",0,H,1.0,H,SellColor,colorDefault);
+	}
+	/*******************************************************************************************/
+	AddAlert(Hammer,Audio,Email,"Bullish Hammer"+def_AudioAlertText,1,BarComplete,def_BuySound1);
+	AddAlert(beSSTAR,Audio,Email,"Bearish Shooting Star"+def_AudioAlertText,2,BarComplete,def_SellSound1);
+	AddAlert(InvertedHammer,Audio,Email,"Bullish Inverted Hammer"+def_AudioAlertText,2,BarComplete,def_SellSound1);
+	AddAlert(HangingMan,Audio,Email,"Bearish Hanging Man"+def_AudioAlertText,2,BarComplete,def_SellSound1);
+	AddAlert(SpinningTop AND NOT buDS,Audio,Email,"Bearish Spinning Top"+def_AudioAlertText,2,BarComplete,def_SellSound1);
+	AddAlert(buENG,Audio,Email,"Bullish Engulfing"+def_AudioAlertText,1,BarComplete,def_BuySound1);
+	AddAlert(beENG,Audio,Email,"Bearish Engulfing"+def_AudioAlertText,2,BarComplete,def_SellSound1);
+	AddAlert(buHARAMI,Audio,Email,"Bullish Harami"+def_AudioAlertText,1,BarComplete,def_BuySound1);
+	AddAlert(beHARAMI,Audio,Email,"Bearish Harami"+def_AudioAlertText,2,BarComplete,def_SellSound1);
+	AddAlert(buHARAMICROSS,Audio,Email,"Bullish Harami Cross"+def_AudioAlertText,1,BarComplete,def_BuySound1);
+	AddAlert(beHARAMICROSS,Audio,Email,"Bearish Harami Cross"+def_AudioAlertText,2,BarComplete,def_SellSound1);
+	AddAlert(buDS,Audio,Email,"Bullish Doji Star"+def_AudioAlertText,1,BarComplete,def_BuySound1);
+	AddAlert(beDS,Audio,Email,"Bearish Doji Star"+def_AudioAlertText,2,BarComplete,def_SellSound1);
+	AddAlert(buPIERCINGLINE,Audio,Email,"Bullish Piercingline"+def_AudioAlertText,1,BarComplete,def_BuySound1);
+	AddAlert(beDARKCLOUDCOVER,Audio,Email,"Bearish Dark Cloud Cover"+def_AudioAlertText,2,BarComplete,def_SellSound1);
+	AddAlert(buMorningStar,Audio,Email,"Bullish Morning Star"+def_AudioAlertText,1,BarComplete,def_BuySound1);
+	AddAlert(buMorningDojiStar,Audio,Email,"Bullish Morning Doji Star"+def_AudioAlertText,1,BarComplete,def_BuySound1);
+	AddAlert(beEveningStar,Audio,Email,"Bearish Evening Star"+def_AudioAlertText,2,BarComplete,def_SellSound1);
+	AddAlert(beEveningDojiStar,Audio,Email,"Bearish Evening Doji Star"+def_AudioAlertText,2,BarComplete,def_SellSound1);
+	/*******************************************************************************************/
+	ToolTip = def_ToolTip +"\n\n"+CandlePattern;
+	/*******************************************************************************************/
+	AddCustomCodeAfterPE();
+	/*******************************************************************************************/
+	Title = "PatternExplorer.com - Candlestick Recognition" + default_priceTitle +", "+EncodeColor(def_Color3)+ WriteIf(CandlePatternRank>0,"Bullish ",WriteIf(CandlePatternRank<0,"Bearish ",""))+CandlePattern+" ";

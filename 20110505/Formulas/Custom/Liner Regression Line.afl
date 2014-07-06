@@ -1,0 +1,163 @@
+/*
+  Linear Regression Line with 2 Standard Deviation Channels Plotted Above and Below 
+  Written by Patrick Hargus, with critical hints from Marcin Gorzynski, Amibroker.com Technical Support 
+      Designed for use with AB 4.63 beta and above, using drag and drop feature.  
+  Permits plotting a linear regression line of any price field available on the chart for a period determined by the user.  
+     2 Channels, based on a standard deviation each determined by the user, are plotted above AND below the linear regression line. 
+     A look back feature is also provided for examining how the indicator would have appeared on a chart X periods in the past.    
+*/
+
+P = ParamField("Price field",-1);
+Daysback = Param("Period for Liner Regression Line",21,1,240,1);
+shift = Param("Look back period",0,0,240,1); 
+
+
+//  =============================== Math Formula =============================================================
+
+x = Cum(1);
+lastx = LastValue( x ) - shift; 
+aa = LastValue( Ref(LinRegIntercept( p, Daysback), -shift) ); 
+bb = LastValue( Ref(LinRegSlope( p, Daysback ), -shift) ); 
+y = Aa + bb * ( x - (Lastx - DaysBack +1 ) ); 
+
+
+// ==================Plot the Linear Regression Line ==========================================================
+
+
+LRColor = ParamColor("LR Color", colorCycle ); 
+LRStyle = ParamStyle("LR Style");
+
+LRLine =  IIf( x > (lastx - Daysback) AND BarIndex() < Lastx, y, Null );
+Plot( LRLine , "LinReg", LRCOLOR, LRSTYLE ); //  styleDots ); 
+
+// ==========================  Plot 1st SD Channel ===============================================================
+
+SDP = Param("Standard Deviation", 1.5, 0, 6, 0.1);
+SD = SDP/2;
+
+width = LastValue( Ref(SD*StDev(p, Daysback),-shift) );   // THIS IS WHERE THE WIDTH OF THE CHANELS IS SET  
+SDU = IIf( x > (lastx - Daysback) AND BarIndex() < Lastx, y+width , Null ) ;
+SDL = IIf( x > (lastx - Daysback) AND BarIndex() < Lastx, y-width , Null ) ;
+
+SDColor = ParamColor("SD Color", colorCycle ); 
+SDStyle = ParamStyle("SD Style");
+
+Plot( SDU , "Upper Lin Reg", SDColor,SDStyle ); 
+Plot( SDL , "Lower Lin Reg", SDColor,SDStyle ); 
+
+//  ==========================  Plot 2d SD Channel ===============================================================
+
+SDP2 = Param("2d Standard Deviation", 2.0, 0, 6, 0.1);
+SD2 = SDP2/2;
+
+width2 = LastValue( Ref(SD2*StDev(p, Daysback),-shift) );   // THIS IS WHERE THE WIDTH OF THE CHANELS IS SET  
+SDU2 = IIf( x > (lastx - Daysback) AND BarIndex() < Lastx, y+width2 , Null ) ;
+SDL2 = IIf( x > (lastx - Daysback) AND BarIndex() < Lastx, y-width2 , Null ) ;
+
+SDColor2 = ParamColor("2 SD Color", colorCycle ); 
+SDStyle2 = ParamStyle("2 SD Style");
+
+Plot( SDU2 , "Upper Lin Reg", SDColor2,SDStyle2 ); 
+Plot( SDL2 , "Lower Lin Reg", SDColor2,SDStyle2 ); 
+
+// ============================ End Indicator Code ==============================================================
+
+_SECTION_BEGIN("Price1");
+SetChartOptions(0,chartShowArrows|chartShowDates);
+_N(Title = StrFormat("{{NAME}} - {{INTERVAL}} {{DATE}} Open %g, Hi %g, Lo %g, Close %g (%.1f%%) {{VALUES}}", O, H, L, C, SelectedValue( ROC( C, 1 ) ) ));
+Plot( C, "Close", ParamColor("Color", colorBlack ), styleNoTitle | ParamStyle("Style") | GetPriceStyle() ); 
+GfxSetOverlayMode(1);
+GfxSelectFont("Tahoma", Status("pxheight")/6 );
+GfxSetTextAlign( 6 );// center alignment
+GfxSetTextColor( ColorRGB( 200,200,200 ) );
+GfxSetBkMode(1); // transparent
+GfxTextOut( Name(), Status("pxwidth")/2, Status("pxheight")/12 );
+_SECTION_END();
+
+_SECTION_BEGIN("Automatic Trend");
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Automatic Trend-line
+//  Author/Uploader: Tomasz Janeczko 
+//  E-mail:          tj@amibroker.com
+//  Date/Time Added: 2001-06-16 07:56:58
+//  Origin:          Created by Tomasz Janeczko
+//  Keywords:        trend
+//  Level:           medium
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=3
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=3
+//
+//------------------------------------------------------------------------------
+//
+//  A trend line is a sloping line drawn between two prominent points on a
+//  chart. Rising trend lines are usually drawn between two troughs (low
+//  points) to illustrate price support while falling trend lines are usually
+//  drawn between two peaks (high points) to illustrate upside price
+//  resistance. The consensus is that once a trend has been formed (two or more
+//  peaks/troughs have touched the trend line and reversed direction) it will
+//  remain intact until broken.
+//
+//  The trend line is described by well-know linear equation:
+//
+//  y = ax + b
+//
+//  where x represents time (bar number), y represents price, a defines the
+//  slope of the line and b defines initial offset. The main problem in
+//  defining appropriate AFL formula is finding the values of these two latter
+//  coefficients. If a trend line is drawn between two important lows the slope
+//  of the line could be calculated by subtracting the second low price from
+//  the first low price and dividing the result by a number of bars between the
+//  lows:
+//
+//  a = ( low2 - low1 ) / ( bars2 - bars1 )
+//
+//  Calculating offset (b) value is trivial when we shift the time scale so x=0
+//  is located at the first low. In this case b=low1.
+//
+//  So our mathematical formula for the trendline between two important lows
+//  will look like this:
+//
+//  y = ( x - bars1 ) * ( low2 - low1 ) / ( bars2 - bars1 ) + low1
+//
+//  While determining low prices is simple (just point your mouse over the
+//  dominant low and read the low price from a data tooltip that appears on the
+//  screen), determining the bar number is not that simple. You can of course
+//  count bars by hand but this is simply too much work (especially when you
+//  don't have Florida volunteers for a recount :-) ). Luckily we have AFL that
+//  allows us to do it in automatic way. All we have to do is to make a running
+//  total of bars (our x coordinate) using cum() function:
+//
+//  x = cum( 1 );
+//
+//  and then find out where low occured using valuewhen() function:
+//
+//  bar1 = valuewhen( low == low1, x, 1 );
+//
+//  bar2 = valuewhen( low == low2, x, 1 );
+//
+//  For more detailed description please check out:
+//
+//  <a href="http://www.amibroker.com/newsletter/04-2000.html">Newsletter
+//  04/2000</a>
+//
+//------------------------------------------------------------------------------
+
+x = Cum(1);
+
+perchg = 0.3*LastValue( Highest( ROC( Low, 50 ) ));
+
+startvalue = LastValue( Trough( Low, perchg, 1 ) );
+endvalue1 = LastValue( Trough( Low, perchg, 2 ) );
+
+startbar = LastValue( ValueWhen( Low == startvalue, x, 1 ) );
+endbar = LastValue( ValueWhen( Low == endvalue1, x, 1 ) );
+
+Aa = (endvalue1-startvalue)/(endbar-startbar);
+b = startvalue;
+
+trendline = Aa * ( x  - startbar ) + b; 
+
+Plot( Close, "Price", colorBlue, styleCandle );
+Plot( IIf( x >= endbar, trendline, Null ), "Trendline", colorRed );
+_SECTION_END();

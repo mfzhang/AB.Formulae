@@ -1,0 +1,31 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Donchian Channel
+//  Author/Uploader: R. Bertematto 
+//  E-mail:          
+//  Date/Time Added: 2003-06-09 22:58:40
+//  Origin:          
+//  Keywords:        donchian channel
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=285
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=285
+//
+//------------------------------------------------------------------------------
+//
+//  This plots a Donchian Channel, similar to a Bollinger Band but based on
+//  highs and lows. Good for support/resistance.
+//
+//------------------------------------------------------------------------------
+
+// Plots a 20 period Donchian channel
+
+pds=20;
+DonchianUpper =HHV(Ref(H,-1),pds);
+DonchianLower = LLV(Ref(L,-1),pds);
+DonchianMiddle = (DonchianUpper+DonchianLower)/2;
+
+
+Plot(DonchianUpper,"DU",colorBlue,styleLine);
+Plot(DonchianMiddle,"DM",colorGreen,styleLine);
+Plot(DonchianLower,"DL",colorRed,styleLine); 

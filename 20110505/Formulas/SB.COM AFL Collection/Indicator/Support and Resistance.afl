@@ -1,0 +1,30 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Support and Resistance
+//  Author/Uploader: Prakash Shenoi 
+//  E-mail:          
+//  Date/Time Added: 2006-09-19 11:06:24
+//  Origin:          
+//  Keywords:        Support and Resistance
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=712
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=712
+//
+//------------------------------------------------------------------------------
+//
+//  Simple support and resistance indicator with lookback variable input.
+//
+//------------------------------------------------------------------------------
+
+/* SUPPORT AND RESISTANCE */
+/* AFL Code - Prakash Shenoi */
+
+LB= Param("Look Back Periods",10,1,30,1);
+R=ValueWhen(Cross(MA(C,LB),C),HHV(H,LB),1);
+S=ValueWhen(Cross(C,MA(C,LB)),LLV(L,LB),1);
+Color=IIf(O>C,colorBlack,colorYellow);
+Plot (R,"Resz",22,8+16);
+Plot (s,"Supp",19,8+16);
+Plot (C,"Close",color,64,32);
+GraphXSpace=4;

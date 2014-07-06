@@ -1,0 +1,10 @@
+cmopds=20;
+CMO_1=Sum( IIf( C > Ref( C, -1 ) , ( C - Ref( C ,-1 ) ) ,0 ) ,cmopds ) ;
+CMO_2=Sum( IIf( C < Ref( C ,-1 ) , ( Ref( C ,-1 ) - C )  ,0 ) ,cmopds );
+
+CMO=100 * (( CMO_1 -CMO_2)  /( CMO_1+CMO_2));
+Plot(Cmo,"CMO",IIf(cmo>Ref(cmo,-1),5,4),2|styleThick);
+Plot(MA(Cmo,9),"Trigger",colorYellow);
+Plot(50,"",15);
+Plot(-50,"",15);
+Title="CMO"+WriteVal(Cmo)+"   Trigger"+WriteVal(MA(Cmo,9));

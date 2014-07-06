@@ -1,0 +1,55 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    accum/dist mov avg crossover SAR
+//  Author/Uploader: Jeff Parent 
+//  E-mail:          
+//  Date/Time Added: 2002-07-31 16:21:24
+//  Origin:          
+//  Keywords:        accumulation distribution volume SAR
+//  Level:           semi-advanced
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=209
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=209
+//
+//------------------------------------------------------------------------------
+//
+//  Similar to a volume weighted price support/resistance line, uses the
+//  accumulation / distribution indicator to set stop line. vbscript required
+//  to calculate variable lookback period.
+//
+//------------------------------------------------------------------------------
+
+EnableScript("vbscript");
+<%
+function jMA(jH,jL,A2,A2m,k)
+dim result()
+redim result(UBound(jH))
+
+for i=k to UBound(jH)
+n=i+1
+if A2(i)<= A2m(i) then
+do until n=0
+n=n-1
+if A2(n)>= A2m(i) then exit do
+Loop
+result(i)=jH(n)
+else
+do until n=0
+n=n-1
+if A2(n)<= A2m(i) then exit do
+Loop 
+result(i)=jL(n)
+end if
+next
+jMA=result
+end function
+%>
+
+script=GetScriptObject();
+
+n=60;
+Graph0=script.jMA(H,L,AccDist(),EMA(AccDist(),n),n);
+
+Graph1=C;
+Graph1Style=128;
+Graph2=IIf(C<MA(C,n),MA(H,n),MA(L,n));Graph2Style=1;

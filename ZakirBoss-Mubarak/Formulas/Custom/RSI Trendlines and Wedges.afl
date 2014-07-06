@@ -1,0 +1,34 @@
+/*RSI Trendlines and Wedges*/
+G=0;// set G=1, 2, 3, ... to see previous Resistance trendlines
+GG=0;// set G=1, 2, 3, ... to see previous Support trendlines
+x = Cum(1);
+per = 1;// sensitivity calibration
+s1=RSI();s11=RSI();
+Plot(RSI(),"RSI",2,8);
+pS = TroughBars( s1, per, 1 ) == 0;
+endt= LastValue(ValueWhen( pS, x, 1+GG ));
+startt=LastValue(ValueWhen( pS, x, 2+GG ));
+dtS =endt-startt;
+endS = LastValue(ValueWhen( pS, s1, 1+GG ) );
+startS = LastValue( ValueWhen( pS, s1, 2+GG  ));
+aS = (endS-startS)/dtS;
+bS = endS;
+trendlineS = aS * ( x  -endt ) + bS;// the Support trendline equation 
+Plot(IIf(x>startt-6 AND TRENDLINES>0 AND TRENDLINES<100,trendlineS,-1e10),"Support",IIf(as>0,5,4),8);
+pR = PeakBars( s11, per, 1 ) == 0;
+endt1= LastValue(ValueWhen( pR, x, 1+G ));
+startt1=LastValue(ValueWhen( pR, x, 2+G ));
+dtR =endt1-startt1;
+endR = LastValue(ValueWhen( pR, s11, 1+G ) );
+startR = LastValue( ValueWhen( pR, s11, 2 +G ));
+aR = (endR-startR)/dtR;
+bR = endR;
+trendlineR = aR * ( x  -endt1 ) + bR;// the Resistance trendline equation
+Plot(IIf(x>startT1-6  AND TRENDLINER>0 AND TRENDLINER<100,trendlineR,-1e10),"Resistance",IIf(Ar>0,5,4),8);
+Ascwedge=Ar>0.5  AND As>sqrt(2)*Ar AND trendlineR>trendlineS;
+Descwedge= As<-0.5 AND As>Ar/sqrt(2) AND trendlineR>trendlineS;
+Filter=1;
+AddColumn(Ascwedge,"AscWedge",1.0);
+AddColumn(DescWedge,"DesWedge",1.0);
+AddColumn(Ascwedge AND trendlineS>50 AND RSI()>50,"Probable Bearish Breakout",1.0);
+AddColumn(Descwedge AND trendlineR<50 AND RSI()<50,"Probable Bullish Breakout",1.0);

@@ -1,0 +1,14 @@
+function PlotGradientArea( array, caption, ColorTop, ColorBottom ) 
+{ 
+ bkclr = GetChartBkColor(); 
+
+ HH = HighestVisibleValue( array ); 
+ if( NOT IsNull( hh ) ) SetChartBkGradientFill( ColorTop, ColorBottom, bkclr, Null, HH ); 
+ Plot( array, Caption, ColorBlend( ColorBottom, colorBlack ), styleNoLabel ); 
+ PlotOHLC( HH, HH, array, HH, "", bkclr, styleNoLabel | styleNoTitle | styleCloud, Null, Null, 0, -10 ); 
+} 
+
+Title = "Portfolio Equity = " + C;
+PlotGradientArea( C, "Portfolio Equity", colorLightOrange, colorPaleGreen );
+
+//SetChartOptions(3, chartShowDates );

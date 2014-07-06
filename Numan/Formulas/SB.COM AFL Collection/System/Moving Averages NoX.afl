@@ -1,0 +1,100 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Moving Averages NoX
+//  Author/Uploader: Thomas Heyen 
+//  E-mail:          
+//  Date/Time Added: 2006-06-07 17:14:52
+//  Origin:          This Model is a result of different tests. The ER2 Future is very volatile due to high program trading. This model tries to find short term trends.
+//  Keywords:        System Moving Average Reversal Trend
+//  Level:           medium
+//  Flags:           system
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=624
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=624
+//
+//------------------------------------------------------------------------------
+//
+//  Instead of using Crossover of Moving Averages, this model will follow
+//  reversals of a short term Moving Average.
+//
+//  A long term Moving Average is used for general trend determination.
+//
+//------------------------------------------------------------------------------
+
+/* -----------------------------------
+
+Author: Thomas Heyen
+Mechanical Trading Model ER2 - Emini Russel 2000
+Curve Fit June 2006
+Base Time Frame: 15 seconds
+
+----------------------------------- */
+
+
+PositionSize = MarginDeposit = 1;
+MarketHours = TimeNum()>=154000 AND TimeNum()<=214000; 
+MarketClose= TimeNum()>=214444 AND TimeNum()<=240000;
+
+perl = 24;//Optimize("smoothing periods long",24,10,60,2);
+perl2 = 72;//Optimize("smoothing periods long slow",72,60,100,4);
+per = 54;//Optimize("smoothing periods",54,20,80,2); //DEMA = 24 long & DEMA=48 short
+per2 = 72;//Optimize("smoothing periods slow",90,60,100,4); //DEMA=74 long & DEMA=90 short - around 80 will do
+//per=Param("periods",3,3,89,1);
+up= (DEMA(C,perl)>Ref(DEMA(C,perl),-1)) AND (Ref(DEMA(C,perl),-2)>Ref(DEMA(C,perl),-1));
+down= (DEMA(C,per)<Ref(DEMA(C,per),-1)) AND (Ref(DEMA(C,per),-2)<Ref(DEMA(C,per),-1));
+
+Buy = up AND (DEMA(C,per)>DEMA(C,perl2));
+Cover = up;
+Short = down AND (DEMA(C,per)<DEMA(C,per2));
+Sell = down;
+
+PlotShapes(IIf(Buy,shapeUpArrow,shapeNone),colorGreen);
+PlotShapes(IIf(Short,shapeDownArrow,shapeNone),colorRed);
+Lang = BarsSince(Buy) < BarsSince(Sell);
+kurz = BarsSince(Short) < BarsSince(Cover);
+//Plot Trading Ribbon
+Color = IIf( Lang, colorGreen, IIf( kurz, colorRed, colorWhite ));
+Plot( 1, "", Color, styleArea | styleOwnScale | styleNoLabel, 0, 15 );
+
+
+
+
+
+/*
+ibc = GetTradingInterface("IB");
+if( ibc.IsConnected() ) // check if connection to IB was successfull
+{
+if( LastValue( Buy ) )
+{
+     if( ibc.GetPositionSize( Name() ) <1)
+     {
+        // transmit order
+        ibc.PlaceOrder( Name(), "Buy", 1, "MKT", 0, 0, "Day", True );
+}
+}
+if( LastValue( Sell ) )
+{
+     if( ibc.GetPositionSize( Name() ) > 0)
+     {
+        // transmit order
+        ibc.PlaceOrder( Name(), "Sell", 1, "MKT", 0, 0, "Day", True );
+}
+}
+if( LastValue( Short ) )
+{
+     if( ibc.GetPositionSize( Name() ) > -1)
+     {
+        // transmit order
+        ibc.PlaceOrder( Name(), "SShort", 1, "MKT", 0, 0, "Day", True );
+}
+}
+if( LastValue( Cover ) )
+{
+     if( ibc.GetPositionSize( Name() ) <0)
+     {
+        // transmit order
+        ibc.PlaceOrder( Name(), "Buy", 1, "MKT", 0, 0, "Day", True );
+}
+}
+}
+
+*/

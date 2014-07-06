@@ -1,0 +1,17 @@
+_SECTION_BEGIN("VWAP - Volume Weighted Average Price");
+/*
+The VWAP for a stock is calculated by adding the dollars traded for every
+transaction in that stock ("price" x "number of 
+      shares traded") and dividing the total shares traded. A VWAP is computed
+from the Open of the market to the market Close, AND is 
+      calculated by Volume weighting all transactions during this time period
+*/
+
+Bars_so_far_today = 1 + BarsSince( Day() != Ref(Day(), -1));
+StartBar = ValueWhen(TimeNum() == 093000, BarIndex());
+TodayVolume = Sum(V,Bars_so_far_today);
+IIf (BarIndex() >= StartBar, VWAP = Sum (C * V, Bars_so_far_today  ) /
+TodayVolume,0);
+Plot (VWAP,"VWAP",colorOrange, styleThick);
+
+_SECTION_END();

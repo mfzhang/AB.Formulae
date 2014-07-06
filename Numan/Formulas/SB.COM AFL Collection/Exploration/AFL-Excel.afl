@@ -1,0 +1,96 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    AFL-Excel
+//  Author/Uploader: Witold Dabrowski 
+//  E-mail:          
+//  Date/Time Added: 2002-08-31 06:29:37
+//  Origin:          
+//  Keywords:        
+//  Level:           semi-advanced
+//  Flags:           exploration
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=218
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=218
+//
+//------------------------------------------------------------------------------
+//
+//  This example show how to control Excel directly from the AFL script via
+//  OLE-Automation interface. In this script I count %DD and plot Equity and
+//  %DD charts in Excel.
+//
+//  In script there is commentary in polish - sorry ;-)
+//
+//------------------------------------------------------------------------------
+
+Buy = Cover =
+ Cross(C,MA(C,5));
+
+Sell = Short =
+ Cross(MA(C,5),C);
+
+PositionSize = IIf(Buy,BuyPrice,ShortPrice);
+
+E = Equity(1);
+Papier = Name();
+
+EnableScript("vbscript");
+<%
+ 'Wymiana zmiennych miêdzy skryptem AFL i VB
+ E = AFL("E")
+ Papier = AFL("Papier")
+
+ 'Uruchamianie Excela
+ Set Excel = CreateObject("Excel.Application")
+ 'Ustawianie Excela w stan gotowoœci
+ Excel.WorkBooks.Add
+ Set Sheet = Excel.WorkBooks(1).WorkSheets(1)
+
+ 'Pisanie do komórek Excela
+ Sheet.Cells(1,1) = Papier
+ Sheet.Cells(1,2) = "Equity"
+ Sheet.Cells(1,3) = "DrawDown"
+
+ 'Inicjacja maksimum Euqity - bêdzie potrzebne
+ ' do obliczania DrawDownu
+ MaxE = E(0)
+
+ 'Wpisywanie stanu Equity i DrawDownu do Excela
+ For i = 0 to UBound(E)
+     Y = i+2
+     Sheet.Cells(Y,2).Value = E(i)
+
+     If E(i) > MaxE then
+        MaxE = E(i)
+     End If
+     Drawdown = 0 - ((MaxE - E(i))/MaxE * 100)
+     Sheet.Cells(Y,3).Value = Drawdown
+ Next
+
+ 'A teraz wykresy
+ Sheet.Activate
+ Sheet.Columns(2).Select
+
+ '...Equity...
+ Excel.Charts.Add
+ Set EquityCharts = Excel.Charts(1)
+ EquityCharts.Name = Papier + " Equity"
+ EquityCharts.Type = 1
+ EquityCharts.HasLegend = 0
+ EquityCharts.HasTitle = 0
+
+ Sheet.Activate
+ Sheet.Columns(3).Select
+
+ '... i DrawDown (w procentach)
+ Excel.Charts.Add
+ Set EquityCharts = Excel.Charts(2)
+ EquityCharts.Name = Papier + " DrawDown"
+ EquityCharts.Type = 1
+ EquityCharts.HasLegend = 0
+ EquityCharts.HasTitle = 0
+
+ 'La Grande Finale - pokazujemy Excel œwiatu.
+ 'Mo¿na to wrzuciæ zaraz po otworzeniu arkusza,
+ ' ale wydaje mi siê, ¿e tak skrypt jest minimalnie
+ ' szybszy.
+ Excel.Visible = 1
+%>

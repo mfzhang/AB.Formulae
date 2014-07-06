@@ -1,0 +1,86 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Fibonacci Moving averages
+//  Author/Uploader: Lokanath 
+//  E-mail:          lokanathpai@yahoo.co.in
+//  Date/Time Added: 2006-04-08 14:18:42
+//  Origin:          
+//  Keywords:        
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=612
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=612
+//
+//------------------------------------------------------------------------------
+//
+//  displays some fibo moving averages
+//
+//------------------------------------------------------------------------------
+
+
+_SECTION_BEGIN("Price");
+SetChartOptions(0,chartShowArrows|chartShowDates);
+_N(Title = StrFormat("{{NAME}} - {{INTERVAL}} {{DATE}} Open %g, Hi %g, Lo %g, Close %g (%.1f%%) Vol " +WriteVal( V, 1.0 ) +" {{VALUES}}", O, H, L, C, SelectedValue( ROC( C, 1 )) ));
+Plot( C, "Close", ParamColor("Color", colorBlack ), styleNoTitle | ParamStyle("Style") | GetPriceStyle() ); 
+if( ParamToggle("Tooltip shows", "All Values|Only Prices" ) )
+{
+ ToolTip=StrFormat("Open: %g\nHigh:  %g\nLow:   %g\nClose:  %g (%.1f%%)\nVolume: "+NumToStr( V, 1 ), O, H, L, C, SelectedValue( ROC( C, 1 )));
+}
+_SECTION_END();
+
+_SECTION_BEGIN("5MA");
+P = ParamField("Price field",-1);
+Periods = Param("Periods", 5, 2, 200, 1 );
+Plot( EMA( P, Periods ), _DEFAULT_NAME(), ParamColor( "Color", colorCycle ), ParamStyle("Style") ); 
+_SECTION_END();
+
+
+_SECTION_BEGIN("8MA");
+P = ParamField("Price field",-1);
+Periods = Param("Periods", 8, 2, 200, 1 );
+Plot( EMA( P, Periods ), _DEFAULT_NAME(), ParamColor( "Color", colorCycle ), ParamStyle("Style") ); 
+_SECTION_END();
+
+
+_SECTION_BEGIN("13MA");
+P = ParamField("Price field",-1);
+Periods = Param("Periods", 13, 2, 200, 1 );
+Plot( EMA( P, Periods ), _DEFAULT_NAME(), ParamColor( "Color", colorCycle ), ParamStyle("Style") ); 
+_SECTION_END();
+
+
+_SECTION_BEGIN("21MA");
+P = ParamField("Price field",-1);
+Periods = Param("Periods", 21, 2, 200, 1 );
+Plot( EMA( P, Periods ), _DEFAULT_NAME(), ParamColor( "Color", colorCycle ), ParamStyle("Style") ); 
+_SECTION_END();
+
+
+_SECTION_BEGIN("34MA");
+P = ParamField("Price field",-1);
+Periods = Param("Periods", 34, 2, 200, 1 );
+Plot( EMA( P, Periods ), _DEFAULT_NAME(), ParamColor( "Color", colorCycle ), ParamStyle("Style") ); 
+_SECTION_END();
+
+
+_SECTION_BEGIN("55MA");
+P = ParamField("Price field",-1);
+Periods = Param("Periods", 55, 2, 200, 1 );
+Plot( EMA( P, Periods ), _DEFAULT_NAME(), ParamColor( "Color", colorCycle ), ParamStyle("Style") ); 
+_SECTION_END();
+
+
+
+_SECTION_BEGIN("89MA");
+P = ParamField("Price field",-1);
+Periods = Param("Periods", 89, 2, 200, 1 );
+Plot( EMA( P, Periods ), _DEFAULT_NAME(), ParamColor( "Color", colorCycle ), ParamStyle("Style") ); 
+_SECTION_END();
+
+
+_SECTION_BEGIN("Volume");
+Plot( Volume, _DEFAULT_NAME(), ParamColor("Color", colorLavender ), styleNoTitle | ParamStyle( "Style", styleHistogram | styleOwnScale | styleThick | styleNoLabel, maskHistogram  ), 2 );
+Plot( MA(Volume,5), "MA", ParamColor("Color", colorRed ), ParamStyle("Style"));
+
+_SECTION_END();
+

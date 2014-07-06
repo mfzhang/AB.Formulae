@@ -1,0 +1,50 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Ichimoku Chart
+//  Author/Uploader: Prakash Shenoi 
+//  E-mail:          
+//  Date/Time Added: 2006-08-11 12:30:12
+//  Origin:          Adapted from Ken Muranaka's formula and article
+//  Keywords:        Trend Following System
+//  Level:           medium
+//  Flags:           system,indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=677
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=677
+//
+//------------------------------------------------------------------------------
+//
+//  Ichimoku Chart is a trend following system similar to Moving averages. Time
+//  spans of 9, 26 and 52 are used. According to Ken Muranaka, Ichimoku charts
+//  depicts market timing, resistance/support,and possibly false break outs,
+//  all in one chart, in one panoramic view. For more details, check this link:
+//  http://www.forex-books.com/articles/techan/ichimoku.pdf
+//
+//------------------------------------------------------------------------------
+
+/* ICHIMOKU CHART */
+
+/* AFL code by Prakash Shenoi */
+
+SL=(HHV(H,26)+LLV(L,26))/2;
+TL=(HHV(H,9)+LLV(L,9))/2;
+DL=Ref(C,25);
+Sp1=Ref((SL+TL)/2,-25);
+Sp2=Ref((HHV(H,52)+LLV(L,52))/2,-25);
+MaxGraph=6;
+Graph0=C;
+Graph0Style=styleCandle;
+Graph0Color=1;
+Graph1=SL;
+Graph1Color=3;
+Graph2=TL;
+Graph2Color=4;
+Graph3=DL;
+Graph3Color=32;
+Graph4=Sp1;
+Graph4Color=5;
+Graph5=Sp2;
+Graph5Color=6;
+Graph1Style=Graph2Style= styleLine | styleThick;
+Graph3Style=Graph4Style= styleLine | styleThick;
+Graph5Style=styleLine | styleThick;
+Title=Name ()+ "  Ichimoku Chart  " + WriteVal ( Graph0,format=1.2); 

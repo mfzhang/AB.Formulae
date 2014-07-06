@@ -1,0 +1,130 @@
+//|-----------------------------------------------------------------------------------------
+//|PatternExplorer.com - PatternExplorer_f01
+//|Copyright © 2007, PatternExplorer.com
+//|http://www.PatternExplorer.com
+//|e-mail: support@PatternExplorer.com
+//|-----------------------------------------------------------------------------------------
+UT = H == HHV( H, 3 );
+UT1 = Ref( UT, -1 );
+DT = L == LLV( L, 3 );
+DT1 = Ref( DT, -1 );
+x = Cum( 1 );
+B = abs( O - C );
+B1 = Ref( B, -1 );
+B2 = Ref( B, -2 );
+BH = IIf( O > C, O, C );
+BH1 = Ref( BH, -1 );
+BH2 = Ref( BH, -2 );
+BL  = IIf( O < C, O, C );
+BL1 = Ref( BL, -1 );
+BL2 = Ref( BL, -2 );
+wD = C > O;
+wD1 = Ref( WD, -1 );
+wD2 = Ref( WD, -2 );
+BD = C < O;
+bD1 = Ref( bD, -1 );
+bD2 = Ref( bD, -2 );
+DR = H - L;
+DR1 = Ref( DR, -1 );
+R = DR / 100;
+LL2 = L == LLV( L, 2 );
+LL3 = L == LLV( L, 3 );
+HH2 = H == HHV( H, 2 );
+HH3 = H == HHV( H, 3 );
+L1 = Ref( L, -1 );
+L2 = Ref( L, -2 );
+L3 = Ref( L, -3 );
+H1 = Ref( H, -1 );
+H2 = Ref( H, -2 );
+H3 = Ref( H, -3 );
+R1 = Ref( R, -1 );
+R2 = Ref( R, -2 );
+C1 = Ref( C, -1 );
+O1 = Ref( O, -1 );
+C2 = Ref( C, -2 );
+UPshadow = H - BH;
+DNshadow = BL - L;
+longday = B > 40 * R;
+wLD = Longday AND wD;
+wLD1 = Ref ( wLD, -1 );
+wLD2 = Ref ( wLD, -2 );
+bLD = Longday AND bD;
+bLD1 = Ref ( bLD, -1 );
+bLD2 = Ref ( bLD, -2 );
+doji = PeDoji();
+HAMMER = Hammer_s & PeHammer() & DT;
+SStar =  Hammer_s & BH < ( 35 * R + L ) AND BL < ( 25 * R + L ) AND B > ( 10 * R );
+SStar1 =  BH < ( 35 * R + L ) AND BL < ( 25 * R + L ) AND B > ( 10 * R );
+beSSTAR =  SStar & UT;
+HangingMan = Hangingman_s & PeHammer() & UT;
+InvertedHammer = Hangingman_s & BH < ( 35 * R + L ) & BL < ( 10 * R + L ) & B > ( 10 * R ) & DT;
+SpinningTop = Spinningtop_s & BH < ( 75 * R + L ) AND BL > ( 25 * R + L )AND B < ( 25 * R ) & H == HHV( H, 3 ) & L == HHV( L, 3 );
+SpinningTop1 = BH < ( 75 * R + L ) AND BL > ( 25 * R + L )AND B < ( 25 * R );
+buENG = Eng_s & wd & bd1 & BH > BH1 & BL < BL1 & DT1;
+beENG = Eng_s & bd & wd1 & BH > BH1 & BL < BL1 & UT1;
+buHARAMI = Harami_s & bLD1 & wD & B<0.5 * B1 & B>0.25 * B1 & Inside() & BH < BH1 AND BL > BL1;
+beHARAMI = Harami_s & wLD1 & bD & B<0.5 * B1 & B>0.25 * B1 & Inside() & BH < BH1 AND BL > BL1;
+buHARAMICROSS = Harami_s & bLD1 & BH < BH1 & BL > BL1 & B < 0.25 * B1 & DT1;
+beHARAMICROSS = Harami_s & wLD1 & BH < BH1 & BL > BL1 & B < 0.25 * B1 & UT1;
+buDS = Dojistar_s & bLD1 & SpinningTop1 & H < L1 + ( DR1 / 2 ) & BH < BL1 & DT1;
+beDS = Dojistar_s & wLD1 & SpinningTop1 & L > H1 - ( DR1 / 2 ) & BL > BH1 & UT1;
+buPIERCINGLINE = Piercingline_s & bLD1 & wLD & C > ( ( B1 / 2 ) + BL1 ) & O < L1 & C < BH1 & DT1;
+beDARKCLOUDCOVER = Piercingline_s & wLD1 & bld & C < ( B1 / 2 + BL1 ) & O > H1 & C > BL1 & UT1;
+buMorningStar = Morning_evening_star_s & bLD2 & BH1 < BL2 + B2 / 3 & BL > L1 & wld & B1 > 0.25 * B2 & B1<0.5 * B2 & C>BL2 + B2 / 2;
+buMorningDojiStar = Morning_evening_star_s & bLD2 & BH1 < BL2 + B2 / 3 & BL > L1 & wld & B1<0.25 * B2 & C>BL2 + B2 / 2;
+beEveningStar = Morning_evening_star_s & wLD2 & BL1 > BH2 - B2 / 3 & B1 > 0.25 * B2 & B1 < 0.5 * B2 & BH < H1 & bld & C < BL2 + B2 / 2;
+beEveningDojiStar = Morning_evening_star_s & wLD2 & BL1 > BH2 - B2 / 3 & B1 < 0.25 * B2 & BH < H1 & bld & C < BL2 + B2 / 2;
+LongUPshadows = upshadow > 0.6 * DR & Ref( upshadow, -1 ) > 0.6 * DR1;
+LongDNshadows = DNshadow > 0.6 * DR & Ref( DNshadow, -1 ) > 0.6 * DR1;
+Pattern_1_Stick_BS = Hammer | InvertedHammer;
+Pattern_1_Stick_SS = beSSTAR | HangingMan | SpinningTop;
+Pattern_2_stick_BS = buENG | buHARAMI | buHARAMICROSS | buDS |  buPIERCINGLINE | buMorningStar | buMorningDojiStar;
+Pattern_2_stick_SS = beENG | beHARAMI | beHARAMICROSS | beDS  | beDARKCLOUDCOVER | beEveningDojiStar | beEveningStar;
+Pattern_3_stick_BS = 0;
+Pattern_3_stick_SS = 0;
+PR =
+    IIf( Pattern_1_Stick_BS, 1,
+         IIf( Pattern_2_Stick_BS, 2,
+              IIf( Pattern_3_Stick_BS, 3,
+                   IIf( Pattern_1_Stick_SS, -1,
+                        IIf( Pattern_2_Stick_SS, -2,
+                             IIf( Pattern_3_Stick_SS, -3, 0 ) ) ) ) ) );
+CandlePatternRank = PR;
+LBPR = LastValue( ValueWhen( PR > 0, PR ) );
+LSPR = LastValue( ValueWhen( PR < 0, PR ) );
+Buy_point = PR > 0 == 1;
+Sell_point = PR < 0 == 1;
+Sup_1 = LastValue( ValueWhen( Buy_point & LBPR == 1, L, 1 ) );
+Sup_2 = LastValue( ValueWhen( Buy_point & LBPR == 2, LLV( L, 2 ), 1 ) );
+Sup_3 = LastValue( ValueWhen( Buy_point & LBPR == 3, LLV( L, 3 ), 1 ) );
+Support = IIf( LBPR == 1, Sup_1, IIf( LBPR == 2, Sup_2, IIf( LBPR == 3, Sup_3, -1e10 ) ) );
+x_Buy = LastValue( ValueWhen( Buy_point, x, 1 ) );
+Plot_Buy = IIf( LBPR == 1 & x >= x_Buy, Sup_1, IIf( LBPR == 2 & x >= x_Buy - 1, Support, IIf( LBPR == 3 & x >= x_Buy - 2, Support, -1e10 ) ) );
+Res_1 = LastValue( ValueWhen( Sell_point & LSPR == -1, H, 1 ) );
+Res_2 = LastValue( ValueWhen( Sell_point & LSPR == -2, HHV( H, 2 ), 1 ) );
+Res_3 = LastValue( ValueWhen( Sell_point & LSPR == -3, HHV( H, 3 ), 1 ) );
+Resistance = IIf( LSPR == -1, Res_1, IIf( LSPR == -2, Res_2, IIf( LSPR == -3, Res_3, -1e10 ) ) );
+x_Sell = LastValue( ValueWhen( Sell_point, x, 1 ) );
+Plot_Sell = IIf( LSPR == -1 & x >= x_Sell, Res_1, IIf( LSPR == -2 & x >= x_Sell - 1, Resistance, IIf( LSPR == -3 & x >= x_Sell - 2, Resistance, -1e10 ) ) );
+CandlePattern =
+    WriteIf( Hammer, "Hammer",
+             WriteIf( beSSTAR, "Shooting Star",
+                      WriteIf( InvertedHammer, "Inverted Hammer",
+                               WriteIf( HangingMan, "Hanging Man",
+                                        WriteIf( SpinningTop AND NOT buDS, "Spinning Top",
+                                                 WriteIf( buENG, "Engulfing",
+                                                          WriteIf( beENG, "Engulfing",
+                                                                   WriteIf( buHARAMI, "Harami",
+                                                                            WriteIf( beHARAMI, "Harami",
+                                                                                     WriteIf( buHARAMICROSS, "Harami Cross",
+                                                                                              WriteIf( beHARAMICROSS, "Harami Cross",
+                                                                                                       WriteIf( buDS, "Doji Star",
+                                                                                                                WriteIf( beDS, "Doji Star",
+                                                                                                                         WriteIf( buPIERCINGLINE, "Piercingline",
+                                                                                                                                  WriteIf( beDARKCLOUDCOVER, "Dark Cloud Cover",
+                                                                                                                                           WriteIf( buMorningStar, "Morning Star",
+                                                                                                                                                    WriteIf( buMorningDojiStar, "Morning Doji Star",
+                                                                                                                                                             WriteIf( beEveningStar, "Evening Star",
+                                                                                                                                                                      WriteIf( beEveningDojiStar, "Evening Doji Star",
+                                                                                                                                                                               "" ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) );
+/*******************************************************************************************/

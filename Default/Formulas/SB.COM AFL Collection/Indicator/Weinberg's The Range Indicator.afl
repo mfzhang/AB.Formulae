@@ -1,0 +1,58 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Weinberg's The Range Indicator
+//  Author/Uploader: Marek Chlopek 
+//  E-mail:          mchlopek@post.pl
+//  Date/Time Added: 2001-10-17 02:51:46
+//  Origin:          
+//  Keywords:        
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=126
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=126
+//
+//------------------------------------------------------------------------------
+//
+//  From S&amp;C V13:6 (238-242)
+//
+//------------------------------------------------------------------------------
+
+/* TRI.AFL v 1.00 17/10/2001
+/* TRI - The Range Indicator
+/* Developed by Jack L. Weinberg
+/* From Technical Analysis of Stocks and Commodities, V13:6 (238-242)
+/* Coded by Marek Chlopek, October 2001
+/* Support from Tomasz Janeczko and Amibroker Mailing List members - THANKS!!! */
+
+/* ************************************************************************** */
+/* StochRange - first step in constructing the TRI
+/* StochRange - an oscillator of the ratio of the daily true range with the intraday range
+/* Value1 - Today's True Range divided by today's close minus yesterday's close unless C-Ref(C,-1) < 0 then Value1 = True Range
+/* Value2 - the lowest value of Value1, over the last q days
+/* Value3 - the highest value of Value1, over the last q days */
+q = 10; /* stochastic period */
+Value1 = IIF(Close > Ref(Close, -1), ATR(1) / (Close - Ref(Close, -1)), ATR(1));
+Value2 = LLV(Value1, q);
+Value3 = HHV(Value1, q);
+StochRange = IIF((Value3 - Value2) > 0, 100 * (Value1 - Value2) / (Value3 - Value2), 100 * (Value1 - Value2));
+
+/* The Range Indicator - TRI by J.L Weinberg
+/* The Range Indicator - smooth StochRange using an exponential moving average of m periods */
+m = 3; /* exponential smoothing period */
+TRI = EMA(StochRange, m);
+
+/* ************************************************************************** */
+/* Graphic presentation in Amibroker */
+maxgraph = 1;
+graph0 = TRI;
+title = name() + " - TRI = " + WriteVal(graph0, 1.2) + " %";
+
+/* ************************************************************************** */
+/* Exploration in Amibroker */
+filter = 1;
+numcolumns = 2;
+column0 = StochRange;	column0name = "StochRange";	column0format = 1.2;
+column1 = TRI;		column1name = "TRI";		column1format = 1.2;
+
+/* ************************************************************************** */
+/* END TRI Indicator Formula */

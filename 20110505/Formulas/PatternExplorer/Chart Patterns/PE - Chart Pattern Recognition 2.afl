@@ -1,0 +1,331 @@
+//|-----------------------------------------------------------------------------------------
+//|PatternExplorer.com - Chart Pattern Recognition - 2
+//|Copyright © 2007, PatternExplorer.com
+//|http://www.PatternExplorer.com
+//|e-mail: support@PatternExplorer.com
+//|-----------------------------------------------------------------------------------------
+FormulaName = "PE - Chart Pattern Recognition 2";
+
+SetChartOptions( 0, chartShowDates | chartLogarithmic | chartWrapTitle );
+#pragma nocache
+#include_once  <\PEInc\PatternExplorer_f0.afl>
+#include_once "C:\Program Files (x86)\AmiBroker5\Formulas\PatternExplorer\#Defaults & Mods\PE - Defaults.afl"
+#include_once "C:\Program Files (x86)\AmiBroker5\Formulas\PatternExplorer\#Defaults & Mods\PE - Mods.afl"
+/*******************************************************************************************/
+_SECTION_BEGIN( "Issue Tag" );
+GfxSetOverlayMode(1);
+GfxSelectFont("Tahoma", Status("pxheight")/6 );
+GfxSetTextAlign( 6 );// center alignment
+GfxSetTextColor( ColorRGB( 200, 200, 200 ) );
+GfxSetBkMode(1); // transparent
+GfxTextOut( Name(), Status("pxwidth")/2, Status("pxheight")/12 );
+_SECTION_END();
+AddCustomCodeBeforePE();
+/*******************************************************************************************/
+def_GraphXSpace = 10;
+AddAlertParam( def_AudioAlert, def_EmailAlert, def_BarComplete );
+/*******************************************************************************************/
+_SECTION_BEGIN( "Alerts" );
+SRbS = ParamToggle( "S/R broken", "Off,On", 1 );
+SRcS = ParamToggle( "S/R confirmed", "Off,On", 1 );
+PjabS = ParamToggle( "Price just above/below", "Off,On", 1 );
+_SECTION_END();
+/*******************************************************************************************/
+_SECTION_BEGIN( "Sensitivity" );
+AddparamUsefromChart2( def_UseFromChart );
+PatternPriceBasis = ParamToggle( "Pattern Price Basis", "Close|High & Low", def_PatternPriceBasisCPR );
+Bars = Param( "Bars", 5, 2, 20, 1 );
+MinVertSize = Param( "Minimum Vertical Size (*ATR)", 0, 0, 5.01, 0.05 );
+
+if ( InChart )
+    StaticVarSet( "Re3442", PatternPriceBasis );
+
+if ( inAA AND Usefromchart )
+    PatternPriceBasis = StaticVarGet( "Re3442" );
+
+if ( InChart )
+    StaticVarSet( "P56947", Bars );
+
+if ( inAA AND Usefromchart )
+    Bars = StaticVarGet( "P56947" );
+
+if ( InChart )
+    StaticVarSet( "Adr897", MinVertSize );
+
+if ( inAA AND Usefromchart )
+    MinVertSize = StaticVarGet( "Adr897" );
+
+_SECTION_END();
+
+/*******************************************************************************************/
+_SECTION_END();
+
+PlotP1P2 = ParamToggle( "Plot P1/P2 Shapes", "Off,On", def_Plot_P1P2_Shapes );
+
+P1Shape = Param( "P1 Shape Typ", 35, 0, 50, 1 );//default 35
+
+P2Shape = Param( "P2 Shape Typ", 37, 0, 50, 1 );//default 37
+
+Parallellinesswitch = ParamToggle( "Plot Parallel Lines", "Off,On" );
+
+DisRange = Param( "Plot Parallel Lines Trigger", 3, 0.0, 10, 0.5 );
+
+_SECTION_END();
+
+/*******************************************************************************************/
+_SECTION_BEGIN( "Styles" );
+
+Style_SL = ParamStyle( "Support", styleLine + styleThick, maskDefault ) + styleNoRescale;
+
+Style_RL = ParamStyle( "Resistance", styleLine + styleThick, maskDefault ) + styleNoRescale;
+
+Style_PHL = ParamStyle( "Parallel Support", styleLine, maskDefault ) + styleNoRescale;
+
+Style_PLL = ParamStyle( "Parallel Resistance", styleLine, maskDefault ) + styleNoRescale;
+
+_SECTION_END();
+
+/*******************************************************************************************/
+_SECTION_BEGIN( "Colors" );
+
+Color_SL =  ParamColor( "Support", def_Color1 );
+
+Color_RL = ParamColor( "Resistance", colorRed );
+
+Shadowcolor = ParamColor( "Shadow", def_Shadowcolor );
+
+Color_PLL = Color_RL; //ParamColor("Resistance",colorRed);
+
+Color_PHL = Color_SL; //ParamColor("Support",def_Color1);
+
+_SECTION_END();
+
+/*******************************************************************************************/
+if ( inAA )
+{
+    _SECTION_BEGIN( "Pattern Selection" );
+    AscTs = ParamToggle( "Ascending Triangle", "Off,On", 1 );
+    DscTs = ParamToggle( "Descending Triangle", "Off,On", 1 );
+    STs = ParamToggle( "Symmetrically Triangle", "Off,On", 1 );
+    ETs = ParamToggle( "Expanding Triangle", "Off,On", 1 );
+    RWs = ParamToggle( "Rising Wedge", "Off,On", 1 );
+    FWs = ParamToggle( "Falling Wedge", "Off,On", 1 );
+    UTs = ParamToggle( "Up Trend", "Off,On", 1 );
+    DTs = ParamToggle( "Down Trend", "Off,On", 1 );
+    Rectangles = ParamToggle( "Rectangle", "Off,On", 1 );
+    NonDefinedPatterns = ParamToggle( "Not defined Patterns", "Off,On", 1 );
+    _SECTION_END();
+}
+
+/*******************************************************************************************/
+#include_once  <\PEInc\Lib\PatternExplorer_f07.afl>
+#include_once  <\PEInc\PatternExplorer_1.afl>
+/*******************************************************************************************/
+GraphZOrder = 0;
+
+Plot( TRS, "  SL" , Color_SL, Style_SL + styleNoTitle );
+
+Plot( TRR, "  RL" , Color_RL, Style_RL + styleNoTitle );
+
+PlotOHLC( Null, TRR, TRS, Null, "", Shadowcolor, styleCloud + styleNoLabel );
+
+Plot( IIf( Parallellinesswitch, PLL_plot, -1e10 ), "  PLL", Color_PLL, Style_PLL + styleNoTitle );
+
+Plot( IIf( Parallellinesswitch, PHL_plot, -1e10 ), "  PHL", Color_PHL, Style_PHL + styleNoTitle );
+
+PlotShapes( IIf( BS & x > LastValue( x ) - 3, def_BuyShape, shapeNone ), def_BuyShapeColor, 0, Low, -def_BuyShapeOffset );
+
+PlotShapes( IIf( SS & x > LastValue( x ) - 3, def_SellShape, shapeNone ), def_SellShapeColor, 0, High, -def_SellShapeOffset );
+
+if ( PlotP1P2 )
+{
+    PlotShapes( IIf( x == xa & NOT AnZ, P1Shape, shapeNone ), Color_SL, 0, SL, -13 );
+    PlotShapes( IIf( x == xb & NOT AnZ, P2Shape, shapeNone ), Color_SL, 0, SL, -13 );
+    PlotShapes( IIf( x == xc & NOT AnZ, P1Shape, shapeNone ), Color_RL, 0, H, 13 );
+    PlotShapes( IIf( x == xd & NOT AnZ, P2Shape, shapeNone ), Color_RL, 0, H, 13 );
+}
+
+/*******************************************************************************************/
+Buy = def_Buy AND BS;
+
+Sell = def_Sell AND SS;
+
+/*******************************************************************************************/
+if ( inAA )
+{
+    CPRFilter =
+        ( AscT AND AscTs ) | ( DscT AND DscTs ) | ( ST AND STs ) |
+        ( ET AND ETs ) | ( RW AND RWs ) | ( FW AND FWs ) |
+        ( UT AND UTs ) | ( DT AND DTs ) | ( Rectangle AND Rectangles ) |
+        ( SupSignals AND NonDefinedPatterns AND NOT DefinedPatterns ) |
+        ( ResSignals AND NonDefinedPatterns AND NOT DefinedPatterns );
+    Filter = def_Filter AND BarIndex() == LastValue( BarIndex() ) AND NOT GroupID() == 253;
+    Filter = Filter AND CPRFilter;
+    /*******************************************************************************************/
+    Addefaultcolumns();
+    Adddefaultcolumns( 2, 1 );
+    AddTextColumn(
+        WriteIf( Sup_pricejustabove, "Price just above",
+                 WriteIf( Sup_confirmed, "Confirmed",
+                          WriteIf( Sup_break, "Break", "" ) ) ), "Support Line", 1.2,
+        IIf( Sup_pricejustabove OR sup_confirmed, colorGreen, colorRed ) );
+    AddTextColumn(
+        WriteIf( Res_pricejustbelow, "Price just below",
+                 WriteIf( Res_confirmed, "Confirmed",
+                          WriteIf( Res_break, "Break", "" ) ) ), "Resistance Line", 1.2,
+        IIf( Res_pricejustbelow OR Res_confirmed, colorRed, colorGreen ) );
+    /*******************************************************************************************/
+    patterncolor =
+        IIf( AscT | FW | UT, colorGreen,
+             IIf( DscT | RW | DT, colorRed,
+                  IIf( ST | ET | Rectangle, colorBlue, colorBlack ) ) );
+    AddTextColumn( PatternText, "Pattern", 0, patterncolor );
+    AddTextColumn( FullName(), "Full name" );
+}
+
+/*******************************************************************************************/
+/*
+AddTextColumn(
+WriteIf(PLL_pricejustabove,"price just above",
+WriteIf(PLL_confirmed,"confirmed",
+WriteIf(PLL_break,"break",""))),"Parallel support line");
+
+AddTextColumn(
+WriteIf(PHL_pricejustbelow,"price just below",
+WriteIf(PHL_confirmed,"confirmed",
+WriteIf(PHL_break,"break",""))),"Parallel resistance line");
+*/
+/*******************************************************************************************/
+if ( SRbS )
+{
+    AddAlert( Res_break, Audio, Email, "Resistance broken", 1, BarComplete, def_BuySound1 );
+    AddAlert( Sup_break, Audio, Email, "Support broken", 2, BarComplete, def_SellSound1 );
+}
+
+if ( SRcS )
+{
+    AddAlert( Sup_confirmed, Audio, Email, "Support confirmed", 1, BarComplete, def_BuySound2 );
+    AddAlert( Res_confirmed, Audio, Email, "Resistance confirmed", 2, BarComplete, def_SellSound2 );
+}
+
+if ( PjabS )
+{
+    AddAlert( Sup_pricejustabove AND PatternDirection == 1, Audio, Email, "Price just above Support", 1, BarComplete, def_BuySound3 );
+    AddAlert( Res_pricejustbelow AND PatternDirection == -1, Audio, Email, "Price just below Resistance", 2, BarComplete, def_SellSound3 );
+    AddAlert( Sup_pricejustabove AND PatternDirection == 0, Audio, Email, "Price just above Support", 5, BarComplete, def_BuySound3 );
+    AddAlert( Res_pricejustbelow AND PatternDirection == 0, Audio, Email, "Price just below Resistance", 5, BarComplete, def_SellSound3 );
+}
+
+/*******************************************************************************************/
+AddCustomCodeAfterPE();
+
+/*******************************************************************************************/
+Title = "PatternExplorer.com - Chart Pattern Recognition 2" + default_priceTitle + ", " + EncodeColor( def_Text3 ) +
+        "Pattern: " + PatternText + " "
+        + EncodeColor( IIf( NOT AnZ, def_Text2, colorRed ) ) + ", Bars = " + WriteVal( Bars, 1 ) + ", Min.Vertical Size (*ATR) = " + WriteVal( MinVertSize, 1.2 ) + " " + EncodeColor( colorRed ) + WriteIf( NOT AnZ, "", " NO POINTS AVAILABLE -> REDUCE BARS/MIN.VERTICAL SIZE " );
+
+/*******************************************************************************************/
+ST = LastValue( ST );
+
+AscT = LastValue( AscT );
+
+DscT = LastValue( DscT );
+
+ET = LastValue( ET );
+
+RW = LastValue( RW );
+
+FW = LastValue( FW );
+
+UT = LastValue( UT );
+
+ParamToggle( "Up Trend", "Off,On", 1 );
+
+DT = LastValue( DT );
+
+ParamToggle( "Down Trend", "Off,On", 1 );
+
+Rectangles = LastValue( Rectangle );
+
+ParamToggle( "Rectangle", "Off,On", 1 );
+
+/*******************************************************************************************/
+ToolTip = def_ToolTip;
+
+if ( ST )
+{
+    ToolTip = ToolTip +
+              "\n\n" +
+              "Current Pattern = Symmetrical Triangle" + "\n" +
+              " ";
+}
+
+if ( AscT )
+{
+    ToolTip = ToolTip +
+              "\n\n" +
+              "Current Pattern = Ascending Triangle" + "\n" +
+              " ";
+}
+
+if ( DscT )
+{
+    ToolTip = ToolTip +
+              "\n\n" +
+              "Current Pattern = Descending Triangle" + "\n" +
+              " ";
+}
+
+if ( ET )
+{
+    ToolTip = ToolTip +
+              "\n\n" +
+              "Current Pattern = Expanding Triangle" + "\n" +
+              " ";
+}
+
+if ( RW )
+{
+    ToolTip = ToolTip +
+              "\n\n" +
+              "Current Pattern = Rising Wedge" + "\n" +
+              " ";
+}
+
+if ( FW )
+{
+    ToolTip = ToolTip +
+              "\n\n" +
+              "Current Pattern = Falling Wedge" + "\n" +
+              " ";
+}
+
+if ( UT )
+{
+    ToolTip = ToolTip +
+              "\n\n" +
+              "Current Pattern = Up Channel" + "\n" +
+              " ";
+}
+
+if ( DT )
+{
+    ToolTip = ToolTip +
+              "\n\n" +
+              "Current Pattern = Down Channel" + "\n" +
+              " ";
+}
+
+if ( Rectangles )
+{
+    ToolTip = ToolTip +
+              "\n\n" +
+              "Current Pattern = Rectangle" + "\n" +
+              " ";
+}
+GfxSetOverlayMode(1);
+GfxSelectFont("Tahoma", Status("pxheight")/6 );
+GfxSetTextAlign( 6 );// center alignment
+GfxSetTextColor( ColorRGB( 200, 200, 200 ) );
+GfxSetBkMode(1); // transparent
+GfxTextOut( Name(), Status("pxwidth")/2, Status("pxheight")/12 );

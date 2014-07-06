@@ -1,0 +1,58 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Strength and Weakness
+//  Author/Uploader: Eric Paradis 
+//  E-mail:          
+//  Date/Time Added: 2006-02-14 00:57:08
+//  Origin:          Created From Ed Seykota's Trading Tribe Website
+//  Keywords:        
+//  Level:           basic
+//  Flags:           exploration
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=587
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=587
+//
+//------------------------------------------------------------------------------
+//
+//  Measures the strength in a stock over a 20 day period, generates a 20-day
+//  rate of change and a yearly rate of change.
+//
+//------------------------------------------------------------------------------
+
+//Coded by Eric Paradis 2006. 
+//Computes Strength and Weakness of stocks over a 20-day period.
+
+
+
+Lag= Ref(Close,-21);
+Lag =  Lag + (Ref(Close,-20)-Lag)/20;
+Lag =  Lag + (Ref(Close,-19)-Lag)/20;
+Lag =  Lag + (Ref(Close,-18)-Lag)/20;
+Lag =  Lag + (Ref(Close,-17)-Lag)/20;
+Lag =  Lag + (Ref(Close,-16)-Lag)/20;
+Lag =  Lag + (Ref(Close,-15)-Lag)/20;
+Lag =  Lag + (Ref(Close,-14)-Lag)/20;
+Lag =  Lag + (Ref(Close,-13)-Lag)/20;
+Lag =  Lag + (Ref(Close,-12)-Lag)/20;
+Lag =  Lag + (Ref(Close,-11)-Lag)/20;
+Lag =  Lag + (Ref(Close,-10)-Lag)/20;
+Lag =  Lag + (Ref(Close,-9)-Lag)/20;
+Lag =  Lag + (Ref(Close,-8)-Lag)/20;
+Lag =  Lag + (Ref(Close,-7)-Lag)/20;
+Lag =  Lag + (Ref(Close,-6)-Lag)/20;
+Lag =  Lag + (Ref(Close,-5)-Lag)/20;
+Lag =  Lag + (Ref(Close,-4)-Lag)/20;
+Lag =  Lag + (Ref(Close,-3)-Lag)/20;
+Lag =  Lag + (Ref(Close,-2)-Lag)/20;
+Lag =  Lag + (Ref(Close,-1)-Lag)/20;
+AV = Lag;
+
+pctROC = (Close-AV)/AV;
+//365.25 / 20 * (P-AV20)/AV20
+YROC = (Close-AV)/AV*100/20 * 365.25; 
+
+
+
+Y = Volume> 200000;
+Filter = Y AND Close > 5.00;// AND Retrace;
+AddColumn(pctROC, "(P-AV)/AV", 1.2 ); 
+AddColumn(YROC, "Yearly % ROC Filter", 1.2 ); 

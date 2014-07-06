@@ -1,0 +1,72 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Range Expansion Index
+//  Author/Uploader: Tomasz Janeczko 
+//  E-mail:          tj@amibroker.com
+//  Date/Time Added: 2001-06-16 08:32:31
+//  Origin:          Originally developed by Tom DeMark
+//  Keywords:        moving average,oscillator
+//  Level:           medium
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=15
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=15
+//
+//------------------------------------------------------------------------------
+//
+//  The DeMark Range Expansion Index is a market-timing oscillator described in
+//  DeMark on Day Trading Options, by T.R. DeMark and T.R. Demark, Jr., McGraw
+//  Hill, 1999. The oscillator is arithmetically calculated and is designed to
+//  overcome problems with exponentially calculated oscillators, like MACD. The
+//  TD REI oscillator typically produces values of -100 to +100 with 45 or
+//  higher indicating overbought conditions and -45 or lower indicating
+//  oversold. Here is how Tom DeMark describes the calculation of Range
+//  Expansion Index:
+//
+//  "The first step in calculating the REI is to add together the respective
+//  differences between the current day's high and the high two days earlier
+//  and the current day's low and the low two days earlier. These values will
+//  be positive or negative depending on whether the current day's high and low
+//  are greater or less than the high and low two days earlier. To prevent
+//  buying or selling prematurely into a steep price decline or advance, two
+//  additional conditions should be met to qualify a positive or negative value
+//  on a particular day: 1) either the high two days earlier must be greater
+//  than or equal to the close seven or eight days ago, or the current day's
+//  high must be greater than or equal to the low five or six days ago; 2)
+//  either the low two days earlier must be less than or equal to the close
+//  seven or eight days ago, or the current day's low must be less than or
+//  equal to the high five or six days ago. If either of these conditions are
+//  not satisfied, a zero value is assigned to that day. If they both are, the
+//  daily values (the differences between the highs and lows) are summed , and
+//  the specific value for that next day is determined. Next, all the positives
+//  and negative values are added together over a five-day period. This value
+//  is then divided by the absolute value price movement of each day over the
+//  five-day period. The numerator of the calculation can be either positive,
+//  negative or zero, because each day's value is summed for five days, but the
+//  denominator is always positive because it is only concerned with the
+//  differential price movement itself. This value is then multiplied by 100.
+//  Consequently, the REI can fluctuate between +100 and -100."
+//
+//------------------------------------------------------------------------------
+
+/* 
+** Tom DeMark's Range Expansion Index 
+** AFL Implementation by Tomasz Janeczko 
+*/
+
+
+HighMom = H - Ref( H, -2 );
+LowMom = L - Ref( L, -2 );
+
+Cond1 = ( H >= Ref( L,-5) OR H >= Ref( L, -6 ) ); 
+Cond2 = ( Ref( H, -2 ) >= Ref( C, -7 ) OR Ref( H, -2 ) >= Ref( C, -8 ) ); 
+Cond3 = ( L <= Ref( H, -5 ) OR L <= Ref( H, -6) ); 	
+Cond4 = ( Ref( L, -2 ) <= Ref( C, -7 ) OR Ref( L, -2 ) <= Ref( C, -8 ) );
+
+Cond = ( Cond1 OR Cond2 ) AND ( Cond3 OR Cond4 );
+
+Num = IIf( Cond, HighMom + LowMom, 0 );
+Den = Abs(  HighMom ) + Abs( LowMom );
+
+TDREI = 100 * Sum( Num, 5 )/Sum( Den, 5 ) ;
+
+graph0 = TDREI;

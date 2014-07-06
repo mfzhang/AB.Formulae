@@ -1,0 +1,64 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Adaptive Price Channel
+//  Author/Uploader: Denis Dube 
+//  E-mail:          
+//  Date/Time Added: 2004-04-29 12:32:15
+//  Origin:          From the book " The Ultimate Trading Guide".
+//  Keywords:        Adaptive channel
+//  Level:           medium
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=356
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=356
+//
+//------------------------------------------------------------------------------
+//
+//  This price channel starts with a lookback period of 20.
+//
+//  The lookback period changes according to volatility, measured by a 30
+//  period standard deviation of prices.
+//
+//  A maximum and a minimum lookback period are defined.
+//
+//------------------------------------------------------------------------------
+
+//Adaptive price channel
+
+Plot(C,"",colorBlack,styleCandle);
+
+Lookback=20;
+MaxLookback=Param("Max Lookback period",40,20,60,5);
+MinLookback=Param("Min Lookback period",20,10,20,5);
+
+Vol=StDev(C,30);
+Change=(Vol-Ref(Vol,-1))/Ref(Vol,-1);
+
+StartBar = BeginValue( BarIndex() ); ;
+FinishBar = EndValue( BarIndex() ); 
+
+i = StartBar; 
+
+for (i = StartBar+31; i<Finishbar; i++) 
+{ 
+	
+	Lookback[i]=round(Lookback[i-1]*(1+Change[i]));
+
+		if(Lookback[i]>MaxLookback)
+				{
+					Lookback[i]=MaxLookback;
+				}
+
+		if(Lookback[i]<MinLookback)
+				{
+					Lookback[i]=MinLookback;
+				}
+
+}
+
+HighChannel=Ref(HHV(H,Lookback),-1);
+LowChannel=Ref(LLV(L,Lookback),-1);
+
+Plot(HighChannel,"",colorPink,styleThick | styleNoRescale);
+Plot(LowChannel,"",colorSeaGreen,styleThick | styleNoRescale );
+
+GraphXSpace=7;

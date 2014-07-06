@@ -1,0 +1,165 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Price Persistency
+//  Author/Uploader: Anthony Faragasso 
+//  E-mail:          ajf1111@epix.net
+//  Date/Time Added: 2002-12-29 18:20:39
+//  Origin:          
+//  Keywords:        
+//  Level:           basic
+//  Flags:           exploration
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=245
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=245
+//
+//------------------------------------------------------------------------------
+//
+//  Interested in measuring a short-term Trend ?
+//
+//  Price persistency is the number of days that a market continues to close
+//  either up or down. It's another term for a market run. The usefulness of
+//  Price Persistency is based on the theory of runs..It is the idea that,
+//  given the market has moved in a particular direction for ( n ) days, the
+//  likelihood it will either continue..or not...can be estimated and used in a
+//  profitable trading system....
+//
+//------------------------------------------------------------------------------
+
+//Price Persistency Exploration
+//Interpreted from January,2002, TASC, page 44
+//article by Gordon Gustafson on Price Persistency
+//Coded by Anthony Faragasso, 12/31/01
+//Version 1.00
+
+/*****Bars in the test*****************/
+bars=Cum(1);
+/**************************************/
+Day1up=C > Ref(C,-1);
+Day1Dn=C < Ref(C,-1);
+/**************************************/
+
+Day2up=C > Ref(C,-1) AND Ref(C,-1) > Ref(C,-2);
+Day2Dn=C < Ref(C,-1) AND Ref(C,-1) < Ref(C,-2);
+
+/***********************************************/
+Day3up=C > Ref(C,-1) AND Ref(C,-1) > Ref(C,-2) AND Ref(C,-2) > Ref(C,-3);
+Day3Dn=C < Ref(C,-1) AND Ref(C,-1) < Ref(C,-2) AND Ref(C,-2) < Ref(C,-3);
+/**********************************************/
+
+Day4up=C > Ref(C,-1) AND Ref(C,-1)>Ref(C,-2)AND Ref(C,-2)>Ref(C,-3) AND Ref(C,-3) > Ref(C,-4);
+Day4Dn=C < Ref(C,-1) AND Ref(C,-1)<Ref(C,-2)AND Ref(C,-2)<Ref(C,-3) AND Ref(C,-3) < Ref(C,-4);
+/**********************************************/
+
+Day5up=C > Ref(C,-1) AND Ref(C,-1)>Ref(C,-2)AND Ref(C,-2)>Ref(C,-3)AND Ref(C,-3) > Ref(C,-4) AND Ref(C,-4) > Ref(C,-5);
+Day5Dn=C < Ref(C,-1) AND Ref(C,-1)<Ref(C,-2)AND Ref(C,-2)<Ref(C,-3)AND Ref(C,-3) < Ref(C,-4) AND Ref(C,-4) < Ref(C,-5);
+/************************************************/
+
+Day6up=C > Ref(C,-1) AND Ref(C,-1)> Ref(C,-2)AND Ref(C,-2)>Ref(C,-3)AND Ref(C,-3) > Ref(C,-4) AND Ref(C,-4) > Ref(C,-5) AND Ref(C,-5) > Ref(C,-6);
+Day6Dn=C < Ref(C,-1) AND Ref(C,-1)< Ref(C,-2)AND Ref(C,-2)< Ref(C,-3)AND Ref(C,-3) < Ref(C,-4)AND Ref(C,-4) < Ref(C,-5) AND Ref(C,-5) < Ref(C,-6);
+/***********************************************/
+
+Day7up=C > Ref(C,-1) AND Ref(C,-1)> Ref(C,-2)AND Ref(C,-2)>Ref(C,-3)AND Ref(C,-3) > Ref(C,-4) AND Ref(C,-4) > Ref(C,-5)AND Ref(C,-5)>Ref(C,-6) AND Ref(C,-6) > Ref(C,-7);
+Day7Dn=C < Ref(C,-1) AND Ref(C,-1)< Ref(C,-2)AND Ref(C,-2)< Ref(C,-3)AND Ref(C,-3) < Ref(C,-4)AND Ref(C,-4) < Ref(C,-5)AND Ref(C,-5)< Ref(C,-6)AND Ref(C,-6) < Ref(C,-7);
+/*********************************************/
+
+Day8up=C > Ref(C,-1) AND Ref(C,-1)> Ref(C,-2)AND Ref(C,-2)>Ref(C,-3)AND Ref(C,-3) > Ref(C,-4) AND Ref(C,-4) > Ref(C,-5)AND Ref(C,-5)>Ref(C,-6)AND Ref(C,-6) > Ref(C,-7) AND Ref(C,-7) > Ref(C,-8);
+Day8Dn=C < Ref(C,-1) AND Ref(C,-1)< Ref(C,-2)AND Ref(C,-2)< Ref(C,-3)AND Ref(C,-3) < Ref(C,-4)AND Ref(C,-4) < Ref(C,-5)AND Ref(C,-5)< Ref(C,-6)AND Ref(C,-6) < Ref(C,-7)AND Ref(C,-7) < Ref(C,-8);
+/**********************************************/
+
+Day9up=C > Ref(C,-1) AND Ref(C,-1)> Ref(C,-2)AND Ref(C,-2)>Ref(C,-3)AND Ref(C,-3) > Ref(C,-4) AND Ref(C,-4) > Ref(C,-5)AND Ref(C,-5)>Ref(C,-6)AND Ref(C,-6) > Ref(C,-7)AND Ref(C,-7) > Ref(C,-8) AND Ref(C,-8) > Ref(C,-9);
+Day9Dn=C < Ref(C,-1) AND Ref(C,-1)< Ref(C,-2)AND Ref(C,-2)< Ref(C,-3)AND Ref(C,-3) < Ref(C,-4)AND Ref(C,-4) < Ref(C,-5)AND Ref(C,-5)< Ref(C,-6)AND Ref(C,-6) < Ref(C,-7)AND Ref(C,-7) < Ref(C,-8) AND Ref(C,-8) < Ref(C,-9);
+/**********************************************/
+
+Day10up=C > Ref(C,-1) AND Ref(C,-1)> Ref(C,-2)AND Ref(C,-2)>Ref(C,-3)AND Ref(C,-3) > Ref(C,-4) AND Ref(C,-4) > Ref(C,-5)AND Ref(C,-5)>Ref(C,-6)AND Ref(C,-6) > Ref(C,-7)AND Ref(C,-7) > Ref(C,-8)AND Ref(C,-8)> Ref(C,-9) AND Ref(C,-9) > Ref(C,-10);
+Day10Dn=C < Ref(C,-1) AND Ref(C,-1)< Ref(C,-2)AND Ref(C,-2)< Ref(C,-3)AND Ref(C,-3) < Ref(C,-4)AND Ref(C,-4) < Ref(C,-5)AND Ref(C,-5)< Ref(C,-6)AND Ref(C,-6) < Ref(C,-7)AND Ref(C,-7) < Ref(C,-8)AND Ref(C,-8) < Ref(C,-9) AND Ref(C,-9) < Ref(C,-10);
+/************************************************/
+
+tot1dayUp=LastValue(Cum(Day1up));tot1dayDn=LastValue(Cum(Day1Dn));
+tot2dayUp=LastValue(Cum(Day2up));tot2dayDn=LastValue(Cum(Day2Dn));
+tot3dayUp=LastValue(Cum(Day3up));tot3dayDn=LastValue(Cum(Day3Dn));
+tot4dayUp=LastValue(Cum(Day4up));tot4dayDn=LastValue(Cum(Day4Dn));
+tot5dayUp=LastValue(Cum(Day5up));tot5dayDn=LastValue(Cum(Day5Dn));
+tot6dayUp=LastValue(Cum(Day6up));tot6dayDn=LastValue(Cum(Day6Dn));
+tot7dayUp=LastValue(Cum(Day7up));tot7dayDn=LastValue(Cum(Day7Dn));
+tot8dayUp=LastValue(Cum(Day8up));tot8dayDn=LastValue(Cum(Day8Dn));
+tot9dayUp=LastValue(Cum(Day9up));tot9dayDn=LastValue(Cum(Day9Dn));
+tot10dayUp=LastValue(Cum(Day10up));tot10dayDn=LastValue(Cum(Day10Dn));
+
+/*********Percentages for Up or Down as a % of total bars *************/
+totpct1dayup=tot1dayUp/(Cum(1))*100;
+totpct1dayDn=tot1dayDn/(Cum(1))*100;
+totpct2dayUp=tot2dayUp/(Cum(1))*100;
+totpct2dayDn=tot2dayDn/(Cum(1))*100;
+totpct3dayUp=tot3dayUp/(Cum(1))*100;
+totpct3dayDn=tot3dayDn/(Cum(1))*100;
+totpct4dayUp=tot4dayUp/(Cum(1))*100;
+totpct4dayDn=tot4dayDn/(Cum(1))*100;
+totpct5dayUp=tot5dayUp/(Cum(1))*100;
+totpct5dayDn=tot5dayDn/(Cum(1))*100;
+totpct6dayUp=tot6dayUp/(Cum(1))*100;
+totpct6dayDn=tot6dayDn/(Cum(1))*100;
+totpct7dayUp=tot7dayUp/(Cum(1))*100;
+totpct7dayDn=tot7dayDn/(Cum(1))*100;
+totpct8dayUp=tot8dayUp/(Cum(1))*100;
+totpct8dayDn=tot8dayDn/(Cum(1))*100;
+totpct9dayUp=tot9dayUp/(Cum(1))*100;
+totpct9dayDn=tot9dayDn/(Cum(1))*100;
+totpct10dayUp=tot10dayUp/(Cum(1))*100;
+totpct10dayDn=tot10dayDn/(Cum(1))*100;
+
+/*******************************************************/
+/**********Percent up or down / previous up or down***********************/
+
+Pct2dayUp=(tot2dayUp/tot1dayup)*100;
+Pct2dayDn=(tot2dayDn/tot1dayDn)*100;
+pct3dayUp=(tot3dayUp/tot2dayup)*100;
+pct3dayDn=(tot3dayDn/tot2dayDn)*100;
+pct4dayUp=(tot4dayUp/tot3dayUp)*100;
+pct4dayDn=(tot4dayDn/tot3dayDn)*100;
+pct5dayUp=(tot5dayUp/tot4dayUp)*100;
+pct5dayDn=(tot5dayDn/tot4dayDn)*100;
+pct6dayUp=(tot6dayUp/tot5dayUp)*100;
+pct6dayDn=(tot6dayDn/tot5dayDn)*100;
+pct7dayUp=(tot7dayUp/tot6dayUp)*100;
+pct7dayDn=(tot7dayDn/tot6dayDn)*100;
+pct8dayUp=(tot8dayUp/tot7dayUp)*100;
+pct8dayDn=(tot8dayDn/tot7dayDn)*100;
+pct9dayUp=(tot9dayUp/tot8dayUp)*100;
+pct9dayDn=(tot9dayDn/tot8dayDn)*100;
+pct10dayUp=(tot10dayUp/tot9dayUp)*100;
+pct10dayDn=(tot10dayDn/tot9dayDn)*100;
+
+
+Filter=1;
+/***Current State of the Closes******/
+stateUp=BarsSince(C < Ref(C,-1));
+stateDown=BarsSince(C > Ref(C,-1));
+AddColumn(stateUp,"currentUp");
+AddColumn(statedown,"CurrentDown");
+
+/***Close is equal to previous close*****/
+AddColumn(Cum(C == Ref(C,-1)),"Close==PrevClose",1);
+
+/***Days in a row ,whether up or down ( A Run )********/
+//1 day
+
+AddColumn(tot1dayUp,"1dayUp",1);AddColumn(tot1dayDn,"1dayDn",1);AddColumn(0,"%Up/PrevUp");AddColumn(0,"%Dn/PrevDn");AddColumn(totpct1dayUp,"%Up[bars]");AddColumn(totpct1dayDn,"%Dn[bars]");
+//2 days 
+AddColumn(tot2dayUp,"2dayUp",1);AddColumn(tot2dayDn,"2dayDn",1);AddColumn(pct2dayUp,"%Up/prevUp");AddColumn(pct2dayDn,"%Dn/prevDn");AddColumn(totpct2dayUp,"%Up[bars]");AddColumn(totpct2dayDn,"%Dn[bars]");
+//3 days
+AddColumn(tot3dayUp,"3dayUp",1);AddColumn(tot3dayDn,"3dayDn",1);AddColumn(pct3dayUp,"%Up/prevUp");AddColumn(pct3dayDn,"%Dn/prevDn");AddColumn(totpct3dayUp,"%Up[bars]");AddColumn(totpct3dayDn,"%Dn[bars]");
+//4 days
+AddColumn(tot4dayUp,"4dayUp",1);AddColumn(tot4dayDn,"4dayDn",1);AddColumn(pct4dayup,"%Up/prevUp");AddColumn(pct4dayDn,"%Dn/prevDn");AddColumn(totpct4dayUp,"%Up[bars]");AddColumn(totpct4dayDn,"%Dn[bars]");
+//5 days
+AddColumn(tot5dayUp,"5dayUp",1);AddColumn(tot5dayDn,"5dayDn",1);AddColumn(pct5dayup,"%Up/prevUp");AddColumn(pct5dayDn,"%Dn/prevDn");AddColumn(totpct5dayUp,"%Up[bars]");AddColumn(totpct5dayDn,"%Dn[bars]");
+//6 days
+AddColumn(tot6dayUp,"6dayUp",1);AddColumn(tot6dayDn,"6dayDn",1);AddColumn(pct6dayUp,"%Up/prevUp");AddColumn(pct6dayDn,"%Dn/prevDn");AddColumn(totpct6dayUp,"%Up[bars]");AddColumn(totpct6dayDn,"%Dn[bars]");
+//7 days
+AddColumn(tot7dayUp,"7dayUp",1);AddColumn(tot7dayDn,"7dayDn",1);AddColumn(pct7dayUp,"%Up/prevUp");AddColumn(pct7dayDn,"%Dn/prevDn");AddColumn(totpct7dayUp,"%Up[bars]");AddColumn(totpct7dayDn,"%Dn[bars]");
+//8 days
+AddColumn(tot8dayUp,"8dayUp",1);AddColumn(tot8dayDn,"8dayDn",1);AddColumn(pct8dayUp,"%Up/prevUp");AddColumn(pct8dayDn,"%Dn/PrevDn");AddColumn(totpct8dayUp,"%Up[bars]");AddColumn(totpct8dayDn,"%Dn[bars]");
+//9 days
+AddColumn(tot9dayUp,"9dayUp",1);AddColumn(tot9dayDn,"9dayDn",1);AddColumn(pct9dayUp,"%Up/prevUp");AddColumn(pct9dayDn,"%Dn/prevDn");AddColumn(totpct9dayUp,"%Up[bars]");AddColumn(totpct9dayDn,"%Dn[bars]");
+//10 days
+AddColumn(tot10dayUp,"10dayUp",1);AddColumn(tot10dayDn,"10dayDn",1);AddColumn(pct10dayUp,"%Up/prevUp");AddColumn(pct10dayDn,"%Dn/prevDn");AddColumn(totpct10dayUp,"%Up[bars]");AddColumn(totpct10dayDn,"%Dn[bars]");
+
+AddColumn(bars,"bars",1);

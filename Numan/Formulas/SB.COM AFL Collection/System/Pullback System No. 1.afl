@@ -1,0 +1,38 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Pullback System No. 1
+//  Author/Uploader: Jerry Coopmans 
+//  E-mail:          
+//  Date/Time Added: 2001-06-16 22:58:37
+//  Origin:          Active Trader Magazine - November, 2000
+//  Keywords:        
+//  Level:           medium
+//  Flags:           system
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=24
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=24
+//
+//------------------------------------------------------------------------------
+//
+//  This is a short term pullback system that in only long. It buys on the open
+//  following a higher high after two lower closes and when the close is above
+//  the 50 day simple average.
+//
+//  The sell is on the day after a profit at the open or stopped after breaking
+//  the two day low.
+//
+//------------------------------------------------------------------------------
+
+// Pullback System # 1
+
+condition1 = ref(c,-2) < ref(c,-3) and ref(c,-1) < ref(c,-2);
+condition2 = h > ref(h,-1);
+filter = c > ma(c,50);
+
+buy = condition1 and condition2 and filter;
+buyPrice = valuewhen( buy, open,1);
+sell = c > buyPrice or l < ref(llv(l,2),-1);
+
+buy = exRem(buy,sell);
+sell = exRem(sell,buy);
+ 
+

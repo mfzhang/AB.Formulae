@@ -1,0 +1,24 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Historical Volotility Scan - 50 Day
+//  Author/Uploader: Dennis Skoblar 
+//  E-mail:          DennisAndLisa@sbcglobal.net
+//  Date/Time Added: 2005-06-14 04:02:32
+//  Origin:          Dave Landry On Swing Trading by Dave Landry
+//  Keywords:        Dave Landry,Landry,historical volotility,50 day hv
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=470
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=470
+//
+//------------------------------------------------------------------------------
+//
+//  Shows how volotile the stock is over a a 1 year period. A reading of 40 or
+//  above is ideal for "where the action is."
+//
+//------------------------------------------------------------------------------
+
+_SECTION_BEGIN("HV50");
+HV50 = round(StDev(log(C/Ref(C,-1)),50)*100*sqrt(256));
+Plot(HV50,"HV50",colorYellow,styleLine);
+_SECTION_END();

@@ -1,0 +1,408 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Triangular Moving Average new
+//  Author/Uploader: ali 
+//  E-mail:          abosliman2005m@hotmail.com
+//  Date/Time Added: 2006-09-09 09:03:23
+//  Origin:          h
+//  Keywords:        h
+//  Level:           basic
+//  Flags:           system
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=696
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=696
+//
+//------------------------------------------------------------------------------
+//
+//  //Triangular Moving average
+//
+//  //Anthony Faragasso
+//
+//  //December, 2002
+//
+//  /* A Triangular moving average is similar to exponential AND
+//
+//  weighted moving averages except A different weighting scheme
+//
+//  is used. Exponential AND Weighted averages assign the majority
+//
+//  of the weight to the most recent data. Simple moving averages
+//
+//  assign the weight equally across all the data. With A Triangular
+//
+//  moving average, the majority of the weight is assigned to the middle
+//
+//  portion of the data.*/
+//
+//  Odd=13;//enter Odd numbers only
+//
+//  CoefOdd=round(Odd/2);
+//
+//  Even=12;//enter Even numbers only
+//
+//  Coefeven=Even/2;
+//
+//  Coefeven2=Coefeven+1;
+//
+//  CongestionPercent=2.8;/*Set % above/below Moving average for congestion /
+//  sideways market*/
+//
+//  TriangularOdd=MA(MA(C,CoefOdd),CoefOdd);
+//
+//  TriangularEven=MA(MA(C,Coefeven),Coefeven2);
+//
+//  finalMov_avg=IIf(Odd > even,triangularOdd,TriangularEven);
+//
+//  Color=colorBrightGreen;//select Moving average line color
+//
+//  tickercolor=colorBlack;//select price color
+//
+//  Plot(finalMov_avg,"",IIf(C <
+//  finalmov_avg,colorRed,Color),styleLine|styleThick);
+//
+//  Plot(C,"",tickercolor,styleCandle);
+//
+//  Title=Name()+"..."+"( "+WriteIf(Odd >
+//  even,WriteVal(Odd,1),WriteVal(even,1))+" ) Period
+//  "+EncodeColor(Color)+"Triangular"+WriteIf(Odd > even,"ODD","EVEN")+" Moving
+//  Average"+"..."+EncodeColor(colorBlack)+ WriteIf(C < finalMov_avg,"Close is
+//  "+EncodeColor(colorRed)+"Below"+EncodeColor(colorBlack)+" Moving Average by
+//  ","Close is"+EncodeColor(colorBrightGreen)+"
+//  Above"+EncodeColor(colorBlack)+" Moving Average by
+//  ")+"("+WriteVal(((C/finalMov_avg)-1)*100,1.1)+"%
+//  )"+"\n"+WriteIf(finalmov_avg-Ref(finalmov_avg,-1)>0," Slope Of Average is
+//  UP : ","Slope Of Average is DOWN :")+WriteIf((((C/finalMov_avg)-1)*100 <=
+//  CongestionPercent AND ((C/finalMov_avg)-1)*100 >=
+//  -CongestionPercent),EncodeColor(colorYellow)+" with Price Congestion /
+//  Divergence to Average ","")+"\n"+WriteIf(Ref(C,-1) < Ref(finalmov_avg,-1)
+//  AND C > finalmov_avg,EncodeColor(colorGreen)+"Possible Change in Trend From
+//  Down to Up"+"\n"+" OR Short Term Correction of Previous
+//  Trend",WriteIf(Ref(C,-1) > Ref(finalmov_avg,-1) AND C <
+//  finalmov_avg,EncodeColor(colorRed)+"Possible Change in Trend From Up to
+//  Down "+"\n"+" OR Short Term Correction to Previous
+//  Trend",""))+"\n"+WriteIf(C > finalmov_avg,EncodeColor(colorGreen)+"Close
+//  has been above Moving Average ( "+WriteVal(BarsSince(C < finalmov_avg),1)+"
+//  ) Bars",EncodeColor(colorRed)+"Close has been Below Moving Average (
+//  "+WriteVal(BarsSince(C > finalmov_avg),1)+" )
+//  Bars")+"\n"+EncodeColor(colorBlack)+"The average # of Bars Above (
+//  "+WriteVal(round(Cum(BarsSince(C < finalmov_avg)/Cum(1))),1)+" )"+"\n"+"The
+//  average # of Bars Below ( "+WriteVal(round(Cum(BarsSince(C >
+//  finalmov_avg)/Cum(1))),1)+" )";
+//
+//  _SECTION_BEGIN("AFL Example");
+//
+//  /*
+//
+//  This is an attempt to provide a basic trading system AFL. The system is
+//  purely imaginary
+//
+//  AND NOT provided as one that would make money. This is just to provide a
+//  guide to learners
+//
+//  on the common components of writing AFL.
+//
+//  Prepared by Graham Kavanagh 12 Aug 2005
+//
+//  AB Write http://e-wire.net.au/~eb_kavan/ab_write.htm
+//
+//  When you copy/paste ensure the existing continuous lines have not been
+//  wrapped. This wrapping
+//
+//  can create error signals when you try to use the code. Click on the check
+//  afl button in the
+//
+//  editor before trying to apply or scan.
+//
+//  I have used slash-asterisk /* */ /* for my comments to get around the
+//  problem of wrapping,
+//
+//  which could happen if you used double slash //
+//
+//  I hope this helps the beginners in creating AFL code
+//
+//  */
+//
+//  /*firstly some basics common*/
+//
+//  SetBarsRequired(10000,10000); /* this ensures that the charts include all
+//  bars AND NOT just those on screen */
+//
+//  SetFormulaName("Sample System"); /*name it for backtest report
+//  identification */
+//
+//  SetTradeDelays( 1, 1, 1, 1 ); /* delay entry/exit by one bar */
+//
+//  SetOption( "initialequity", 100000 ); /* starting capital */
+//
+//  PositionSize = -10; /* trade size will be 10% of available equty */
+//
+//  SetOption( "MaxOpenPositions", 6 ); /* I don't want to comit more than 60%
+//  of Equity at any one time */
+//
+//  SetOption( "PriceBoundChecking", 1 ); /* trade only within the chart bar's
+//  price range */
+//
+//  SetOption( "CommissionMode", 2 ); /* set commissions AND costs as $ per
+//  trade */
+//
+//  SetOption( "CommissionAmount", 32.95 ); /* commissions AND cost */
+//
+//  SetOption( "UsePrevBarEquityForPosSizing", 1 ); /*set the use of last bars
+//  equity for trade size*/
+//
+//  PositionScore = 100/C; /*Set the order for which stock trades when get
+//  mulitple signals in one bar in backtesting */
+//
+//  //Trade system
+//
+//  /*
+//
+//  Buy when exp mov avg crosses and the high is highest for 50 bars
+//
+//  Sell when exp mov avg crosses back
+//
+//  Cross is first variable moves to above the second variable
+//
+//  */
+//
+//  LongPer = Param("Long Period", 50, 30, 100, 5 ); /* select periods with
+//  parameter window */
+//
+//  ShortPer = Param("Short Period", 5, 3, 10, 1 );
+//
+//  LongMA = EMA( C, LongPer );
+//
+//  ShortMA = EMA( C, ShortPer );
+//
+//  LastHigh = HHV( H, LongPer );
+//
+//  Buy = Cross( ShortMA, LongMA ) AND H > Ref( LastHigh, -1 );
+//
+//  /* ref,-1 is used for the high to have todays high greater than the
+//  previous 50 bar high.
+//
+//  To just use H==LastHigh couold mean a previous high was equal to current
+//  high */
+//
+//  Sell = Cross( LongMA, ShortMA );
+//
+//  /* exrem is one method to remove surplus strade signals*/
+//
+//  Buy = ExRem(Buy,Sell);
+//
+//  Sell = ExRem(Sell,Buy);
+//
+//  /* Now for exploration results.
+//
+//  Will restrict results of exploration to when the Buy AND Sell signals occur
+//
+//  You can use Filter=1; to display every bar result */
+//
+//  Filter = Buy OR Sell;
+//
+//  AddTextColumn( FullName(), "Company Name" );
+//
+//  AddColumn( Buy, "Buy", 1 );
+//
+//  AddColumn( Sell, "Sell", 1 );
+//
+//  AddColumn( C, "Close", 1.3 );
+//
+//  AddColumn( H, "High", 1.3 );
+//
+//  AddColumn( LastHigh, "HHV", 1.3 );
+//
+//  AddColumn( LongMA, "Long MA", 1,3 );
+//
+//  AddColumn( ShortMA, "Short MA", 1,3 );
+//
+//  /* Now to show this on a chart */
+//
+//  /* I use WriteVal to limit the values to the wanted number of decimal
+//  places,
+//
+//  seeing a value of 5 decimal places can be frustrating.
+//
+//  I have included additional information in the plot title sections to add
+//  some
+//
+//  information to the title block */
+//
+//  GraphXSpace = 10; /* create empty space of 10% top and bottom of chart */
+//
+//  Plot( C, " Close Price", colorGrey50, styleBar );
+//
+//  Plot( LongMA, " EMA(C,"+WriteVal(LongPer,1)+")", colorYellow,
+//  styleLine|styleNoRescale );
+//
+//  Plot( ShortMA, " EMA(C,"+WriteVal(ShortPer,1)+")", colorSkyblue,
+//  styleLine|styleNoRescale );
+//
+//  Plot( Ref(Lasthigh,-1), " HHV(H,"+WriteVal(LongPer,1)+")", colorRed,
+//  styleNoLine|styleDots|styleNoRescale );
+//
+//  /* styleNoRescale in the plots stops the added plots from compressing the
+//  original bar chart to the middle of the pane */
+//
+//  PlotShapes( shapeUpArrow*Buy, colorGreen, 0, L, -10 );
+//
+//  PlotShapes( shapeDownArrow*Sell, colorRed, 0, H, -10 );
+//
+//  Title = " {{NAME}} {{DATE}} {{INTERVAL}} "+_DEFAULT_NAME()+" Chart values :
+//  {{VALUES}} ";
+//
+//  /* _DEFAULT_NAME() shows the section name or, if not present, the file name
+//
+//  the items in {{}} are short cuts for the title block. It can be done long
+//  hand
+//
+//  Title = Name() +" "+ Date() +" "+ "{{INTERVAL}}"+_DEFAULT_NAME()+" Chart
+//  values : " +
+//
+//  " Close Price = " + C +
+//
+//  " EMA(C,"+WriteVal(LongPer,1)+") = "+WriteVal(LongMA,1.3) +
+//
+//  " EMA(C,"+WriteVal(ShortPer,1)+") = "+WriteVal(ShortMA,1.3) +
+//
+//  " HHV(H,"+WriteVal(LongPer,1)+") = "+WriteVal(Ref(LastHigh,-1),1.3) ;
+//
+//  */
+//
+//  _SECTION_END();
+//
+//------------------------------------------------------------------------------
+
+//Triangular Moving average
+//Anthony Faragasso
+//December, 2002
+
+/* A Triangular moving average is similar to exponential AND 
+weighted moving averages except A different weighting scheme
+is used. Exponential AND Weighted averages assign the majority
+of the weight to the most recent data. Simple moving averages
+assign the weight equally across all the data. With A Triangular
+moving average, the majority of the weight is assigned to the middle
+portion of the data.*/
+
+Odd=13;//enter Odd numbers only
+CoefOdd=round(Odd/2);
+
+Even=12;//enter Even numbers only
+Coefeven=Even/2;
+Coefeven2=Coefeven+1;
+
+CongestionPercent=2.8;/*Set % above/below Moving average for congestion / sideways market*/
+
+TriangularOdd=MA(MA(C,CoefOdd),CoefOdd);
+TriangularEven=MA(MA(C,Coefeven),Coefeven2);
+
+finalMov_avg=IIf(Odd > even,triangularOdd,TriangularEven);
+
+Color=colorBrightGreen;//select Moving average line color
+tickercolor=colorBlack;//select price color
+
+Plot(finalMov_avg,"",IIf(C < finalmov_avg,colorRed,Color),styleLine|styleThick);
+Plot(C,"",tickercolor,styleCandle);
+
+Title=Name()+"..."+"( "+WriteIf(Odd > even,WriteVal(Odd,1),WriteVal(even,1))+" ) Period "+EncodeColor(Color)+"Triangular"+WriteIf(Odd > even,"ODD","EVEN")+" Moving Average"+"..."+EncodeColor(colorBlack)+ WriteIf(C < finalMov_avg,"Close is "+EncodeColor(colorRed)+"Below"+EncodeColor(colorBlack)+" Moving Average by ","Close is"+EncodeColor(colorBrightGreen)+" Above"+EncodeColor(colorBlack)+" Moving Average by ")+"("+WriteVal(((C/finalMov_avg)-1)*100,1.1)+"% )"+"\n"+WriteIf(finalmov_avg-Ref(finalmov_avg,-1)>0," Slope Of Average is UP : ","Slope Of Average is DOWN :")+WriteIf((((C/finalMov_avg)-1)*100 <= CongestionPercent AND ((C/finalMov_avg)-1)*100 >= -CongestionPercent),EncodeColor(colorYellow)+" with Price Congestion / Divergence to Average ","")+"\n"+WriteIf(Ref(C,-1) < Ref(finalmov_avg,-1) AND C > finalmov_avg,EncodeColor(colorGreen)+"Possible Change in Trend From Down to Up"+"\n"+" OR Short Term Correction of Previous Trend",WriteIf(Ref(C,-1) > Ref(finalmov_avg,-1) AND C < finalmov_avg,EncodeColor(colorRed)+"Possible Change in Trend From Up to Down "+"\n"+" OR Short Term Correction to Previous Trend",""))+"\n"+WriteIf(C > finalmov_avg,EncodeColor(colorGreen)+"Close has been above Moving Average ( "+WriteVal(BarsSince(C < finalmov_avg),1)+" ) Bars",EncodeColor(colorRed)+"Close has been Below Moving Average ( "+WriteVal(BarsSince(C > finalmov_avg),1)+" ) Bars")+"\n"+EncodeColor(colorBlack)+"The average # of Bars Above ( "+WriteVal(round(Cum(BarsSince(C < finalmov_avg)/Cum(1))),1)+" )"+"\n"+"The average # of Bars Below ( "+WriteVal(round(Cum(BarsSince(C > finalmov_avg)/Cum(1))),1)+" )";
+_SECTION_BEGIN("AFL Example");
+/*
+This is an attempt to provide a basic trading system AFL. The system is purely imaginary
+ AND NOT provided as one that would make money. This is just to provide a guide to learners
+ on the common components of writing AFL.
+
+ Prepared by Graham Kavanagh 12 Aug 2005
+ AB Write http://e-wire.net.au/~eb_kavan/ab_write.htm
+
+When you copy/paste ensure the existing continuous lines have not been wrapped. This wrapping
+ can create error signals when you try to use the code. Click on the check afl button in the
+ editor before trying to apply or scan.
+ I have used slash-asterisk /*  */ /* for my comments to get around the problem of wrapping,
+ which could happen if you used double slash //
+
+I hope this helps the beginners in creating AFL code
+
+*/
+
+/*firstly some basics common*/
+SetBarsRequired(10000,10000); /* this ensures that the charts include all bars AND NOT just those on screen */
+SetFormulaName("Sample System"); /*name it for backtest report identification */
+SetTradeDelays( 1, 1, 1, 1 ); /* delay entry/exit by one bar */
+SetOption( "initialequity", 100000 ); /* starting capital */
+PositionSize = -10; /* trade size will be 10% of available equty */
+SetOption( "MaxOpenPositions", 6 ); /* I don't want to comit more than 60% of Equity at any one time */
+SetOption( "PriceBoundChecking", 1 ); /* trade only within the chart bar's price range */
+SetOption( "CommissionMode", 2 ); /* set commissions AND costs as $ per trade */
+SetOption( "CommissionAmount", 32.95 ); /* commissions AND cost */
+SetOption( "UsePrevBarEquityForPosSizing", 1 ); /*set the use of last bars equity for trade size*/
+PositionScore = 100/C; /*Set the order for which stock trades when get mulitple signals in one bar in backtesting */
+
+//Trade system
+/*
+Buy when exp mov avg crosses and the high is highest for 50 bars
+Sell when exp mov avg crosses back
+Cross is first variable moves to above the second variable
+*/
+
+LongPer = Param("Long Period", 50, 30, 100, 5 ); /* select periods with parameter window */
+ShortPer = Param("Short Period", 5, 3, 10, 1 ); 
+
+LongMA = EMA( C, LongPer );
+ShortMA = EMA( C, ShortPer );
+LastHigh = HHV( H, LongPer );
+
+Buy = Cross( ShortMA, LongMA ) AND H > Ref( LastHigh, -1 );
+/* ref,-1 is used for the high to have todays high greater than the previous 50 bar high.
+   To just use H==LastHigh couold mean a previous high was equal to current high */
+Sell = Cross( LongMA, ShortMA );
+/* exrem is one method to remove surplus strade signals*/
+Buy = ExRem(Buy,Sell);
+Sell = ExRem(Sell,Buy);
+
+
+/* Now for exploration results. 
+   Will restrict results of exploration to when the Buy AND Sell signals occur 
+   You can use Filter=1; to display every bar result */
+
+Filter = Buy OR Sell;
+AddTextColumn( FullName(), "Company Name" );
+AddColumn( Buy, "Buy", 1 );
+AddColumn( Sell, "Sell", 1 );
+AddColumn( C, "Close", 1.3 );
+AddColumn( H, "High", 1.3 );
+AddColumn( LastHigh, "HHV", 1.3 );
+AddColumn( LongMA, "Long MA", 1,3 );
+AddColumn( ShortMA, "Short MA", 1,3 );
+
+
+/* Now to show this on a chart */
+/* I use WriteVal to limit the values to the wanted number of decimal places,
+   seeing a value of 5 decimal places can be frustrating.
+   I have included additional information in the plot title sections to add some
+   information to the title block */
+
+GraphXSpace = 10; /* create empty space of 10% top and bottom of chart */
+
+Plot( C, " Close Price", colorGrey50, styleBar );
+Plot( LongMA, " EMA(C,"+WriteVal(LongPer,1)+")", colorYellow, styleLine|styleNoRescale );
+Plot( ShortMA, " EMA(C,"+WriteVal(ShortPer,1)+")", colorSkyblue, styleLine|styleNoRescale );
+Plot( Ref(Lasthigh,-1), " HHV(H,"+WriteVal(LongPer,1)+")", colorRed, styleNoLine|styleDots|styleNoRescale );
+
+/* styleNoRescale in the plots stops the added plots from compressing the original bar chart to the middle of the pane */
+
+PlotShapes( shapeUpArrow*Buy, colorGreen, 0, L, -10 );
+PlotShapes( shapeDownArrow*Sell, colorRed, 0, H, -10 );
+
+Title = " {{NAME}} {{DATE}} {{INTERVAL}} "+_DEFAULT_NAME()+" Chart values : {{VALUES}} ";
+/* _DEFAULT_NAME() shows the section name or, if not present, the file name
+the items in {{}} are short cuts for the title block. It can be done long hand
+
+Title = Name() +" "+ Date() +" "+ "{{INTERVAL}}"+_DEFAULT_NAME()+" Chart values : " + 
+" Close Price = " + C + 
+" EMA(C,"+WriteVal(LongPer,1)+") = "+WriteVal(LongMA,1.3) + 
+" EMA(C,"+WriteVal(ShortPer,1)+") = "+WriteVal(ShortMA,1.3) + 
+" HHV(H,"+WriteVal(LongPer,1)+") = "+WriteVal(Ref(LastHigh,-1),1.3) ;
+
+ */
+
+_SECTION_END(); 

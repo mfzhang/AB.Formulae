@@ -1,0 +1,151 @@
+wc = TimeFrameCompress( Close, in15Minute ); 
+
+/* now the time frame is still unchanged (say daily) and our MA will operate on daily data */ 
+dailyma = EMA( C, 39 ); 
+
+/* but if we call MA on compressed array, it will give MA from other time frame */ 
+weeklyma = EMA( wc, 39 ); // note that argument is time-compressed array 
+
+
+
+weeklyma = TimeFrameExpand( weeklyma, in15Minute ); // expand for display 
+
+Plot( weeklyma, "WeeklyMA", colorBlue ); 
+
+wc = TimeFrameCompress( Close, in15Minute ); 
+
+/* now the time frame is still unchanged (say daily) and our MA will operate on daily data */ 
+dailyma = EMA( C, 104 ); 
+
+/* but if we call MA on compressed array, it will give MA from other time frame */ 
+weeklyma = EMA( wc, 104 ); // note that argument is time-compressed array 
+
+
+weeklyma = TimeFrameExpand( weeklyma, in15Minute ); // expand for display 
+
+Plot( weeklyma, "WeeklyMA", colorBrightGreen ); 
+wc = TimeFrameCompress( Close, in15Minute ); 
+
+/* now the time frame is still unchanged (say daily) and our MA will operate on daily data */ 
+dailyma = MA( C, 104 ); 
+
+/* but if we call MA on compressed array, it will give MA from other time frame */ 
+weeklyma = MA( wc, 104 ); // note that argument is time-compressed array 
+
+
+weeklyma = TimeFrameExpand( weeklyma, in15Minute ); // expand for display 
+
+Plot( weeklyma, "WeeklyMA", colorLightGrey ); 
+_SECTION_END();
+
+_SECTION_BEGIN("Price");
+SetChartOptions(0,chartShowArrows|chartShowDates);
+_N(Title = StrFormat("{{NAME}} - {{INTERVAL}} {{DATE}} Open %g, Hi %g, Lo %g, Close %g (%.1f%%) {{VALUES}}", O, H, L, C, SelectedValue( ROC( C, 1 ) ) ));
+Plot( C, "Close", ParamColor("Color", colorWhite ), styleNoTitle | ParamStyle("Style") | GetPriceStyle() ); 
+_SECTION_END();
+
+_SECTION_BEGIN("swing1");
+no=20;
+res=HHV(H,no);
+sup=LLV(L,no);
+avd=IIf(C>Ref(res,-1),1,IIf(C<Ref(sup,-1),-1,0));
+avn=ValueWhen(avd!=0,avd,1);
+supres=IIf(avn==1,sup,res);
+
+a=Cross(C,supres);
+b=Cross(supres,C);
+
+style = a * styleStaircase + b * styleStaircase;
+
+_SECTION_END();
+
+
+DayH = SelectedValue(TimeFrameGetPrice("H", inDaily));// yesterdays high 
+DayL = SelectedValue(TimeFrameGetPrice("L", inDaily));//low 
+DayH1 = SelectedValue(TimeFrameGetPrice("H", inDaily, -1));// yesterdays high 
+DayL1 = SelectedValue(TimeFrameGetPrice("L", inDaily, -1));//low 
+DayH2 = SelectedValue(TimeFrameGetPrice("H", inDaily, -2));// yesterdays high 
+DayL2 = SelectedValue(TimeFrameGetPrice("L", inDaily, -2));//low 
+
+Range = ((DayH +DayH1  +DayH2)/3 - (DayL+DayL1+DayL2)/3);
+sr1= (Range *0.292)+DayL;
+sr2= Dayh-(Range *0.33);
+sr3= (Range *0.702)+DayL;
+sr4= DayH-(Range *0.655);
+
+style = styleLine | styleNoRescale|styleLine; 
+Plot(sr1, "SR1",colorWhite ,styleDashed|styleNoRescale|styleThick);
+Plot(sr2, "SR2",colorGold  ,styleDashed|styleNoRescale|styleThick);
+Plot(sr3, "SR3",colorPink  , styleDashed|styleNoRescale|styleThick);
+Plot(sr4, "SR4",colorOrange ,styleDashed|styleNoRescale|styleThick);
+
+Bars_so_far_today = 1 + BarsSince( Day() != Ref(Day(), -1));
+TT=  RSIa(C,60);
+StartBar = ValueWhen(TimeNum() == 090000, BarIndex());
+TodayVolume = Sum(TT,Bars_so_far_today);
+IIf (BarIndex() >= StartBar, VWAP = Sum (C * TT, Bars_so_far_today  ) / TodayVolume,0);
+Plot (VWAP,"VWAP",colorOrange,4 +8+2048 );
+
+_SECTION_BEGIN("Volume");
+Plot( Volume, _DEFAULT_NAME(), ParamColor("Color", colorBrown ), styleNoTitle | ParamStyle( "Style", styleHistogram | styleOwnScale | styleThick | styleNoLabel, maskHistogram ), 2 );
+_SECTION_END();
+Plot(supres,"Swing",colorYellow,styleStaircase);
+
+SetChartBkGradientFill( ParamColor("BgTop", colorBlack),
+
+ParamColor("BgBottom", colorBlack),ParamColor("titleblock", colorBlack));
+
+GraphXSpace = 5;
+
+
+
+_SECTION_BEGIN("EMA");
+P = ParamField("Price field",-1);
+Periods = Param("Periods", 13);
+Plot( EMA( P, Periods ), _DEFAULT_NAME(), ParamColor( "Color", colorCycle ), ParamStyle("Style") ); 
+_SECTION_END();
+
+_SECTION_BEGIN("DEMA");
+P = ParamField("Price field",-1);
+Periods = Param("Periods", 65, 2, 3000, 1, 10 );
+Plot( DEMA( P, Periods ), _DEFAULT_NAME(), ParamColor( "Color", colorAqua ), ParamStyle("Style") ); 
+_SECTION_END();
+
+A = DEMA (H,65);
+B = EMA (H,39);
+G = DEMA (L,65);
+I = EMA(L,39);
+D = Min (G,I);
+E = Max (A,B);
+/* Buy or Sell Condition */
+Buy =Cover= Cross(Close,E);
+Sell = Short=Cross(D,Close);
+Buy = ExRem(Buy,Sell);
+Sell = ExRem(Sell,Buy);
+SellPrice=ValueWhen(Sell,C,1);
+BuyPrice=ValueWhen(Buy,C,1);
+
+Filter = Buy OR Sell;
+/* Exploration Parameters */
+AddTextColumn( FullName(), "Company Name" );
+AddColumn( Buy, "Buy", 1 );
+AddColumn( Sell, "Sell", 1 );
+AddColumn( C, "Close", 1.3 );
+AddColumn( H, "High", 1.3 );
+
+Title = EncodeColor(colorWhite)+ "Saihaj Arjit Rainy Rimple (SARR) Trading System" + " - " +  Name() + " - " + EncodeColor(colorRed)+ Interval(2) + EncodeColor(colorWhite) +
+ "  - " + Date() +" - "+"\n" +EncodeColor(colorRed) +"Op-"+O+"  "+"Hi-"+H+"  "+"Lo-"+L+"  "+
+"Cl-"+C+"  "+ "Vol= "+ WriteVal(V)+"\n"+ 
+EncodeColor(colorLime)+
+WriteIf (Buy , " GO LONG / Reverse Signal at "+C+"  ","")+
+WriteIf (Sell , " EXIT LONG / Reverse Signal at "+C+"  ","")+"\n"+EncodeColor(colorWhite)+
+WriteIf(Sell , "Total Profit/Loss for the Last Trade Rs."+(C-BuyPrice)+"","")+
+WriteIf(Buy  , "Total Profit/Loss for the Last trade Rs."+(SellPrice-C)+"","");
+
+PlotShapes(IIf(Buy, shapeSquare, shapeNone),colorGreen, 0, L, Offset=-40);
+PlotShapes(IIf(Buy, shapeSquare, shapeNone),colorLime, 0,L, Offset=-50);                      
+PlotShapes(IIf(Buy, shapeUpArrow, shapeNone),colorWhite, 0,L, Offset=-45); 
+PlotShapes(IIf(Sell, shapeSquare, shapeNone),colorRed, 0, H, Offset=40);
+PlotShapes(IIf(Sell, shapeSquare, shapeNone),colorOrange, 0,H, Offset=50);                      
+PlotShapes(IIf(Sell, shapeDownArrow, shapeNone),colorWhite, 0,H, Offset=-45);
+_SECTION_END();

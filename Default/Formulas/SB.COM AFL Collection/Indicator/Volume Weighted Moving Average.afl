@@ -1,0 +1,23 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Volume Weighted Moving Average
+//  Author/Uploader: Jack Kutzer 
+//  E-mail:          jack.kutzer@mail.com
+//  Date/Time Added: 2002-07-10 11:23:59
+//  Origin:          Neuro Dimensions Trading Solutions Implementation of Volume Weighted Moving Average
+//  Keywords:        
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=197
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=197
+//
+//------------------------------------------------------------------------------
+//
+//  Conversion of the Volume Weighted Moving Average from Neuro Dimensions
+//  Tading Solutions to AFL.
+//
+//------------------------------------------------------------------------------
+
+/* The Volume Weighted Moving Average calculates the sum of the volume times the data field for each day in the average, then divides this value by the sum of the volumes in that period. */
+
+Graph0 = Sum((Volume*Close),10)/Sum (Volume,10);

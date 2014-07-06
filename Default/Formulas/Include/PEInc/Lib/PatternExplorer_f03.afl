@@ -1,0 +1,19 @@
+//|-----------------------------------------------------------------------------------------
+//|PatternExplorer.com - PatternExplorer_f03
+//|Copyright © 2007, PatternExplorer.com
+//|http://www.PatternExplorer.com
+//|e-mail: support@PatternExplorer.com
+//|-----------------------------------------------------------------------------------------
+ALON = Audio | Email;
+SuAL_L = IIf( Centering, SU - Offset, SU );
+SuAL_H = SU + Offset;
+ReAL_L = RE - Offset;
+ReAL_H = IIf( Centering, RE + Offset, Re );
+Shift = 10;
+x = Cum( 1 );
+Lx = x >= LastValue( x ) - Shift;
+Nd = IIf( Su == 0 & Re > 0, 1, IIf( Re == 0 & Su > 0, 2, IIf( Su == 0 & Re == 0, 3, 0 ) ) );
+Buy_1 = Ind < SuAL_H & Ind >= SuAL_L;
+Buy_2 = Cross( Ind, SuAL_H );
+Sell_1 = Cross( ReAL_L, Ind );
+Sell_2 = Ind > ReAL_L & Ind <= ReAL_H;

@@ -1,0 +1,41 @@
+Plot(C,"", IIf(C>O,colorGreen,
+colorRed) , styleBar);
+  
+TimeFrameSet( inWeekly );
+maw = MACD();
+siw = Signal();
+TimeFrameRestore();
+ 
+Plot( TimeFrameExpand( MAw, inWeekly), "", colorGreen ,
+styleLine+styleLeftAxisScale);
+Plot( TimeFrameExpand( siw, inWeekly), "", colorRed ,
+styleLine+styleLeftAxisScale);
+Plot( 0, "", colorBlack , styleLine+styleLeftAxisScale);
+ 
+PlotShapes(shapeUpArrow*Cross(TimeFrameExpand( MAw,
+inWeekly),TimeFrameExpand( siw, inWeekly)),colorGreen,0,L,-30);
+PlotShapes(shapeDownArrow*Cross(TimeFrameExpand( siw,
+inWeekly),TimeFrameExpand( MAw, inWeekly)),colorRed,0,H,-30);
+ 
+ 
+ 
+a = ROC(EMA(ATR(20),30),10);
+ 
+
+ 
+PlotShapes(shapeUpArrow*Cross(0,a),colorGreen,0,0,-10);
+PlotShapes(shapeDownArrow*Cross(A,0),colorRed,0,0,-10);
+ 
+ 
+ 
+ATR1 = ATR(50)/EMA(C,50);
+ATR2 = ATR(260)/EMA(C,260);
+ATR3 = EMA(ATR1,10);
+
+ 
+PlotShapes(shapeUpArrow*Cross(ATR2,ATR3)  ,colorGreen,0,ATR3,-10);
+PlotShapes(shapeDownArrow*Cross(ATR3,ATR2),colorRed,0,ATR3,-10);
+ 
+Buy = Cross(TimeFrameExpand( MAw, inWeekly),TimeFrameExpand( siw,
+inWeekly)) AND a<0 AND atr3<atr2;
+Sell = Cross(TimeFrameExpand( siw, inWeekly),TimeFrameExpand( MAw, inWeekly));

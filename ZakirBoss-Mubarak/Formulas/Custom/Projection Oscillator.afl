@@ -1,0 +1,55 @@
+/* Projection Oscillator - Version 2.0 - 
+Hans -  2004 march 14
+
+*/
+
+n = Param("Periods",12,5,50,1);
+av = Param("Average",5,2,20,1);
+
+n = Optimize("Periods",n,5,50,1);
+av = Optimize("Average",av,2,20,1);
+
+function ProjOsc(n) { 
+
+// Slope of High {n period regression line of High)} 
+SlopeHigh = ((n * (Sum( Cum(1) * High, n))) - (Sum( Cum(1),n) * ( 
+Sum(High, n)))) / ((n * Sum( Cum(1) ^ 2 , n)) - (Sum(Cum(1),n) ^ 
+2)); 
+
+//Slope of Low {n period regression line of Low} 
+SlopeLow = ((n * (Sum( Cum(1) * Low, n))) - (Sum( Cum(1), n) * ( 
+Sum(Low, n)))) / ((n * Sum( Cum(1)^ 2, n)) - ( Sum(Cum(1),n) ^ 
+2)); 
+
+//Upper Projection Band 
+UpProjBand = 0; 
+for (i=0; i<n-1; i++) 
+{ 
+UpProjBand = 
+Max(Max(Ref(High,-i)+i*slopehigh,Ref(High,-i-1)+(i+1)*slopehigh),UpProjBand); 
+} 
+
+//Lower Projection Band 
+LoProjBand = 10000; 
+for (i=0; i<n-1; i++) 
+{ 
+LoProjBand = 
+Min(Min(Ref(Low,-i)+i*slopelow,Ref(Low,-i-1)+(i+1)*slopelow),LoProjBand); 
+} 
+
+//Projection Oscillator 
+ProOsc = 100 * (Close - LoProjBand) / (UpProjBand - LoProjBand); 
+
+return ProOsc; 
+
+} 
+aa= ProjOsc(n);
+bb= MA(ProjOsc(n),av);
+
+Plot(aa,"Projection Osc",colorGreen,styleLine); 
+Plot(bb,"MA ProjOsc",colorRed,styleLine); 
+
+Buy = Cross (aa,bb);
+Sell = Cross (bb,aa);
+Cover=Buy;
+Short=Sell;

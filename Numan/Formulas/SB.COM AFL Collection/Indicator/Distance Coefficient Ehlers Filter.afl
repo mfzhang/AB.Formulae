@@ -1,0 +1,34 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Distance Coefficient Ehlers Filter
+//  Author/Uploader: Chris Yeoh 
+//  E-mail:          turkey@kingdomwork.net
+//  Date/Time Added: 2004-11-14 23:50:02
+//  Origin:          TASC April 2001
+//  Keywords:        
+//  Level:           medium
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=402
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=402
+//
+//------------------------------------------------------------------------------
+//
+//  Taken from the article in TASC's April 2001 Issue.
+//
+//------------------------------------------------------------------------------
+
+Price = (H+L)/2;
+CoefLookback = 5;
+
+Coef = (Price-Ref(Price, -1))^2+(Price-Ref(Price, -2))^2+(Price-Ref(Price, -3))^2+(Price-Ref(Price, -4))^2+(Price-Ref(Price, -5))^2;
+
+SumCoef=0;
+SumCoefPrice=0;
+for(i=0; i < CoefLookback; i++) {
+	SumCoef = SumCoef + Ref(Coef, -i);
+	SumCoefPrice = SumCoefPrice + (Ref(Coef, -i) * Ref(Price, -i));
+}
+DCEF = SumCoefPrice / SumCoef;
+
+Plot(Close, "Close", colorBlack, styleLine);
+Plot(DCEF, "NonLinear Ehlers Filter", IIf(Close>DCEF, colorGreen, colorRed), styleLine);

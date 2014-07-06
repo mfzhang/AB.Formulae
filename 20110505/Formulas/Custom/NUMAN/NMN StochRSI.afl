@@ -1,0 +1,105 @@
+ 
+
+ 
+
+_SECTION_BEGIN("StochRSI T3 based");
+
+/*StochRSI with smoothing formula*/
+
+ 
+
+//Tillson Smoothing Function
+
+function T3(price,periods) //AMA-based
+
+ 
+
+{
+
+ 
+
+s=Param("Hot ?",0.618,0,100,0.001,0);
+
+periods = 2/(periods+1);
+
+ 
+
+e1=AMA(price,periods);
+
+e2=AMA(e1,Periods);
+
+ 
+
+e3=AMA(e2,Periods);
+
+e4=AMA(e3,Periods);
+
+ 
+
+e5=AMA(e4,Periods);
+
+e6=AMA(e5,Periods);
+
+ 
+
+c1=-s*s*s;
+
+c2=3*s*s+3*s*s*s;
+
+ 
+
+c3=-6*s*s-3*s-3*s*s*s;
+
+c4=1+3*s+s*s*s+3*s*s;
+
+ 
+
+Ti3=c1*e6+c2*e5+c3*e4+c4*e3;
+
+return Ti3;
+
+ 
+
+}
+
+ 
+
+ 
+
+//StochRSI
+
+StochRSI=(Sum(RSI(14) - LLV(RSI(14), 14), 3) / 
+
+ 
+
+Sum(HHV(RSI(14), 14) - LLV(RSI(14), 14), 3))*100;
+
+Plot(StochRSI,"StochRSI",ParamColor("StochRSI color", colorRed ), ParamStyle("StochRSI style", styleLine) );
+
+ 
+
+//Smoothing
+
+ 
+
+Plot(T3(StochRSI,3),"T3-StochRSI",ParamColor("T3-StochRSI color", colorLime), ParamStyle("T3-StochRSI", styleDashed));
+
+ 
+
+Plot(30,"",3, styleNoLabel + styleDashed);
+
+ 
+
+Plot(70,"",3, styleNoLabel + styleDashed);
+
+ 
+
+//End
+
+ 
+
+_SECTION_END();
+
+ 
+
+ 

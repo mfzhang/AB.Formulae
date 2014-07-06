@@ -1,0 +1,27 @@
+_SECTION_BEGIN("Background_Setting"); 
+SetChartBkGradientFill( ParamColor("BgTop", colorBlack), 
+ParamColor("BgBottom", colorBlack),ParamColor("titleblock",colorTeal )); 
+_SECTION_END();
+
+_SECTION_BEGIN("buy sell pressure");
+Days=Param("Days",10,1,50,1);
+MaxGraph=2;
+ up=C-O;
+ down=C+O;
+ BP=Sum(up*V,Days);
+ SP=Sum(down*V,Days);
+ PI=100*BP/(BP+SP);
+ PI1=100*BP/(BP-sp);
+Buy=Cross(PI,PI1);
+Sell=Cross(PI1,PI);
+Graph0=0;
+Graph0Color=2;
+Buy=ExRem(Buy,Sell);
+Sell=ExRem(Sell,Buy);
+
+Plot(PI,"Sell Pressure", colorRed,styleLine);
+Plot(PI1,"Buy Pressure",colorGreen,styleLine);
+PlotShapes(Buy*shapeUpArrow,colorLime,0);
+PlotShapes(Sell*shapeDownArrow,colorRed,0);
+
+_SECTION_END();

@@ -1,0 +1,34 @@
+//|-----------------------------------------------------------------------------------------
+//|PatternExplorer.com - PatternExplorer_f02
+//|Copyright © 2007, PatternExplorer.com
+//|http://www.PatternExplorer.com
+//|e-mail: support@PatternExplorer.com
+//|-----------------------------------------------------------------------------------------
+SU = LastValue( Study( "SU", GetChartID() ) );
+RE = LastValue( Study( "RE", GetChartID() ) );
+
+if ( inAA )
+{
+    _SECTION_BEGIN( "Main Parameters" );
+    ChartIDAA = Param( "Chart ID", 1000, 0, 10000, 1 );
+    _SECTION_END();
+    SU = LastValue( Study( "SU", ChartIDAA ) );
+    RE = LastValue( Study( "RE", ChartIDAA ) );
+}
+
+digits = IIf( C >= 60, 1, IIf( C >= 30 & C < 60, 0.1, IIf( C > 3 AND C < 30, 0.01, 0.0001 ) ) );
+
+digits2 = IIf( LastValue( C ) < 3, 1.4, IIf( LastValue( C ) >= 3 AND LastValue( C ) < 10, 1.3, 1.2 ) );
+ALON = Audio | Email;
+SuAL_L = IIf( Centering, IIf( Switch2, SU - ( Su * 0.01 * Offset ), SU - digits * Offset ), SU );
+SuAL_H = IIf( Switch2, SU + ( Su * 0.01 * Offset ), SU + digits * Offset );
+ReAL_L = IIf( Switch2, RE - ( Re * 0.01 * Offset ), RE - digits * Offset );
+ReAL_H = IIf( Centering, IIf( Switch2, RE + ( Re * 0.01 * Offset ), RE + digits * Offset ), Re );
+Shift = 10;
+x = Cum( 1 );
+Lx = x >= LastValue( x ) - Shift;
+Nd = IIf( Su == 0 & Re > 0, 1, IIf( Re == 0 & Su > 0, 2, IIf( Su == 0 & Re == 0, 3, 0 ) ) );
+Buy_1 = C < SuAL_H & C >= SuAL_L & SU > 0;
+Buy_2 = Cross( C, ReAL_H ) & Re > 0;
+Sell_1 = Cross( SuAL_L, C ) & SU > 0;
+Sell_2 = C > ReAL_L & C <= ReAL_H & Re > 0;

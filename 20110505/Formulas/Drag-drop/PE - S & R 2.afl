@@ -1,0 +1,106 @@
+//|-----------------------------------------------------------------------------------------
+//|PatternExplorer.com - Support & Resistance
+//|Copyright © 2007, PatternExplorer.com
+//|http://www.PatternExplorer.com
+//|e-mail: support@PatternExplorer.com
+//|-----------------------------------------------------------------------------------------
+FormulaName = "PE - S & R";
+
+SetChartOptions( 0, chartShowDates | chartLogarithmic | chartWrapTitle );
+#pragma nocache
+#include_once  <\PEInc\PatternExplorer_f0.afl>
+#Include_once "C:\Program Files (x86)\AmiBroker5\Formulas\PatternExplorer\#Defaults & Mods\PE - Defaults.afl"
+#Include_once "C:\Program Files (x86)\AmiBroker5\Formulas\PatternExplorer\#Defaults & Mods\PE - Mods.afl"
+/*******************************************************************************************/
+AddCustomCodeBeforePE();
+/*******************************************************************************************/
+
+_SECTION_BEGIN( "Main Parameters" );
+AddparamUsefromChart( def_UseFromChart );
+Sensitivity = Param( "Sensitivity", 10, 0, 100, 1 );
+
+if ( InChart )
+    StaticVarSet( "FYIOKU", Sensitivity );
+
+if ( inAA AND Usefromchart )
+    Sensitivity = StaticVarGet( "FYIOKU" );
+
+DisRange = Param( "Plot 'far away' Lines Trigger", 3, 0, 10, 0.5 );
+
+Color_SL =  ParamColor( "Support", def_Color1 );
+
+Color_RL =  ParamColor( "Resistance", colorRed );
+
+_SECTION_END();
+
+/*******************************************************************************************/
+#include_once  <\PEInc\PatternExplorer_1.afl>
+#include_once  <\PEInc\Lib\PatternExplorer_f15.afl>
+/*******************************************************************************************/
+BS = break_G1_val == 1 OR break_G2_val == 1;
+
+SS = break_G1_val == -1 OR break_G2_val == -1;
+
+Buy = def_Buy AND BS;
+
+Sell = SS;
+
+/*******************************************************************************************/
+Filter = def_Filter AND BarIndex() == LastValue( BarIndex() ) AND NOT GroupID() == 253;
+
+Filter = Filter AND ( Buy OR Sell );
+
+/*******************************************************************************************/
+Addefaultcolumns();
+
+Adddefaultcolumns( 2, 1 );
+
+AddTextColumn(
+    WriteIf( break_G1_val == -1, "Break",
+             WriteIf( break_G1_val == 1, "Break", "" ) ), "Minor Levels", 1.2,
+    IIf( break_G1_val == 1, colorGreen, IIf( break_G1_val == -1, colorRed, colorBlue ) ) );
+
+AddTextColumn(
+    WriteIf( break_G2_val == -1, "Break",
+             WriteIf( break_G2_val == 1, "Break", "" ) ), "Major Levels", 1.2,
+    IIf( break_G2_val == 1, colorGreen, IIf( break_G2_val == -1, colorRed, colorBlue ) ) );
+
+AddTextColumn( FullName(), "Full name" );
+
+/*******************************************************************************************/
+Plot( IIf( x >= XT1 & RT1 &NOT T1 == 0, T1, -1e10 ), "T1", IIf( LastValue( C ) < T1, Color_RL, Color_SL ), 1 + 2048 + styleNoTitle );
+
+Plot( IIf( x >= XT2 & RT2 &NOT T2 == 0, T2, -1e10 ), "T2", IIf( LastValue( C ) < T2, Color_RL, Color_SL ), 1 + 2048 + styleNoTitle );
+
+Plot( IIf( x >= XT3 & RT3 &NOT T3 == 0, T3, -1e10 ), "T3", IIf( LastValue( C ) < T3, Color_RL, Color_SL ), 1 + 2048 + styleNoTitle );
+
+Plot( IIf( x >= XT4 & RT4 &NOT T4 == 0, T4, -1e10 ), "T4", IIf( LastValue( C ) < T4, Color_RL, Color_SL ), 1 + 2048 + styleNoTitle );
+
+Plot( IIf( x >= XT5 & RT5 &NOT T5 == 0, T5, -1e10 ), "T5", IIf( LastValue( C ) < T5, Color_RL, Color_SL ), 1 + 2048 + styleNoTitle );
+
+Plot( IIf( x >= XP1 & RP1 &NOT P1 == 0, P1, -1e10 ), "P1", IIf( LastValue( C ) < P1, Color_RL, Color_SL ), 1 + 2048 + styleNoTitle );
+
+Plot( IIf( x >= XP2 & RP2 &NOT P2 == 0, P2, -1e10 ), "P2", IIf( LastValue( C ) < P2, Color_RL, Color_SL ), 1 + 2048 + styleNoTitle );
+
+Plot( IIf( x >= XP3 & RP3 &NOT P3 == 0, P3, -1e10 ), "P3", IIf( LastValue( C ) < P3, Color_RL, Color_SL ), 1 + 2048 + styleNoTitle );
+
+Plot( IIf( x >= XP4 & RP4 &NOT P4 == 0, P4, -1e10 ), "P4", IIf( LastValue( C ) < P4, Color_RL, Color_SL ), 1 + 2048 + styleNoTitle );
+
+Plot( IIf( x >= XP5 & RP5 &NOT P5 == 0, P5, -1e10 ), "P5", IIf( LastValue( C ) < P5, Color_RL, Color_SL ), 1 + 2048 + styleNoTitle );
+
+Plot( IIf( x >= XT6 & RT6 &NOT T6 == 0, T6, -1e10 ), "T6", IIf( LastValue( C ) < T6, Color_RL, Color_SL ), 8 + 2048 + styleNoTitle );
+
+Plot( IIf( x >= XT7 & RT7 &NOT T7 == 0, T7, -1e10 ), "T7", IIf( LastValue( C ) < T7, Color_RL, Color_SL ), 8 + 2048 + styleNoTitle );
+
+Plot( IIf( x >= XP6 & RP6 &NOT P6 == 0, P6, -1e10 ), "P6", IIf( LastValue( C ) < P6, Color_RL, Color_SL ), 8 + 2048 + styleNoTitle );
+
+Plot( IIf( x >= XP7 & RP7 &NOT P7 == 0, P7, -1e10 ), "P7", IIf( LastValue( C ) < P7, Color_RL, Color_SL ), 8 + 2048 + styleNoTitle );
+
+/*******************************************************************************************/
+ToolTip = def_ToolTip;
+
+/*******************************************************************************************/
+AddCustomCodeAfterPE();
+
+/*******************************************************************************************/
+Title = "PatternExplorer.com - Support & Resistance" + default_priceTitle + EncodeColor( IIf( NOT AnZ, def_Text2, colorRed ) ) + ",Sensitivity = " + WriteVal( Sensitivity, 1 ) + "     " + EncodeColor( colorRed ) + WriteIf( NOT AnZ, "", "  NO POINTS AVAILABLE -> REDUCE SENSITIVITY " );

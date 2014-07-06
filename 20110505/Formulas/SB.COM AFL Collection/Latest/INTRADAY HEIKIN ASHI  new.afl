@@ -1,0 +1,49 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    INTRADAY HEIKIN ASHI  new
+//  Author/Uploader: ali 
+//  E-mail:          abosliman2005m@hotmail.com
+//  Date/Time Added: 2006-09-22 19:07:15
+//  Origin:          a
+//  Keywords:        INTRADAY HEIKIN ASHI  new
+//  Level:           advanced
+//  Flags:           system
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=714
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=714
+//
+//------------------------------------------------------------------------------
+//
+//  INTRADAY HEIKIN ASHI new
+//
+//------------------------------------------------------------------------------
+
+/*======================================================
+		FOREX INTRADAY HEIKIN ASHI + PIVOT POINTS
+  ======================================================*/
+
+//---- heikin ashi
+HaClose = (O+H+L+C)/4; 
+HaOpen = AMA( Ref( HaClose, -1 ), 0.3 ); 
+HaHigh = Max( H, Max( HaClose, HaOpen ) ); 
+HaLow = Min( L, Min( HaClose, HaOpen ) ); 
+xDiff = (HaHigh - Halow) * IIf(StrFind(Name(),"JPY"),100,10000);
+barcolor = IIf(HaClose >= HaOpen,colorGreen,colorRed);
+PlotOHLC( HaOpen, HaHigh, HaLow, HaClose, "", barcolor, styleCandle ); 
+// Plot(EMA(HaClose,9),"",colorWhite, styleLine);
+// Plot(EMA(HaClose,18),"",colorBlack, styleLine);
+
+_SECTION_BEGIN("Bollinger Bands");
+P = ParamField("Price field",-1);
+Periods = Param("Periods", 15, 2, 100, 1 );
+Width = Param("Width", 2, 0, 10, 0.05 );
+Color = ParamColor("Color", colorCycle );
+Style = ParamStyle("Style");
+Plot( BBandTop( P, Periods, Width ), "BBTop" + _PARAM_VALUES(), Color, Style ); 
+Plot( BBandBot( P, Periods, Width ), "BBBot" + _PARAM_VALUES(), Color, Style ); 
+_SECTION_END();
+
+_SECTION_BEGIN("MA1");
+P = ParamField("Price field",-1);
+Periods = Param("Periods", 15, 2, 200, 1, 10 );
+Plot( MA( P, Periods ), _DEFAULT_NAME(), ParamColor( "Color", colorCycle ), ParamStyle("Style") );
+_SECTION_END();

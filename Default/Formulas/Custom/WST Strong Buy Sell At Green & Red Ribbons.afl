@@ -1,0 +1,81 @@
+_SECTION_BEGIN("Price");
+//SetChartBkColor( colorBlack ); 
+Col_1 = IIf(EMA(RSI(39),30) > Ref(EMA(RSI(39),30),-1),colorGreen,colorRed);
+//Plot( C, "", col_1, styleBar); 
+Plot(C,"",Col_1,128);
+
+_SECTION_END();
+
+Plot(EMA(C,10), "EMA(10)", colorLightGrey, styleLine| styleNoLabel);
+Plot(EMA(C,50), "EMA(50)", colorBlue, styleLine| styleNoLabel);
+Plot(MA(C,200), "MA(200)", colorRed, styleThick| styleNoLabel);
+_SECTION_END();
+
+_SECTION_BEGIN("Phase");
+RCP = C > EMA(C,50) AND EMA(C,50) < MA(C,200); // Recovery                         Blue
+ACP = C > EMA(C,50) AND C > MA(C,200) AND EMA(C,50) < MA(C,200); // Accumulation   seagreen
+BLP = C > EMA(C,50) AND C > MA(C,200) AND EMA(C,50) > MA(C,200); // Bullish        Limegreen
+WRP = C < EMA(C,50) AND EMA(C,50) > MA(C,200); // Warning                          Pink
+DSP = C < EMA(C,50) AND C < MA(C,200) AND EMA(C,50) > MA(C,200); // Distribution   Orange
+BRP = C < EMA(C,50) AND C < MA(C,200) AND EMA(C,50) < MA(C,200); // Bearish        Red
+
+//Plot( 1, "", IIf(RCP, colorBlue, IIf(ACP, colorSeaGreen, IIf(BLP, colorDarkGreen, IIf(WRP, colorOrange, IIf(DSP, colorRed, IIf(BRP, colorDarkRed, 0)))))), styleOwnScale|styleArea|styleNoLabel, -0.1, 50 );
+Plot( 1, "", IIf(RCP, colorBlue, IIf(ACP, colorAqua, IIf(BLP, colorLime, IIf(WRP, colorPink, IIf(DSP, colorOrange, IIf(BRP, colorRed, 0)))))), styleOwnScale|styleArea|styleNoLabel, -0.1, 50 );
+
+Buy_cross1050 = Cross(EMA(Close,10),EMA(Close,50));
+
+Sell_cross1050 = Cross(EMA(Close,50),EMA(Close,10));
+
+
+
+Buy_cross1050 = ExRem(Buy_cross1050, Sell_cross1050  );
+sell_cross1050 = ExRem(sell_cross1050, buy_cross1050  );
+dist = 1.5*ATR(10); 
+for( i = 0; i < BarCount; i++ ) 
+{ 
+
+HH1 = HHV(H,20);
+LL1 = LLV(L,20);
+
+if( Buy_cross1050[i] ) PlotText( "A=" + HH1[ i ], i, L[ i ]-dist[i], colorBlack, colorLime); 
+if( sell_cross1050[i] ) PlotText( "A=" + LL1[ i ], i, H[ i ]+dist[i], colorLightYellow, colorRed); 
+}
+
+
+PlotShapes(Buy_cross1050*shapeUpArrow,colorGreen, 0, Low, Offset =-12);
+PlotShapes(sell_cross1050*shapeDownArrow,colorRed, 0, High, Offset =-12);
+
+pds = 20;
+DonchianUpper =HHV(Ref(H,-1),pds);
+DonchianLower = LLV(Ref(L,-1),pds);
+
+
+Buy_Price = C;
+Sell_Price = C;
+
+BuySL  = DonchianLower ;
+SellSL = DonchianUpper;
+
+BPdiff = HH1 - BuySL ;
+SPdiff = LL1 - SellSL;
+
+SwingBuy = (BPdiff/BuySL)*100 ;
+SwingSell = (SPdiff/SellSL)*100 ;
+
+BuyTarget = Buy_Price + BPdiff ;
+SellTarget = Sell_Price + SPdiff ; 
+
+
+
+// Exploration
+
+Filter=Buy_cross1050 OR sell_cross1050;// OR Buy_cross10200 OR sell_cross10200;// OR Buy_cross50200 OR sell_cross50200;
+mytimenum = DateTimeConvert( 1, DateTime() ); 
+
+AddColumn( IIf(Buy_cross1050,C,IIf(sell_cross1050,-C,Null)) ,"A=Cross",1.1,colorBlack,IIf(Buy_cross1050,colorLightGrey,IIf(sell_cross1050,colorLightGrey,colorLightGrey)));
+AddColumn( IIf(Buy_cross1050,HH1,IIf(sell_cross1050,-LL1,Null)) ,"Enter",1.1,colorBlack,IIf(Buy_cross1050,colorGreen,IIf(sell_cross1050,colorRed,colorLightGrey)));
+AddColumn( IIf(Buy_cross1050 ,Prec(SwingBuy,1),IIf(Sell_cross1050 ,Prec(SwingSell,1),Null)) ,"%SWING",1.1,colorBlack,IIf(Buy_cross1050 ,colorLightGrey,IIf(Sell_cross1050 ,colorLightGrey,colorLightGrey)));
+
+AddColumn( mytimenum,"TimeNum",colorBlack);
+SetSortColumns(-6);
+_SECTION_END();

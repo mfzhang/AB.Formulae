@@ -1,0 +1,47 @@
+#include <TDashInclude.afl>
+//#include "C:\\AmiBroker Formulas\\Formulas\\Include\\TDashIncludeGlobal.afl";
+//#include "C:\Program Files (x86)\AmiBroker5\Formulas\Include\TDashInclude.afl"
+
+SetChartOptions( 0, chartHideQuoteMarker );
+MX = GetCursorXPosition( 1 );
+MY = GetCursorYPosition( 1 );
+
+LeftClick = Nz( StaticVarGet( "~LeftClick" ) ); //Left Click SV is set at end of code
+LeftDown = GetCursorMouseButtons() == 1;
+
+OnTDash 	= !IsNull( MX ) AND !IsNull( MY ); // Is the cursor over our window?
+LeftClick = LeftClick AND OnTDash;
+LeftDown = ( LeftDown OR LeftClick ) AND OnTDash; // Only accept clicks when cursor is inside TDash window
+
+PrevLeftButtonState = Nz( StaticVarGet( "~LeftButtonState" ) );
+LeftButtonRelease = LeftDown < PrevLeftButtonState AND OnTDash;
+StaticVarSet( "~LeftButtonState", LeftDown );
+
+FontSize = Nz(StaticVarGet( "~FontSize"));
+FontName = "ARIAL";
+Fontweight = 700;
+GfxSelectFont( FontName, FontSize, FontWeight );
+
+// Place Order Markers
+MArkerTip = "Drag Price Marker to desired price Level. Click 'X' to cancel, '+' to increment, and '-' to decrement";
+ServiceMarkers( "BUY", colorBrightGreen, colorBlack, colorBlack, MArkerTip );
+ServiceMarkers( "MAIN", colorBlue, colorWhite, colorBlack, MArkerTip   );
+ServiceMarkers( "SELL", colorRed, colorBlack, colorBlack, MArkerTip   );
+
+LeftClick = GetCursorMouseButtons() == 9;
+StaticVarSet( "~LeftClick", LeftClick );
+RequestTimedRefresh( 0.1 );
+
+_SECTION_BEGIN( "TESTING");
+if ( ParamTrigger( "Clear StaticVar (TEST)", "CLEAR" ) ) // to simulate start up
+{
+    StaticVarRemove( "*" );
+}
+
+if ( ParamTrigger( "Clear Persistent Var", "CLEAR" ) ) // to simulate start up
+{
+    PersistentVarRemove( "MainChartPrice_" + "BUY" );
+    PersistentVarRemove( "MainChartPrice_" + "MAIN" );
+    PersistentVarRemove( "MainChartPrice_" + "SELL" );
+}
+_SECTION_END();

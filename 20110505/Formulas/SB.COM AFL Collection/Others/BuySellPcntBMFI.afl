@@ -1,0 +1,12 @@
+function BuySellPcntBMFI(dynamic, p1, p2) { // p1 = MFI period,p2 = High crossover threshhold
+price = Close;
+BA = 20; //Bband MA
+BD = 2;//Bband Stdev
+BL = ML = 20;// lower crossover threshhold
+MP = p1;// MFI period
+MH = BH = p2;// higher crossover threshhold  //b is Bollinger's %b
+b = ((price - BBandBot( price, BA, BD )) / (BBandTop( price,BA, BD ) - BBandBot(price, BA, BD ))) * 100;
+
+Buy = Cover = b > BH AND MFI(MP) > MH;
+Sell = Short = b < BL AND MFI(MP) < ML;
+}

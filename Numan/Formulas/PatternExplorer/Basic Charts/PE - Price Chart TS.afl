@@ -1,0 +1,168 @@
+//|-----------------------------------------------------------------------------------------
+//|PatternExplorer.com - Price chart TS - with Taio based Shapes
+//|Copyright © 2007, PatternExplorer.com
+//|http://www.PatternExplorer.com
+//|e-mail: support@PatternExplorer.com
+//|-----------------------------------------------------------------------------------------
+FormulaName = "PE - Price Chart TS";
+
+SetChartOptions( 0, chartShowDates | chartShowArrows | chartLogarithmic | chartWrapTitle );
+#pragma nocache
+#include_once  <\PEInc\PatternExplorer_f0.afl>
+#Include_once "C:\Program Files (x86)\AmiBroker5\Formulas\PatternExplorer\#Defaults & Mods\PE - Defaults.afl"
+#Include_once "C:\Program Files (x86)\AmiBroker5\Formulas\PatternExplorer\#Defaults & Mods\PE - Mods.afl"
+/*******************************************************************************************/
+AddCustomCodeBeforePE();
+/*******************************************************************************************/
+AddAlertParam( def_AudioAlert, def_EmailAlert, def_BarComplete );
+/*******************************************************************************************/
+_SECTION_BEGIN( "Indicator Periods" );
+period1 = Param( "Period 1", 5, 1, 30, 1 );
+period2 = Param( "Period 2", 6, 1, 30, 1 );
+_SECTION_END();
+/*******************************************************************************************/
+_SECTION_BEGIN( "Main Settings" );
+TrendLevel = Param( "Trend Level", 50, 0, 90, 1 );
+OBOSLevel = Param( "OB/OS Level", 80, 0, 100, 1 );
+OBOSLevelTF2 = Param( "OB/OS Level TF2", 60, 25, 100, 1 );
+TF2drop = ParamToggle( "TF2 Turn Over", "Off|0n", 0 );
+Taio2expandMode = ParamToggle( "Taio TF2 Expand Mode", "Expand First|Expand Last", 1 );
+Multiplier = Param( "Second Time Frame Multiplier", 4, 1, 30, 1 );
+UseExrem = ParamToggle( "Use Exrem", "Off|0n", 0 );
+_SECTION_END();
+/*******************************************************************************************/
+_SECTION_BEGIN( "Buy and Sell Signals" );
+BuySig = ParamList( "Buy Signal", List1 = "Off,Taio Top,Taio Valley,Zero Line Cross,Zero Line Bounce,Oversold,Trend Level reached,Taio2 Direction change", 2 );
+SellSig = ParamList( "Sell Signal", List2 = "Off,Taio Top,Taio Valley,Zero Line Cross,Zero Line Bounce,Overbought,Trend Level reached,Taio2 Direction change", 1 );
+BuyShape = Param( "Buy Shape Typ", def_BuyShape, 0, 50, 1 );
+SellShape = Param( "Sell Shape Typ", def_SellShape, 0, 50, 2 );
+Buyshapecolor = ParamColor( "Buy Shape Color", def_BuyShapeColor );
+Sellshapecolor = ParamColor( "Sell Shape Color", def_SellShapeColor );
+_SECTION_END();
+/*******************************************************************************************/
+_SECTION_BEGIN( "Short and Cover Signals" );
+ShortSig = ParamList( "Short Signal", List1sig2 = "Off,Taio Top,Taio Valley,Zero Line Cross,Zero Line Bounce,Overbought,Trend Level reached,Taio2 Direction change", 7 );
+CoverSig = ParamList( "Cover Signal", List2sig2 = "Off,Taio Top,Taio Valley,Zero Line Cross,Zero Line Bounce,Oversold,Trend Level reached,Taio2 Direction change", 7 );
+ShortShape = Param( "Short Shape Typ", def_ShortShape, 0, 50, 2 );
+CoverShape = Param( "Cover Shape Typ", def_CoverShape, 0, 50, 1 );
+Shortshapecolor = ParamColor( "Short Shape Color", def_ShortShapeColor );
+Covershapecolor = ParamColor( "Cover Shape Color", def_CoverShapeColor );
+_SECTION_END();
+/*******************************************************************************************/
+#include_once  <\PEInc\Lib\PatternExplorer_f05.afl>
+/*******************************************************************************************/
+Buy = def_Buy AND
+      IIf( BuySignal == 0, Null,
+           IIf( BuySignal == 1, TpVa == -1,
+                IIf( BuySignal == 2, TpVa == 1,
+                     IIf( BuySignal == 3, ZLC == 1,
+                          IIf( BuySignal == 4, ZLB == 1,
+                               IIf( BuySignal == 5, Oversold == 1,
+                                    IIf( BuySignal == 6, UpperLevelreached == 1,
+                                         IIf( BuySignal == 7, Taio2upsig == 1, Null ) ) ) ) ) ) ) );
+Sell = def_Sell AND
+       IIf( SellSignal == 0, Null,
+            IIf( SellSignal == 1, TpVa == -1,
+                 IIf( SellSignal == 2, TpVa == 1,
+                      IIf( SellSignal == 3, ZLC == -1,
+                           IIf( SellSignal == 4, ZLB == -1,
+                                IIf( SellSignal == 5, Overbought == -1,
+                                     IIf( SellSignal == 6, LowerLevelreached == -1,
+                                          IIf( SellSignal == 7, Taio2dnsig == 1, Null ) ) ) ) ) ) ) );
+Short = def_Short AND
+        IIf( ShortSignal == 0, Null,
+             IIf( ShortSignal == 1, TpVa == -1,
+                  IIf( ShortSignal == 2, TpVa == 1,
+                       IIf( ShortSignal == 3, ZLC == -1,
+                            IIf( ShortSignal == 4, ZLB == -1,
+                                 IIf( ShortSignal == 5, Overbought == 1,
+                                      IIf( ShortSignal == 6, LowerLevelreached == 1,
+                                           IIf( ShortSignal == 7, Taio2dnsig == 1, Null ) ) ) ) ) ) ) );
+Cover = def_Cover AND
+        IIf( CoverSignal == 0, Null,
+             IIf( CoverSignal == 1, TpVa == -1,
+                  IIf( CoverSignal == 2, TpVa == 1,
+                       IIf( CoverSignal == 3, ZLC == 1,
+                            IIf( CoverSignal == 4, ZLB == 1,
+                                 IIf( CoverSignal == 5, Oversold == 1,
+                                      IIf( CoverSignal == 6, UpperLevelreached == 1,
+                                           IIf( CoverSignal == 7, Taio2upsig == 1, Null ) ) ) ) ) ) ) );
+
+if ( UseExrem )
+{
+    Buy = ExRem( Buy, Sell );
+    Sell = ExRem( Sell, Buy );
+    Short = ExRem( Short, Cover );
+    Cover = ExRem( Cover, Short );
+}
+
+/*******************************************************************************************/
+Filter = def_Filter AND NOT GroupID() == 253;
+
+Filter = Filter AND ( Buy OR Sell OR Short OR Cover );
+
+/*******************************************************************************************/
+AddAlert( Buy, Audio, Email, BuySig, 1, BarComplete, def_BuySound1 );
+
+AddAlert( Sell, Audio, Email, SellSig, 2, BarComplete, def_SellSound1 );
+
+AddAlert( Short, Audio, Email, ShortSig, 3, BarComplete, def_ShortSound1 );
+
+AddAlert( Cover, Audio, Email, CoverSig, 4, BarComplete, def_CoverSound1 );
+
+/*******************************************************************************************/
+if ( inAA )
+{
+    _SECTION_BEGIN( "Automatic Analysis - Exploration" );
+    Widecolumns = ParamToggle( "Wide columns", "No,Yes", 1 );
+    _SECTION_END();
+    /*******************************************************************************************/
+
+    if ( Widecolumns )
+    {
+        Addefaultcolumns();
+        AddColumn( Taio, "Taio", 1 );
+        AddColumn( Taio2, "Taio TF2", 1, 1, colorWhite, 60 );
+        AddColumn( TpVa, "Taio Top / Valley", 1, 1, IIf( TpVa == 1 OR TpVa == -1, colorLightBlue, colorWhite ), 100 );
+        AddColumn( ZLC, "Zero Line Cross", 1, 1, IIf( ZLCp, def_Color1, IIf( ZLCn, colorRed, colorWhite ) ), 90 );
+        AddColumn( ZLB, "Zero Line Bounce", 1, 1, IIf( ZLBp, def_Color1, IIf( ZLBn, colorRed, colorWhite ) ), 100 );
+        AddColumn( TrendLevelreached, "Trend Level reached", 1, 1, IIf( UpperLevelreached, def_Color1, IIf( LowerLevelreached, colorRed, colorWhite ) ), 120 );
+        AddColumn( OBOS, "Overbought/Oversold", 1, 1, IIf( Oversold, def_Color1, IIf( Overbought, colorRed, colorWhite ) ), 120 );
+        AddColumn( IIf( Taio > TrendLevel, BarsSince( Cross( Taio, TrendLevel ) ), IIf( Taio < -TrendLevel, BarsSince( Cross( -TrendLevel, Taio ) ), Null ) ), "Bars since Trendlevel reached", 1.0 );
+        AddTextColumn( FullName(), "Full name", 120 );
+    }
+    else
+    {
+        Addefaultcolumns();
+        Adddefaultcolumns( 2, 1 );
+        AddColumn( Taio, "Taio", 1 );
+        AddColumn( Taio2, "Taio TF2", 1, 1, colorWhite, 60 );
+        AddColumn( TpVa, "T/V", 1, 1, IIf( TpVa == 1 OR TpVa == -1, colorLightBlue, colorWhite ), 40 );
+        AddColumn( ZLC, "ZLC", 1, 1, IIf( ZLCp, def_Color1, IIf( ZLCn, colorRed, colorWhite ) ), 40 );
+        AddColumn( ZLB, "ZLB", 1, 1, IIf( ZLBp, def_Color1, IIf( ZLBn, colorRed, colorWhite ) ), 40 );
+        AddColumn( TrendLevelreached, "TLR", 1, 1, IIf( UpperLevelreached, def_Color1, IIf( LowerLevelreached, colorRed, colorWhite ) ), 40 );
+        AddColumn( OBOS, "OB/OS", 1, 1, IIf( Oversold, def_Color1, IIf( Overbought, colorRed, colorWhite ) ), 60 );
+        AddColumn( IIf( Taio > TrendLevel, BarsSince( Cross( Taio, TrendLevel ) ), IIf( Taio < -TrendLevel, BarsSince( Cross( -TrendLevel, Taio ) ), Null ) ), "BSTR", 1.0 );
+        AddTextColumn( FullName(), "Full name" );
+    }
+}
+
+/*******************************************************************************************/
+#include_once  <\PEInc\PatternExplorer_1.afl>
+/*******************************************************************************************/
+PlotShapes( BuyShape*Buy, BuyShapecolor, 0, L, -def_BuyShapeOffset );
+
+PlotShapes( SellShape*Sell, SellShapecolor, 0, H, -def_SellShapeOffset );
+
+PlotShapes( ShortShape*Short, Shortshapecolor, 0, H, -def_ShortShapeOffset );
+
+PlotShapes( CoverShape*Cover, Covershapecolor, 0, L, -def_CoverShapeOffset );
+
+/*******************************************************************************************/
+ToolTip = def_ToolTip;
+
+Title = "PatternExplorer.com - Price Chart TS" + default_priceTitle + " ";
+
+/*******************************************************************************************/
+AddCustomCodeAfterPE();
+/*******************************************************************************************/

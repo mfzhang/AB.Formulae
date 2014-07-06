@@ -1,0 +1,24 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    10-20 Indicator
+//  Author/Uploader: Dennis Skoblar 
+//  E-mail:          DennisAndLisa@sbcglobal.net
+//  Date/Time Added: 2005-06-14 04:09:34
+//  Origin:          Dave Landry On Swing Trading by Dave Landry
+//  Keywords:        Dave Landry,Landry,10-20 indicator
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=471
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=471
+//
+//------------------------------------------------------------------------------
+//
+//  Shows how many points the stock has gone in a 20 day (one month) period.
+//  The ideal would be for a stock to move 10 points in a 20 day period.
+//
+//------------------------------------------------------------------------------
+
+_SECTION_BEGIN("TenTwentyValue");
+TenTwentyValue = HHV(H,20)-LLV(L,20);
+Plot(TenTwentyValue,"10/20 Value",colorRed,styleLine);
+_SECTION_END();

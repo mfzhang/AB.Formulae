@@ -1,0 +1,77 @@
+/*Rafi - MFI+RSI+HA*/   
+ 
+_SECTION_BEGIN("Background");
+SetChartOptions(0,chartShowArrows|chartShowDates);
+if( ParamToggle("Tooltip shows", "All Values|Only Prices" ) )
+{
+ ToolTip=StrFormat("Open: %g\nHigh:  %g\nLow:   %g\nClose:  %g
+(%.1f%%)\nVolume: "+NumToStr( V, 1 ), O, H, L, C, SelectedValue( ROC( C, 1
+)));
+}
+
+SetChartBkColor(ParamColor("Outer panel color ",colorBlack)); // color of outer border 
+SetChartBkGradientFill( ParamColor("Inner panel color upper half",colorBlack),ParamColor("Inner panel color lower half",colorBlack)); //color of inner panel
+_SECTION_END();
+
+_SECTION_BEGIN("MFI");  
+SetChartOptions(0,0,chartGrid30|chartGrid70);
+periods = Param( "Periods", 15, 1, 50, 1 );
+MFIstyle = ParamStyle("Style", styleThick );
+MFIcolor = IIf( MFI(periods) > Ref(MFI(periods),-1), ParamColor("Up Color", colorWhite ), ParamColor("Down Color", colorWhite ));
+Plot( MFI( periods), _DEFAULT_NAME(), MFIcolor, MFIstyle );
+_SECTION_END();
+
+_SECTION_BEGIN("Fill Color");
+Fillswitch = ParamToggle("Fill Color","On,Off");
+r = MFI(periods);
+FillColor = IIf( r > 50, ParamColor("Up Fill Color", colorRed),ParamColor("Down Fill Color", colorGreen));
+if (NOT Fillswitch) PlotOHLC( r,r,50,r, "", FillColor, styleNoLabel | styleCloud | styleClipMinMax, 30, 80 );
+_SECTION_END();
+
+_SECTION_BEGIN("Buy/Sell Arrows");
+shapesswitch = ParamToggle("Arrows","On,Off",1);
+UPcolor = ParamColor( "UP Color", colorGreen );
+DOWNcolor = ParamColor( "Down Color", colorRed );
+Buy=Cross( MFI( periods), 30 ); 
+Sell=Cross( 80, MFI( periods) );
+shape = Buy * shapeUpArrow + Sell * shapeDownArrow;
+PlotShapes( IIf(shapesswitch,-1e10,shape), IIf( Buy, UPcolor, DOWNcolor ));
+_SECTION_END();
+
+_SECTION_BEGIN("RSI"); 
+SetChartOptions(0,0,chartGrid30|chartGrid70);
+periods = Param( "Periods", 15, 1, 50, 1 );
+RSIstyle = ParamStyle("Style", styleThick );
+RSIcolor = IIf( RSI(periods) > Ref(RSI(periods),-1), ParamColor("Up Color", colorYellow ), ParamColor("Down Color", colorYellow ));
+Plot( RSI( periods), _DEFAULT_NAME(), RSIcolor, RSIstyle );
+_SECTION_END(); 
+
+_SECTION_BEGIN("Fill Color");
+Fillswitch = ParamToggle("Fill Color","On,Off");
+r = RSI(periods);
+FillColor = IIf( r > 50, ParamColor("Up Fill Color", colorRed),ParamColor("Down Fill Color", colorGreen));
+if (NOT Fillswitch) PlotOHLC( r,r,50,r, "", FillColor, styleNoLabel | styleCloud | styleClipMinMax, 30, 80 );
+_SECTION_END(); 
+ 
+_SECTION_BEGIN("Buy/Sell Arrows");
+shapesswitch = ParamToggle("Arrows","On,Off",1);
+UPcolor = ParamColor( "UP Color", colorGreen );
+DOWNcolor = ParamColor( "Down Color", colorRed );
+Buy=Cross( RSI( periods), 30 );
+Sell=Cross( 80, RSI( periods) );
+shape = Buy * shapeUpArrow + Sell * shapeDownArrow;
+PlotShapes( IIf(shapesswitch,-1e10,shape), IIf( Buy, UPcolor, DOWNcolor ));
+_SECTION_END();
+
+_SECTION_BEGIN("RSI in Heikin"); 
+periods = Param( "Periods", 15, 1, 200, 1 );
+HaClose = (RSIa(Open, periods)+RSIa(High, periods)+RSIa(Low,periods)+RSIa(Close,periods))/4;
+HaOpen = AMA( Ref( HaClose, -1 ), 0.5 );
+HaHigh = Max( RSIa(High, periods), Max( HaClose, HaOpen ) );
+HaLow = Min( RSIa(Low,periods), Min( HaClose, HaOpen ) );
+PlotOHLC( HaOpen, HaHigh, HaLow, HaClose, _DEFAULT_NAME(), colorGreen, styleCandle );
+
+Plot(80,"",4,1|styleNoLabel);  
+Plot(50,"",colorDarkGrey,styleDashed|styleNoLabel);
+Plot(30,"",27,1|styleNoLabel);
+_SECTION_END();

@@ -1,0 +1,110 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Gann Swing Chart
+//  Author/Uploader: Geoff Mulhall 
+//  E-mail:          gmulhall@iprimus.com.au
+//  Date/Time Added: 2001-06-25 05:13:31
+//  Origin:          Swing Chart
+//  Keywords:        Swing Chart
+//  Level:           semi-advanced
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=35
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=35
+//
+//------------------------------------------------------------------------------
+//
+//  A Gann Swing Chart is similar to a Kanji chart but uses high and low
+//  instead of open and close. Refer Beyond Candlesticks by Steve Nison.
+//
+//------------------------------------------------------------------------------
+
+/* Gann Swing chart v4 */
+/* Last modified 24 Feb 2001 */
+/* AFL implementation by */
+/* (C)2001 Tomasz Janeczko  */
+/* one and two - bar reversal version */
+
+/* Change this to 1 for two-bar mode */
+twobarmode = 0;
+
+outsidebar = outside();
+insidebar = H <= Ref( H, -1 ) AND L >= Ref( L, -1 ); // built-in inside() works with < > instead of <= >=
+
+upbar = H > Ref( H, -1 ) AND L >= Ref( L, -1 );
+downbar = L < Ref( L, -1 ) AND H <= Ref( H, -1 );
+
+upbar2 = upbar OR ( outsidebar AND ref( downbar, 1 ) ) ;
+downbar2 = downbar OR ( outsidebar and ref( upbar, 1 ) );
+
+Poi =  outsidebar AND ref( insidebar, 1 );
+Poo =  outsidebar AND ref( outsidebar, 1 );
+Pooi = Poo AND ref( insidebar, 2 );
+Poio = Poi AND ref( outsidebar, 2 );
+Poii =  Poi AND ref( insidebar, 2 );
+Pooo = Poo AND ref( outsidebar, 2 );
+Poooi = Pooo AND ref( insidebar, 3 );
+Pooio = Pooi AND ref( outsidebar, 3 );
+Poioo = Poio AND ref( outsidebar, 3 );
+
+upbar3 = upbar2 OR ( Poi AND ref( downbar, 2 ) );
+downbar3 = downbar2 OR ( Poi AND ref( upbar, 2 ) );
+ 
+upbar4 = upbar3 OR ( Poo  AND ref( upbar, 2 ) );
+downbar4 = downbar3 OR ( Poo  AND ref( downbar, 2 ) );
+
+upbar5 = upbar4 OR  ( Pooi AND ref( upbar, 3 ) );
+downbar5 = downbar4 OR  ( Pooi  AND ref( downbar, 3 ) );
+
+upbar6 = upbar5 OR  ( Poio AND ref( upbar, 3 ) );
+downbar6 = downbar5 OR  ( Poio  AND ref( downbar, 3 ) );
+
+upbar7 = upbar6 OR  ( Poii AND ref( downbar, 3 ) );
+downbar7 = downbar6 OR  ( Poii  AND ref( upbar, 3 ) );
+
+upbar8 = upbar7 OR  ( Pooo AND ref( downbar, 3 ) );
+downbar8 = downbar7 OR  ( Pooo AND ref( upbar, 3 ) );
+
+upbar9 = upbar8 OR  ( Poooi AND ref( downbar, 4 ) );
+downbar9 = downbar8 OR  (Poooi  AND ref( upbar, 4 ) );
+
+upbar10 = upbar9 OR  ( Pooio AND ref( downbar, 4 ) );
+downbar10 = downbar9 OR  (  Pooio AND ref( upbar, 4 ) );
+
+upbar11 = upbar10 OR  (  Poioo AND ref( downbar, 4 ) );
+downbar11 = downbar10 OR  ( Poioo  AND ref( upbar, 4 ) );
+
+fupbar = upbar11;
+fdownbar = downbar11;
+ 
+// Two-bar mode handling
+fupbar = IIF( twobarmode, fupbar AND ref( fupbar, 1 ), fupbar );
+fdownbar = IIF( twobarmode, fdownbar AND ref( fdownbar, 1 ), fdownbar );
+
+/* Barcount since most recent up and down swings */
+Us = BarsSince( fupbar  ); 
+Ds = BarsSince( fdownbar ) ;
+
+Sd1 =IIf( Us==0, 1,  IIf( Ds==0, -1, 0) );
+
+Sd2 = IIf( Sd1 == 1,  IIf( Ref( BarsSince(Sd1==1), -1) > Ref( BarsSince( Sd1 == -1), -1), 1, 0), 
+          IIf( Sd1 == -1,  IIf( Ref( BarsSince(Sd1==1),-1) < Ref( BarsSince( Sd1 == -1),-1), -1, 0),  0 ) ); 
+
+g0 =  ValueWhen( Sd2, Sd2 ); /* sample and hold non-zero values */
+
+/* shift back one bar, add one dummy swing at the end and shift forward */
+/* to ensure proper handling of the last swing */
+lastbar = Cum(1) == LastValue( cum(1) );
+swinglevel = IIF( g0 == -1, HighestSince( Sd2 == 1, H ), LowestSince( Sd2 == -1, L ) );
+swinglevel = IIF( lastbar, IIF( g0 == -1, LowestSince( Sd2 == -1, L ), HighestSince( Sd2 == 1, H )), Ref( swinglevel, 1 ) );
+
+/* Gann Swing chart drawn here */
+graph1 =  Ref( ValueWhen( Ref( Sd2 != 0, 1 ) or lastbar, swinglevel ,  0 ), -1 );
+graph1style = 512+1024;
+graphxspace = 5;
+
+/* Colourized price bars drawn here */
+/* graph0 = close; */
+/* graph0style = 128; */
+/* barcolor =  IIF( outsidebar, 1, IIF( downbar, 4, IIF( upbar, 5, 0 ) ) ); */
+/* graph0barcolor = ValueWhen( barcolor != 0, barcolor ); */
+

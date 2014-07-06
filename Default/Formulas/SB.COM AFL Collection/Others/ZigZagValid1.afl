@@ -1,0 +1,33 @@
+_SECTION_BEGIN("Price");
+SetChartOptions(0,chartShowArrows|chartShowDates);
+_N(Title = StrFormat("{{NAME}} - {{INTERVAL}} {{DATE}} Open %g, Hi %g, Lo %g, Close %g (%.1f%%) Vol " +WriteVal( V, 1.0 ) +" {{VALUES}}", O, H, L, C, SelectedValue( ROC( C, 1 )) ));
+Plot( C, "Close", ParamColor("Color", colorBlack ), styleNoTitle | ParamStyle("Style") | GetPriceStyle() ); 
+if( ParamToggle("Tooltip shows", "All Values|Only Prices" ) )
+{
+ToolTip=StrFormat("Open: %g\nHigh: %g\nLow: %g\nClose: %g (%.1f%%)\nVolume: "+NumToStr( V, 1 ), O, H, L, C, SelectedValue( ROC( C, 1 )));
+}
+_SECTION_END();
+
+
+_SECTION_BEGIN("ZIG");
+
+P = ParamField( "Price field" );
+change = Param("% change",5,0.1,25,0.1);
+z = Zig(P, change);
+Plot( z, _DEFAULT_NAME(), ParamColor( "Color", colorCycle ), ParamStyle("Style") );
+myBuy = IIf(z > Ref(z, -1), 1, 0);
+mySell = IIf(z < Ref(z, -1), 1, 0);
+Buy = Cover = ExRem(myBuy, mySell);
+Sell = Short = ExRem(mySell, mybuy);
+Filter = Buy OR Sell;
+AddColumn(Buy, "Buy", 1.0);
+AddColumn(Sell, "Sell", 1.0);
+
+
+Title = Name() + " " + Date() ;
+
+P = ParamField( "Price field" );
+
+AddColumn(Sell, "Sell", 1.0);
+
+_SECTION_END();

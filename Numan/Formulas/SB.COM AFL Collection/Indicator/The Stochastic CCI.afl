@@ -1,0 +1,36 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    The Stochastic CCI
+//  Author/Uploader: Dimitris Tsokakis 
+//  E-mail:          tsokakis@oneway.gr
+//  Date/Time Added: 2002-08-11 04:09:59
+//  Origin:          
+//  Keywords:        
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=211
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=211
+//
+//------------------------------------------------------------------------------
+//
+//  The Stochastic CCI was defined and presented at
+//
+//  http://groups.yahoo.com/group/amibroker/message/2394.
+//
+//  For more details you may take a look at
+//
+//  http://groups.yahoo.com/group/amibroker/message/21618
+//
+//  and an excellent work by Herman van den Bergen, available at
+//
+//  http://www.amibroker.com/support.html
+//
+//  namely the
+//
+//  http://www.amibroker.net/3rdparty/ABSysDevTutorv2.pdf
+//
+//------------------------------------------------------------------------------
+
+StochCCI=100*(CCI(14)-LLV(CCI(14),14))/(HHV(CCI(14),14)-LLV(CCI(14),14));
+Plot(StochCCI,"StochCCI",1,1);
+Plot(80,"",2,1);Plot(20,"",2,1);

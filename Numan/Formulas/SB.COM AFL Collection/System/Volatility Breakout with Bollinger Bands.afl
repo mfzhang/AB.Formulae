@@ -1,0 +1,36 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Volatility Breakout with Bollinger Bands
+//  Author/Uploader: Joachim Feseck 
+//  E-mail:          joachimfeseckqweb.de
+//  Date/Time Added: 2003-01-19 07:49:55
+//  Origin:          
+//  Keywords:        
+//  Level:           medium
+//  Flags:           system,exploration
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=256
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=256
+//
+//------------------------------------------------------------------------------
+//
+//  This Tradingsystem gives buy and short signals when after Bollinger Bands
+//  got very narrow they spread out and the Close touches the band (top or
+//  bottom). Additionally the MFI has to confirm this volatility breakout. But
+//  please be carefull because some stock suddenly change direction and in this
+//  case the really change! For more information please read "Bollinger on
+//  Bollinger Bands".
+//
+//------------------------------------------------------------------------------
+
+Band= (BBandTop( C, 20, 2 ) - BBandBot( C, 20, 2)) / MA(Close, 20 ) * 100;
+B= ((Close - BBandBot( Close, 20, 2 )) / (BBandTop( Close, 20, 2 ) - BBandBot( Close, 20, 2 ))) * 100;
+
+Buy = band < 15 AND b > 95 AND MFI(10) > 60;
+Sell = Cross(Close,SAR(0.01,0.2));
+Short = band < 15 AND b < 5 AND MFI(10) < 40;
+Cover = Cross(SAR(0.01,0.2), Close);
+
+Filter = (band < 15 AND b > 95 AND MFI(10) > 60)  OR (band < 15 AND b < 5 AND MFI(10) < 40);
+
+NumColumns = 1;
+Column0 = Close;

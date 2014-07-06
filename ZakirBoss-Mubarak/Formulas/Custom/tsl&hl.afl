@@ -1,0 +1,89 @@
+
+
+
+
+//PRICE
+_SECTION_BEGIN("Price");
+SetChartOptions(0,chartShowArrows|chartShowDates);
+_N(Title = StrFormat("{{NAME}} - {{INTERVAL}} {{DATE}} Open %g, Hi %g, Lo %g, Close %g (%.1f%%)Vol " +WriteVal( V, 1.0 ) +
+           " {{VALUES}}", O, H, L, C, SelectedValue( ROC( C, 1 )) ));
+Plot( C, "", ParamColor("Color", colorBlack ), styleNoTitle | ParamStyle("Style") | GetPriceStyle() ); 
+_SECTION_END();
+//xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+//TRENDING RIBBON
+// Paste the code below to your price chart somewhere and green ribbon means both
+// both MACD and ADX trending up so if the red ribbon shows up the MACD and the ADX 
+// are both trending down.
+_SECTION_BEGIN("trending ribbon");
+uptrend=PDI()>MDI() AND MACD()>Signal();
+downtrend=MDI()>PDI() AND Signal()>MACD();
+Plot( 2, /* defines the height of the ribbon in percent of pane width */"",
+    IIf( uptrend AND EMA(C,50)>=Ref(EMA(C,50),-1), colorLime, IIf( downtrend OR EMA(C,50)<Ref(EMA(C,50),-1),
+     colorRed, colorTan)) , /* choose color */styleOwnScale|styleArea|styleNoLabel, -0.5, 100 );
+_SECTION_END();
+//xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+//HEIKIN-ASHI ORIGINAL
+//SetChartOptions(0,chartShowArrows | chartShowDates);
+HaClose = (O + H + L + C)/4; 
+HaOpen = AMA( Ref( HaClose, -1 ), 0.5 ); 
+HaHigh = Max( H, Max( HaClose, HaOpen ) ); 
+HaLow = Min( L, Min( HaClose, HaOpen ) ); 
+xDiff = (HaHigh - Halow) * 10000;
+barcolor = IIf(HaClose >= HaOpen,colorGreen,colorRed);
+//SetBarFillColor(IIf(HaClose>=HaOpen,colorBrightGreen,colorOrange));
+//PlotOHLC( HaOpen, HaHigh, HaLow, HaClose, "\nHeikin-ashi", barcolor, styleCandle );
+//xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+//BUYSTOP&SELLSTOP
+
+cpper= Param("Buyper",2,1,20,1,0) ;
+vdper= Param("Sellper",1,1,20,1,0) ;
+
+cp= HHV(H,Cpper) ;
+vd= LLV(L,vdper) ;
+
+Plot(IIf(Ref(C,-1)< cp,cp,Null),"\nBuyStop",colorBlue,styleDots|styleNoLine|styleThick);
+Plot(IIf(Ref(C,-1)> vd,vd,Null),"\nSellStop",colorRed,styleDots|styleNoLine|styleThick);
+
+mybuy= C>Ref(Cp,-1) ;
+myshort= C<Ref(Vd,-1) ;
+
+Buy = ExRem(myBuy, myShort);
+Sell = ExRem(myShort, myBuy);
+
+PlotShapes(IIf(Buy,shapeUpArrow,shapeNone),colorBlue,0,Low,Offset=-10);
+PlotShapes(IIf(Sell,shapeDownArrow,shapeNone),colorRed,0,High,Offset=-10);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

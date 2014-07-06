@@ -1,0 +1,142 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    IFT of RSI - Multiple TimeFrames
+//  Author/Uploader: Brian Richard 
+//  E-mail:          brianrichard99@hotmail.com
+//  Date/Time Added: 2004-07-30 23:43:41
+//  Origin:          
+//  Keywords:        IFT, RSI, TimeFrame
+//  Level:           semi-advanced
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=375
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=375
+//
+//------------------------------------------------------------------------------
+//
+//  This is the Inverse Fisher Transform (IFT) of the Relative Strength Index
+//  (RSI), across multiple timeframes. It only shows two timeframes at any
+//  given time -- the currrent chart time frame, and the next largest time
+//  frame (see code for details).
+//
+//  Hourly chart: When the IFT is oversold on the daily IFT, and lifting up
+//  above the oversold line -- and the hourly IFT is also rising -- this is a
+//  good buy signal. The reverse is true for a short signal.
+//
+//  This may be used with 5 min., hourly, daily, and weekly charts.
+//
+//  Included is Tom DeMark-style duration analysis, which includes trend
+//  strength arrows. These arrows are not buy or sell signals. Instead, they
+//  represent extreme conditions, which usually end up with a strong rebound,
+//  or a strong continuation of the trend. Use something like the Volume Flow
+//  Indicator (VFI) to help determine which way the trend will go.
+//
+//  The white IFT line always represents the smaller time frame (i.e, the
+//  default time frame for the chart).
+//
+//  You may want to build a version of this that uses Tom DeMark's Range
+//  Expansion Index, instead of the IFT or RSI. This works well to help
+//  determine what this IFT indicator will likely do next.
+//
+//------------------------------------------------------------------------------
+
+/* IFT-RSI */
+TimeFrameSet(in5Minute);
+pr_5m = (H+L)/2; 
+len_5m = 10; 
+maxh_5m = HHV(pr_5m,len_5m); 
+minl_5m = LLV(pr_5m,len_5m); 
+Array1_5m = .33*2*((pr_5m-minl_5m)/(maxh_5m-minl_5m)-.5); 
+val1_5m = AMA(Array1_5m,.67); 
+value1_5m = IIf(val1_5m>.99,.999,IIf(val1_5m<-.99,-.999,val1_5m)); 
+Array2_5m = .5*log((1+value1_5m)/(1-value1_5m)); 
+fish_5m = AMA(Array2_5m,.5); 
+
+/* IFT-RSI */
+TimeFrameSet(inHourly);
+pr_h = (H+L)/2; 
+len_h = 10; 
+maxh_h = HHV(pr_h,len_h); 
+minl_h = LLV(pr_h,len_h); 
+Array1_h = .33*2*((pr_h-minl_h)/(maxh_h-minl_h)-.5); 
+val1_h = AMA(Array1_h,.67); 
+value1_h = IIf(val1_h>.99,.999,IIf(val1_h<-.99,-.999,val1_h)); 
+Array2_h = .5*log((1+value1_h)/(1-value1_h)); 
+fish_h = AMA(Array2_h,.5); 
+
+/* IFT-RSI */
+TimeFrameSet(inDaily);
+pr_d = (H+L)/2; 
+len_d = 10; 
+maxh_d = HHV(pr_d,len_d); 
+minl_d = LLV(pr_d,len_d); 
+Array1_d = .33*2*((pr_d-minl_d)/(maxh_d-minl_d)-.5); 
+val1_d = AMA(Array1_d,.67); 
+value1_d = IIf(val1_d>.99,.999,IIf(val1_d<-.99,-.999,val1_d)); 
+Array2_d = .5*log((1+value1_d)/(1-value1_d)); 
+fish_d = AMA(Array2_d,.5); 
+
+/* IFT-RSI */
+TimeFrameSet(inWeekly);
+pr_w = (H+L)/2; 
+len_w = 10; 
+maxh_w = HHV(pr_w,len_w); 
+minl_w = LLV(pr_w,len_w); 
+Array1_w = .33*2*((pr_w-minl_w)/(maxh_w-minl_w)-.5); 
+val1_w = AMA(Array1_w,.67); 
+value1_w = IIf(val1_w>.99,.999,IIf(val1_w<-.99,-.999,val1_w)); 
+Array2_w = .5*log((1+value1_w)/(1-value1_w)); 
+fish_w = AMA(Array2_w,.5);
+
+/* IFT-RSI */
+TimeFrameSet(inMonthly);
+pr_mo = (H+L)/2; 
+len_mo = 10; 
+maxh_mo = HHV(pr_mo,len_mo); 
+minl_mo = LLV(pr_mo,len_mo); 
+Array1_mo = .33*2*((pr_mo-minl_mo)/(maxh_mo-minl_mo)-.5); 
+val1_mo = AMA(Array1_mo,.67); 
+value1_mo = IIf(val1_mo>.99,.999,IIf(val1_mo<-.99,-.999,val1_mo)); 
+Array2_mo = .5*log((1+value1_mo)/(1-value1_mo)); 
+fish_mo = AMA(Array2_mo,.5); 
+
+TimeFrameRestore();
+
+varOverboughtSignal = 0.20;
+varOversoldSignal = -0.20;
+PlotGrid(varOverboughtSignal);
+PlotGrid(varOversoldSignal);
+
+/// DURATION ANALYSIS for Hourly ///
+// Identify oversold conditions, marked with red arrow to denote downtrend
+varOversold_h = IIf( Ref(fish_h,-7)<=varOversoldSignal 
+AND Ref(fish_h,-6)<=varOversoldSignal 
+AND Ref(fish_h,-5)<=varOversoldSignal 
+AND Ref(fish_h,-4)<=varOversoldSignal 
+AND Ref(fish_h,-3)<=varOversoldSignal 
+AND Ref(fish_h,-2)<=varOversoldSignal 
+AND Ref(fish_h,-1)<=varOversoldSignal 
+AND fish_h<=varOversoldSignal ,1,0);
+IIf(VarOversold_h>0,PlotShapes(shapeHollowDownArrow*varOversold_h,colorRed),0);
+
+// Identify overbought conditions, marked with green arrow to denote uptrend
+varOverbought_h = IIf( Ref(fish_h,-7)>=varOverboughtSignal 
+AND Ref(fish_h,-6)>=varOverboughtSignal 
+AND Ref(fish_h,-5)>=varOverboughtSignal
+AND Ref(fish_h,-4)>=varOverboughtSignal 
+AND Ref(fish_h,-3)>=varOverboughtSignal 
+AND Ref(fish_h,-2)>=varOverboughtSignal 
+AND Ref(fish_h,-1)>=varOverboughtSignal 
+AND fish_h>=varOverboughtSignal ,1,0);
+IIf(varOverbought_h>0,PlotShapes(shapeHollowUpArrow*varOverbought_h,colorGreen),0);
+
+Plot(TimeFrameExpand(fish_5m, in5Minute), "IFT_5m", colorWhite, styleThick);
+
+Plot(TimeFrameExpand(fish_h, inHourly), "IFT_h", colorOrange, styleThick);
+
+Plot(TimeFrameExpand(fish_d, inDaily), "IFT_d", colorRed, styleThick);
+
+Plot(TimeFrameExpand(fish_w, inWeekly), "IFT_w", colorBlue, styleThick);
+
+Plot(TimeFrameExpand(fish_mo, inMonthly), "IFT_m", colorBlack, styleThick);
+
+Title="IFT-RSI TimeFrame";

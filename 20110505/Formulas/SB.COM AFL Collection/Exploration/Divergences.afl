@@ -1,0 +1,159 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Divergences
+//  Author/Uploader: Dimitris Tsokakis 
+//  E-mail:          tsokakis@oneway.gr
+//  Date/Time Added: 2001-09-08 06:45:46
+//  Origin:          
+//  Keywords:        
+//  Level:           semi-advanced
+//  Flags:           exploration
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=113
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=113
+//
+//------------------------------------------------------------------------------
+//
+//  Exploration for Relative Slope or Stochastic Divergence,
+//
+//  bullish or bearish. For Indicator Builder Use you may see
+//
+//  RELATIVE SLOPE BULLISH DIV, yellow spike
+//
+//  STOCHASTIC BULLISH DIV, red spike
+//
+//  RELATIVE SLOPE BEARISH DIV, yellow bar
+//
+//  STOCHASTIC BEARISH DIV, red bar
+//
+//  The only purpose of BUY, SELL, SHORT and COVER is to see the indicating
+//  arrows and are not suggestions to take some action.
+//
+//  Variations:
+//
+//  A. Replace the FILTER line with
+//
+//  FILTER= STBULL and HHV(RSBULL,4);
+//
+//  In this Exploration, Relative Slope is anticipating Stochastic Bullish
+//  Divergence and the result is a quite reliable sign for the beginning of an
+//  uptrend.
+//
+//  B. Replace the FILTER line with
+//
+//  FILTER= STBEAR and HHV(RSBEAR,4);
+//
+//  In this Exploration, Relative Slope is anticipating Stochastic Bearish
+//  Divergence and the result is a quite reliable sign for the beginning of a
+//  downtrend.
+//
+//  C. Replace the FILTER line with
+//
+//  FILTER= STBULL;
+//
+//  to Explore only Bullish Stochastic Divergence, or do the same with any
+//  single example
+//
+//  FILTER= STBEAR;
+//
+//  FILTER= RSBULL;
+//
+//  FILTER= RSBEAR;
+//
+//  In above formula we pay attention to divergences whithin the
+//
+//  last 20 days, hence it is a short term investigation.
+//
+//------------------------------------------------------------------------------
+
+MAXGRAPH=5;
+/*BULLISH STOCHASTIC DIVERGENCE, DD==30*/
+ST33=STOCHD();
+TR1=LLVBARS(ST33,4);
+TR2=IIF(ST33<30 AND TR1>0 AND REF(TR1,-1)==0,ref(ST33,-1),0);
+TRC=IIF(TR2>0,C,0);
+vs=valuewhen(tr2, ref(st33,-1), 1);
+dvs=vs-ref(vs,-1);
+vc=valuewhen(trc, LLV(c,3), 1);
+dvc=vc-ref(vc,-1);
+diver=iif(dvs>0 and dvc<0,30,0);
+DAS=BARSSINCE(REF(TR2,-1)>0);
+DD=IIF(DAS<20 AND C>=REF(C,-1),DIVER,0);
+GRAPH0=DD;
+GRAPH0BARCOLOR=4;
+STBULL=DD==30;
+
+/*BULLISH RELATIVE SLOPE DIVERGENCE, DDDR==20*/
+D1=10;
+KUP=EMA((H+L+C)/3,D1)+EMA(H-L,D1);
+KDOWN=EMA((H+L+C)/3,D1)-EMA(H-L,D1);
+K=EMA((H+L+C)/3,D1);
+S1=2*(K-REF(K,-1))/(K+REF(K,-1));
+T33=10+100*EMA(S1,3);
+R1=LLVBARS(T33,4);
+R2=IIF(T33<9 AND R1>0 AND REF(R1,-1)==0,ref(T33,-1),0);
+RC=IIF(R2>0,C,0);
+vsR=valuewhen(r2, ref(t33,-1), 1);
+dvsR=vsR-ref(vsR,-1);
+vcR=valuewhen(rc, LLV(C,3), 1);
+dvcR=vcR-ref(vcR,-1);
+diverR=iif(dvsR>0 and dvcR<0,20,0);
+DASR=BARSSINCE(REF(R2,-1)>0);
+dddR=IIF(DASR<20 ,DIVERR,0);
+GRAPH1=DDDR;
+GRAPH1BARCOLOR=7;
+RSBULL=DDDR==20;
+
+/*BEARISH STOCHASTIC DIVERGENCE, BDDD==90*/
+
+BTR1=HHVBARS(ST33,4);
+BTR2=IIF(ST33>70 AND BTR1>0 AND REF(BTR1,-1)==0,ref(ST33,-1),0);
+BTRC=IIF(BTR2>0,C,0);
+Bvs=valuewhen(Btr2, ref(st33,-1), 1);
+Bdvs=Bvs-ref(Bvs,-1);
+Bvc=valuewhen(Btrc, HHV(H,3), 1);
+Bdvc=Bvc-ref(Bvc,-1);
+Bdiver=iif(Bdvs<0 and Bdvc>0,90,0);
+BDAS=BARSSINCE(REF(BTR2,-1)>0);
+Bddd=IIF(BDAS<20 AND C<=REF(C,-1),BDIVER,0);
+GRAPH2=BDDD;
+GRAPH2BARCOLOR=4;
+STBEAR=BDDD==90;
+
+/*BEARISH RELATIVE SLOPE DIVERGENCE, EDDDR==80*/
+
+ER1=HHVBARS(T33,4);
+ER2=IIF(T33>11 AND ER1>0 AND REF(ER1,-1)==0,ref(T33,-1),0);
+ERC=IIF(ER2>0,C,0);
+EvsR=valuewhen(Er2, ref(t33,-1), 1);
+EdvsR=EvsR-ref(EvsR,-1);
+EvcR=valuewhen(Erc, HHV(H,3), 1);
+EdvcR=EvcR-ref(EvcR,-1);
+EdiverR=iif(EdvsR<0 and EdvcR>0,80,0);
+EDASR=BARSSINCE(REF(ER2,-1)>0);
+EdddR=IIF(EDASR<20,EDIVERR,0);
+GRAPH3=EDDDR;
+GRAPH3STYLE=2;
+GRAPH3BARCOLOR=7;
+GRAPH4=45;
+GRAPH4STYLE=8;
+RSBEAR=EDDDR==80;
+
+FILTER= STBULL OR STBEAR OR RSBULL OR RSBEAR;
+NUMCOLUMNS=4;
+COLUMN0=RSBEAR;
+COLUMN0NAME="RS BEAR";
+COLUMN1=STBEAR;
+COLUMN1NAME="ST BEAR";
+COLUMN2=RSBULL;
+COLUMN2NAME="RS BULL";
+COLUMN3= STBULL;
+COLUMN3NAME="ST BULL";
+COLUMN0FORMAT=1.0;COLUMN1FORMAT=1.0;
+COLUMN2FORMAT=1.0;COLUMN3FORMAT=1.0;
+COVER=RSBULL;
+BUY=STBULL;
+SHORT=RSBEAR;
+SELL=STBEAR;
+/*The only purpose of BUY, SELL, SHORT and COVER is
+to see the indicating arrows and are not suggestions to
+take some action. */

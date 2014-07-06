@@ -1,0 +1,35 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Buff Volume Weighted Moving Averages
+//  Author/Uploader: Prakash Shenoi 
+//  E-mail:          
+//  Date/Time Added: 2006-08-19 12:36:37
+//  Origin:          From TASC Feb 2001 article "Buff up your Moving averages" by Buff Dormeier.
+//  Keywords:        Moving Averages
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=680
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=680
+//
+//------------------------------------------------------------------------------
+//
+//  Buff's volume-weighted average function has three inputs, price, vol and
+//  length. The Fast and slow period inputs represents the number of bars to
+//  use in the volume-weighted average calculation. Trader use a combination of
+//  5 and 20 representing Fast and Slow periods respectively.
+//
+//------------------------------------------------------------------------------
+
+/* Buff's Moving Averages */
+
+/* Afl Code - Prakash Shenoi */
+
+f=Param(" Fast Periods  ",5,1,100); 
+fa=Sum(V*C,f)/Sum(V,f); 
+s=Param("Slow Periods ",10,1,50);
+sl=Sum(V*C,s)/(Cum(V)-Ref(Cum(V),-s));
+Plot (fa,"fast MA",1,1);
+Plot (C,"close",5,64);
+Plot (sl,"Slow MA",3,1);
+GraphXSpace=3;
+Title=Name ()+ "  Buff Averages  "+"\n"+ "Close = " + WriteVal  (C,1.2) +  "  Fast MA =  " + WriteVal  (fa,1.2) + "  Slow MA = "+ WriteVal (sl,1.2);

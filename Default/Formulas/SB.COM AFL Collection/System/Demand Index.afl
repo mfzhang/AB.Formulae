@@ -1,0 +1,95 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Demand Index
+//  Author/Uploader: Steve Wiser 
+//  E-mail:          slwiserr@erols.com
+//  Date/Time Added: 2001-07-05 19:12:36
+//  Origin:          
+//  Keywords:        
+//  Level:           medium
+//  Flags:           system,exploration,indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=58
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=58
+//
+//------------------------------------------------------------------------------
+//
+//  Uses the demand index for a system test.
+//
+//------------------------------------------------------------------------------
+
+/* Demand Index */
+/* Steve Wiser at slwiserr@erols.com */
+/* Exploration, System and indicator */
+
+GraphMax=9;
+
+A=(H+L+2*C);
+B=ema((HHV(H,2)-LLV(L,2)),19);
+BuyP= 
+/*{BuyPower}*/
+ V/ema(V,19) * ((A>=Ref(A,-1)) +(A<Ref(A,-1)) / Exp((0.375 * (A+Ref(A,-1)) /B ) *(Ref(A,-1)-A) / A));
+
+SellP = 
+/*{SellPressure}*/ 
+V/ema(V,19) * ((A<=Ref(A,-1)) + (A>Ref(A,-1)) / Exp((0.375 * (A+Ref(A,-1)) / B ) * (A-Ref(A,-1)) / Ref(A,-1)));
+
+
+mabp=ema(BuyP,19);       
+masp=ema(SellP,19);        /*{smooth Selling Pressure}*/
+divsor=iif(mabp>masp,mabp,masp);         /*{BP:SP ratio}*/
+divend=iif(mabp<masp,mabp,masp);       /*{biggest=divisor}*/
+var2=1-(divend/divsor);                               /*{adjust ratio to plot in}*/
+var3=iif( (masp>mabp) , -var2 , var2  )  ;       /*{range -100 to 100}*/
+var4=var3*100;  
+Graph1 = var4;
+Graph1Style=5;
+
+var5=ma(var4,30);
+Graph2=var5;;
+Graph2Style=5;
+Graph2Color=6;
+
+/*  Zero Line  */
+Graph0=0;
+
+
+Buy=cross(var4,var5); /* originally var5 was a zero */
+sell=cross(0,var4);
+
+buy=exrem(buy,sell);
+sell=exrem(sell,buy);
+
+short=sell;
+cover=buy;
+
+Filter= (Buy == 1 or Sell == 1)  ;
+numcolumns = 7;
+column0 =  IIF(Buy == 1, 1, IIF(Sell == 1, -1, 0 )  );
+column0format = 1.0;
+column0name = "B/S";
+column1 = C;
+column1name = "Close       ";
+column1format = 1.2;
+column2 = ma(v,17);
+column2name = "17 Ma Vol   ";
+column2format = 1.0;
+column3 = ma(C,17)/ma(c,50);
+column3name = "% 17/50 ";
+column3format = 1.2;
+column3format = 1.2;
+column4= ma(c,17);
+column4name="17 C ma";
+column4format = 1.2;
+column4= ma(c,50);
+column4name="50 C ma";
+column4format = 1.2;
+Column5=ROC(var4,2);
+column5Name="ROC DI";
+Column5Format=1.2;  
+Column6=Cum(1);
+Column6Name = "#Bars";
+Column6format = 1.0;
+
+/*  End of Exploration Code. */
+
+

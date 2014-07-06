@@ -1,0 +1,21 @@
+/*Positive Stochastic Divergence for use in 
+Indicator Builder and Automatic Analysis (scan mode),
+by Dimitris Tsokakis*/
+
+ST33=STOCHD(14);
+TR1=LLVBARS(ST33,4);
+TR2=IIF(ST33<30 AND TR1>0 AND REF(TR1,-1)==0,ref(ST33,-1),0);
+TRC=IIF(TR2>0,C,0);
+vs=valuewhen(tr2, ref(st33,-1), 1);
+dvs=vs-ref(vs,-1);
+vc=valuewhen(trc, LLV(c,3), 1);
+dvc=vc-ref(vc,-1);
+diver=iif(dvs>0 and dvc<0,30,0);
+DAS=BARSSINCE(REF(TR2,-1)>0);
+DD=IIF(DAS<20 AND C>=REF(C,-1),DIVER,0);
+GRAPH0=TR2;
+GRAPH0STYLE=2;
+graph0barcolor=12;
+graph1=dd;
+graph1barcolor=5;
+BUY=DD>0 ;

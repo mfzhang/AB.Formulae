@@ -1,0 +1,139 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Calculate composites for tickers in list files
+//  Author/Uploader: Mark H. 
+//  E-mail:          
+//  Date/Time Added: 2006-09-15 23:46:12
+//  Origin:          
+//  Keywords:        Composite AddToComposite File JScript List
+//  Level:           semi-advanced
+//  Flags:           exploration,function
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=709
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=709
+//
+//------------------------------------------------------------------------------
+//
+//  Notes:
+//
+//  1. All list files are in folder C:\Program Files\AmiBroker\MyLists and have
+//  file name as ListName.tls.
+//
+//  2. The composite results use ticker ~Comp~ListName.
+//
+//  3. The AFL formula is C:\Program
+//  Files\AmiBroker\Formulas\Custom\ListComp.afl
+//
+//  4. Save the following text in a JScript file named ListsComp.js
+//
+//  5. Run by double click the JScript file
+//
+//  //========== Start JScript ListsComp.js ==========
+//
+//  listFolder = "C:\\Program Files\\AmiBroker\\MyLists";
+//
+//  compAFL = "C:\\Program Files\\AmiBroker\\Formulas\\Custom\\ListComp.afl";
+//
+//  WorkingWatchlist = 40;
+//
+//  CompWatchlist = 41;
+//
+//  AB = new ActiveXObject("Broker.Application");
+//
+//  AA = AB.Analysis;
+//
+//  WScript.Echo("Now open folder " + listFolder + " to read lists.");
+//
+//  fs = new ActiveXObject("Scripting.FileSystemObject");
+//
+//  f = fs.GetFolder(listFolder);
+//
+//  for (fc = new Enumerator(f.files); !fc.atEnd(); fc.moveNext())
+//
+//  {
+//
+//  fullname = fc.item(); name = fc.item().name;
+//
+//  listname = name.substring(0,name.indexOf(".tls"));
+//
+//  WScript.Echo("Now calculate composite for list: " + listname); // remove
+//  this line to stop prompts
+//
+//  values = AB.Stocks("~VALUES"); // use a bogus stock to pass filename and
+//  listname to AFL
+//
+//  values.fullname = fullname;
+//
+//  values.alias = listname;
+//
+//  AA.ClearFilters();
+//
+//  AA.RangeMode = 1; // n last quotes
+//
+//  AA.RangeN = 1;
+//
+//  AA.ApplyTo = 1; // current stock
+//
+//  if(AA.LoadFormula( compAFL))
+//
+//  {
+//
+//  AA.Explore();
+//
+//  AA.ApplyTo = 2; // use filter
+//
+//  AA.Filter(0, "watchlist") = WorkingWatchlist; // apply to this watchlist
+//
+//  AA.Scan();
+//
+//  }
+//
+//  }
+//
+//  WScript.Echo("Calculation for all composites completed.");
+//
+//  //=============== End of JScript ================
+//
+//------------------------------------------------------------------------------
+
+WorkingWatchlist = 40;  // the watchlist for calculating composite, re-use every time
+CompWatchlist = 41;     // the watchlist to store composite results
+AAAction = Status("action");
+if(AAAction == actionScan)
+{
+	buy = 0;
+	compname = StaticVarGetText("COMPNAME");
+	AddToComposite(C, compname, "X");    // add more composite calculations here
+}
+else if(AAAction == actionExplore)
+{
+	filter = 0;
+	ab = CreateObject("Broker.Application");
+	values = ab.Stocks("~VALUES");  // get the filename and listname from the bogus stock
+	filename = values.FullName;
+	listname = values.Alias;
+	compname = "~Comp~"+listname;   // generate composite name
+	StaticVarSetText("COMPNAME", compname);  // store the composite name so that Scan can use it
+	AddToComposite(0, compname, "X", atcFlagCompositeGroup + atcFlagEnableInExplore);
+	CategoryAddSymbol( compname, categoryWatchlist, CompWatchlist);
+	// remove all tickers from the working watchlist
+	list = CategoryGetSymbols( categoryWatchlist, WorkingWatchlist );	
+	for( i = 0; ( sym = StrExtract( list, i ) ) != ""; i++ )
+	{
+		CategoryRemoveSymbol(sym, categoryWatchlist, WorkingWatchlist);
+	}
+	_TRACE("FileName=" + filename + " ListName=" + listname );	
+	// add tickers to the working watchlist from file
+	fh = fopen(filename, "r");
+	while( ! feof( fh ) ) 
+	{
+		sym = fgets( fh ); 
+		sym = StrReplace(sym, "\n", ""); 
+		sym = StrReplace(sym, "\r", "");
+		if(StrLen(sym) > 0)
+		{ 
+			CategoryAddSymbol( sym , categoryWatchlist, WorkingWatchlist);
+			_TRACE("Adding to watchlist: " + sym);
+		}
+	}
+	AddColumn( Close, "Close", 1.2 ); // useless but required by Explore
+}

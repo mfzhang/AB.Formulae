@@ -1,0 +1,15 @@
+/* Relative Vigour Index from TASC 01/02 */
+
+period = 14;
+
+value1 = ( ( C - O ) + ( 2 * Ref( C - O, -1) ) + ( 2 * Ref( C - O, -2) ) + Ref( C - O, -3) ) / 6;
+value2 = ( ( H - L ) + ( 2 * Ref( H - L, -1) ) + ( 2 * Ref( H - L, -2) ) + Ref( H - L, -3) ) / 6;
+
+num = Sum( value1, period );
+denom = Sum( value2, period );
+
+RVI = IIf( denom != 0, num / denom, 0);
+
+RVISig = ( RVI + 2 * Ref( RVI, -1) + 2 * Ref( RVI, -2) + Ref( RVI, -3) ) / 6;
+Graph1 = RVI;
+Graph0 = RVISig;

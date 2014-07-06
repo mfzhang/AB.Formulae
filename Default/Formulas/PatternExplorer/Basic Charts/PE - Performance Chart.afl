@@ -1,0 +1,55 @@
+//|-----------------------------------------------------------------------------------------
+//|PatternExplorer.com - Performance overview
+//|Copyright © 2007, PatternExplorer.com
+//|http://www.PatternExplorer.com
+//|e-mail: support@PatternExplorer.com
+//|-----------------------------------------------------------------------------------------
+FormulaName = "PE - Performance Chart";
+
+SetChartOptions( 0, chartShowDates | chartShowArrows | chartWrapTitle );
+#pragma nocache
+#include_once  <\PEInc\PatternExplorer_f0.afl>
+#Include_once "C:\Program Files (x86)\AmiBroker5\Formulas\PatternExplorer\#Defaults & Mods\PE - Defaults.afl"
+#Include_once "C:\Program Files (x86)\AmiBroker5\Formulas\PatternExplorer\#Defaults & Mods\PE - Mods.afl"
+/*******************************************************************************************/
+AddCustomCodeBeforePE();
+/*******************************************************************************************/
+_SECTION_BEGIN( "Main Parameters" );
+GraphXSpace = Param( "Vertical Zoom Out", 10, 0, 100, 1 );
+pds = Param( "Smoothing Period", 3, 0, 20, 1 );//select 1, if you want no smoothing
+_SECTION_END();
+/*******************************************************************************************/
+_SECTION_BEGIN( "Symbols" );
+Symbol1 = ParamStr( "Symbol 1", def_Symbol_1 );
+Symbol2 = ParamStr( "Symbol 2", def_Symbol_2 );
+Symbol3 = ParamStr( "Symbol 3", def_Symbol_3 );
+Symbol4 = ParamStr( "Symbol 4", def_Symbol_4 );
+_SECTION_END();
+/*******************************************************************************************/
+_SECTION_BEGIN( "Colors" );
+ColorT1 = ParamColor( "Symbol 1", colorBlue );
+ColorT2 = ParamColor( "Symbol 2", colorGreen );
+ColorT3 = ParamColor( "Symbol 3", colorRed );
+ColorT4 = ParamColor( "Symbol 4", colorOrange );
+ColorT5 = ParamColor( "Selected Symbol", def_Color_Selected_Symbol );
+_SECTION_END();
+/*******************************************************************************************/
+#include_once  <\PEInc\Lib\PatternExplorer_f04.afl>
+Plot( Perf_T1, "", colorT1, 1 );
+Plot( Perf_T2, "", colorT2, 1 );
+Plot( Perf_T3, "", colorT3, 1 );
+Plot( Perf_T4, "", colorT4, 1 );
+Plot( Perf_T5, "", colorT5, 1 );
+/*******************************************************************************************/
+AddGradientBackground( def_BGColorswitch, def_BgTopcolor, def_BgBottomcolor, def_titlebkcolor );
+/*******************************************************************************************/
+/*******************************************************************************************/
+AddCustomCodeAfterPE();
+/*******************************************************************************************/
+Title = "PatternExplorer.com - Performance Chart " + def_Title +
+        EncodeColor( def_Text2 ) + " Period = " + WriteVal( No_of_bars, 1.0 ) + " days," + EncodeColor( def_Color3 ) + " Smooth-Factor = " + WriteVal( pds, 1.0 ) + " \n" +
+        EncodeColor( colorT1 ) + Symbol1 + "   " + WriteVal( Perf_T1, 1.0 ) + " %          " +
+        EncodeColor( colorT2 ) + Symbol2 + "   " + WriteVal( Perf_T2, 1.0 ) + "%          " +
+        EncodeColor( colorT3 ) + Symbol3 + "   " + WriteVal( Perf_T3, 1.0 ) + " %          " +
+        EncodeColor( colorT4 ) + Symbol4 + "   " + WriteVal( Perf_T4, 1.0 ) + " %\n" +
+        EncodeColor( colorT5 ) + FullName() + "   " + WriteVal( Perf_T5, 1.0 ) + " % ";

@@ -1,0 +1,194 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Elder Triple Screen Trading System
+//  Author/Uploader: Dennis Skoblar 
+//  E-mail:          DennisAndLisa@sbcglobal.net
+//  Date/Time Added: 2005-07-05 23:56:38
+//  Origin:          As derrived from "Trading For A Living" and "Come Into My Trading Room" by Alexander Elder.
+//  Keywords:        Triple Screen, Alexander Elder,Pullback scan
+//  Level:           semi-advanced
+//  Flags:           showemail
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=490
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=490
+//
+//------------------------------------------------------------------------------
+//
+//  Elder Triple Screen Trading System. As derrived from "Trading For A Living"
+//  and "Come Into My Trading Room" by Alexander Elder. This scan finds long
+//  candidates by the weekly MACD rising and the weekly 13 period Force Index
+//  above it's zero line. Plot a weekly EMA (26 period)...it should be rising
+//  to go long. The daily 2 period Force Index must be below it's zero line.
+//  Look for the stock on a pullback around it's daily 13 period ema. Also use
+//  the daily 22 period ema to determine the direction of the daily trend. Do
+//  the opposite for shorts. Best used as an Exploration.
+//
+//------------------------------------------------------------------------------
+
+// Elder Triple Screen Trading System.
+// Coded by Dennis Skoblar 7/05/2005.
+// As derrived from "Trading For A Living" and "Come Into My Trading Room" by Alexander Elder.
+// 
+// This scan finds long candidates by the weekly MACD rising and the weekly 13 period Force Index above it's zero line.
+// Plot a weekly EMA (26 period)...it should be rising to go long.
+// The daily 2 period Force Index must be below it's zero line. Look for the stock on a pullback around it's daily 13 period ema.
+// Also use the daily 22 period ema to determine the direction of the daily trend.
+// Do the opposite for shorts. Best used as an Exploration. 
+
+TimeFrameSet( inWeekly );
+WeeklyMACD = MACD( 12, 26 ) - Signal( 12, 26, 9 );
+WeekHistRising = IsTrue ( Ref(WeeklyMACD, -1) < Ref(WeeklyMACD, 0) );
+WeekHistFalling = IsTrue ( Ref(WeeklyMACD, -1) > Ref(WeeklyMACD, 0) );
+FIWeekly = EMA(((C-Ref(C,-1))*V),13);
+WeeklyForceIndexLong = IsTrue ( FIWeekly > 0 );
+WeeklyForceIndexShort = IsTrue ( FIWeekly < 0);
+TimeFrameRestore();
+
+// Weekly criteria
+MACDLongW = TimeFrameExpand( WeekHistRising, inWeekly );
+MACDShortW= TimeFrameExpand( WeekHistFalling, inWeekly );
+FILongW = TimeFrameExpand( WeeklyForceIndexLong, inWeekly );
+FIShortW = TimeFrameExpand( WeeklyForceIndexShort, inWeekly );
+
+// Daily criteria
+FIDaily = EMA(((C-Ref(C,-1))*V),2);
+FILongD = IsTrue ( FIDaily < 0 );
+FIShortD = IsTrue ( FIDaily > 0 );
+PVFilter = (C>15) AND Ref(MA(V,50),-1)>100000;
+TenTwentyFilter = HHV(H,20)-LLV(L,20); // How much price has gone in one month (>=10 points preferable)
+FiftyDayHVFilter = round(StDev(log(C/Ref(C,-1)),50)*100*sqrt(256)); // One year volotility (>=40 preferable)
+
+// Scan criteria
+ElderLong = MACDLongW AND FILongW AND FILongD;
+ElderShort = MACDShortW AND FIShortW AND FIShortD;
+
+// Columns for exploration
+
+NumColumns = 7;
+
+Column0 = FullName();     
+Column0Name = "Ticker name";
+
+Column1 = ElderLong;
+Column1Name = "Long";
+
+Column2 = ElderShort;
+Column2Name = "Short";
+
+Column3 = FiftyDayHVFilter;
+Column3Name = "50 Day HV";
+
+Column4 = TenTwentyFilter;
+Column4Name = "10/20 Filter";
+
+Column5 = FIWeekly;
+Column5Name = "Weekly Force Index";
+
+Column6 = FIDaily;
+Column6Name = "Daily Force Index";
+
+AddTextColumn( IndustryID(1), "Industry" );
+
+AddTextColumn( MarketID(1), "Market" );
+
+// Filters
+Filter = TenTwentyFilter > 5 AND PVFilter AND (ElderLong OR ElderShort);
+Buy= ElderLong;
+Sell = ElderShort;
+
+// Charts (just cut and paste each to it's owm window)-------------------------------------------------------------------
+
+// Weekly Bar Chart
+_SECTION_BEGIN("Weekly Graph");
+TimeFrameSet( inWeekly );
+wo = O;
+wh = H;
+wl = L;
+wc = C;
+TimeFrameRestore(); 
+
+PlotOHLC( wo, wh, wl, wc, "Weekly Close", colorCustom9, styleBar );
+_SECTION_END();
+
+_SECTION_BEGIN("EMA");
+P = ParamField("Price field",-1);
+Periods = Param("Periods", 15, 2, 200, 1, 10 );
+Plot( EMA( P, Periods ), _DEFAULT_NAME(), ParamColor( "Color", colorCycle ), ParamStyle("Style") ); 
+_SECTION_END();
+
+// ----------------------------------------------------------------------------------------------------------------------
+
+// Weekly Force Index 13 Chart
+_SECTION_BEGIN("Weekly Force Index Thirteen Period");
+TimeFrameSet( inWeekly ); 
+FI=EMA(((C-Ref(C,-1))*V),13);
+TimeFrameRestore();
+
+Plot(FI,"FI",colorCustom11,styleLine);
+Plot(0,"ZERO LINE",colorWhite,styleThick);
+_SECTION_END();
+
+// ----------------------------------------------------------------------------------------------------------------------
+
+// Weekly MACD Histogran
+_SECTION_BEGIN("Weekly MACD");
+TimeFrameSet( inWeekly );
+MACDw = MACD( 12, 26 ) - Signal( 12, 26, 9 );
+MACDwLINE =  MACD( 12, 26 ) ;
+MACDwSignal = Signal( 12, 26, 9 );
+TimeFrameRestore();
+
+Plot(MACDw,"MACD Weekly",colorYellow,styleHistogram);
+Plot(MACDwLINE,"MACD Weekly Line",colorRed,styleLine);
+Plot(MACDwSignal,"MACD Weekly Signal Line",colorBlue,styleLine);
+_SECTION_END();
+
+// ----------------------------------------------------------------------------------------------------------------------
+
+// Daily Bar Chart
+_SECTION_BEGIN("Price");
+SetChartOptions(0,chartShowArrows|chartShowDates);
+_N(Title = StrFormat("{{NAME}} - {{INTERVAL}} {{DATE}} Open %g, Hi %g, Lo %g, Close %g (%.1f%%) {{VALUES}}", O, H, L, C, SelectedValue( ROC( C, 1 ) ) ));
+Plot( C, "Close", ParamColor("Color", colorCustom9 ), styleBar | ParamStyle("Style") | GetPriceStyle() ); 
+_SECTION_END();
+
+_SECTION_BEGIN("EMA");
+P = ParamField("Price field",-1);
+Periods = Param("Periods", 13);
+Plot( EMA( P, Periods ), _DEFAULT_NAME(), ParamColor( "Color", colorYellow ), ParamStyle("Style") ); 
+_SECTION_END();
+
+_SECTION_BEGIN("EMA1");
+P = ParamField("Price field",-1);
+Periods = Param("Periods", 22);
+Plot( EMA( P, Periods ), _DEFAULT_NAME(), ParamColor( "Color", colorRed ), ParamStyle("Style") ); 
+_SECTION_END();
+
+// ----------------------------------------------------------------------------------------------------------------------
+
+// Daily Force Index 2 Period
+_SECTION_BEGIN("Force Index 2 Day");
+FI=EMA(((C-Ref(C,-1))*V),2);
+Plot(FI,"FI",colorCustom11,styleLine);
+Plot(0,"ZERO LINE",colorWhite,styleThick);
+_SECTION_END();
+
+// ----------------------------------------------------------------------------------------------------------------------
+
+// Daily MACD Histogram
+_SECTION_BEGIN("MACD");
+r1 = Param( "Fast avg", 12, 2, 200, 1 );
+r2 = Param( "Slow avg", 26, 2, 200, 1 );
+r3 = Param( "Signal avg", 9, 2, 200, 1 );
+Plot( ml = MACD(r1, r2), StrFormat(_SECTION_NAME()+"(%g,%g)", r1, r2), ParamColor("MACD color", colorRed ), ParamStyle("MACD style") );
+Plot( sl = Signal(r1,r2,r3), "Signal" + _PARAM_VALUES(), ParamColor("Signal color", colorBlue ), ParamStyle("Signal style") );
+Plot( ml-sl, "MACD Histogram", ParamColor("Histogram color", colorBlack ), styleNoTitle | ParamStyle("Histogram style", styleHistogram | styleNoLabel, maskHistogram ) );
+_SECTION_END();
+
+// End ---------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+

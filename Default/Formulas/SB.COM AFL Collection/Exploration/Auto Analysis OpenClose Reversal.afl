@@ -1,0 +1,24 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Auto Analysis Open/Close Reversal
+//  Author/Uploader: Larry Lovrencic 
+//  E-mail:          lvl@firstpacific.net
+//  Date/Time Added: 2001-09-04 01:53:15
+//  Origin:          
+//  Keywords:        Open Close reversal
+//  Level:           basic
+//  Flags:           exploration
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=110
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=110
+//
+//------------------------------------------------------------------------------
+//
+//  Find Open/Close Reversals using automatic analysis
+//
+//------------------------------------------------------------------------------
+
+/*Open/Close Reversals Automatic Analysis
+by Larry Lovrencic*/
+
+buy=O<(L+0.2*(H-L)) AND C>(H-0.2*(H-L)) AND H<ref(H,-1) AND L<ref(L,-1) AND C<ref(C,-1);
+sell=O>(L+0.8*(H-L)) AND C<(H-0.8*(H-L)) AND H>ref(H,-1) AND L>ref(L,-1) AND C>ref(C,-1);

@@ -1,0 +1,43 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Trending or Trading ?
+//  Author/Uploader: Dimitris Tsokakis 
+//  E-mail:          
+//  Date/Time Added: 2002-03-24 14:15:51
+//  Origin:          
+//  Keywords:        
+//  Level:           advanced
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=177
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=177
+//
+//------------------------------------------------------------------------------
+//
+//  We have here a simple tool, useful to detect if the Market is trending
+//  (bullish or bearish) or trading (moving sideways), based on macd and its
+//  signal. Values of "bull" above 70, signal the beginning of a bullish period
+//  for the Market as a whole. Values between 30 and 70 indicate a trading
+//  period (congestion) and values below 30 announce that the bears supervise
+//  the game.
+//
+//  We create first the MACD composites, based on well known relations
+//
+//  macd()>signal() (bullish) and
+//
+//  macd()<=signal() (bearish).
+//
+//  The results are properly arranged to vary between 0 and 100, whithout
+//  disturbing the shape of curves.
+//
+//  Then we can plot the "bull" and "bear" graph.
+//
+//------------------------------------------------------------------------------
+
+/*MACD BULL-BEAR*/
+ob=Signal()<MACD();
+os=Signal()>=MACD();
+values5 = os>0;
+values6 = ob>0;
+AddToComposite(Values5,"~macdbear","V");
+AddToComposite(Values6,"~macdbull","V");
+Buy=0;

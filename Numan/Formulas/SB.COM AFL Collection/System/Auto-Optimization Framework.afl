@@ -1,0 +1,546 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Auto-Optimization Framework
+//  Author/Uploader: Dave Merrill 
+//  E-mail:          
+//  Date/Time Added: 2003-10-22 11:58:47
+//  Origin:          
+//  Keywords:        optimize,auto-optimize,backtest
+//  Level:           advanced
+//  Flags:           system,exploration,function
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=304
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=304
+//
+//------------------------------------------------------------------------------
+//
+//  this is a backtest framework that continously and automatically optimizes
+//  settings for a trading rule you provide. it chooses settings that measure
+//  best over a selectable lookback period. this re-optimization can be done
+//  every bar, at a user-definable interval, or once at the start of trading.
+//  it requires AFL editing to use; instructions are provided.
+//
+//------------------------------------------------------------------------------
+
+//////////////////////////////////////////////////////////////////////////
+// INTRO
+//////////////////////////////////////////////////////////////////////////
+/*
+
+------------------------------------------------------------------------
+Auto-Optimization Framework
+v 1.0 (hah) 10/20/03 Dave Merrill (email: dmerrill at usa dot net)
+thanks to Tomasz Janeczko for AmiBroker, and everyone in the AmiBroker groups at Yahoo
+comments, suggestions, bug reports etc are most welcome
+------------------------------------------------------------------------
+
+
+WHAT DOES THIS DO?
+
+you've probably done walk-forward optimizations, where you optimize a trading system over some time period, then trade with those settings for a while, optimize again at some later date, trade on, etc.. in fact, this is like real life, unless you assume your initial settings will be optimal forever and you'll never change them.
+
+this code is a backtest framework that does this continously and automatically. you provide a trading rule, and it constantly optimizes the parameters for it, always using the settings that measure best over a selectable lookback period. this re-optimization can be done every bar, at a user-definable interval, or once at the start of trading.
+
+one interesting fact is that so far, almost no trading rules I've tested are very profitable when managed this way, with any framework settings I've tried. the ones that are are far from universally successful over various stocks and time frames. I find this very interesting and quite puzzling, as is well documented on the AB group. maybe there are bugs that cause this; please let me know about any you find. maybe the equity evaluation function or other framework behaviors could be improved; please let me know if you come up with great changes. maybe it's just not a very effective method; if you can explain to me why this is so, please do!
+
+and lastly, if you find any hugely profitable uses for this thing, or other interesting insights from poking around with it, PLEASE let me in on 'em! (:-)
+
+
+IMPORTANT USAGE NOTE!!!!
+
+parts of this code belong to the framework itself, and shouldn't be modified in normal use. other parts you need to edit, to select the specific trading rule you want to test, and establish settings for how the framework will operate. 
+
+all sections are clearly labelled as editable or not. it's in your best interest not to change the ones that say NOT EDITABLE, at least to start with.
+
+
+DON'T BE IMTIMIDATED
+
+though this is pretty long, it's actually not that complicated, either to use or in its internals. it's broken down into sections, most of which you don't need to even look at. if I could hide the no-touchy bits away I would (:-). also, a lot of it is explanation, not code, and a lot of the code is a collection of sample trading rules.
+
+
+INSTRUCTIONS
+
+1) add trading rule(s) you want to test to the CUSTOM TRADING RULES section. see comments there for how your rules will be called, and what they need to do. some examples are provided. you can have as many rules here as you want, but only one can be in use at a time. step 3 below controls which one is active.
+
+2) if those rules require other custom functions, add them to the CUSTOM UTILITY FUNCTIONS section.
+
+3) edit the framework function BuySellRule(), at the start of the FRAMEWORK CONFIGURATION section, to call the trading rule you want to test now.
+
+4) edit the SetParameterRanges() call, next in the FRAMEWORK CONFIGURATION section, to set the ranges over which you want to test each of the two optimization parameters. some examples are provided; comment out all but the one you want to use.
+
+5) if desired, edit the rest of the FRAMEWORK CONFIGURATION section, to control various aspects of how the framework itself behaves.
+
+6) set the AA range, stock universes you want to test, and other AA settings, then run a Backtest or Portfolio Backtest.
+
+7) if you want to see the parameters selected and other decisions being made under the hood, you can Explore instead of backtest. if desired, edit the EXPLORATION section at the end to change the columns and bars displayed; some possible extensions and modifications are provided. note that exploring doesn't actually trade, it's only a readout for your interest.
+
+
+GETTING STARTED
+
+this comes set up to run the included trading rule 'BuySellCCI'. backtest it on, say, the NASDAQ Composite Index, to get an idea of how it performs (nothing great). explore it to see the parameter values the framework selected (the best_p1 column). try changing the parameter ranges tested, as described in the instructions above.
+
+BuySellCCI uses a single parameter, requiring only 40 tests to optimize. this makes it quicker to run than most two-parameter systems, which typically need about 40 x 40 tests or more, depending on the number of values you want to test. performance can definitely be an issue as the number of tests goes up, and even single parameter systems can be pretty slow with a large number of stocks.
+
+in the FRAMEWORK CONFIGURATION section, try changing equity_lookback_bars (how far back performance is evaluated during optimization) and equity_lookback_frequency (how often optimization is done). if you want, you can actually optimize these; possible optimization settings are provided. be cautious in interpreting those results though. I'd do it more for a quick sense of how things behave than to necessarily choose the highest performing settings. at the very least, test a variety of stocks and time frames with any settings you arrive at, to make sure they're not a fluke.
+
+try some of the other included trading rules, maybe starting with the MA/EMA/DEMA/TEMA cross rules. hook them up and select parameter ranges to test as described in the instructions above.
+
+try adding your own trading rules, and experiment with optimization ranges and equity feedback parameters.
+
+try modifying the performance scoring methods, and adding your own.
+
+*/
+
+
+//////////////////////////////////////////////////////////////////////////
+// FRAMEWORK INIT - NOT EDITABLE
+//////////////////////////////////////////////////////////////////////////
+
+buy = sell = short = cover = 0;
+equity_lookback_bars = equity_lookback_frequency = equity_lookback_smoothing = equity_drawdown_discount_pct = 0;
+e = best_e = best_perf_score = best_p1 = best_p2 = 0;
+p1_start = p2_start = 2;
+p1_end = p2_end = 20;
+p1_step = p2_step = 1;
+bar_index = BarIndex();
+
+
+//////////////////////////////////////////////////////////////////////////
+// FRAMEWORK FUNCTIONS - NOT EDITABLE
+//////////////////////////////////////////////////////////////////////////
+
+function SetParameterRanges(p1_start_p, p1_end_p, p1_step_p, p2_start_p, p2_end_p, p2_step_p) {
+	if(p1_step_p != 0) {
+		p1_start = p1_start_p;
+		p1_end = p1_end_p;
+		p1_step = p1_step_p;
+	} else {
+		p1_start = p1_end = p1_step = 1;
+	}
+	if(p2_step_p != 0) {
+		p2_start = p2_start_p;
+		p2_end = p2_end_p;
+		p2_step = p2_step_p;
+	} else {
+		p2_start = p2_end = p2_step = 1;
+	}
+}
+function PerformanceScoreMDDDiscount(e, perf_score) {
+	e_max = Highest(e); // peak equity so far
+	mdd = Highest(e_max - e);	// max drawdown so far
+	mdd_fraction = Highest(mdd / e_max);	// fraction max drawdown is of peak equity
+	perf_score = perf_score - (perf_score * mdd_fraction * (equity_drawdown_discount_pct/100));	// reduce score by mdd fraction scaled by drawdown discount
+	return perf_score;
+}
+
+
+//////////////////////////////////////////////////////////////////////////
+// CUSTOM UTILITY FUNCTIONS - EDITABLE
+//////////////////////////////////////////////////////////////////////////
+
+function EMAx(array, period) {	// use in place of AB EMA function when period needs to be an array
+	return AMA(array, 2 / (period + 1));
+}
+function StochTransform(array, period) {
+	return 100*(array-LLV(array,period))/(HHV(array,period)-LLV(array,period));
+}
+function MeanDev(array, mean, range) {
+	result = 0;
+	for(i = LastValue(Highest(range)); i < BarCount; i++) {
+		result[i] = 0;	// the mean is not 'moving' over the range (outside the loop)
+		tm = mean[i]; 
+		for(j = 0; j < range[i]; j++) {
+			result[i] = result[i] + abs(array[i - j] - tm);
+		}
+		result[i] = result[i] / range[i]; 
+	}
+	return result;
+}
+function CCIx(period) {	// use in place of AB CCI function when period needs to be an array
+	// CCI = (TypicalPrice - MA(TypicalPrice, 20)) / (.015 x MeanDeviation)
+	SMATP = MA(Avg, period);
+	MD = MeanDev(Avg, SMATP, period);
+	result = (Avg - SMATP) / (0.015 * MD);
+	return result;
+}
+function TradeDivergences(array1, array2) {
+	dir1 = IIf(array1 > Ref(array1, -1), 1, IIf(array1 < Ref(array1, -1), -1, 0));
+	dir2 = IIf(array2 > Ref(array2, -1), 1, IIf(array2 < Ref(array2, -1), -1, 0));
+	buy = cover = (dir1 == 1) and (dir2 == -1);
+	sell = short = (dir1 == -1) and (dir2 == 1);
+}
+function TradeReversalsArith(array, threshold) {
+	array = last_hi = last_lo = IIf(IsNull(array), -1, array);
+	last_signal[0] = 0;
+	buy = sell = 0;
+	for(i = 1; i < BarCount; i++) {
+		buy[i] = array[i] >= last_lo[i-1] + threshold[i] and last_signal[i-1] != 1 and array[i-1] != -1;
+		sell[i] = array[i] <= last_hi[i-1] - threshold[i] and last_signal[i-1] != -1 and array[i-1] != -1;
+		last_signal[i] = IIf(buy[i], 1, IIf(sell[i], -1, last_signal[i-1]));
+		always_track = array[i-1] == -1 or buy[i] or sell[i];
+		last_lo[i] = IIf(always_track or array[i] < last_lo[i-1], array[i], last_lo[i-1]);
+		last_hi[i] = IIf(always_track or array[i] > last_hi[i-1], array[i], last_hi[i-1]);
+	}
+	short = sell;
+	cover = buy;
+}
+
+
+/////////////////////////////////////////////////////////////////////////
+// CUSTOM TRADING RULES - EDITABLE
+/////////////////////////////////////////////////////////////////////////
+
+/*
+
+this is where you put the various trading rules you may want to test. only one rule can be in use at a time. select which one actually gets used by editing the framework function BuySellRule(), at the start of the FRAMEWORK CONFIGURATION section.
+
+all rules should set buy, sell, short and cover, in response to the parameters passed to it and whatever logic you want.
+
+your rule will be passed 3 parameters:
+	dynamic (true/false)	: true if parameters are arrays, not just single values; see ABOUT THE 'DYNAMIC' PARAMETER, below
+	p1 (number/array)		: first optimization parameter
+	p2 (number/array)		: second optimization parameter
+
+p1 and p2 are the values being optimized on. trading rules can use them for any optimizable purpose, MA periods or crossover thresholds for example.
+
+during optimization, the rule in use will be called multiple times, once with each combination of p1 and p2 being tested. at this time, p1 and p2 will be simple numeric values, not arrays. once optimal settings have been determined for every bar, the rule will be called once more, to generate actual trading signals. this time, p1 and p2 will be arrays, each bar containing the optimal p1 and p2 value for that bar.
+
+ABOUT THE 'DYNAMIC' PARAMETER
+
+not all AB functions can take arrays as inputs. for example, MA, TEMA and DEMA can use an array as their period, but EMA can't. it's usually possible to code an equivalent that can in AFL, but it may be slower, or in a DLL, which I didn't want to depend on for this. this speed difference can be big, since the trading rule is called many times during optimization. 
+
+if desired, your rule can include both slower array-capable code for use in the final signal-generation phase, and faster, non-array-capable code for use during the many optimization tries. if you do this, use the 'dynamic' parameter to know which to call. see BuySellCCI, below, for an example.
+
+*/
+
+function BuySellEMACrossPrice(dynamic, p1, p2) {	// p1 = EMA period
+	m = EMAx(c, p1);
+	buy = cover = Cross(c, m);
+	sell = short = Cross(m, c);
+}
+function BuySellMACross(dynamic, p1, p2) {	// p1 = MA1 period, p2 = MA2 period increase over MA1 period
+	m1 = MA(c, p1);
+	m2 = MA(c, p1 + p2);
+	buy = cover = Cross(m1, m2);
+	sell = short = Cross(m2, m1);
+}
+function BuySellEMACross(dynamic, p1, p2) {	// p1 = MA1 period, p2 = MA2 period increase over MA1 period
+	m1 = EMAx(c, p1);
+	m2 = EMAx(c, p2);
+	buy = cover = Cross(m1, m2);
+	sell = short = Cross(m2, m1);
+}
+function BuySellDEMACross(dynamic, p1, p2) {	// p1 = MA1 period, p2 = MA2 period increase over MA1 period
+	m1 = DEMA(c, p1);
+	m2 = DEMA(c, p1 + p2);
+	buy = cover = Cross(m1, m2);
+	sell = short = Cross(m2, m1);
+}
+function BuySellTEMACross(dynamic, p1, p2) {	// p1 = MA1 period, p2 = MA2 period increase over MA1 period
+	m1 = TEMA(c, p1);
+	m2 = TEMA(c, p1 + p2);
+	buy = cover = Cross(m1, m2);
+	sell = short = Cross(m2, m1);
+	//short = cover = 0;	// at least sometimes, short is perf_scoreable, but only barely, so RAR drops
+}
+function BuySellCCI(dynamic, p1, p2) {	// p1 = CCI period; fixed threshold of zero
+	If(dynamic) {
+		cc = CCIx(p1);
+	} else {
+		cc = CCI(p1);
+	}
+	buy = cover = Cross(cc, 0);
+	sell = short = Cross(0, cc);
+}
+function BuySellCCI2(dynamic, p1, p2) {	// p1 = CCI period; moveable symetrical thresholds, mirrored above and below zero for long and short
+	If(dynamic) {
+		cc = CCIx(p1);
+	} else {
+		cc = CCI(p1);
+	}
+	buy = cover = Cross(cc, p2);
+	sell = short = Cross(-p2, cc);
+}
+function BuySellCCI3(dynamic, p1, p2) {	// p1 = CCI period; moveable absolute threshold, same numeric level for long and short
+	If(dynamic) {
+		cc = CCIx(p1);
+	} else {
+		cc = CCI(p1);
+	}
+	buy = cover = Cross(cc, p2);
+	sell = short = Cross(p2, cc);
+}
+function BuySellStochCCI(dynamic, p1, p2) {	// p1 = CCI period
+	cc = CCIx(period);
+	cc = StochTransform(cc, period);
+	buy = cover = Cross(cc, 50);
+	sell = short = Cross(50, cc);
+}
+function BuySellStoch(dynamic, p1, p2) {	// p1 = range, p2 = K & D smoothing
+	If(dynamic) {
+		stoK = MA(100*(C-LLV(L,best_p1))/(HHV(H,best_p1)-LLV(L,best_p1)),best_p2);
+		stoD = MA(stoK, best_p2);
+	} else {
+		stoD = StochD(p1, p2, p2);
+		stoK = StochK(p1, p2);
+	}
+	sig = stoD - stoK;
+	buy = cover = Cross(sig, 0);;
+	sell = short = Cross(0, sig);
+}
+function BuySellStochDivergence(dynamic, p1, p2) {	// p1 = range, p2 = K & D smoothing
+	If(dynamic) {
+		stoK = MA(100*(C-LLV(L,best_p1))/(HHV(H,best_p1)-LLV(L,best_p1)),best_p2);
+		stoD = MA(stoK, best_p2);
+	} else {
+		stoD = StochD(p1, p2, p2);
+		stoK = StochK(p1, p2);
+	}
+	TradeDivergences(stoD, stoK);
+}
+function BuySellROC(dynamic, p1, p2) {	// p1 = range, p2 = threshold
+	sig = ROC(MA(c, p1), 1);
+	buy = cover = Cross(sig, p2);
+	sell = short = Cross(p2, sig);
+}
+function BuySellDemandIndex(dynamic, p1, p2) {	// p1 = DI & TEMA period, p2 = EMA period
+	period = 21;	//p1;	// 21
+	period2 = 30;	//p2;	// 30
+	A=(H+L+2*C);
+	B=EMAx((HHV(H,2)-LLV(L,2)),21);
+	BuyP= /*{BuyPower}*/
+		V/EMAx(V,21) * ((A>=Ref(A,-1)) +(A<Ref(A,-1)) / exp((0.375 * (A+Ref(A,-1)) /B ) *(Ref(A,-1)-A) / A));
+	SellP = /*{SellPressure}*/ 
+		V/EMAx(V,21) * ((A<=Ref(A,-1)) + (A>Ref(A,-1)) / exp((0.375 * (A+Ref(A,-1)) / B ) * (A-Ref(A,-1)) / Ref(A,-1)));
+	mabp=EMAx(BuyP,period);       
+	masp=EMAx(SellP,period);				// {smooth Selling Pressure}
+	divsor=IIf(mabp>masp,mabp,masp);		// {BP:SP ratio}
+	divend=IIf(mabp<masp,mabp,masp);		// {biggest=divisor}
+	var2=1-(divend/divsor);					// {adjust ratio to plot in}
+	var3=IIf((masp>mabp), -var2, var2);	// {range -100 to 100}
+	var4=var3*100;
+	DI = var4;
+	DI_TEMA = TEMA(DI, period);
+	DI_TEMA_MA = EMAx(DI_TEMA, period2);
+	buy = cover = Cross(DI_TEMA, 0);		// try various crosses of DI, DI_TEMA, DI_TEMA_MA and zero
+	sell = short = Cross(0, DI_TEMA);
+	short = cover = 0;						// improves performance sometimes
+}
+function BuySellMTIReversals(dyanamic, p1, p2) {	// p1 = reversal threshold; .12 for San Diego Wave timing
+	// requires MTI in ticker !!MTI;
+	// note that MTI data doesn't go back very far, and was calculated differently before some time in early '00
+	// adjust test period and keep results in perspective accordingly
+	MTI = Foreign("!!MTI", "C", true);
+	TradeReversalsArith(MTI, p1);
+}
+
+
+//////////////////////////////////////////////////////////////////////////
+// PERFORMANCE SCORING METHODS - EDITABLE
+//////////////////////////////////////////////////////////////////////////
+// one of these functions will be called to evaluate the performance of each parameter combination tried
+// select the one that will be active by editing the framework function PerformanceScore
+//		it's at the beginning of EQUITY FEEDBACK BEHAVIOR, in the FRAMEWORK CONFIGURATION section
+// you can edit these or add your own
+function PerformanceScore1() {	// profit per bar
+	e = Equity(0, 0);	
+	if(equity_lookback_bars == 0) {	// test all performance to date
+		e_ref = e[0];
+	} else {								// test performance back spec'd number of bars
+		e_ref = Ref(e, -equity_lookback_bars);
+	}
+	perf_score = (e - e_ref) / e_ref;	// growth over lookback period
+	perf_score = MA(perf_score, IIf(equity_lookback_smoothing >= 1, equity_lookback_smoothing, 1)) * 100;	// smoothed pct
+	perf_score = perf_score * 100 / IIf(equity_lookback_bars == 0, Cum(1), equity_lookback_bars);	// per 100 bars
+	perf_score = PerformanceScoreMDDDiscount(e, perf_score);
+	return perf_score;
+}
+function PerformanceScore2() {	// net of right-sided bars per bar
+	e = Equity(0, 0);	
+	e_ref = Ref(e, -1);
+	e_delta = e - e_ref;
+	last_buy_bar = ValueWhen(buy, bar_index);
+	last_sell_bar = ValueWhen(sell, bar_index);
+	last_short_bar = ValueWhen(short, bar_index);
+	last_cover_bar = ValueWhen(cover, bar_index);
+	entry_status = IIf(last_buy_bar > last_sell_bar, 1, IIf(last_short_bar > last_cover_bar, -1, 0));
+	bar_is_right = IIf(entry_status == 1, e_delta > 0, IIf(entry_status == -1, e_delta < 0, 0));
+	bar_is_wrong = IIf(entry_status == 1, e_delta < 0, IIf(entry_status == -1, e_delta < 0, 0));
+	if(equity_lookback_bars == 0) {	// test all performance to date
+		bars_right = Cum(bar_is_right);	// bars long and rising or short and falling
+		bars_wrong = Cum(bar_is_wrong);	// bars long and falling or short and rising
+	} else {								// test performance back spec'd number of bars
+		bars_right = Sum(bar_is_right, equity_lookback_bars);	// bars long and rising or short and falling
+		bars_wrong = Sum(bar_is_wrong, equity_lookback_bars);	// bars long and falling or short and rising
+	}
+	perf_score = (bars_right - bars_wrong) / bar_index;		// net bars right per bar
+	perf_score = MA(perf_score, IIf(equity_lookback_smoothing >= 1, equity_lookback_smoothing, 1)) * 100;	// smoothed pct
+	perf_score = PerformanceScoreMDDDiscount(e, perf_score);
+	return perf_score;
+}
+
+
+//////////////////////////////////////////////////////////////////////////
+// FRAMEWORK CONFIGURATION - EDITABLE
+//////////////////////////////////////////////////////////////////////////
+
+// TRADING RULE: EDIT TO CALL THE CUSTOM RULE YOU WANT TO TEST
+function BuySellRule(dynamic, p1, p2) {
+	BuySellCCI(dynamic, p1, p2);
+}
+
+// PARAMETER RANGES TO TEST
+// each of the two parameters, p1 and p2, has start, end and step values that control the values tried during optimization
+//		you'll probably need to adjust these to the ranges that are useful for the active trading rule
+//	to set them all at once, call SetParameterRanges(p1_start, p1_end, p1_step, p2_start, p2_end, p2_step)
+// 		if your rule doesn't use p2, use p2_step = 0 to speed up optimization
+//  some typical settings are provided below; uncomment and edit the one you want to use
+SetParameterRanges(2, 40, 1, 1, 1, 0); 	// basic single parameter range
+//SetParameterRanges(2, 40, 1, 2, 40, 1); 	// basic two parameter ranges
+//SetParameterRanges(2, 40, 1, 0, 100, 10); 	// 2-40 period, 0-100 threshold
+//SetParameterRanges(.01, .5, .01, 1, 1, 0);	// for MTI reversals
+
+// EQUITY FEEDBACK BEHAVIOR
+// parameter values selected by the framework are the ones that performed best over a specified time in the past
+// this section controls how this is done
+//		two performance metrics are provided, and you can add your own
+//			only one can be active at a time
+//			edit the function PerformanceScore to call the one you want to use
+//		equity_lookback_bars controls how many bars worth of history will be examined
+//			0 = examine all performance to date
+//		equity_lookback_frequency is the number of bars between optimizations
+//			0 = optimize every bar, -1 = first bar only
+//		equity_lookback_smoothing applies an MA to the equity curve before picking optimum values
+//			minimizes the effect of daily price fluctuations on optimization; only matters much when pretty high, multiple months
+//		equity_drawdown_discount_pct reduces the performance score by the maximum drawdown amount * this percentage
+//			at zero, MDD has no effect; at 100, 20% MDD reduces the score by 20%
+function PerformanceScore() {
+	return PerformanceScore2();
+}
+equity_lookback_bars = 0;	// 126 * Optimize("Equity Lookback", 0, 0, 5*2, 1);
+equity_lookback_frequency = 0;	//21 * Optimize("Equity Lookback Frequency", 0, 0, 12*2, 1);
+equity_lookback_smoothing = 0;	//21*6;
+equity_drawdown_discount_pct = 0;	//100;
+
+// TRADE ENTRY RESTRICTIONS
+// edit to set minimum price, volume and length of history required to enter a trade
+// note that the volume requirement is ignored for mutual funds and tickers starting w '!' or '~'
+has_min_vol = (MA(v, 100) > 1000000) OR TRUE;
+is_min_price_long = c > 1;
+is_min_price_short = c > 5;
+has_min_history = bar_index >= (252 * 3);	// require 3 years of history before trading
+
+// PORTFOLIO MANAGEMENT
+// these settings aren't well tested (:-)
+max_positions = 0;	// number of simultaneous positions to hold; zero for no portfolio management
+use_ranking = false;	// true to rank simultaneous entry signals by backtest return in portfolio mode
+
+
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+////////////////////  FRAMEWORK ENGINE - NOT EDITABLE   //////////////////
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+
+// tweak volume entry requirements for things with no volume data
+has_min_vol = has_min_vol 
+	or (MarketID(1) == "Mutual funds") or (StrLeft(Name(), 1) == "!") or (StrLeft(Name(), 1) == "~");
+
+// loop through requested parameter ranges, calculating signals and choosing parameter values that score best
+first_bar_index = ValueWhen(Status("FirstBarInRange"), bar_index);
+for(p1 = p1_start; p1 <= p1_end; p1 = p1 + p1_step) {
+	for(p2 = p2_start; p2 <= p2_end; p2 = p2 + p2_step) {
+
+		// calc buy/sell/short/cover w those settings
+		BuySellRule(false, p1, p2);
+
+		// apply overall entry restrictions
+		buy = buy and is_min_price_long and has_min_vol;
+		short = short and is_min_price_short and has_min_vol;
+
+		// calc performance score w those settings
+		perf_score = PerformanceScore();
+
+		// track settings w best performance and resulting equity
+		if(equity_lookback_frequency == 0) {
+			optimize_this_bar = 1;
+		} else if(equity_lookback_frequency == -1) {
+			optimize_this_bar = Status("FirstBarInRange");
+		} else {
+			optimize_this_bar = (first_bar_index - bar_index) % equity_lookback_frequency == 0;
+		}
+		is_new_best = IIf(optimize_this_bar and perf_score > best_perf_score, 1, 0);
+		best_perf_score = IIf(is_new_best, perf_score, best_perf_score);
+		best_p1 = IIf(is_new_best, p1, best_p1);
+		best_p2 = IIf(is_new_best, p2, best_p2);
+		best_e = IIf(is_new_best, e, best_e);
+		best_perf_score = IIf(optimize_this_bar, best_perf_score, ValueWhen(optimize_this_bar, best_perf_score));
+		best_p1 = IIf(optimize_this_bar, best_p1, ValueWhen(optimize_this_bar, best_p1));
+		best_p2 = IIf(optimize_this_bar, best_p2, ValueWhen(optimize_this_bar, best_p2));
+		best_e = IIf(optimize_this_bar, best_e, ValueWhen(optimize_this_bar, best_e));
+	}
+}
+
+// calc real buy/sell/short/cover w optimal settings
+BuySellRule(true, best_p1, best_p2);
+
+// apply overall entry restrictions
+buy = buy and is_min_price_long and has_min_vol and has_min_history;
+short = short and is_min_price_short and has_min_vol and has_min_history;
+
+// don't enter, exit now, unless lookback was perf_scoreable
+buy = buy and best_perf_score > 0;
+short = short and best_perf_score > 0;
+sell = sell or best_perf_score <= 0;
+cover = cover or best_perf_score <= 0;
+
+// kill sells and covers before respective entries; cleans up exploration
+sell = sell and Cum(buy);
+cover = cover and Cum(short);
+
+// kill dupe signals, for exploration
+sell = ExRem(sell, buy);
+cover = ExRem(cover, short);
+
+// set PostionSize and PositionScore if requested
+if(max_positions > 0) {
+	PositionSize = -((100 / max_positions) - 1);
+}
+if(use_ranking) {
+	PositionScore = IIf(buy, best_perf_score, IIf(short, -best_perf_score, 0));
+}
+
+
+//////////////////////////////////////////////////////////////////////////
+// EXPLORATION - EDITABLE IF YOU WANT, BUT USUALLY NOT NECCESSARY
+//////////////////////////////////////////////////////////////////////////
+
+filter = buy or sell or short or cover;
+//filter = optimize_this_bar;		// to show every bar where optimization was done
+//filter = filter or Ref(filter, 1);		// to show the day before each signal too
+//filter = 1; //to show all bars
+
+AddColumn(bar_index, "Bar Index", 1.0);
+AddColumn(buy, "buy", 1);
+AddColumn(sell, "sell", 1);
+AddColumn(short, "short", 1);
+AddColumn(cover, "cover", 1);
+AddColumn(optimize_this_bar, "optimize_this_bar", 1.0);
+AddColumn(best_perf_score, "best_perf_score", 1.4);
+AddColumn(best_e, "best_e", 1.0);
+AddColumn(((ValueWhen(filter or Status("LastBarInTest"), best_e, 0) - best_e) / best_e) * 100, "best_e_pct_change", 1.2);
+AddColumn(best_p1, "best_p1");
+AddColumn(best_p2, "best_p2");
+AddColumn(BarsSince(best_p1 != Ref(best_p1, -1) or best_p2 != Ref(best_p2, -1)) + 1, "bars_since_settings", 1.0);
+AddColumn(ValueWhen(filter or Status("LastBarInTest"), bar_index, 0) - bar_index, "bars", 1.0);
+AddColumn(has_min_history, "has_min_vol", 1.0);
+AddColumn(has_min_history, "has_min_history", 1.0);
+AddColumn(c, "price");
+AddColumn(equity_lookback_bars, "equity_lookback_bars");
+AddColumn(equity_lookback_frequency, "equity_lookback_frequency");
+
+// enable next lines to see more optimization details; note that only the last parameter set tried will show
+//AddColumn(e, "e");
+//AddColumn(e_ref, "e_ref");
+//AddColumn(perf_score, "perf_score", 1.4);

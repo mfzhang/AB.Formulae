@@ -1,0 +1,24 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Auto Analysis Closing Price Reversal
+//  Author/Uploader: Larry Lovrencic 
+//  E-mail:          lvl@firstpacific.net
+//  Date/Time Added: 2001-09-04 01:54:33
+//  Origin:          
+//  Keywords:        closing price reversal
+//  Level:           basic
+//  Flags:           exploration
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=111
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=111
+//
+//------------------------------------------------------------------------------
+//
+//  Find Closing Price Reversals using automatic analysis
+//
+//------------------------------------------------------------------------------
+
+/*Closing Price Reversals Automatic Analysis
+by Larry Lovrencic*/
+
+buy=O<(L+0.2*(H-L)) AND C>(H-0.2*(H-L)) AND H<ref(H,-1) AND L<ref(L,-1) AND C>ref(C,-1);
+sell=O>(L+0.8*(H-L)) AND C<(H-0.8*(H-L)) AND H>ref(H,-1) AND L>ref(L,-1) AND C<ref(C,-1);

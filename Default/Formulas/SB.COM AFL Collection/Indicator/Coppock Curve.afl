@@ -1,0 +1,87 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Coppock Curve
+//  Author/Uploader: Tomasz Janeczko 
+//  E-mail:          tj@amibroker.com
+//  Date/Time Added: 2001-06-16 08:17:23
+//  Origin:          Originally developed by Edwin Sedgwick Coppock
+//  Keywords:        moving average
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=9
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=9
+//
+//------------------------------------------------------------------------------
+//
+//  The Coppock Curve was developed by Edwin Sedgwick Coppock in 1962.
+//
+//  It was featured in the November 94 issue of Technical Analysis of Stocks
+//  &amp; Commodities, in the article "The Coppock Curve", written by Elliot
+//  Middleton.:
+//
+//  Taken from Stocks &amp; Commodities, V. 12:11 (459-462): The Coppock Curve
+//  by Elliott Middleton
+//
+//  "We are creatures of habit. We judge the world relative to what we have
+//  experienced.
+//
+//  If we're shopping for a mortgage and rates have been in the teens (as they
+//  were in the early 1980s) and then drop to 10%, we are elated.
+//
+//  If, however, they've been at 8% and then rise to 10%, we are disappointed.
+//  It all depends on your perspective.
+//
+//  The principle of adaptation-level applies to how we judge our income
+//  levels, stock prices and virtually every other variable in our lives.
+//  Psychologically, relativity prevails..
+//
+//  SIMPLEST FORMS
+//
+//  The moving average is the simplest form of adaptation-level. Moving average
+//  crossover rules accurately signal the onset of periods of returns outside
+//  the norm, whether
+//
+//  positive or negative. This makes moving average crossovers useful to
+//  traders who want to get a boost on entering or exiting stocks or funds.
+//
+//  The oscillator is also based on adaptation-level, although in a slightly
+//  different way. Oscillators generally begin by calculating a percentage
+//  change of current price from
+//
+//  some previous price, where the previous price is the adaptation-level or
+//  reference point. The mind is attuned to percentage changes because they
+//  represent returns. If you
+//
+//  bought Microsoft Corp. stock (MSFT) at $50 and it goes to $80, you make 60%
+//  before dividends.
+//
+//  If you bought Berkshire Hathaway (BRK) at $4,000 and it rises to $4,030,
+//  the same dollar gain, you make 0.75% before dividends.
+//
+//  It's the percentage change that counts. Relativity again.
+//
+//  Coppock reasoned that the market's emotional state could be determined by
+//  adding up the percentage changes over the recent past to get a sense of the
+//  market's
+//
+//  momentum (and oscillators are generally momentum indicators ). So if we
+//  compare prices relative to a year ago - which happens to be the most common
+//  interval - and we
+//
+//  see that this month the market is up 15% over a year ago, last month it was
+//  up 12.5% over a year ago, and 10%, 7.5% and 5%, respectively, the months
+//  before that, then
+//
+//  we may judge that the market is gaining momentum and, like a trader
+//  watching for the upward crossover of the moving average, we may jump into
+//  the market."
+//
+//------------------------------------------------------------------------------
+
+/*
+Coppock Curve
+
+AFL Implementation by Tomasz Janeczko
+*/
+
+Graph0 = EMA( ROC( MA( C, 22 ), 250 ), 150 ) / 100; 

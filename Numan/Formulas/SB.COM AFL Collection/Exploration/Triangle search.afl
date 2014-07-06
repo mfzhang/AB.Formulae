@@ -1,0 +1,60 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Triangle search
+//  Author/Uploader: G Kavanagh 
+//  E-mail:          kavemanperth@telstra.com
+//  Date/Time Added: 2002-07-15 21:54:53
+//  Origin:          
+//  Keywords:        triangle
+//  Level:           basic
+//  Flags:           exploration
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=208
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=208
+//
+//------------------------------------------------------------------------------
+//
+//  Triangle search using HHV and LLV. I vary the length of the search to
+//  locate different size triangles. d1 &amp; d2 are either 10 &amp; 2, 20
+//  &amp; 4, 40 &amp; 10.
+//
+//------------------------------------------------------------------------------
+
+/* 20 day
+This is a scan for triangles using highest high and lowest low over a chosen period, then next high over a chosen period after these HHV and LLV. Then the order of the highs and lows are to be in alternate order. This will pick up ascending, descending and eqaul triangles. Variable d1 is the number of days to search for the last highest high, and d2 is the gap after this HH to start searching for the next HH after the first. Similarly for the lowest lows
+The variables w? represent the highs, and z? are the lows.
+Graham Kavanagh*/
+
+Filter=Close>1;
+d1=20;
+d2=4;
+
+z1=HHV(High,d1);
+za1=HHVBars(High,d1);
+zb1=za1-d2;
+z2=HHV(High,zb1);
+za2=HHVBars(High,zb1);
+w1=LLV(Low,d1);
+wa1=LLVBars(Low,d1);
+wb1=wa1-d2;
+w2=LLV(Low,wb1);
+wa2=LLVBars(Low,wb1);
+
+aa1=LastValue(High);
+aa2=LastValue(Low);
+
+
+
+
+Buy= ((z1>=z2 AND w2>w1) OR(z1>z2 AND w2>=w1)) AND za1>za2 AND wa1>wa2 AND ((za1>wa1 AND wa1>za2 AND za2>wa2) OR (wa1>za1 AND za1>wa2 AND wa2>za2)) AND aa1<z2 AND aa2>w2 AND Ref(Volume,-za1) > MA(Volume,d2) AND Ref(MA(Close,d1),-za1) > Ref(MA(Close,d1),-2*za1) AND MA(Close,d1) > Ref(MA(Close,d1),-2*za1); 
+
+
+NumColumns = 8;
+
+Column0 = z1;
+Column1 = z2;
+Column2 = w1;
+Column3 = w2;
+Column4 = za1;
+Column5 = za2;
+Column6 = wa1;
+Column7 = wa2;

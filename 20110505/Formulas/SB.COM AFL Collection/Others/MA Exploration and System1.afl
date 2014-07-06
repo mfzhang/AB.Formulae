@@ -1,0 +1,10 @@
+Buy = MA (C, 9) > Ref( MA (C,9),-1);
+Sell = Ref( MA (C,9),-1) > MA (C,9);
+
+Plot (MA (C, 9), "MA-9", colorBlue);
+Filter = Buy OR Sell;
+
+AddColumn( Buy, "Buy", 1);
+AddColumn(Sell, "Sell", 1);
+AddColumn(Close,"Close",1.2);
+AddColumn(Volume,"Volume",1.0);

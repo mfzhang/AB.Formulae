@@ -1,0 +1,179 @@
+// MainMarkers.afl
+
+PersistentPath = StaticVarGetText( "~PersistentPath" ); // Global
+if ( PersistentPath == "" ) 
+{
+    PersistentPath = "PersistentVariables\\";
+    fmkdir( PersistentPath );
+    StaticVarSetText( "~PersistentPath", PersistentPath );
+}
+
+function PersistentVarRemove( VarName )
+{
+    global PersistentPath;
+    Fn = PersistentPath + VarName + ".pva";
+    fh = fdelete( Fn ) ;
+    return fh;
+}
+
+function PersistentVarGet( VarName )
+{
+    global PersistentPath;
+    fh = fopen( PersistentPath + VarName + ".pva", "r" );
+    if ( fh )
+    {
+        String = fgets( fh );
+        fclose( fh );
+        Number = StrToNum( String );
+    }
+    else Number = Null;
+    return Number;
+}
+
+function PersistentVarSet( VarName, Number )
+{
+    global PersistentPath;
+    String = NumToStr( Number );
+    fh = fopen( PersistentPath + VarName + ".pva", "w" );
+    if ( fh )
+    {
+        fputs( String, fh );
+        fclose( fh );
+    }
+    return fh;
+}
+
+function MAinLinkWitTDash( MArkername )
+{
+    local xMY;
+    // On first run try to get persistent price
+    if ( IsNull( StaticVarGet( "~MarkerInit_" + MArkerName ) ) )
+    {
+        Price = PersistentVarGet( "MainChartPrice_" + MarkerName );
+        if ( Price > 0 )
+        {
+            Miny = Status( "axisminy" );
+            Maxy = Status( "axismaxy" );
+            PxChartRange = Status( "pxchartheight" );
+            Pricerange = MaxY - MinY;
+            TDashYPixels = ( MaxY - Price ) * PxChartRange / Pricerange + 5;
+            StaticVarSet( "~TDashYPixels_" + MarkerName, TDashYPixels );
+            StaticVarSet( "~MainChartPrice_" + MarkerName, Price );
+            StaticVarSet( "~Exists_" + MarkerName, True );
+        }
+        StaticVarSet( "~MarkerInit_" + MArkerName, True );
+    }
+
+    MArkerEnabled = Nz( StaticVarGet( "~Exists_" + MarkerName ) );
+    if ( MArkerEnabled )
+    {
+        pxWidth = Status( "pxWidth" );
+        Miny = Status( "axisminy" );
+        Maxy = Status( "axismaxy" );
+        pxchartright = Status( "pxchartright" );
+        pxchartbottom = Status( "pxchartbottom" );
+        pxcharttop = Status( "pxcharttop" );
+        PxChartRange = Status( "pxchartheight" );
+        pxheight = Status( "pxheight" );
+        Pricerange = MaxY - MinY;
+
+        // TDash releases get TDash y-pixel value and convert to price
+        if ( Nz( StaticVarGet( "~LeftButtonRelease" ) ) ) 		
+        {
+            TDashYPixels = Nz( StaticVarGet( "~TDashYPixels_" + MarkerName ) );		// Y pixels from TDash window
+            Price = Maxy - ( Pricerange / PxChartRange * ( TDashYPixels - 5 ) );
+            StaticVarSet( "~LeftButtonRelease", False );
+            StaticVarSet( "~MainChartPrice_" + MarkerName, Price );
+        }
+        else
+            if ( Nz( StaticVarGet( "~NowDragging_" + MarkerName ) ) == 0 ) 	// TDash marker tracks main window
+            {
+                Price = Nz( StaticVarGet( "~MainChartPrice_" + MarkerName ) );
+                TDashYPixels = ( MaxY - Price ) * PxChartRange / Pricerange + 5;
+                StaticVarSet( "~TDashYPixels_" + MarkerName, TDashYPixels ); 		// Y pixels calculated from price in main chart
+            }
+            else
+                if ( Nz( StaticVarGet( "~NowDragging_" + MarkerName ) ) ) 			// Main window tracks TDash window
+                {
+                    TDashYPixels = Nz( StaticVarGet( "~TDashYPixels_" + MarkerName ) );
+                    Price = Maxy - ( Pricerange / PxChartRange * ( TDashYPixels - 5 ) );
+                    StaticVarSet( "~MainChartPrice_" + MarkerName, Price );  // Price for main chart calculated from TDash y pixels
+                }
+
+        Price = Nz( StaticVarGet( "~MainChartPrice_" + MarkerName ) );
+
+        MArkerColor  = Nz( StaticVarGet( "~MarkerColor_" + MarkerName ) );
+        MArkerTextColor = Nz( StaticVarGet( "~MarkerTextColor_" + MarkerName ) );
+        MArkerPenColor = Nz( StaticVarGet( "~MarkerPenColor_" + MarkerName ) );
+
+        GfxSetBkMode( 1 );
+        GfxSelectPen( MArkerColor, 1, 1 );
+        GfxMoveTo( 0, TDashYPixels );
+        GfxLineTo( pxwidth, TDashYPixels );
+
+        GfxSetBkMode( 2 );
+        GfxSetBkColor( MArkerColor );
+        GfxSetTextColor( MArkerTextColor );
+        GfxSelectFont( "Lucida Console", FontSize = 10, FontWeight = 700 );
+        GfxDrawText( NumToStr( Price, 1.2, False ), pxchartright, TDashYPixels - FontSize, pxwidth, TDashYPixels + Fontsize, 37 );
+    }
+}
+
+function DrawQBarPriceLine()
+{
+    if( Nz( StaticVarGet( "~QBarVisible" ) ) )
+    {
+        pxWidth = Status( "pxWidth" );
+        Miny = Status( "axisminy" );
+        Maxy = Status( "axismaxy" );
+        pxchartright = Status( "pxchartright" );
+        pxchartbottom = Status( "pxchartbottom" );
+        pxcharttop = Status( "pxcharttop" );
+        PxChartRange = Status( "pxchartheight" );
+        pxheight = Status( "pxheight" );
+        Pricerange = MaxY - MinY;
+
+    QBarColor  = Nz( StaticVarGet( "~QBarColor" ) );
+    QBarTextColor = Nz( StaticVarGet( "~QBarTextColor" ) );
+    QBarPenColor = Nz( StaticVarGet( "~QBarPenColor" ) );
+
+    QBarColor = Nz( StaticVarGet( "~ActionColor" ) );
+    QBarTextColor = Nz( StaticVarGet( "~ActionTextColor" ) );
+
+    QBarYPixel = Nz( StaticVarGet( "~QBarYPixel" ) );		// Y pixels from TDash window
+    Price = Maxy - ( Pricerange / PxChartRange * ( QBarYPixel - 5 ) );
+    GfxSetBkMode( 1 );
+    GfxSelectPen( QBarColor, 1, 1 );
+    GfxMoveTo( 0, QBarYPixel );
+    GfxLineTo( pxwidth, QBarYPixel );
+
+    GfxSetBkMode( 2 );
+    GfxSetBkColor( QBarColor );
+    GfxSetTextColor( QBarTextColor );
+    GfxSelectFont( "Lucida Console", FontSize = 10, FontWeight = 700 );
+    GfxDrawText( NumToStr( Price, 1.2, False ), pxchartright, QBarYPixel - FontSize, pxwidth, QBarYPixel + Fontsize, 37 );
+    }
+}
+
+
+_SECTION_BEGIN( "Global Parameters" );
+if ( ParamTrigger( "Clear StaticVar (TEST)", "CLEAR" ) ) // to simulate start up
+{
+    StaticVarRemove( "*" );
+}
+
+if ( ParamTrigger( "Clear Persistent Var", "CLEAR" ) ) // to simulate start up
+{
+    PersistentVarRemove( "MainChartPrice_" + "TARGET" );
+    PersistentVarRemove( "MainChartPrice_" + "MAIN" );
+    PersistentVarRemove( "MainChartPrice_" + "STPLOSS" );
+}
+_SECTION_END();
+
+GfxSetOverlayMode( 0 );
+MAinLinkWitTDash( "BUY" );
+MAinLinkWitTDash( "MAIN" );
+MAinLinkWitTDash( "SELL" );
+DrawQBarPriceLine();
+Plot( C, "", colorBlack, styleBar );
+RequestTimedRefresh( 0.1 );

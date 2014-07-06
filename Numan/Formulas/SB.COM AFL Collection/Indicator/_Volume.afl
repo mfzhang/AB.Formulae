@@ -1,0 +1,28 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    _Volume
+//  Author/Uploader: ali 
+//  E-mail:          abosliman2005m@hotmail.com
+//  Date/Time Added: 2006-09-10 19:18:39
+//  Origin:          w
+//  Keywords:        
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=698
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=698
+//
+//------------------------------------------------------------------------------
+//
+//  1
+//
+//------------------------------------------------------------------------------
+
+_SECTION_BEGIN("Volume");
+Plot( Volume, _DEFAULT_NAME(), IIf( C > O, ParamColor("Up Color", colorGreen ), ParamColor("Down Color", colorRed ) ), ParamStyle( "Style", styleHistogram | styleThick, maskHistogram  ) );
+_SECTION_END();
+
+_SECTION_BEGIN("MA");
+P = ParamField("Price field",-1);
+Periods = Param("Periods", 15, 2, 200, 1, 10 );
+Plot( MA( P, Periods ), _DEFAULT_NAME(), ParamColor( "Color", colorBlue ), ParamStyle("Style") ); 
+_SECTION_END();

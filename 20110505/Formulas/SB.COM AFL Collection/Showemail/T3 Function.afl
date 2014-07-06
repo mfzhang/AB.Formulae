@@ -1,0 +1,53 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    T3 Function
+//  Author/Uploader: Jayson Casavant 
+//  E-mail:          jcasavant@verizon.net
+//  Date/Time Added: 2004-03-03 20:07:15
+//  Origin:          Tim Tillson is a software project manager at Hewlett-Packard, with degrees in Mathematics and Computer Science. He has privately traded options and equities for 15 years.
+//  Keywords:        Moving Average
+//  Level:           semi-advanced
+//  Flags:           showemail,function
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=342
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=342
+//
+//------------------------------------------------------------------------------
+//
+//  In filter theory parlance, T3 is a six-pole non-linear Kalman filter.
+//  Kalman filters are ones which use the error (in this case (time series -
+//  EMA(n)) to correct themselves. In Technical Analysis, these are called
+//  Adaptive Moving Averages; they track the time series more aggressively when
+//  it is making large moves.
+//
+//  If you enjoy reading tech material there is a white paper posted at...
+//
+//  http://groups.yahoo.com/group/amibroker-ts/files/
+//
+//  I did not create the code, I only adapted it to function form. To call the
+//  T3 function use the syntax T3(price,periods) as in T3(C,50) . You can also
+//  substitute any indicator for price as in T3(RSI(14),20)
+//
+//------------------------------------------------------------------------------
+
+
+function T3(price,periods)
+
+
+{
+s = 0.84;
+e1=EMA(price,periods);
+e2=EMA(e1,Periods);
+e3=EMA(e2,Periods);
+e4=EMA(e3,Periods);
+e5=EMA(e4,Periods);
+e6=EMA(e5,Periods);
+c1=-s*s*s;
+c2=3*s*s+3*s*s*s;
+c3=-6*s*s-3*s-3*s*s*s;
+c4=1+3*s+s*s*s+3*s*s;
+Ti3=c1*e6+c2*e5+c3*e4+c4*e3;
+return ti3;
+}
+Plot(C,"",4,64);
+Plot(T3(C,50),"T3",colorYellow,1);
+Plot(t3(C,20),"T3",colorBlue,1);

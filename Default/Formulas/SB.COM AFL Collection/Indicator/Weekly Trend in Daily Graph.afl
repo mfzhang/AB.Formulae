@@ -1,0 +1,50 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Weekly Trend in Daily Graph
+//  Author/Uploader: Frank Snay 
+//  E-mail:          fesnay@san.rr.com
+//  Date/Time Added: 2002-04-04 19:16:47
+//  Origin:          Weekly Trend in Daily Graph
+//  Keywords:        Weekly Trend in Daily Graph
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=183
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=183
+//
+//------------------------------------------------------------------------------
+//
+//  A text description in the Title Line of a daily graph giving the weekly
+//  trend. Just add this code to any of your daily graphs.
+//
+//------------------------------------------------------------------------------
+
+/*  Text of Weekly MACD Signal with 5 ROC on Daily Charts 
+    INSTRUCTIONS AT END OF CODE  */
+
+weeklyprice=C;
+Weekly=ValueWhen(DayOfWeek() > Ref( DayOfWeek(),1),WeeklyPrice);
+
+W6ema = EMA(weekly,30);// 6 weeks * 5 days per week
+W13ema = EMA(weekly,65);// 13 weeks * 5 days per week
+MACDSignal = EMA((W6ema - W13ema),25);// 5 weeks * 5 days per week
+
+ROCMACD = MACDSignal - Ref(MACDSignal,-25);//ROC of MACD Signal
+
+//Cond1 - "V" bottom, start of climb
+Cond1 = IIf(ROCMACD > Ref(ROCMACD,-5)  AND Ref(ROCMACD,-5) <= Ref(ROCMACD,-10),1,0);
+//Cond2 - "V" top, start of drop
+Cond2 = IIf(ROCMACD < Ref(ROCMACD,-5)   AND Ref(ROCMACD,-5) >= Ref(ROCMACD,-10),1,0);
+//cond3 - Steady up trend
+Cond3 = IIf(ROCMACD> Ref(ROCMACD,-5) AND Ref(ROCMACD,-5) >= Ref(ROCMACD,-10),1,0);
+//Cond4 - Steady down trend
+Cond4 = IIf(ROCMACD < Ref(ROCMACD,-5) AND Ref(ROCMACD,-5) <= Ref(ROCMACD,-10),1,0);
+//Cond5 - no change - flat
+Cond5 = IIf(ROCMACD = Ref(ROCMACD,-5) ,1,0);
+
+Title = Title + "        Weekly -"  
+ + WriteIf(Cond1," NEW UP TREND  ", WriteIf(Cond2," NEW DOWN TREND   ", WriteIf(Cond3," Trend is Up    ",WriteIf(Cond4,"  Trend is Down    ",WriteIf(Cond5,"    Trend is Flat    ","")))));
+
+//  Add this code to ANY indicator you like.  To be used in "Indicator" in AB
+//  This code will approximate A Weekly ROC of MACD ( see seperate code for an
+//  weekly indicator in the AB Files ).  There is NO PRESENTATION of A GRAPH.  
+//  The results will give a text readout during "Daily" presentation of what the       //  weekly trend is doing.

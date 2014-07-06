@@ -1,0 +1,55 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Force index
+//  Author/Uploader: Thomas Youssef 
+//  E-mail:          thomasmejl@hotmail.com
+//  Date/Time Added: 2005-02-22 02:07:19
+//  Origin:          
+//  Keywords:        force index Alexander Elder indicator
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=433
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=433
+//
+//------------------------------------------------------------------------------
+//
+//  Alexander Elder´s classic force index indicator
+//
+//  I use them on swedish stocks, weekly.
+//
+//  The rules are easy:
+//
+//  If the indicator is below zero AND there is a bullish divergence, then go
+//  LONG
+//
+//  If the indicator is above zero AND there is a bearish divergence, then go
+//  SHORT
+//
+//  Works well when you have a head and shoulder or a triangular formation
+//  against the zeroline.
+//
+//------------------------------------------------------------------------------
+
+/*Made by Thomas Youssef, 2005-01-15
+
+Alexander Elder´s classic force index indicator
+
+I use them on swedish stocks, weekly.
+
+The rules are easy:
+
+If the indicator is below zero AND there is a bullish divergence, then go LONG
+If the indicator is above zero AND there is a bearish divergence, then go SHORT
+
+Works well when you have a head and shoulder or a triangular formation against the zeroline.
+
+
+*/
+
+_SECTION_BEGIN("Force index");
+FI=EMA(((C-Ref(C,-1))*V),13);
+
+
+Plot(FI,"FI",12,5);
+Plot(0,"ZERO LINE",colorWhite,styleThick);
+_SECTION_END();

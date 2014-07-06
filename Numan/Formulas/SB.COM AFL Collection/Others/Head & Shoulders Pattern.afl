@@ -1,0 +1,63 @@
+x = Cum(1);
+per = 5;
+back=50;
+inter=100;
+s11=H;s12=L;
+/* H & S */
+pR = PeakBars( s11, per, 1 ) == 0;
+endt1= LastValue(ValueWhen( pR, x, 1 ));
+medt1=LastValue(ValueWhen( pR, x, 2 ));
+startt1=LastValue(ValueWhen( pR, x, 3 ));
+dt1=endt1-startt1;
+C1=x==endt1 OR x==medt1 OR x==startt1;
+endR = LastValue(ValueWhen( pR, s11, 1 ) );
+medR=LastValue(ValueWhen( pR, s11, 2 ) );
+startR = LastValue( ValueWhen( pR, s11, 3  ));
+Filter1=medR>endR AND medR>startR AND abs(startR-endR)<0.02*(startR+endR) AND
+dt1<inter AND endt1>LastValue(x)-back;
+MaxGraph=10;Graph1=C;Graph1Style=64;GraphXSpace=5;
+/*H&S Neck Line*/
+Aper=medt1-startt1;bper=endt1-medt1;
+La=  LastValue(ValueWhen(x==medt1,LLV(L,Aper)));
+Lb=LastValue(ValueWhen(x==-1+endt1,LLV(L,bper)));
+Fa=L==La AND x>startt1 AND x<medt1;
+Fb=L==Lb AND x>medt1 AND x<endt1;
+endt= LastValue(ValueWhen( Fb, x ));
+startt=LastValue(ValueWhen( Fa, x ));
+dtS =endt-startt;endS = Lb;startS = La;
+aS = (endS-startS)/dtS;bS = endS;
+trendlineS = aS * ( x  -endt ) + bS; 
+Graph3 = IIf(Filter1 AND x>startt-5,trendlineS,-1e10);Graph3BarColor=7;
+/*Inverted H & S*/
+tpR = TroughBars( s12, per, 1 ) == 0;
+tendt1=LastValue(ValueWhen(tpr,x,1));
+tmedt1=LastValue(ValueWhen(tpr,x,2));
+tstartt1=LastValue(ValueWhen(tpr,x,3));
+tdt1=tendt1-tstartt1;
+C2=x==tendt1 OR x==tmedt1 OR x==tstartt1;
+tendR = LastValue(ValueWhen( tpR, s12, 1 ) );
+tmedR=LastValue(ValueWhen( tpR, s12, 2 ) );
+tstartR = LastValue( ValueWhen( tpR, s12, 3  ));
+Filter2=tmedR<tendR AND tmedR<tstartR AND
+abs(tstartR-tendR)<0.02*(tstartR+tendR) AND tdt1<inter AND
+tendt1>LastValue(x)-back;
+Graph1BarColor=IIf(C1 AND Filter1,7,IIf(C2 AND Filter2,10,1));
+/*Inverted H&S Neck Line*/
+tAper=tmedt1-tstartt1;tbper=tendt1-tmedt1;
+Ha=  LastValue(ValueWhen(x==tmedt1,HHV(H,tAper)));
+Hb=LastValue(ValueWhen(x==-1+tendt1,HHV(H,tbper)));
+tFa=H==Ha AND x>tstartt1 AND x<tmedt1;
+tFb=H==Hb AND x>tmedt1 AND x<tendt1;
+Rendt= LastValue(ValueWhen(tFb, x ));
+Rstartt=LastValue(ValueWhen( tFa, x ));
+Rdt =Rendt-Rstartt;endR = Hb;startR = Ha;
+aR = (endR-startR)/Rdt;bR = endR;
+trendlineR = aR * ( x  -Rendt ) + bR; 
+Graph4 = IIf(Filter2 AND x>Rstartt-5,trendlineR,-1e10);Graph4BarColor=10;
+Filter=Filter1 OR Filter2;
+NumColumns=2;/*Graph2=x==-1+tendt1;*/
+Column0=Filter1;
+Column1=Filter2;
+Column0Format=Column1Format=1.0;
+Column0Name="H&S";
+Column1Name="inv H&S";

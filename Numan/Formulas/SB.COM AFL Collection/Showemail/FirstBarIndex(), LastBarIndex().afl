@@ -1,0 +1,91 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    FirstBarIndex(), LastBarIndex()
+//  Author/Uploader: Antonio Marra 
+//  E-mail:          ant.marra@virgilio.it
+//  Date/Time Added: 2004-07-20 06:38:08
+//  Origin:          
+//  Keywords:        BarIndex
+//  Level:           basic
+//  Flags:           showemail,function
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=363
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=363
+//
+//------------------------------------------------------------------------------
+//
+//  It retrieve the first or the last BarIndex() Value when a given condition
+//  is true.
+//
+//------------------------------------------------------------------------------
+
+/*_________________________________________________________________________________________ 
+
+  SYNTAX:
+         FirstBarIndex(Condition)
+         LastBarIndex(Condition)
+  
+  PURPOSE:
+          It gets the first BarIndex() Value when a given condition is true.
+          It gets the last BarIndex() Value when a given condition is true.
+  
+  HOW TO USE:
+          Copy this file in your include directory or append it to another file that You 
+          use as "functions database".
+
+  EXAMPLE:
+          1. Let's suppose you want to know when a given condition comes true for the
+             first time and for the last time.
+             
+             //We will serch for the first and last DOJI candle
+             // Condition is:
+             Doji = (O == C and O < H and O > L);
+             
+             First_Bar = FirstBarIndex(Doji);
+             First_Doji_Close = ValueWhen( BarIndex()== First_Bar,C,1);
+             
+             Last_Bar = LastBarIndex(Doji);
+             Last_Doji_Close = ValueWhen( BarIndex()== Last_Bar,C,1);
+          
+
+  ________________________________________________________________________________________  
+                                                                                          */
+                                                                                          
+                                                                                          
+function FirstBarIndex(Condition)
+{
+     TotalBarsIndex = LastValue(BarIndex());
+     a = 0;
+     Counter = 0;
+     for (a = 0 ;a < TotalBarsIndex; a++)
+     {
+       Counter = Counter+1;
+       if (
+           IsTrue(Condition[a])
+          )
+       a = TotalBarsIndex;
+       }
+     result = Counter-1;
+
+     return result;
+}
+
+
+
+
+function LastBarIndex(Condition)
+{
+     TotalBarsIndex = LastValue(BarIndex());
+     a = TotalBarsIndex;
+     Counter = TotalBarsIndex+1;
+     for (a = TotalBarsIndex ;a > 0; a--)
+     {
+       Counter = Counter-1;
+       if (
+           IsTrue(Condition[a])
+          )
+       a = 0;
+     }
+     result = Counter;
+
+     return result;
+}

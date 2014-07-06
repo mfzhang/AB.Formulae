@@ -1,0 +1,131 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Probability Calculator
+//  Author/Uploader: Anthony Faragasso 
+//  E-mail:          ajf1111@epix.net
+//  Date/Time Added: 2001-09-08 15:45:03
+//  Origin:          
+//  Keywords:        
+//  Level:           semi-advanced
+//  Flags:           commentary
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=114
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=114
+//
+//------------------------------------------------------------------------------
+//
+//  To be used in the Guru Commentary Window. Provides Support for
+//
+//  Options and Derivatives. By using Probability theory, you are letting
+//
+//  the market find the trades for you that are likely to be
+//
+//  consistent winners.
+//
+//------------------------------------------------------------------------------
+
+/* Probability Calculator  */
+/* coded by Anthony Faragasso */
+
+
+/*c1 = 625;*/         /* remove comments if manually entering price*/
+c1 = c;                    /* current closing price , Install comments if manually entering price */
+                     
+    
+dt =10;          /* days in trade , insert days till option expiration,  */                                
+                     /* or days to test a range */
+
+x =1;        /* Standard Deviation ,*/
+                      /* 67 to 68 % of all outcomes */
+                     /* happen between +1 and -1 standard deviation */
+                     /* 90% probability = 1.2815 standard deviation, */
+                    /* and 95% = 1.645  */   
+          
+/*vl =.25;*/               /*Remove comments and Enter */
+                          /*Implied Volatitliy (ex.36.41% = .3641) which */
+                           /*is a better predictor of future volatility, use decimal */
+                           /*in front of percentage.*/
+                                      
+hv1=20;             /*Install Comments if using Implied Volatiltiy */
+
+vl= Stdev(log(C/ref(C,-1)),hv1)*Sqrt(365);            /*Comment this line out if using Implied Volatility,*/
+                                                                            /* remove comments  if   using  daily  Historical */
+                                                                          /* volatility (ex.  10,20,30,60,90, day etc.  in ( hv ) line , */                                                                                       /* must be 2 days or more. */                                                                  
+                                                                      
+
+t = sqrt(dt/365);              /* Time Conversion*/
+
+
+
+                                                
+b1= exp(vl*t*x)*c1;         /* 1st Target is ...  Future Price Above Close */
+b2= exp(vl*t*-x)*c1;        /* 2nd Target is...  Future Price Below Close */
+
+                                                        
+b1a = 0.31938153;
+b2a = -0.3565638;
+b3a = 1.78147794;
+b4a = -1.821256;
+b5a = 1.33027443;
+p = 0.2316419;
+t1= 1/(1+(p*x));
+
+e1=exp(-x*x/2);
+e2=(b1a*t1)+(b2a*(t1^2))+(b3a*(t1^3))+(b4a*(t1^4))+(b5a*(t1^5));
+
+
+pr = (1-(1-0.398942*e1*e2))*100;   /* 1st Percentage is  Probability of finishing above upper target*/
+                                                      /* and Probability of finishing  below lower target in days selected*/
+                                                      /* and current volatility selected remaining*/
+                         
+pr2 = (1-0.398942*e1*e2)*100;      /*  2nd Percentage is Probability of finishing below upper target*/
+                                                      /*  and Probability of finishing  above lower target in days selected*/
+                                                      /* and current volatility selected remaining   */
+
+TU = b1 ;                                       /* Target up */
+
+TD = b2;                                        /* Target Down */
+
+
+/* Guru Commentary */
+
+"PROBABILITY CALCULATOR : ";
+"";   
+"Market being Evaluated =    " +""+name() +"   Date:   " +Date();
+"";
+"Asset Price : (Closing Price ) .............................. "  +writeval(c1,format=1.2);
+"";
+"Market Volatility :................................................  " +writeval(vl*100,format=1.2)+"%";
+"";
+"Number of Days :..............................................   "+writeval (dt,fromat=1);
+"";
+"Upper Target :..................................................   "+ writeval( TU,format=1.2) ;
+"";
+"Lower Target :..................................................   "+writeval(TD,format=1.2);
+"";
+"Probability of Finishing Above Upper Target :....  " +writeval(pr,format = 1.2)+" %"  ;  
+"or Below the Lower Target. ( If one Target Selected ) ";   
+"";
+"Probability of Finishing Below Upper Target :.....  "+writeval(pr2,format = 1.2)+" % ";
+"or  Above the Lower Target. ( If one Target Selected ) ";  
+"";
+"--------------------IF TWO TARGETS  ARE SELECTED---------------------";
+"";
+"Probability of Finishing Above Upper Target :....  " +writeval(pr,format = 1.2)+" %"  ;  
+ ""; 
+"Probability of Finishing Below Lower Target :.....  " +writeval(pr,format = 1.2)+" %"  ;  
+"";
+"Probability of Finishing between an Upper\nand Lower Target : . ............................................" +writeval(pr2-pr,format = 1.2)+" % ";
+"(Trading Range , If you Bracket the Market ) ";
+"";
+"Standard Deviation :............................................."+writeval(x,format=1.4);
+"( Default is +1 , -1 Standard Deviation , 68% of all\nMarket Outcome happens between +1, -1)";
+"";
+"Probability Percentages  to use in Standard Deviation ( X ) Value . ";
+"";
+" 1.645 = 95% ... 1.2815 = 90% ...  1 = 84.13%  ,  .8417 = 80%";
+"";
+"  .6745 = 75%  ,   .5245 = 70%  ,  .3854 = 65%  ,   .2534 = 60% ";
+"";
+"  .1256 = 55%  ,   .0251 = 51%  ,  .0001 = 50% ";
+ 
+

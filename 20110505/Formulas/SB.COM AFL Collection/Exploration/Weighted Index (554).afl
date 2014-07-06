@@ -1,0 +1,45 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Weighted Index
+//  Author/Uploader: Gerard 
+//  E-mail:          gerard_kellett@optusnet.com.au
+//  Date/Time Added: 2005-09-08 04:49:25
+//  Origin:          
+//  Keywords:        Weight Index AddToComposite Foreign
+//  Level:           basic
+//  Flags:           exploration
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=554
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=554
+//
+//------------------------------------------------------------------------------
+//
+//  Weighted Index using AddToComposite and Foreign functions.
+//
+//------------------------------------------------------------------------------
+
+//Select a group of tickers i.e. Apply to/Use Filter/Define - choose a watchlist
+//Click on Scan to create your new index
+AddToComposite((Close*Volume),  "~GMarketIndx", "I");
+
+AddToComposite(Open*((Close*Volume)/Foreign("~GMarketIndx", "I")),"~GMarketIndx", "O");  
+AddToComposite(High*((Close*Volume)/Foreign("~GMarketIndx","I")),"~GMarketIndx", "H");   
+AddToComposite(Low*((Close*Volume)/Foreign("~GMarketIndx","I")),"~GMarketIndx", "L");   
+AddToComposite(Close *((Close*Volume)/Foreign("~GMarketIndx","I")),"~GMarketIndx", "C"); 
+AddToComposite(Volume*((Close*Volume)/Foreign("~GMarketIndx","I")),"~GMarketIndx", "V");   
+			
+Buy = 0; // required by scan mode
+	
+
+//To check on some of the values;
+//Click on Explore
+Filter = Close>0;
+AddColumn(Close,"Close",1.3);
+
+AddColumn(Close*Volume,"Close*Volume",1.3);
+AddColumn(Foreign("~GMarketIndx", "I"),"I",1.3);
+AddColumn(Close*((Close*Volume)/Foreign("~GMarketIndx","I")),"CFinal",1.3);
+
+AddColumn(Volume,"Volume",1.3);
+AddColumn(Close*Volume,"Close*Volume",1.3);
+AddColumn(Foreign("~GMarketIndx", "I"),"I",1.3);
+AddColumn(Volume*((Close*Volume)/Foreign("~GMarketIndx","I")),"VFinal",1.3);

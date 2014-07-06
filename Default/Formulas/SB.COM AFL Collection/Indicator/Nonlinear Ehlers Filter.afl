@@ -1,0 +1,35 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Nonlinear Ehlers Filter
+//  Author/Uploader: Chris Yeoh 
+//  E-mail:          turkey@kingdomwork.net
+//  Date/Time Added: 2004-11-14 23:52:20
+//  Origin:          
+//  Keywords:        Ehler
+//  Level:           medium
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=403
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=403
+//
+//------------------------------------------------------------------------------
+//
+//  Taken from TASC's April 2001 Issue.
+//
+//------------------------------------------------------------------------------
+
+Price = (H+L)/2;
+MomLength = 15;
+
+PriceMomSum = 0;
+FiveMomSum = 0;
+
+FiveMom = abs(Price - Ref(Price, -5));
+PriceMom = Price * FiveMom;
+for (i=0; i < MomLength; i++) {
+	PriceMomSum = PriceMomSum + Ref(PriceMom, -i);
+	FiveMomSum = FiveMomSum + Ref(FiveMom, -i);
+}
+NLEF = PriceMomSum / FiveMomSum;
+
+Plot(Close, "Close", colorBlack, styleLine);
+Plot(NLEF, "NonLinear Ehlers Filter", IIf(Close>NLEF, colorGreen, colorRed), styleLine);

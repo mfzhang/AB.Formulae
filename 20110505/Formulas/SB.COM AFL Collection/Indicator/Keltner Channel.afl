@@ -1,0 +1,46 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Keltner Channel
+//  Author/Uploader: Ara Kaloustian 
+//  E-mail:          ara1@san.rr.com
+//  Date/Time Added: 2002-05-21 04:24:18
+//  Origin:          
+//  Keywords:        Keltner Channel Band
+//  Level:           medium
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=189
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=189
+//
+//------------------------------------------------------------------------------
+//
+//  Keltner Channels are similar to Bollinger bands in that they create an
+//  envelope around prices in order to indicate oversold / overbought
+//  conditions.
+//
+//  Bollinger Bands use standard deviation to measure volatility, while Keltner
+//  channels use ATR (Average True Range).
+//
+//  Keltner Channels provide a smoother envelope, that may be easier to use.
+//
+//------------------------------------------------------------------------------
+
+// Keltner Channels are constructed similar to Bollinger Bands
+// around a moving average +/- volatility.
+// The difference is in the measurement of volatility. 
+// Bollinger uses standard deviation. MA(Close,20) +/- #STDs
+// Keltner uses ATR (Average True Range). MA(Close,20) +/- #ATRs
+// Keltner channels may be easier to use for detecting oversold / overbought conditions
+
+
+
+Length = 20; Num_ATRs = 2;
+// Length and Num_ATRs parameters should be personalized for your preferred settings.
+
+Mov_Avg = MA(C,Length);
+KUP   = Mov_Avg + Num_ATRs * ATR(Length);
+KDOWN = Mov_Avg - Num_ATRs * ATR(Length);
+
+
+Plot (KUP,"KUP",1,1);
+Plot (KDown,"Kdown",1,1);
+Plot (Mov_Avg,"Mov_Avg",6,1);

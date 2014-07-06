@@ -1,0 +1,47 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Stochastic Divergence, negative
+//  Author/Uploader: Dimitris Tsokakis 
+//  E-mail:          tsokakis@oneway.gr
+//  Date/Time Added: 2001-07-04 04:30:59
+//  Origin:          
+//  Keywords:        
+//  Level:           semi-advanced
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=49
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=49
+//
+//------------------------------------------------------------------------------
+//
+//  A negative Stochastic divergence occurs when the tangent of Stochastic
+//  oscillator's graph is descending, whereas the tangent of price's graph is
+//  ascending for the same time interval .
+//
+//  The occurrence of a negative stochastic divergence in overbought area,
+//  usually signals a trend reversal,
+//
+//  especially if it is confirmed by complementary criteria.
+//
+//------------------------------------------------------------------------------
+
+/*Negative Stochastic divergence for use in 
+Indicator Builder and Automatic Analysis (scan mode),
+by Dimitris Tsokakis*/
+
+ST33=stochd(14);
+TR1=HHVBARS(ST33,4);
+TR2=IIF(ST33>70 AND TR1>0 AND REF(TR1,-1)==0,ref(ST33,-1),0);
+TRC=IIF(TR2>0,C,0);
+vs=valuewhen(tr2, ref(st33,-1), 1);
+dvs=vs-ref(vs,-1);
+vc=valuewhen(trc, HHV(H,3), 1);
+dvc=vc-ref(vc,-1);
+diver=iif(dvs<0 and dvc>0,90,0);
+DAS=BARSSINCE(REF(TR2,-1)>0);
+ddd=IIF(DAS<20 AND C<REF(C,-1),DIVER,0);
+GRAPH1=TR2;
+graph0=ddd;
+graph0barcolor=4;
+GRAPH1STYLE=2;
+graph1barcolor=1;
+SELL=ddd==90;

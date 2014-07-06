@@ -1,0 +1,32 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Market Direction
+//  Author/Uploader: Dimitris Tsokakis 
+//  E-mail:          
+//  Date/Time Added: 2002-03-24 14:03:12
+//  Origin:          
+//  Keywords:        
+//  Level:           advanced
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=176
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=176
+//
+//------------------------------------------------------------------------------
+//
+//  Market direction is described through 3 composite tickers, based on
+//  Relative slope values. You may read on daily basis the % distribution of
+//  bullish, congestive and bearish phase of the Market.
+//
+//------------------------------------------------------------------------------
+
+/*BULL-BEAR-CONGESTIVE*/
+K=EMA((H+L+C)/3,10);
+S1=2*(K-Ref(K,-1))/(K+Ref(K,-1));
+RS=100*EMA(S1,3);
+values16 = abs(rs)<=1;
+values17=rs>1;
+values18=rs<-1;
+AddToComposite(Values16,"~rscongestion","V");
+AddToComposite(Values17,"~rsbullish","V");
+AddToComposite(Values18,"~rsbearish","V");
+Buy=0;

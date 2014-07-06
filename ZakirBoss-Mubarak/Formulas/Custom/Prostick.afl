@@ -1,0 +1,14 @@
+/*	An estimate by Mark Fisher about the value area (pivot range) is plus OR 
+	minus the range abs((H+L+C)/3 - (H+L)/2) from the average price 
+	(H+L+C)/3. He claims accuracy of 98%. The following code plots a chart similar to Prostick.
+	http://www.prosticks.com/education/best_both_worlds.php?sid=559cb990c9dffd8675f6bc2186971dc2*/
+
+SetChartBkColor(16);
+
+// Calculate the pivot range
+PivotBand = abs(Avg - (H+L)/2);
+VaH = Avg + PivotBand;
+VaL = Avg - PivotBand;
+
+Plot(C, "C", colorLightGrey,styleBar);                         
+PlotOHLC( VaL, VaH, VaL, VaH, "Pivot range", IIf(Close > Open, colorGreen, colorRed), styleCandle);

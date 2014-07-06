@@ -1,0 +1,278 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Bullish Percent Index 2 files combined
+//  Author/Uploader: Graham Kavanagh 
+//  E-mail:          gkavanag@bigpond.net.au
+//  Date/Time Added: 2003-01-05 16:53:46
+//  Origin:          the other uploaded file
+//  Keywords:        Bullish Percent P&F
+//  Level:           semi-advanced
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=251
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=251
+//
+//------------------------------------------------------------------------------
+//
+//  The first loaded file was in zipped format to combine 2 formula. I have put
+//  both into a single file and they will need to be split back into 2 files.
+//  see the first upload for instruction on use
+//
+//------------------------------------------------------------------------------
+
+//=========================================================\
+// 2 formula loaded in this one window, split them into 2  ]
+//the first is for AA window                               ]
+//=========================================================/
+
+// BULLISH PERCENT INDEX
+//P&F Chart based on Closing prices for Amibroker Indicator window. Produces composite ticker ~BPI
+// 05 Jan 2003
+//Reverse is 3 boxes.
+//Graham Kavanagh
+
+
+SetBarsRequired(100000,100000);
+
+//Size for P&F boxes to be manually entered below or can be assigend to individual stocks on watchlist.
+first=Cum(1);
+period=Min(20,first);
+mean = (HHV(C,period)+LLV(C,period))/2;
+range = (HHV(C,period)-LLV(C,period));
+Change0 = MA(abs(C-Ref(C,-1)),period);
+Ratio = IIf(range<mean, Max(range/mean,0.5),IIf(range>mean, Min(range/mean,1.1),range/mean));
+Change=Change0*ratio;
+
+box = IIf(C<=10,Max(int(change)+round(frac(Change)*10)/10,0.1),
+IIf(C>10 AND C<=50,Max(int(Change)+round(frac(Change)/5*10)/10*5,0.5), 
+IIf(C>50 AND C<=500,Max(round(Change),1),
+IIf(C>500 AND C<=1000,Max(round(Change),2),
+IIf(C>1000 AND C<=2000,Max(round(Change/10)*10,5),
+Max(round(Change/10)*10,10) )))));
+Box=LastValue(box);
+
+EnableScript("jscript");
+
+<%
+
+Close = VBArray( AFL( "Close" ) ).toArray();
+
+PFO = new Array();
+PFC = new Array();
+
+Box = AFL("Box");
+
+// initialize first element
+j = 0;
+PFC[j] = Box*Math.ceil(Close[0]/Box);
+PFO[j] = PFC[j]+Box;
+down = 1;                  // By default the first bar is a down bar.
+up = 0;
+swap = 0;
+
+// perform the loop that produces PF Chart
+for( i = 0; i < Close.length; i++ )
+{
+ Reverse = 3*Box ;                   // reversal requirement
+
+ if( Close[i] <= PFC[j]-Box && down)         //continue down
+ {
+  PFC[j] = Box*Math.ceil(Close[i]/Box);
+  PFO[j] = PFC[j]+Box;
+ }
+ else
+ {
+  if( Close[i] >= PFC[j] + Reverse && down)  //Change direction to up
+  {
+   j++;
+   swap = 1;
+   PFC[j] = Box*Math.floor(Close[i]/Box);
+   PFO[j] = PFC[j] - Box;
+  }
+ }
+ if( Close[i] >= PFC[j] + Box && up)         //Continue up
+ { 
+  PFC[j] = Box*Math.floor(Close[i]/Box);
+  PFO[j] = PFC[j] - Box;
+ }
+ else
+ {
+  if( Close[i] <= PFC[j] - Reverse && up)   //Change direction to down
+  {
+   j++;
+   PFC[j] = Box*Math.ceil(Close[i]/Box); 
+   PFO[j] = PFC[j]+Box;
+   swap = 1;
+  }
+ }
+ if( swap )
+ {
+  swap = 0;
+  if( up )
+  {
+   up = 0;
+   down = 1;
+  }
+  else
+  {
+   up = 1;
+   down = 0;
+  }
+ }
+}
+delta = Close.length - j-1;
+
+AFL.Var("PFO") = PFO;
+AFL.Var("PFC") = PFC;
+AFL.Var("Box") = Box;
+AFL.Var("delta") = delta;
+AFL.Var("Reverse") = Reverse;
+ 
+%>
+
+PFO = Ref( PFO, -delta );
+PFC = Ref( PFC, -delta );
+
+// High-Low range sets the height of the P&F bar 
+H = IIf(Ref(PFC,-1)>Ref(PFO,-1),Ref(HHV(PFC,1),-1)-Box,Max(PFO,PFC));
+L = IIf(Ref(PFC,-1)<Ref(PFO,-1),Ref(LLV(PFC,1),-1)+Box,Min(PFO,PFC));
+O = IIf(Ref(PFC,-1)>Ref(PFO,-1),Ref(HHV(PFC,1),-1)-Box,IIf(Ref(PFC,-1)<Ref(PFO,-1),Ref(LLV(PFC,1),-1)+Box,PFO));
+
+// the difference between Open AND Close should be set to box size 
+// the sign decides if X or O are plotted 
+C = O + Box * IIf( PFC > PFO, 1,-1);
+
+
+Bulls = IIf(H>Ref(H,-2),1,0);
+Stocks = IIf(H>0,1,0);
+
+xyz =  "~BPI";
+
+Buy=0;
+AddToComposite(bulls,xyz,"C");
+AddToComposite(stocks,xyz,"V");
+
+
+Filter=1;
+AddColumn(Bulls,"bulls",1.0);
+AddColumn(Stocks ,"Stocks" ,1.0);
+
+
+//====================================================================\
+//Move the rest of this formula to indicator window for teh P&F chart ]
+//====================================================================/
+// Indicator window formula
+//P&F Chart for Bullish Percent Index
+// 05 Jan 2003
+//Reverse is 3 boxes. Box size is 2%
+//Graham Kavanagh
+
+//Use on the composite ticker "~BPI" produced from AA scan BullishPercentIndexScan
+
+SetBarsRequired(100000,100000);
+
+Box=2;
+Close = C/V*100;
+Filter=1;
+AddColumn(Close,"close",1.0);
+
+CF = ceil(C/Box)*box;
+CR = floor(C/box)*box;
+
+EnableScript("jscript");
+<%
+
+Close = VBArray( AFL( "Close" ) ).toArray();
+CR = VBArray( AFL( "CR" ) ).toArray();
+CF = VBArray( AFL( "CF" ) ).toArray();
+
+PFO = new Array();
+PFC = new Array();
+
+Box = AFL("Box");
+
+// initialize first element
+j = 0;
+PFC[j] = CF[0];
+PFO[j] = CF[0]+Box;
+down = 1;                  // By default the first bar is a down bar.
+up = 0;
+swap = 0;
+
+// perform the loop that produces PF Chart
+for( i = 1; i < Close.length; i++ )
+{
+ Reverse = 3*Box  ;                   // reversal requirement
+
+ if( Close[i] <= PFC[j]-Box && down)         //continue down
+ {
+  PFC[j] = CF[i];
+  PFO[j] = CF[i]+Box;
+ }
+ else
+ {
+  if( Close[i] >= PFC[j] + Reverse && down)  //Change direction to up
+  {
+   j++;
+   swap = 1;
+   PFC[j] = CR[i];
+   PFO[j] = CR[i] - Box;
+  }
+ }
+ if( Close[i] >= PFC[j] + Box && up)         //Continue up
+ { 
+  PFC[j] = CR[i];
+  PFO[j] = CR[i] - Box;
+ }
+ else
+ {
+  if( Close[i] <= PFC[j] - Reverse && up)   //Change direction to down
+  {
+   j++;
+   PFC[j] = CR[i]; 
+   PFO[j] = CR[i]+Box;
+   swap = 1;
+  }
+ }
+ if( swap )
+ {
+  swap = 0;
+  if( up )
+  {
+   up = 0;
+   down = 1;
+  }
+  else
+  {
+   up = 1;
+   down = 0;
+  }
+ }
+}
+delta = Close.length - j-1;
+
+AFL.Var("PFO") = PFO;
+AFL.Var("PFC") = PFC;
+AFL.Var("Box") = Box;
+AFL.Var("delta") = delta;
+AFL.Var("Reverse") = Reverse;
+ 
+%>
+
+PFO = Ref( PFO, -delta );
+PFC = Ref( PFC, -delta );
+
+// High-Low range sets the height of the P&F bar 
+H = IIf(Ref(PFC,-1)>Ref(PFO,-1),Ref(HHV(PFC,1),-1)-Box,Max(PFO,PFC));
+L = IIf(Ref(PFC,-1)<Ref(PFO,-1),Ref(LLV(PFC,1),-1)+Box,Min(PFO,PFC));
+O = IIf(Ref(PFC,-1)>Ref(PFO,-1),Ref(HHV(PFC,1),-1)-Box,IIf(Ref(PFC,-1)<Ref(PFO,-1),Ref(LLV(PFC,1),-1)+Box,PFO));
+
+// the difference between Open AND Close should be set to box size 
+// the sign decides if X or O are plotted 
+C = O + Box * IIf( PFC > PFO, 1,-1);
+
+GraphXSpace = 5;
+Plot(C,"P&F Bullish Percent Index",IIf( PFC > PFO, 3, 4 ),64+4096+8192);
+Plot(Box,"Box size",1,16+2048+4096);
+Plot(Reverse/Box,"Reverse",1,styleNoLine+styleNoLabel+styleOwnScale);
+Plot(H,"L ="+WriteVal(L,1.1)+", H",1,styleNoLine+styleNoLabel+styleOwnScale);
+

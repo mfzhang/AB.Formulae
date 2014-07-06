@@ -1,0 +1,13 @@
+_SECTION_BEGIN("vol macd");
+Diff = EMA (Volume,12) - EMA (Volume,26);
+
+DEA = EMA (Diff,9); 
+
+Value3 = (Diff-DEA);
+
+Plot (Diff, "Diff", 18,1);
+Plot (DEA, "DEA",15,1);
+
+Plot(Value3,"Vmacd",12,3);
+
+_SECTION_END();

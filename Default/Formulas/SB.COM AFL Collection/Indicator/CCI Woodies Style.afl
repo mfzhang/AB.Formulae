@@ -1,0 +1,87 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    CCI Woodies Style
+//  Author/Uploader: Larry Jameson 
+//  E-mail:          cljameson@hotmail.com
+//  Date/Time Added: 2004-11-16 18:13:49
+//  Origin:          
+//  Keywords:        Woodies CCI
+//  Level:           semi-advanced
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=405
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=405
+//
+//------------------------------------------------------------------------------
+//
+//  This CCI chart incorporates some of the features seen on a Woodies CCI
+//  Chart.
+//
+//------------------------------------------------------------------------------
+
+///////////////////////////////
+// CCI Woodies Style - Coded by Wring
+// Amibroker 4.63.1
+///////////////////////////////
+//
+// Note: Set Custom Scaling in dialog just below this dialogue box
+//       to Min -350, Max +350
+//	
+//	 Set Background color to DarkOliveGreen
+//	 Set Axes color to white
+//
+///////////////////////////////
+ 
+
+z = CCI(14);
+LSMA = LinearReg(C, 25 ); 
+EMA34 = EMA(C,34);
+
+Title = Interval(2) + " " + Name() + ", " + EncodeColor(colorOrange) + 
+			"CCI 14=" + round(z) + ", " + EncodeColor(colorLightBlue) + 
+			"CCI 6=" + round(CCI(6)) + EncodeColor(colorPink) +
+			"\nPrice=" + H + ", " + L + ", " + C +
+			EncodeColor(colorWhite) + " " + Date();
+
+// Colour the bars for Woodies Trend Following
+Plusbars = BarsSince(z < 0);
+Minusbars = BarsSince(z > 0);
+TrendBarCount = 5;
+for( i = 0; i < BarCount; i++ ) 
+{ 
+	if (Plusbars[i] >= TrendBarCount)
+		Color[i] = colorGreen;
+	else
+		if (Minusbars[i] >= TrendBarCount)
+			Color[i] = colorRed;
+		else
+			Color[i] = colorBlack;
+}
+
+// CCI Histogram
+Plot(z,"",Color,styleHistogram | styleNoLabel);
+// CCI Line
+Plot(z,"CCI 14",colorWhite,styleLine | styleNoLabel | styleThick);
+// Turbo CCI
+Plot(CCI(6),"CCI 6",colorLightBlue,styleLine | 	styleNoLabel);
+// zero line 25lsma
+Plot(0,"",IIf(C > LSMA,colorGreen,IIf(C<LSMA,colorRed,colorBlack)),
+				 styleThick | styleNoLabel);
+// Print the price label - Note div by 1000 to position price near 0 line
+Plot(Prec(C / 1000,3),"",
+		IIf(C >=Ref(C,-1),colorGreen,colorRed),styleNoLine);
+
+// Set up color for the 100s, green if 34ema above red if below
+Color = IIf(C>EMA34,colorGreen,
+		IIf(C==EMA34,colorBlack,colorRed));
+// Plot the 100s
+Plot(100,"",Color,styleDots |styleNoLine | styleNoLabel | styleThick);
+Plot(-100,"",Color,styleDots |styleNoLine | styleNoLabel | styleThick);
+// Plot the 50s
+PlotGrid(50,colorTeal);
+PlotGrid(-50, colorTeal);
+// Plot the 200s
+PlotGrid(200,colorTeal);
+PlotGrid(-200,colorTeal);
+// Plot the 300s
+PlotGrid(-300,colorTeal);
+PlotGrid(300,colorTeal);

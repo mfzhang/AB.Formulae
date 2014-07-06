@@ -1,0 +1,24 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Auto Analysis Pivot Point Reversal
+//  Author/Uploader: Larry Lovrencic 
+//  E-mail:          lvl@firstpacific.net
+//  Date/Time Added: 2001-09-04 02:39:26
+//  Origin:          
+//  Keywords:        Pivot point reversal
+//  Level:           basic
+//  Flags:           exploration
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=112
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=112
+//
+//------------------------------------------------------------------------------
+//
+//  Find Pivot Point Reversals using automatic analysis
+//
+//------------------------------------------------------------------------------
+
+/*Pivot Point Reversals Automatic Analysis
+by Larry Lovrencic*/
+
+buy=ref(L,-1)<ref(L,-2) AND ref(L,-1)<L AND C>ref(H,-1);
+sell=ref(H,-1)>ref(H,-2) AND ref(H,-1)>H AND C<ref(L,-1); 

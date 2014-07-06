@@ -1,0 +1,38 @@
+//|-----------------------------------------------------------------------------------------
+//|PatternExplorer.com - PatternExplorer_f14
+//|Copyright © 2007, PatternExplorer.com
+//|http://www.PatternExplorer.com
+//|e-mail: support@PatternExplorer.com
+//|-----------------------------------------------------------------------------------------
+
+for ( i = 0; i < 10; i++ )
+{
+    if ( StrExtract( List, i ) == PivotTyp )
+        PivottypValue = i;
+}
+
+AddPivotlevels ( PivottypValue, TF );
+
+digits = IIf( C > 10, 1.2, 1.4 );
+digits = LastValue( digits );
+
+if ( Status( "action" ) == actionCommentary )
+{
+    printf( "\n" + "R3 = " + WriteVal( R3, digits )  ) +
+    printf( "\n" + "R2 = " + WriteVal( R2, digits )  ) +
+    printf( "\n" + "R1 = " + WriteVal( R1, digits )  ) +
+    printf( "\n\n" + "PP = " + WriteVal( PP, digits )  ) +
+    printf( "\n\n" + "S1 = " + WriteVal( S1, digits )  ) +
+    printf( "\n" + "S2 = " + WriteVal( S2, digits )  ) +
+    printf( "\n" + "S3 = " + WriteVal( S3, digits )  );
+}
+
+if ( Shadow )
+{
+    style1 = styleArea + styleNoLabel + styleNoTitle;
+    S2_even = IIf( S2_even > 0, S2_even, Null );
+    Plot( R2, "R2", R12Shadow, style1 );
+    Plot( R1, "R1", BackgroundColor, style1 );
+    Plot( S1, "S1", S12Shadow, styleArea + styleNoTitle );
+    Plot( S2, "", BackgroundColor, style1 );
+}

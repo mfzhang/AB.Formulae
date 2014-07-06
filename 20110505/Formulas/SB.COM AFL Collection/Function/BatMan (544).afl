@@ -1,0 +1,27 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    BatMan
+//  Author/Uploader: Fred Tonetti 
+//  E-mail:          ftonetti@optonline.net
+//  Date/Time Added: 2005-08-10 23:52:43
+//  Origin:          
+//  Keywords:        Batch Manager AFL Web
+//  Level:           advanced
+//  Flags:           showemail,function
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=544
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=544
+//
+//------------------------------------------------------------------------------
+//
+//  A Web based form and .vbs AB/AA automation processor for running batches of
+//  jobs (AFL's) ... Output is all web based on your PC. Detailed page includes
+//  the relevant chart and results from the AA window. Several levels above
+//  this also exist including a Job Log, Job Signals and a Batch Summary.
+//
+//------------------------------------------------------------------------------
+
+//
+// See the files section of the Yahoo AmiBroker-TS Forum
+//
+// http://finance.groups.yahoo.com/group/amibroker-ts/files/
+//

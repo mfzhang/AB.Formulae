@@ -1,0 +1,738 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Performance Check
+//  Author/Uploader: Frank Snay 
+//  E-mail:          fesnay@san.rr.com
+//  Date/Time Added: 2001-07-14 16:02:56
+//  Origin:          A Check on Possible Performance of a Signal
+//  Keywords:        
+//  Level:           basic
+//  Flags:           exploration
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=72
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=72
+//
+//------------------------------------------------------------------------------
+//
+//  /*
+//
+//  A Daily Performance Check of your Buy signal. Corrected and revised on
+//  7/14/01.
+//
+//  Use to:
+//
+//  1. Help set Stop Losses, in percentages.
+//
+//  2. See if increase in rate of return levels off within the first 20 days.
+//
+//  3. See if signal is a "leading" indicator, and by how many days.
+//
+//  This is a different way to look at the performance of a buy signal - it is
+//  a day - by - day look at percentage gain for 20 days.
+//
+//  For this example, "Buffy Averages" was used.
+//
+//  Replace the Buffy Averages with your system, and you can see how your
+//  system performs.
+//
+//  --------------------------How to Use--Modified
+//  7/14/01-------------------------
+//
+//  After running "Explore", Expand the columns Max... and Min... to
+//
+//  MaxGain and MinGain. MaxGain is the Maximum Gain realized for 20 days. The
+//  first column after MaxGain ( +Day) is the day after
+//
+//  the signal where the max gain occured. MinimumGain and -Day works the same
+//  way. These four columns give a quick summary of the results of explore.
+//
+//  After running the test on a the current stock, scroll to the right and
+//  select the "D20%" column. Sort so blue arrow points up. This gives you the
+//  best gains for 20 days for this buy signal.
+//
+//  Now as you scan slowly back towards "D1%" with this sort still in place,
+//  you can see the maximum percent loss your system used to get the desired
+//  gains. This maximum percent loss can be used in the "Settings" button for
+//  Backtesting your system.
+//
+//  "D20%" was used in this example, but any of the "Dn%" columns can be used
+//  for sorting. If you are a swing trader using a maximum time frame of only 2
+//  or 3 days in your system, use "D2%" or "D3%".
+//
+//  A careful study of the results might reveal that possibly, for example, the
+//  rate of change of percentage gains slows down after day five. This would
+//  prepare you to exit on day five.
+//
+//  Another possible finding is that the signal is "early", and best entry
+//  point might be, for example again, three days after the actual buy signal.
+//  This would be revealed by negative returns for the first three days, and
+//  then positive gains.
+//
+//  */
+//
+//  /*-----------Replace all until next dashed line with your
+//  system------------*/
+//
+//  /*-----------Ensure your "Buy" rules are
+//  included--------------------------------*/
+//
+//  /*
+//
+//  Buffy Averages
+//
+//  */
+//
+//  FastPeriods =5;
+//
+//  SlowPeriods = 20;
+//
+//  FastBuffAvg = Sum( Volume * Close, FastPeriods ) / Sum( Volume, FastPeriods
+//  );
+//
+//  SlowBuffAvg = Sum( Volume * Close, SlowPeriods ) / Sum( Volume, SlowPeriods
+//  );
+//
+//  graph0 = FastBuffAvg;
+//
+//  graph1 = SlowBuffAvg;
+//
+//  /* buy &amp; sell trading rules */
+//
+//  buy = cross( FastBuffAvg, SlowBuffAvg );
+//
+//  sell = cross( SlowBuffAvg, FastBuffAvg );
+//
+//  /* A commentary */
+//
+//  buybars = BarsSince( buy );
+//
+//  sellbars = BarsSince( sell );
+//
+//  WriteIF( buybars < sellbars,
+//
+//  "A bullish crossover occured " + WriteVal( buybars ) + " bars ago",
+//
+//  "A bearish crossover occured " + WriteVal( sellbars ) + " bars ago" );
+//
+// 
+//  /*--------------------------------------------------------------------------------------------------------*/
+//
+//  /* Only Buy signals will be used
+//
+//  "D1%" means percent gain at the end of day one, "D2%" the end of day two,
+//  etc.
+//
+//  The entry price will be the Open on the day following the signal.
+//
+//  The percent gain will be the Close price of the day.
+//
+//  This program looks "forward" twenty days, so under the "Range" option, use
+//  the last radio button next to "from" and set the dates that would include a
+//  stop date ("to") about 21 days ago. Start date is your option. If this step
+//  is NOT done, signals that occur within the last 21 days will have bad data
+//  in the display.
+//
+//  REMEMBER THAT THE RESULTS MEASURE PAST PERFORMANCE, AND THERE IS NO
+//  GUARENTEE THAT THE STOCK WILL HAVE THE SAME GAINS IN THE FUTURE.
+//
+//  */
+//
+//  /* EP is the Entry Price */
+//
+//  EP = ref(o,1);
+//
+//  D1G = 100*(ref(c,1) - EP)/EP;
+//
+//  D2G = 100*(ref(c,2) - EP)/EP;
+//
+//  D3G = 100*(ref(c,3) - EP)/EP;
+//
+//  D4G = 100*(ref(c,4) - EP)/EP;
+//
+//  D5G = 100*(ref(c,5) - EP)/EP;
+//
+//  D6G = 100*(ref(c,6) - EP)/EP;
+//
+//  D7G = 100*(ref(c,7) - EP)/EP;
+//
+//  D8G = 100*(ref(c,8) - EP)/EP;
+//
+//  D9G = 100*(ref(c,9) - EP)/EP;
+//
+//  D10G = 100*(ref(c,10) - EP)/EP;
+//
+//  D11G = 100*(ref(c,11) - EP)/EP;
+//
+//  D12G = 100*(ref(c,12) - EP)/EP;
+//
+//  D13G = 100*(ref(c,13) - EP)/EP;
+//
+//  D14G = 100*(ref(c,14) - EP)/EP;
+//
+//  D15G = 100*(ref(c,15) - EP)/EP;
+//
+//  D16G = 100*(ref(c,16) - EP)/EP;
+//
+//  D17G = 100*(ref(c,17) - EP)/EP;
+//
+//  D18G = 100*(ref(c,18) - EP)/EP;
+//
+//  D19G = 100*(ref(c,19) - EP)/EP;
+//
+//  D20G = 100*(ref(c,20) - EP)/EP;
+//
+//  /* Compute the Maximum Gain for the 20 Days */
+//
+//  Max20 = max(D1G,D2G);
+//
+//  MaxCntr = iif(D1G > D2G,1,2);
+//
+//  Max20 = max(Max20,D3G);
+//
+//  MaxCntr = iif(Max20 > D3G,MaxCntr,3);
+//
+//  Max20 = max(Max20,D4G);
+//
+//  MaxCntr = iif(Max20 > D4G,MaxCntr,4);
+//
+//  Max20 = max(Max20,D5G);
+//
+//  MaxCntr = iif(Max20 > D5G,MaxCntr,5);
+//
+//  Max20 = max(Max20,D6G);
+//
+//  MaxCntr = iif(Max20 > D6G,MaxCntr,6);
+//
+//  Max20 = max(Max20,D7G);
+//
+//  MaxCntr = iif(Max20 > D7G,MaxCntr,7);
+//
+//  Max20 = max(Max20,D8G);
+//
+//  MaxCntr = iif(Max20 > D8G,MaxCntr,8);
+//
+//  Max20 = max(Max20,D9G);
+//
+//  MaxCntr = iif(Max20 > D9G,MaxCntr,9);
+//
+//  Max20 = max(Max20,D10G);
+//
+//  MaxCntr = iif(Max20 > D10G,MaxCntr,10);
+//
+//  Max20 = max(Max20,D11G);
+//
+//  MaxCntr = iif(Max20 > D11G,MaxCntr,11);
+//
+//  Max20 = max(Max20,D12G);
+//
+//  MaxCntr = iif(Max20 > D12G,MaxCntr,12);
+//
+//  Max20 = max(Max20,D13G);
+//
+//  MaxCntr = iif(Max20 > D13G,MaxCntr,13);
+//
+//  Max20 = max(Max20,D14G);
+//
+//  MaxCntr = iif(Max20 > D14G,MaxCntr,14);
+//
+//  Max20 = max(Max20,D15G);
+//
+//  MaxCntr = iif(Max20 > D15G,MaxCntr,15);
+//
+//  Max20 = max(Max20,D16G);
+//
+//  MaxCntr = iif(Max20 > D16G,MaxCntr,16);
+//
+//  Max20 = max(Max20,D17G);
+//
+//  MaxCntr = iif(Max20 > D17G,MaxCntr,17);
+//
+//  Max20 = max(Max20,D18G);
+//
+//  MaxCntr = iif(Max20 > D18G,MaxCntr,18);
+//
+//  Max20 = max(Max20,D19G);
+//
+//  MaxCntr = iif(Max20 > D19G,MaxCntr,19);
+//
+//  Max20 = max(Max20,D20G);
+//
+//  MaxCntr = iif(Max20 > D20G,MaxCntr,20);
+//
+//  /*Now the Minimum Gain for the 20 Days */
+//
+//  Min20 = min(D1G,D2G);
+//
+//  MinCntr = iif(D1G < D2G,1,2);
+//
+//  Min20 = min(Min20,D3G);
+//
+//  MinCntr = iif(Min20 < D3G,MinCntr,3);
+//
+//  Min20 = min(Min20,D4G);
+//
+//  MinCntr = iif(Min20< D4G,MinCntr,4);
+//
+//  Min20 = min(Min20,D5G);
+//
+//  MinCntr = iif(Min20 < D5G,MinCntr,5);
+//
+//  Min20 = min(Min20,D6G);
+//
+//  MinCntr = iif(Min20< D6G,MinCntr,6);
+//
+//  Min20 = min(Min20,D7G);
+//
+//  MinCntr = iif(Min20 < D7G,MinCntr,7);
+//
+//  Min20 = min(Min20,D8G);
+//
+//  MinCntr = iif(Min20< D8G,MinCntr,8);
+//
+//  Min20 = min(Min20,D9G);
+//
+//  MinCntr = iif(Min20 < D9G,MinCntr,9);
+//
+//  Min20 = min(Min20,D10G);
+//
+//  MinCntr = iif(Min20< D10G,MinCntr,10);
+//
+//  Min20 = min(Min20,D11G);
+//
+//  MinCntr = iif(Min20< D11G,MinCntr,11);
+//
+//  Min20 = min(Min20,D12G);
+//
+//  MinCntr = iif(Min20 < D12G,MinCntr,12);
+//
+//  Min20 = min(Min20,D13G);
+//
+//  MinCntr = iif(Min20 < D13G,MinCntr,13);
+//
+//  Min20 = min(Min20,D14G);
+//
+//  MinCntr = iif(Min20< D14G,MinCntr,14);
+//
+//  Min20 = min(Min20,D15G);
+//
+//  MinCntr = iif(Min20 < D15G,MinCntr,15);
+//
+//  Min20 = min(Min20,D16G);
+//
+//  MinCntr = iif(Min20 < D16G,MinCntr,16);
+//
+//  Min20 = min(Min20,D17G);
+//
+//  MinCntr = iif(Min20 < D17G,MinCntr,17);
+//
+//  Min20 = min(Min20,D18G);
+//
+//  MinCntr = iif(Min20 < D18G,MinCntr,18);
+//
+//  Min20 = min(Min20,D19G);
+//
+//  MinCntr = iif(Min20< D19G,MinCntr,19);
+//
+//  Min20 = min(Min20,D20G);
+//
+//  MinCntr = iif(Min20 < D20G,MinCntr,20);
+//
+//  numcolumns = 26;
+//
+//  column0 = c;
+//
+//  column0format = 1.2;
+//
+//  column0name = "Close";
+//
+//  column1 = EP;
+//
+//  column1format = 1.2;
+//
+//  column1name = "E. P.";
+//
+//  column2 = Max20;
+//
+//  column2format = 1.2;
+//
+//  column2name = "MaxGain";
+//
+//  column3 = MaxCntr;
+//
+//  column3format = 1.0;
+//
+//  column3name = " +Day";
+//
+//  column4 = Min20;
+//
+//  column4format = 1.2;
+//
+//  column4name = "MinGain";
+//
+//  column5= MinCntr;
+//
+//  column5format = 1.0;
+//
+//  column5name = "-Day";
+//
+//  column6 =D1G;
+//
+//  column6format = 1.2;
+//
+//  column6name = "D1%";
+//
+//  column7 =D2G;
+//
+//  column7format = 1.2;
+//
+//  column7name = "D2%";
+//
+//  column8 =D3G;
+//
+//  column8format = 1.2;
+//
+//  column8name = "D3%";
+//
+//  column9=D4G;
+//
+//  column9format = 1.2;
+//
+//  column9name = "D4%";
+//
+//  column10 =D5G;
+//
+//  column10format = 1.2;
+//
+//  column10name = "D5%";
+//
+//  column11=D6G;
+//
+//  column11format = 1.2;
+//
+//  column11name = "D6%";
+//
+//  column12 =D7G;
+//
+//  column12format = 1.2;
+//
+//  column12name = "D7%";
+//
+//  column13 =D8G;
+//
+//  column13format = 1.2;
+//
+//  column13name = "D8%";
+//
+//  column14 =D9G;
+//
+//  column14format = 1.2;
+//
+//  column14name = "D9%";
+//
+//  column15 =D10G;
+//
+//  column15format = 1.2;
+//
+//  column15name = "D10%";
+//
+//  column16 =D11G;
+//
+//  column16format = 1.2;
+//
+//  column16name = "D11%";
+//
+//  column17 =D12G;
+//
+//  column17format = 1.2;
+//
+//  column17name = "D12%";
+//
+//  column18 =D13G;
+//
+//  column18format = 1.2;
+//
+//  column18name = "D13%";
+//
+//  column19 =D14G;
+//
+//  column19format = 1.2;
+//
+//  column19name = "D14%";
+//
+//  column20 =D15G;
+//
+//  column20format = 1.2;
+//
+//  column20name = "D15%";
+//
+//  column21 =D16G;
+//
+//  column21format = 1.2;
+//
+//  column21name = "D16%";
+//
+//  column22 =D17G;
+//
+//  column22format = 1.2;
+//
+//  column22name = "D17%";
+//
+//  column23 =D18G;
+//
+//  column23format = 1.2;
+//
+//  column23name = "D18%";
+//
+//  column24 =D19G;
+//
+//  column24format = 1.2;
+//
+//  column24name = "D19%";
+//
+//  column25 =D20G;
+//
+//  column25format = 1.2;
+//
+//  column25name = "D20%";
+//
+//  filter = buy == 1;
+//
+//------------------------------------------------------------------------------
+
+/*
+A Daily Performance Check of your Buy signal.  Corrected and revised on 7/14/01.
+Use to:
+1.  Help set Stop Losses, in percentages.
+2.  See if increase in rate of return levels off within the first 20 days.
+3.  See if signal is a "leading" indicator, and by how many days.
+This is a different way to look at the performance of a buy signal - it is a day - by - day look at percentage gain for 20 days.  
+For this example, "Buffy Averages"  was used.  
+Replace the Buffy Averages with your system, and you can see how your system performs.
+--------------------------How to Use--Modified 7/14/01-------------------------
+After running "Explore", Expand the columns Max... and Min... to
+MaxGain and MinGain.  MaxGain is the Maximum Gain realized for 20 days.  The first column after MaxGain ( +Day) is the day after
+the signal where the max gain occured. MinimumGain and -Day works the same way.  These four columns give a quick summary of the results of explore.
+After running the test on a the current stock, scroll to the right and select the "D20%" column.  Sort so blue arrow points up.  This gives you the best gains for 20 days for this buy signal.
+Now as you scan slowly back towards "D1%" with this sort still in place, you can see the maximum percent loss your system used to get the desired gains.  This maximum percent loss can be used in the "Settings" button for Backtesting your system.
+"D20%" was used in this example, but any of the "Dn%" columns can be used for sorting.  If you are a swing trader using a maximum time frame of only 2 or 3 days in your system, use "D2%" or "D3%".
+A careful study of the results might reveal that possibly, for example, the rate of change of percentage gains slows down after day five.  This would prepare you to exit on day five.
+Another possible finding is that the signal is "early", and best entry point might be, for example again, three days after the actual buy signal.  This would be revealed by negative returns for the first three days, and then positive gains.
+*/
+/*-----------Replace all until next dashed line with your system------------*/
+/*-----------Ensure your "Buy" rules are included--------------------------------*/
+/*
+Buffy Averages
+*/
+
+FastPeriods =5;
+SlowPeriods = 20;
+
+ 
+FastBuffAvg = Sum( Volume * Close, FastPeriods ) / Sum( Volume, FastPeriods );
+SlowBuffAvg = Sum( Volume * Close,  SlowPeriods ) / Sum( Volume, SlowPeriods );
+ 
+graph0 = FastBuffAvg;
+graph1 = SlowBuffAvg;
+
+
+/* buy & sell trading rules */
+buy = cross( FastBuffAvg, SlowBuffAvg );
+sell = cross( SlowBuffAvg, FastBuffAvg );
+ 
+/* A commentary */
+buybars = BarsSince( buy );
+sellbars = BarsSince( sell );
+ 
+WriteIF( buybars < sellbars, 
+"A bullish crossover occured " + WriteVal( buybars ) + " bars ago", 
+"A bearish crossover occured " + WriteVal( sellbars ) + " bars ago" );
+
+/*--------------------------------------------------------------------------------------------------------*/
+/*  Only Buy signals will be used
+"D1%" means percent gain at the end of day one, "D2%" the end of day two, etc.
+The entry price will be the Open on the day following the signal.
+The percent gain will be the Close price of the day.
+This program looks "forward" twenty days, so under the "Range" option, use the last radio button next to "from" and set the dates that would include a stop date ("to") about 21 days ago.  Start date is your option.  If this step is NOT done, signals that occur within the last 21 days will have bad data in the display.
+REMEMBER THAT THE RESULTS MEASURE PAST PERFORMANCE, AND THERE IS NO GUARENTEE THAT THE STOCK WILL HAVE THE SAME GAINS IN THE FUTURE.
+*/
+/*  EP is the Entry Price */
+EP = ref(o,1);
+D1G = 100*(ref(c,1) - EP)/EP;
+D2G = 100*(ref(c,2) - EP)/EP;
+D3G = 100*(ref(c,3) - EP)/EP;
+D4G = 100*(ref(c,4) - EP)/EP;
+D5G = 100*(ref(c,5) - EP)/EP;
+D6G = 100*(ref(c,6) - EP)/EP;
+D7G = 100*(ref(c,7) - EP)/EP;
+D8G = 100*(ref(c,8) - EP)/EP;
+D9G = 100*(ref(c,9) - EP)/EP;
+D10G = 100*(ref(c,10) - EP)/EP;
+D11G = 100*(ref(c,11) - EP)/EP;
+D12G = 100*(ref(c,12) - EP)/EP;
+D13G = 100*(ref(c,13) - EP)/EP;
+D14G = 100*(ref(c,14) - EP)/EP;
+D15G = 100*(ref(c,15) - EP)/EP;
+D16G = 100*(ref(c,16) - EP)/EP;
+D17G = 100*(ref(c,17) - EP)/EP;
+D18G = 100*(ref(c,18) - EP)/EP;
+D19G = 100*(ref(c,19) - EP)/EP;
+D20G = 100*(ref(c,20) - EP)/EP;
+/* Compute the Maximum Gain for the 20 Days  */
+Max20 = max(D1G,D2G);
+MaxCntr = iif(D1G > D2G,1,2);
+Max20 = max(Max20,D3G);
+MaxCntr = iif(Max20 > D3G,MaxCntr,3);
+Max20 = max(Max20,D4G);
+MaxCntr = iif(Max20 > D4G,MaxCntr,4);
+Max20 = max(Max20,D5G);
+MaxCntr = iif(Max20 > D5G,MaxCntr,5);
+Max20 = max(Max20,D6G);
+MaxCntr = iif(Max20 > D6G,MaxCntr,6);
+Max20 = max(Max20,D7G);
+MaxCntr = iif(Max20 > D7G,MaxCntr,7);
+Max20 = max(Max20,D8G);
+MaxCntr = iif(Max20 > D8G,MaxCntr,8);
+Max20 = max(Max20,D9G);
+MaxCntr = iif(Max20 > D9G,MaxCntr,9);
+Max20 = max(Max20,D10G);
+MaxCntr = iif(Max20 > D10G,MaxCntr,10);
+Max20 = max(Max20,D11G);
+MaxCntr = iif(Max20 > D11G,MaxCntr,11);
+Max20 = max(Max20,D12G);
+MaxCntr = iif(Max20 > D12G,MaxCntr,12);
+Max20 = max(Max20,D13G);
+MaxCntr = iif(Max20 > D13G,MaxCntr,13);
+Max20 = max(Max20,D14G);
+MaxCntr = iif(Max20 > D14G,MaxCntr,14);
+Max20 = max(Max20,D15G);
+MaxCntr = iif(Max20 > D15G,MaxCntr,15);
+Max20 = max(Max20,D16G);
+MaxCntr = iif(Max20 > D16G,MaxCntr,16);
+Max20 = max(Max20,D17G);
+MaxCntr = iif(Max20 > D17G,MaxCntr,17);
+Max20 = max(Max20,D18G);
+MaxCntr = iif(Max20 > D18G,MaxCntr,18);
+Max20 = max(Max20,D19G);
+MaxCntr = iif(Max20 > D19G,MaxCntr,19);
+Max20 = max(Max20,D20G);
+MaxCntr = iif(Max20 > D20G,MaxCntr,20);
+/*Now the Minimum Gain for the 20 Days  */
+Min20 = min(D1G,D2G);
+MinCntr = iif(D1G < D2G,1,2);
+Min20 = min(Min20,D3G);
+MinCntr = iif(Min20 < D3G,MinCntr,3);
+Min20 = min(Min20,D4G);
+MinCntr = iif(Min20< D4G,MinCntr,4);
+Min20 = min(Min20,D5G);
+MinCntr = iif(Min20 < D5G,MinCntr,5);
+Min20 = min(Min20,D6G);
+MinCntr = iif(Min20< D6G,MinCntr,6);
+Min20 = min(Min20,D7G);
+MinCntr = iif(Min20 < D7G,MinCntr,7);
+Min20 = min(Min20,D8G);
+MinCntr = iif(Min20< D8G,MinCntr,8);
+Min20 = min(Min20,D9G);
+MinCntr = iif(Min20 < D9G,MinCntr,9);
+Min20 = min(Min20,D10G);
+MinCntr = iif(Min20< D10G,MinCntr,10);
+Min20 = min(Min20,D11G);
+MinCntr = iif(Min20< D11G,MinCntr,11);
+Min20 = min(Min20,D12G);
+MinCntr = iif(Min20 < D12G,MinCntr,12);
+Min20 = min(Min20,D13G);
+MinCntr = iif(Min20 < D13G,MinCntr,13);
+Min20 = min(Min20,D14G);
+MinCntr = iif(Min20< D14G,MinCntr,14);
+Min20 = min(Min20,D15G);
+MinCntr = iif(Min20 < D15G,MinCntr,15);
+Min20 = min(Min20,D16G);
+MinCntr = iif(Min20 < D16G,MinCntr,16);
+Min20 = min(Min20,D17G);
+MinCntr = iif(Min20 < D17G,MinCntr,17);
+Min20 = min(Min20,D18G);
+MinCntr = iif(Min20 < D18G,MinCntr,18);
+Min20 = min(Min20,D19G);
+MinCntr = iif(Min20< D19G,MinCntr,19);
+Min20 = min(Min20,D20G);
+MinCntr = iif(Min20 < D20G,MinCntr,20);
+
+numcolumns = 26;
+column0 = c;
+column0format = 1.2;
+column0name = "Close";
+column1 = EP;
+column1format = 1.2;
+column1name = "E. P.";
+column2 = Max20;
+column2format = 1.2;
+column2name = "MaxGain";
+column3 = MaxCntr;
+column3format = 1.0;
+column3name = " +Day";
+column4 = Min20;
+column4format = 1.2;
+column4name = "MinGain";
+column5= MinCntr;
+column5format = 1.0;
+column5name = "-Day";
+column6 =D1G;
+column6format = 1.2;
+column6name = "D1%";
+column7 =D2G;
+column7format = 1.2;
+column7name = "D2%";
+column8 =D3G;
+column8format = 1.2;
+column8name = "D3%";
+column9=D4G;
+column9format = 1.2;
+column9name = "D4%";
+column10 =D5G;
+column10format = 1.2;
+column10name = "D5%";
+column11=D6G;
+column11format = 1.2;
+column11name = "D6%";
+column12 =D7G;
+column12format = 1.2;
+column12name = "D7%";
+column13 =D8G;
+column13format = 1.2;
+column13name = "D8%";
+column14 =D9G;
+column14format = 1.2;
+column14name = "D9%";
+column15 =D10G;
+column15format = 1.2;
+column15name = "D10%";
+column16 =D11G;
+column16format = 1.2;
+column16name = "D11%";
+column17 =D12G;
+column17format = 1.2;
+column17name = "D12%";
+column18 =D13G;
+column18format = 1.2;
+column18name = "D13%";
+column19 =D14G;
+column19format = 1.2;
+column19name = "D14%";
+column20 =D15G;
+column20format = 1.2;
+column20name = "D15%";
+column21 =D16G;
+column21format = 1.2;
+column21name = "D16%";
+column22 =D17G;
+column22format = 1.2;
+column22name = "D17%";
+column23 =D18G;
+column23format = 1.2;
+column23name = "D18%";
+column24 =D19G;
+column24format = 1.2;
+column24name = "D19%";
+column25 =D20G;
+column25format = 1.2;
+column25name = "D20%";
+
+filter = buy == 1;

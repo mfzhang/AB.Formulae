@@ -1,0 +1,29 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Stochastic OSI & OBI
+//  Author/Uploader: Dimitris Tsokakis 
+//  E-mail:          
+//  Date/Time Added: 2002-03-24 14:28:53
+//  Origin:          
+//  Keywords:        
+//  Level:           advanced
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=178
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=178
+//
+//------------------------------------------------------------------------------
+//
+//  An example Of Overbought Issues (OBI) and Oversold Issues(OSI), based on
+//  Stochastic(14), smoothed, complementary to RSIobi and RSIosi.
+//
+//------------------------------------------------------------------------------
+
+/*STOCHD OSI OBI*/
+s1=StochD(14);
+os=s1<=30;
+ob=s1>70;
+values11 = os>0;
+values12= ob>0;
+AddToComposite(Values11,"~stochdosi","V");
+AddToComposite(Values12,"~stochdobi","V");
+Buy=0;

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Account CompactMode="1">
+	<Transactions>
+		<Item ID="1" DateTime="13/03/2011" Type="Deposit" Symbol="&lt;Funding&gt;" Qty="1" Price="125000" NetValue="125000" Commission="0" GrossValue="125000" Currency="" FXRate="1"/>
+	</Transactions>
+	<Equity>
+		<Item ID="0" DateTime="13/03/2011" Equity="125000" Cash="125000" OpenPosQty="0" OpenPosVal="0" LongPosQty="0" LongPosVal="0" ShortPosQty="0" ShortPosVal="0" TransID="1"/>
+	</Equity>
+	<Settings Name="Unnamed" Cash="125000" InitialEquity="125000" Equity="125000" LastTransID="1" LastPosID="0" EODMode="1" LastTransDateTime="2011-13-03"/>
+	<Commission>
+		<Item GroupID="0" TierMin="0" TierMax="0" PerShare="0" PerTrade="0" PcntOfValue="0.5" MinAmount="0" MinPercent="0" MaxAmount="0" MaxPercent="0"/>
+		<Item GroupID="0" TierMin="0" TierMax="0" PerShare="0" PerTrade="0" PcntOfValue="0" MinAmount="0" MinPercent="0" MaxAmount="0" MaxPercent="0"/>
+		<Item GroupID="0" TierMin="0" TierMax="0" PerShare="0" PerTrade="0" PcntOfValue="0" MinAmount="0" MinPercent="0" MaxAmount="0" MaxPercent="0"/>
+		<Item GroupID="0" TierMin="0" TierMax="0" PerShare="0" PerTrade="0" PcntOfValue="0" MinAmount="0" MinPercent="0" MaxAmount="0" MaxPercent="0"/>
+		<Item GroupID="0" TierMin="0" TierMax="0" PerShare="0" PerTrade="0" PcntOfValue="0" MinAmount="0" MinPercent="0" MaxAmount="0" MaxPercent="0"/>
+		<Item GroupID="0" TierMin="0" TierMax="0" PerShare="0" PerTrade="0" PcntOfValue="0" MinAmount="0" MinPercent="0" MaxAmount="0" MaxPercent="0"/>
+	</Commission>
+</Account>

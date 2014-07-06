@@ -1,0 +1,80 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Fishnet Rainbow
+//  Author/Uploader: Thomas Youssef 
+//  E-mail:          thomasmejl@hotmail.com
+//  Date/Time Added: 2005-03-03 16:44:36
+//  Origin:          
+//  Keywords:        Fisnhet rainbow
+//  Level:           basic
+//  Flags:           showemail,function
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=435
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=435
+//
+//------------------------------------------------------------------------------
+//
+//  /* Created by Thomas Youssef, sweden 2005-03-01. With this code you can see
+//  fishnet in rainbow colors. I use 30 MA per color.
+//
+//  */
+//
+//------------------------------------------------------------------------------
+
+/* Created by Thomas Youssef, sweden 2005-03-01. This code plot fishnet with rainbow colors. I use 30 MA per color.
+
+*/
+
+
+
+_SECTION_BEGIN("");
+Plot( C, "Close", ParamColor("Color", colorBlack ), styleNoTitle | ParamStyle("Style", styleCandle, maskPrice ) );
+
+net= 30; // This value can be changed. It`s how many MA:s every color have.
+
+
+for (i=1; i<net;i++) {
+
+Plot(MA(Close,i),"",colorDarkRed,styleLine);
+
+}
+
+for (i=net; i<2*net;i++) {
+
+Plot(MA(Close,i),"",colorOrange,styleLine);
+
+}
+
+for (i=2*net; i<3*net;i++) {
+
+Plot(MA(Close,i),"",colorGold,styleLine);
+
+}
+
+for (i=3*net; i<4*net;i++) {
+
+Plot(MA(Close,i),"",colorLime,styleLine);
+
+}
+
+for (i=4*net; i<5*net;i++) {
+
+Plot(MA(Close,i),"",colorBlue,styleLine);
+
+}
+
+for (i=5*net; i<6*net;i++) {
+
+Plot(MA(Close,i),"",colorIndigo,styleLine);
+
+}
+
+for (i=6*net; i<7*net;i++) {
+
+Plot(MA(Close,i),"",colorViolet,styleLine);
+
+}
+
+
+
+_SECTION_END();
+

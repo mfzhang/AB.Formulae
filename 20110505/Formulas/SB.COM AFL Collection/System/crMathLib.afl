@@ -1,0 +1,50 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    crMathLib
+//  Author/Uploader: Chuck Rademacher 
+//  E-mail:          chuck_rademacher@xtra.co.nz
+//  Date/Time Added: 2003-05-06 15:46:11
+//  Origin:          
+//  Keywords:        
+//  Level:           medium
+//  Flags:           system,exploration,indicator,function
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=278
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=278
+//
+//------------------------------------------------------------------------------
+//
+//  A "work in progress" library of mathematical functions. This first posting
+//  is purely to get things going. More functions will be added regularly.
+//  Users may cut and paste functions into their own code. This version
+//  includes:
+//
+//  crLinearCorrelation (bars)
+//
+//  crRSquare (bars)
+//
+//------------------------------------------------------------------------------
+
+//  Linear Correlation
+
+function crLinearCorrelation (crLength) {
+
+crX            = BarIndex();
+crCloseMA      = MA(Close,crLength);
+crXMA          = MA(crX,crLength);
+crCloseSquared = Close*Close;
+crXSquared     = crX*crX;
+
+crUpEQ   = Sum(crX * Close, crLength) - (crLength * crXMA * crCloseMA);
+crLowEQ1 = Sum(crXSquared, crLength) - (crLength * crXMA * crXMA);
+crLowEQ2 = Sum(crCloseSquared, crLength) - (crLength * crCloseMA * crCloseMA);
+crLowEQT = sqrt(crLowEQ1 * crLowEQ2);
+
+return IIf(crLowEQT == 0, 0, crUpEQ / crLowEQT);
+}
+
+//  R-Squared
+
+function crRSquare (crLength) {
+crR = crLinearCorrelation(crLength);
+return crR*crR;
+}

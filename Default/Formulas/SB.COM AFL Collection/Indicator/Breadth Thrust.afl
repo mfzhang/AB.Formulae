@@ -1,0 +1,35 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Breadth Thrust
+//  Author/Uploader: Tomasz Janeczko 
+//  E-mail:          tj@amibroker.com
+//  Date/Time Added: 2001-06-16 08:04:41
+//  Origin:          Originally developed by Dr. Martin Zweig
+//  Keywords:        breadth,momentum
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=5
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=5
+//
+//------------------------------------------------------------------------------
+//
+//  The Breadth Thrust indicator is a market momentum indicator developed by
+//  Dr. Martin Zweig. The Breadth Thrust is calculated by taking a 10-day
+//  exponential moving average of the advancing issues divided by the advancing
+//  plus declining issues. According to Dr. Zweig a Breadth Thrust occurs when,
+//  during a 10-day period, the Breadth Thrust indicator rises from below 40
+//  percent to above 61.5 percent. A "Thrust" indicates that the stock market
+//  has rapidly changed from an oversold condition to one of strength, but has
+//  not yet become overbought. Dr. Zweig also points out that there have only
+//  been 14 Breadth Thrusts since 1945. The average gain following these 14
+//  Thrusts was 24.6 percent in an average time frame of 11 months. Dr. Zweig
+//  also points out that most bull markets begin with a Breadth Thrust.
+//
+//------------------------------------------------------------------------------
+
+/*
+The Breadth Thrust indicator is a market momentum indicator developed by Dr. Martin Zweig. 
+AFL implementation by Tomasz Janeczko
+*/
+
+Graph0 = EMA( AdvIssues()/( AdvIssues()+DecIssues() ), 10 );

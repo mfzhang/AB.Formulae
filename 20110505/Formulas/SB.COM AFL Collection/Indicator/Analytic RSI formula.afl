@@ -1,0 +1,64 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Analytic RSI formula
+//  Author/Uploader: Dimitris Tsokakis 
+//  E-mail:          tsokakis@oneway.gr
+//  Date/Time Added: 2001-12-22 08:05:37
+//  Origin:          
+//  Keywords:        
+//  Level:           semi-advanced
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=143
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=143
+//
+//------------------------------------------------------------------------------
+//
+//  RSI is an interesting transformation and may be applied
+//
+//  to any variable, not only internally supposed Close.
+//
+//  For this purpose we give here the analytic code for RSI.
+//
+//  To obtain an RSI transformation of another variable Var,
+//
+//  just replace C with Var.
+//
+//  Example:
+//
+//  To find the 14-day RSI of Stochd(14):
+//
+//  /*14-Day RSI of StochD(14)*/
+//
+//  t=14;
+//
+//  Var=Stochd(14);
+//
+//  Up=IIf(Var>Ref(Var,-1),abs(Var-Ref(Var,-1)),0);
+//
+//  Dn=IIf(Var<Ref(Var,-1),abs(Var-Ref(Var,-1)),0);
+//
+//  Ut=Wilders(Up,t);
+//
+//  Dt=Wilders(Dn,t);
+//
+//  RSIt=100*(Ut/(Ut+Dt));
+//
+//  Graph0=RSIt;
+//
+//  An interesting application is in
+//
+//  http://groups.yahoo.com/group/amibroker/message/7628
+//
+//  where the 14-day RSI of MACD() is introduced.
+//
+//------------------------------------------------------------------------------
+
+/*RSI 12*/
+t=12;
+Up=IIf(C>Ref(C,-1),abs(C-Ref(C,-1)),0);
+Dn=IIf(C<Ref(C,-1),abs(C-Ref(C,-1)),0);
+Ut=Wilders(Up,t);
+Dt=Wilders(Dn,t);
+RSIt=100*(Ut/(Ut+Dt));
+Graph0=RSIt;
+ 

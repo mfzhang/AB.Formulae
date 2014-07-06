@@ -1,0 +1,33 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Absolute Breadth Index
+//  Author/Uploader: Tomasz Janeczko 
+//  E-mail:          tj@amibroker.com
+//  Date/Time Added: 2001-06-16 07:36:16
+//  Origin:          Originaly developed by Norman G. Fosback.
+//  Keywords:        breadth
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=1
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=1
+//
+//------------------------------------------------------------------------------
+//
+//  The Absolute Breadth Index (ABI) is a market momentum indicator that was
+//  developed by Norman G. Fosback. The ABI shows how much activity,
+//  volatility, and change is taking place on the New York Stock Exchange while
+//  ignoring the direction prices are headed. You can think of the ABI as an
+//  "activity index". High readings indicate market activity and change, while
+//  low readings indicate lack of change. In Mr. Fosback's book, Stock Market
+//  Logic, he indicates that historically, high values typically lead to higher
+//  prices three to twelve months later.
+//
+//------------------------------------------------------------------------------
+
+/*
+Absolute Breadth Index
+AFL implementation by Tomasz Janeczko.
+
+*/
+
+graph0 = abs( AdvIssues() - DecIssues() ); 

@@ -1,0 +1,93 @@
+/*
+Aviator33
+7th Feb 2008
+
+Adapted from ideas presented at ozscanner.com. Average Dollar Price Volatility
+(ADPV) added for possible use as an 
+intraday swing technique but seems to work best as a 5-10 Day strategy
+
+Links:
+http://www.ozscanner.com/bottom.htm
+http://www.ozscanner.com/bottom2.htm
+
+The Bottom Fisher Scan filters the entire market searching for stocks that have
+
+traded down for at least three consecutive trading sessions and are currently
+trading higher 
+and signaling that a potential short-term bottom might have been formed. Based
+on swing trading 
+methodology.
+
+It can be used for a stock that is in an uptrend or downtrend. 
+The trigger event for an entry is for the stock to be up from yesterday?s
+close. 
+As long as a stop loss below today?s low is an acceptable risk while trying to
+capture 
+the price target reward, you can enter the trade. Otherwise, you would have to
+use intraday support levels.
+*/
+
+//=========PARAMETERS====================
+
+myVol=Param("Min Volume (Million)", 0,0,10,0.5);           // Filter out stocks below certain Volume (average over sampled periods). default 0 (NOT filtered)
+myVol = myVol * 1000000;                                   // Volume * million multiplier
+myMaxPrice = Param("Price Max",200,0.0001,200,1);          // Filter for stocks below certain price. default 0 (NOT filtered)
+myMinPrice = Param("Price Min",0,0.0001,199,1);            // Filter for stocks above certain price. default 0 (NOT filtered)
+myPercentMin = Param("Min ADPV %",0,0,30,0.5);             // Filter  for minimum Average Dollar Price Volatility %. default 0 (NOT filtered)
+myMinPriceSteps = Param("Min Price Steps",0,0,500,1);      // Filter for minimum ticks in ADPV (eg H=0.005, L=0.002, price steps=3)
+                                                           // Default 0 (not filtered)
+myPeriods = Param("No. Of Days To Sample",20,2,90,1);
+myPeriods = IIf(myPeriods>BarCount,BarCount,myPeriods);    // Just in case there are less data bars than the number of periods wanted
+
+                                                           // ****** Uncomment next 2 lines for use in Australian ASX market *********
+//myTickerMax = ParamList("Stocks only?","Yes|No");        // Filter to exclude options/warrants. default "Yes" (stocks only)
+//myTickerMax = IIf(myTickerMax == "Yes", 3,10);           // Ticker max length. 3 for stocks only.
+
+//==========================================
+
+
+
+trig1 = IIf(C<=O,True,False);
+trig2 = IIf(Ref(C,-1)<=Ref(O,-1),True,False);
+trig3 = IIf(Ref(C,-2)<=Ref(O,-2),True,False);
+trig4 = IIf(C<Ref(C,-1) AND Ref(C,-1)<Ref(C,-2), True, False);
+
+ADPV  = H - L;                                  // Average Dollar Price Volatility of current quotation (ie today's H to L range)
+MedianPrice = ADPV/2 + L;                       // Median price of current quotation
+ADPVpercent = (ADPV  / MedianPrice ) * 100;     // ADPV as percent of median price
+
+// Calculate the same for the last x days, keep a running total for averaging
+for( i = 1; i < myPeriods; i++ ) 
+{
+	x = i * -1; // negate counter to enable count back
+	MedianPrice =MedianPrice + Ref(H-L,x)/2 + Ref(L,x);
+	ADPV  = ADPV  + Ref(H-L,x);
+	ADPVpercent = ADPVpercent + ((ADPV  / MedianPrice ) * 100);
+}
+
+
+
+MedianPrice = MedianPrice / myPeriods;       // Average median price over x days
+ADPV  = ADPV  / myPeriods;                   // Average ADPV over x days
+ADPVpercent = ADPVpercent / myPeriods;       // ADPV percentage over x days
+
+
+Buy = trig1 AND trig2 AND trig3 AND trig4 AND MA(V,20)>500000;
+Filter=Buy;
+// ==============OUTPUT==================
+
+// Tidy up output
+txtADPVpercent=NumToStr(ADPVpercent,10.2 );
+txtADPVpercent=txtADPVpercent + " %";
+txtADPV = NumToStr(ADPV,3.3);
+txtADPV = "$" + txtADPV ;
+txtClose=NumToStr(Close,4.3 );
+txtClose = "$" + txtClose;
+
+AddTextColumn( txtClose , "Close");
+AddColumn( MA(V,myPeriods), "Avg Daily Vol",20.0 );
+AddTextColumn( txtADPV  , "$Avg Range",10.3 );
+AddTextColumn( txtADPVpercent, "Av % Range",10.2 );
+// AddColumn( PriceSteps , "Price Steps",8.0 );     // Remove comment tags to display price steps
+
+// ====================================  END CODE ====================================================

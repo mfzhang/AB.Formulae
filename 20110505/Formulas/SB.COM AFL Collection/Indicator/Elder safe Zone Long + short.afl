@@ -1,0 +1,98 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Elder safe Zone Long + short
+//  Author/Uploader: Boodha 
+//  E-mail:          boodha@focale.us
+//  Date/Time Added: 2005-10-16 19:35:37
+//  Origin:          A. ELDER
+//  Keywords:        Trailing stop
+//  Level:           semi-advanced
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=569
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=569
+//
+//------------------------------------------------------------------------------
+//
+//  Trailing stop méthod
+//
+//------------------------------------------------------------------------------
+
+_SECTION_BEGIN("Elder safe Zone Long + short");
+
+L1=Ref(L,-1);
+H1=Ref(H,-1);
+Pd=Param("Period",10,1,50,1);
+DnPen=IIf(L<L1,L1-L,0);
+UpPen=IIf(H>H1,H-H1,0);
+DnPenSum=Sum(DnPen,Pd);
+UpPenSum=Sum(UpPen,Pd);
+DnPenCount=Sum(L<L1,Pd);
+UpPenCount=Sum(H>H1,Pd);
+AvgDnPen=IIf(DnPenCount>0,DnPenSum/DnPenCount,0.01);
+AvgUpPen=IIf(UpPenCount>0,UpPenSum/UpPenCount,0.01);
+AvgDnPenMult=Param("Multiplier",2,1,4,0.1);
+AvgUpPenMult=Param("Multiplier",2,1,4,0.1);
+DaysInTrade=Param("Days in trade",1,1,50,1);
+StopLong=L-(AvgDnPen*AvgDnPenMult);
+StopShort=H+(AvgUpPen*AvgUpPenMult);
+SafeZoneStopLong=HHV(StopLong,DaysInTrade);
+SafeZoneStopShort=LLV(StopShort,DaysInTrade);
+MilieuCorps = (C+O)/2;
+Plot( C, "Close", ParamColor("Couleur ", colorBlack ), styleNoTitle | ParamStyle("Style") | styleCandle|styleThick);
+ShortStop=BeginValue(C);
+LongStop=BeginValue(C);
+i=1;
+	for (i=1;i < BarCount; i++)
+{
+	if (SafeZoneStopShort[i] >= SafeZoneStopShort[i-1] && ShortStop[i-1] <= H[i])
+			ShortStop[i] = SafeZoneStopShort[i] ;
+	if (SafeZoneStopShort[i] >= SafeZoneStopShort[i-1] && ShortStop[i-1] > H[i])
+			ShortStop[i] = ShortStop[i-1];	
+	if (SafeZoneStopShort[i] < SafeZoneStopShort[i-1] && ShortStop[i-1] <= H[i])
+			ShortStop[i] = SafeZoneStopShort[i] ;
+	if (SafeZoneStopShort[i] < SafeZoneStopShort[i-1] && ShortStop[i-1] > H[i])
+			ShortStop[i] = ShortStop[i-1];	
+	if (IsEmpty(SafeZoneStopShort[i]))
+				ShortStop[i] = SafeZoneStopShort[i] ;
+	if (ShortStop[i] >= SafeZoneStopShort[i])
+ 				ShortStop[i] = SafeZoneStopShort[i] ;
+
+	if (SafeZoneStopLong[i] <= SafeZoneStopLong[i-1] && LongStop[i-1] >= L[i])
+			LongStop[i] = SafeZoneStopLong[i] ;
+	if (SafeZoneStopLong[i] <= SafeZoneStopLong[i-1] && LongStop[i-1] < L[i])
+			LongStop[i] = LongStop[i-1];	
+	if (SafeZoneStopLong[i] > SafeZoneStopLong[i-1] && LongStop[i-1] >= L[i])
+			LongStop[i] = SafeZoneStopLong[i] ;
+	if (SafeZoneStopLong[i] > SafeZoneStopLong[i-1] && LongStop[i-1] < L[i])
+			LongStop[i] = LongStop[i-1];	
+	if (IsEmpty(SafeZoneStopLong[i]))
+				LongStop[i] = SafeZoneStopLong[i] ;
+	if (LongStop[i] <= SafeZoneStopLong[i])
+ 				LongStop[i] = SafeZoneStopLong[i] ;
+
+}
+
+
+PlotShapes(IIf(ShortStop>Ref(ShortStop,-1), shapeHollowSmallDownTriangle, shapeNone), colorRed, 0, ShortStop, Offset=-15);
+PlotShapes(IIf(LongStop<Ref(LongStop,-1), shapeHollowSmallUpTriangle, shapeNone), colorGreen, 0, 	LongStop, Offset=-15);
+Plot(SafeZoneStopShort,"Safe Zone Short", ParamColor("Couleur Safe Zone Short", colorRed ),ParamStyle("Style Safe Zone Short",styleDots|styleNoLine) );
+Plot(SafeZoneStopLong,"Safe zone Long", ParamColor("Couleur Stop Long", colorGreen ),ParamStyle("Safe zone Long",styleDots|styleNoLine) );
+Plot(ShortStop,"Stop Short", IIf(ShortStop>Ref(ShortStop,-1),colorCustom1,colorBlue),ParamStyle("Style Stop Short",styleLine|styleLine) );
+Plot(LongStop,"Stop Long", IIf(LongStop<Ref(LongStop,-1),colorCustom1,colorRed),ParamStyle("Style Stop Long",styleLine|styleLine) );
+
+
+_N(Title = StrFormat("{{NAME}} - {{INTERVAL}} {{DATE}} Open %g, Hi %g, Lo %g, Close %g (%.1f%%)\n - Elder SafeZone long-Short pour trades après le "+Date()+"\n {{VALUES}}", O, H, L, C, SelectedValue( ROC( C, 1 ) ) ));
+Title= Title
++"\n\\c56Periode: \\c56"
++WriteVal(Pd,1.0)
++"\\c56 - Multiplicateur Long : \\c56"
++WriteVal(AvgDnPenMult,1.1)
++"\\c56 - Multiplicateur Short : \\c56"
++WriteVal(AvgUpPenMult,1.1)
++"\\c56 - Jour en position(inclus): \\c56"
++WriteVal(DaysInTrade,1.0) 
++"\n\\c56Milieu corps : \\c56"
++WriteVal(MilieuCorps,1.2 )
++": \\c56 - N° barre : "
++WriteVal(BarIndex(),1);
+_SECTION_END();

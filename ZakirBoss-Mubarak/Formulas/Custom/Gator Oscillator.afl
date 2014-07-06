@@ -1,0 +1,47 @@
+/*
+Gator Oscillator is based on the Alligator and shows the degree of convergence/divergence
+of the Balance Lines (Smoothed Moving Averages).
+The top bar chart is the absolute difference between the values of the blue and the red lines.
+The bottom bar chart is the absolute difference between the values of the red line and the green line,
+but with the minus sign, as the bar chart is drawn top-down.
+*/
+
+AlligatorBlue=Ref(Wilders(Avg,13),-8);
+AlligatorRed=Ref(Wilders(Avg,8),-5);
+AlligatorGreen=Ref(Wilders(Avg,5),-3);
+
+
+BlueRedDiff = AlligatorBlue - AlligatorRed;
+
+Plot(BlueRedDiff, "Gator Oscillator: Blue-Red", IIf(BlueRedDiff  > 0, colorGreen, colorRed), 2+4);
+//Graph0Name = "Gator Oscillator: Blue-Red";
+//Graph0 = abs(BlueRedDiff);
+//Graph0Style=2+4;
+//Graph0BarColor= IIf(BlueRedDiff  > 0, colorGreen, colorRed);
+RedGreenDiff = AlligatorRed- AlligatorGreen;
+Plot(RedGreenDiff , "Red-Green", IIf(RedGreenDiff > 0, colorGreen, colorRed), 2+4);
+
+//Graph1Name = "Red-Green";
+//Graph1= -abs(RedGreenDiff);
+//Graph1Style=2+4;
+//Graph1BarColor= IIf(RedGreenDiff > 0, colorGreen, colorRed);
+
+TotalDistance = abs(BlueRedDiff) + abs(RedGreenDiff);
+Plot(TotalDistance , "Total Distance", colorBlue, styleLine);
+
+//Graph2Name = "Total Distance";
+//Graph2 = TotalDistance;
+//Graph2Color = colorBlue;
+//Graph2Style = styleLine;
+AvgDistance = MA(totalDistance, 100);
+Plot(AvgDistance/2, "Average/2", colorBlack, styleLine);
+//Graph2Name = "Average/2";
+//Graph2 = AvgDistance/2;
+//Graph2Color = colorBlack;
+//Graph2Style = styleLine;
+
+Plot(0, "0", colorBlack, styleLine | styleNoLabel | styleNoTitle);
+
+
+Buy = TotalDistance < (AvgDistance / 2);
+Sell = 0;

@@ -1,0 +1,225 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Woodie's CCI Price with Woodie's  Intraday Pivots
+//  Author/Uploader: Dennis Skoblar 
+//  E-mail:          DennisAndLisa@sbcglobal.net
+//  Date/Time Added: 2006-07-24 00:36:54
+//  Origin:          woodiescciclub.com
+//  Keywords:        Woodie's CCI, CCI, Woodie's Pivots, Pivots
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=647
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=647
+//
+//------------------------------------------------------------------------------
+//
+//  Woodie's Intraday pivots. Set candle preferences for up candle = green,
+//  down candle = dark red.
+//
+//  r1,r2,r3 = solid blue line
+//
+//  s1,s2,s3 = solid light orange line
+//
+//  pivot = solid black line
+//
+//  high of day = dashed blue line
+//
+//  low of day = dashed pink line
+//
+//  EMA 34 is solid color coded line of angles - blue for uptrend, red for
+//  downtrend, yellow for no trend.
+//
+//  LSMA 25 is a dashed line, color coded green for close above LSMA 25 line,
+//  red for close below LSMA 25 line.
+//
+//  *** Set background preference for Dark Olive Green.
+//
+//  For educational purposes only, trade at ypur own risk.
+//
+//  -Dennis
+//
+//------------------------------------------------------------------------------
+
+//***************************** 
+// 
+// Price Panel For Amibroker and Woodie's CCI 
+// Coded by Crasher_FL 
+// Modified by Woodie's CCI Club members 
+// 
+// Displays Woodie's Pivots, Price relative to LSMA, and EMA angle 
+// 
+//****************************** 
+
+
+barcolor = IIf(C > Open, colorBlack, IIf(C == Open, colorBlack, colorBlack)); 
+Plot( C, "Close", barcolor, styleNoTitle | ParamStyle("Style") | GetPriceStyle() ); 
+
+if( ParamToggle("Tooltip shows", "All Values|Only Prices" ) ) 
+{ 
+ToolTip=StrFormat("Open: %g\nHigh: %g\nLow: %g\nClose: %g (%.1f%%)\nVolume: "+NumToStr( V, 1 ), O, H, L, C, SelectedValue( ROC( C, 1 ))); 
+} 
+
+EMA34 = EMA(C,34); 
+LSMA = LinearReg(C,25); 
+
+//Uncomment for lsma. 
+//Plot(LSMA,"LSMA 25", colorLightBlue, styleLine | styleNoLabel | styleThick); 
+
+PI = atan(1.00) * 4; 
+periods = 30; 
+HighHigh = HHV(H, periods); 
+LowLow = LLV(L, periods); 
+range = 25 / (HighHigh - LowLow) * LowLow; 
+
+x1_EMA34 = 0; 
+x2_EMA34 = 2; 
+y1_EMA34 = 0; 
+y2_EMA34 = (Ref(EMA34, -2) - EMA34) / Avg * range; 
+
+c_EMA34 = sqrt((x2_EMA34 - x1_EMA34)*(x2_EMA34 - x1_EMA34) + (y2_EMA34 - y1_EMA34)*(y2_EMA34 - y1_EMA34)); 
+angle_EMA34 = round(180 * acos((x2_EMA34 - x1_EMA34)/c_EMA34) / PI); 
+
+TitleAngleEMA34 = EncodeColor(colorWhite) + "\nEMA34 angle = "; 
+
+angle_EMA34 = IIf(y2_EMA34 > 0, - angle_EMA34, angle_EMA34); 
+if(abs(SelectedValue(angle_EMA34)) >= 25) 
+{ 
+TitleAngleEMA34 = TitleAngleEMA34 + EncodeColor(colorLime); 
+} 
+else if(abs(SelectedValue(angle_EMA34)) >= 15) 
+{ 
+TitleAngleEMA34 = TitleAngleEMA34 + EncodeColor(colorYellow); 
+} 
+else 
+{ 
+TitleAngleEMA34 = TitleAngleEMA34 + EncodeColor(colorRed); 
+} 
+TitleAngleEMA34 = TitleAngleEMA34 + angle_EMA34; 
+
+// End Angle of EMA34 ****************** 
+
+//Plot Ema and LSMA 
+
+Color_ema_eangle= IIf(angle_ema34>=5,colorTurquoise,IIf(angle_ema34<=-5,colorRed,colorYellow)); 
+
+Plot(EMA34,"EMA 34",Color_ema_eangle, styleLine | styleThick | styleNoLabel ); 
+
+Plot(lsma,"LSMA 25",IIf(C > lsma, colorLime, 
+IIf(C == lsma, colorTeal, colorRed)), styleDashed | styleNoLabel); 
+
+//---- pivot points 
+DayH = TimeFrameGetPrice("H", inDaily, -1);// yesterdays high 
+DayL = TimeFrameGetPrice("L", inDaily, -1);//low 
+DayC = TimeFrameGetPrice("C", inDaily, -1);//close 
+DayO = TimeFrameGetPrice("O", inDaily);// current day open 
+HiDay = TimeFrameGetPrice("H", inDaily); 
+LoDay = TimeFrameGetPrice("L", inDaily); 
+
+PP = (DayH + DayL + DayO + DayO) / 4 ; 
+R1 = (2 * PP) - DayL; 
+S1 = (2 * PP) - DayH; 
+R2 = PP + R1 - S1; 
+S2 = PP + S1 - R1; 
+R3 = R2 + (R1 - PP); 
+S3 = S2 - (PP - S1); 
+
+style = styleLine | styleThick + styleNoRescale; 
+rcolor = colorBlue; 
+scolor = colorLightOrange; 
+pcolor = colorBlack; 
+
+Plot(R1, "R1",rcolor,style); 
+Plot(S1, "S1",scolor,style); 
+Plot(R2, "R2",rcolor,style); 
+Plot(S2, "S2",scolor,style); 
+Plot(PP, "PP",pcolor,style); 
+Plot(s3, "S3", scolor, style); 
+Plot(R3, "R3", rcolor, style); 
+
+HiDayTitle = EncodeColor(colorPink) + "HOD "; 
+HiDayTitle = HiDayTitle + EncodeColor(colorYellow) + HiDay; 
+LoDayTitle = EncodeColor(colorPink) + ", LOD "; 
+LoDayTitle = LoDayTitle + EncodeColor(colorYellow) + LoDay; 
+RangeTitle = EncodeColor(colorPink) + " Range " + EncodeColor(colorYellow) + StrToNum(NumToStr(HiDay - LoDay, 4.4)); 
+
+// finds closest pivot lines 
+// assigns numeric values 
+ABN = IIf(C < S3, S3, IIf(C < S2, S2, IIf(C < S1, S1, IIf(C< PP, PP, IIf(C<R1, R1, 
+IIf(C<R2, R2, IIf(C<r3, R3, 0))))))); 
+BLN = IIf(C > R3, R3, IIf(C > R2, R2, IIf(C> R1, R1, IIf(C> PP, PP, IIf(C> S1, S1, 
+IIf(C>S2, S2, IIf(C> S3, S3, 0))))))); 
+
+AB = WriteIf(abn == S3, "S3", WriteIf(abn == S2, "S2", WriteIf(abn == S1, "S1", WriteIf(abn == PP, "PP", 
+WriteIf(abn == R1, "R1", WriteIf(abn == R2, "R2", WriteIf(abn == R3, "R3", ""))))))); 
+BL = WriteIf(bln == S3, "S3", WriteIf(bln == S2, "S2", WriteIf(bln == S1, "S1", WriteIf(bln == PP, "PP", 
+WriteIf(bln == R1, "R1", WriteIf(bln == R2, "R2", WriteIf(bln == R3, "R3", ""))))))); 
+
+// Ticks to close. 
+AFC = abn - C; 
+BLFC = C - bln; 
+
+// Extra variables 
+PFH = HiDay-C; 
+PFL = C-LoDay; 
+TTEMA34 = C-EMA34; 
+
+// My attempt to limit numbers after the integer; 
+// Remove or comment if it causes problems with your trading instrument 
+AFC = int(AFC) + int(frac(AFC) *10000)/10000; 
+BLFC = int(BLFC) + int(frac(BLFC) * 10000)/10000; 
+PFH = int(PFH) + int(frac(PFH) * 10000)/10000; 
+PFL = int(PFL) + int(frac(PFL) * 10000)/10000; 
+TTEMA34 = int(TTEMA34) + int(frac(TTEMA34) * 10000)/10000; 
+
+
+
+Title = "" + Name() + ", " + Interval(2) + ", " + Date() + 
+EncodeColor(colorPink) + "\nO " + EncodeColor(colorYellow) + O + 
+EncodeColor(colorPink) + ", H " + EncodeColor(colorYellow) + H + 
+EncodeColor(colorPink) + ", L " + EncodeColor(colorYellow) + L + 
+EncodeColor(colorPink) + ", C " + EncodeColor(colorYellow) + C + " " + 
+"\n"+HiDayTitle + LoDayTitle + RangeTitle ;// + "\n" + AB +" -"+ AFC + " " + 
+//BL + " +" + BLFC + " Hi -" + PFH + " Lo +" + PFL + " EMA34 " + TTEMA34; 
+
+// High/Low of the day plotting. 
+
+tempnum = TimeNum(); 
+temphi[0] = H[0]; 
+temphiColor[0] = colorPaleGreen; 
+templo[0] = L[0]; 
+temploColor[0] = colorPink; 
+for( i = 1; i < BarCount; i++ ) 
+{ 
+if(tempnum[i] - tempnum[i-1] > Interval()) 
+{ 
+if(H[i] > temphi[i-1]) 
+{ 
+temphi[i] = H[i]; 
+temphiColor[i] = colorLime; 
+} 
+else 
+{ 
+temphi[i] = temphi[i-1]; 
+temphiColor[i] = colorPaleGreen; 
+} 
+if(L[i] < templo[i-1]) 
+{ 
+templo[i] = L[i]; 
+temploColor[i] = colorRed; 
+} 
+else 
+{ 
+templo[i] = templo[i-1]; 
+temploColor[i] = colorPink; 
+} 
+} 
+else 
+{ 
+temphi[i] = H[i]; 
+temphiColor[i] = colorLime; 
+templo[i] = L[i]; 
+temploColor[i] = colorPink; 
+} 
+} 
+Plot(temphi,"", temphiColor, styleBar | styleNoLabel); 
+Plot(templo,"", temploColor, styleBar| styleNoLabel); 

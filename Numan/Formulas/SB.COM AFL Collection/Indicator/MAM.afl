@@ -1,0 +1,36 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    MAM
+//  Author/Uploader: Salil V Gangal 
+//  E-mail:          salil_gangal@yahoo.com
+//  Date/Time Added: 2002-11-10 23:19:20
+//  Origin:          
+//  Keywords:        MAM, Most Anchored Momentum
+//  Level:           medium
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=234
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=234
+//
+//------------------------------------------------------------------------------
+//
+//  MAM - Most Anchored Momentum.
+//
+//  This indicator is similar to FastTrack Rank, except it has *much* less
+//  noise. This indicator is also similar in looks (on chart) to RSI. However,
+//  this is *unbounded*, so it does not flatten out at the extremes.
+//
+//  The author of this indicator has create PDF document, which is available at
+//  the following URL ===>
+//
+//  http://fundvision.com/essays/essays_rudy.shtml
+//
+//  Regards,
+//
+//  - Salil V Gangal
+//
+//------------------------------------------------------------------------------
+
+mamPeriod = 13;
+mam = 100*(close/ma(close, (2*mamPeriod) +1) -1);
+Plot(mam,"MAM-13",colorSkyBlue,8);
+Plot(0,"",colorYellow,1);

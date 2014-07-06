@@ -1,0 +1,29 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Vertical Horizontal Filter
+//  Author/Uploader: Tomasz Janeczko 
+//  E-mail:          tj@amibroker.com
+//  Date/Time Added: 2001-06-16 08:34:26
+//  Origin:          Presented in TASC magazine
+//  Keywords:        trend,moving average
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=16
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=16
+//
+//------------------------------------------------------------------------------
+//
+//  Vertical Horizontal Filter indicator. This filter identifies when a stock
+//  is trending and when it is in a congestion phase so the analyst can apply
+//  the correct type of analysis indicator, such as moving average for trends
+//  or stochastics for congestion. VHF readings above 0.3 to 0.38 indicate a
+//  trending market while readings below this point are considered congestion.
+//  (Thanks to Carlton McEachern for the description)
+//
+//------------------------------------------------------------------------------
+
+/*Vertical Horizontal Filter
+  AFL implementation by Tomasz Janeczko */
+num = hhv( close, 28 ) - llv( close, 28 );
+denom = sum( abs( close - ref( close, -1 ) ), 28 );
+graph0=100*num/denom;

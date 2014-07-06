@@ -1,0 +1,159 @@
+//|-----------------------------------------------------------------------------------------
+//|PatternExplorer.com - Candlestick Recognition
+//|Copyright © 2007, PatternExplorer.com
+//|http://www.PatternExplorer.com
+//|e-mail: support@PatternExplorer.com
+//|-----------------------------------------------------------------------------------------
+FormulaName = "PE - Candlesticks";
+
+SetChartOptions( 0, chartShowDates | chartLogarithmic | chartWrapTitle );
+#pragma nocache
+#include_once  <\PEInc\PatternExplorer_f0.afl>
+#include_once "C:\Program Files (x86)\AmiBroker5\Formulas\PatternExplorer\#Defaults & Mods\PE - Defaults.afl"
+#include_once "C:\Program Files (x86)\AmiBroker5\Formulas\PatternExplorer\#Defaults & Mods\PE - Mods.afl"
+/*******************************************************************************************/
+AddCustomCodeBeforePE();
+/*******************************************************************************************/
+def_PE_AB_Style = 0; //PatternExplorer style:0 //Amibroker style: 1
+def_pricestyle = styleCandle;// + styleThick; //can be used at PatternExplorer mode
+def_Band_switch = 1;//Off:0 //On:1
+def_BandTyp = 0;//Off:0 //Bollinger Bands:1 //Headley Acceleration Bands:2 //Keltner Channel:3 //Price Channel:4
+/*******************************************************************************************/
+//AddparamUsefromChart(1);
+AddAlertParam( def_AudioAlert, def_EmailAlert, def_BarComplete );
+/*******************************************************************************************/
+_SECTION_BEGIN( "Main Parameters" );
+ActTrendFilter = ParamToggle( "Trend Filter", "Off,On", 0 );
+SRplot = ParamToggle( "Plot S/R", "Off,On", 1 );
+TextPlot = ParamToggle( "Plot Signal Text", "Off,On", 0 );
+Buyshape = Param( "Buy Shape Typ", def_BuyShape, 1, 60, 1 );
+Sellshape = Param( "Sell Shape Typ", def_SellShape, 1, 60, 1 );
+BuyColor = ParamColor( "Buy Signals", def_BuyShapeColor );
+SellColor = ParamColor( "Sell Signals", def_SellShapeColor );
+_SECTION_END();
+/*******************************************************************************************/
+_SECTION_BEGIN( "Pattern Selection" );
+Dojistar_s = ParamToggle( "Doji Star", "Off,On", 1 );
+Hammer_s = ParamToggle( "Hammer/Shooting Star", "Off,On", 1 );
+Hangingman_s = ParamToggle( "Hanging Man/Inverted Hammer", "Off,On", 1 );
+Spinningtop_s = ParamToggle( "Spinning Top", "Off,On", 1 );
+Eng_s = ParamToggle( "Engulfing", "Off,On", 1 );
+Harami_s = ParamToggle( "Harami", "Off,On", 1 );
+Piercingline_s = ParamToggle( "Piercing Line/Dark Cloud Cover", "Off,On", 1 );
+Morning_evening_star_s = ParamToggle( "Morning Star/Evening Star", "Off,On", 1 );
+_SECTION_END();
+/*Static - currently not support by amibroker
+if(InChart)StaticVarSet("PQQAWN",Dojistar_s);if(inAA AND Usefromchart) Dojistar_s = StaticVarGet("PQQAWN");
+if(InChart)StaticVarSet("ONLDUM",Hammer_s);if(inAA AND Usefromchart) Hammer_s = StaticVarGet("ONLDUM");
+if(InChart)StaticVarSet("CPAWNL",Hangingman_s);if(inAA AND Usefromchart) Hangingman_s = StaticVarGet("CPAWNL");
+if(InChart)StaticVarSet("MNHCWV",Spinningtop_s);if(inAA AND Usefromchart) Spinningtop_s = StaticVarGet("MNHCWV");
+if(InChart)StaticVarSet("FLXSHT",Eng_s);if(inAA AND Usefromchart) Eng_s = StaticVarGet("FLXSHT");
+if(InChart)StaticVarSet("FBDBRN",Harami_s);if(inAA AND Usefromchart) Harami_s = StaticVarGet("FBDBRN");
+if(InChart)StaticVarSet("OVITBK",Piercingline_s);if(inAA AND Usefromchart) Piercingline_s = StaticVarGet("OVITBK");
+if(InChart)StaticVarSet("VHVRAB",Morning_evening_star_s);if(inAA AND Usefromchart) Morning_evening_star_s = StaticVarGet("VHVRAB");
+*/
+/*******************************************************************************************/
+#include_once  <\PEInc\Lib\PatternExplorer_f01.afl>
+#include_once  <\PEInc\PatternExplorer_1.afl>
+/*******************************************************************************************/
+
+if ( ActTrendFilter == 0 )
+{
+    Buy = def_Buy AND CandlePatternRank > 0;
+    Sell = def_Sell AND CandlePatternRank < 0;
+}
+
+if ( ActTrendFilter )
+{
+    Buy = def_Buy AND CandlePatternRank > 0
+          AND PeTaio() > 0
+          AND TaioTimeFrame( 5, 6, 4, expandLast ) > 0
+          AND Taio2direction == 1; //define your conditions for the Trendfilter here.
+
+    Sell = def_Sell AND CandlePatternRank < 0
+           AND PeTaio() < 0
+           AND TaioTimeFrame( 5, 6, 4, expandLast ) < 0
+           AND Taio2direction == 0; //define your conditions for the Trendfilter here.
+}
+
+/*******************************************************************************************/
+Filter = def_Filter  AND NOT GroupID() == 253;
+
+Filter = Filter AND ( Buy OR Sell );
+
+/*******************************************************************************************/
+Addefaultcolumns();
+
+Adddefaultcolumns( 2, 1 );
+
+if ( CandleColumnOn == 0 )
+    AddCandleColumn();
+
+AddTextColumn( FullName(), "Full name" );
+
+/*******************************************************************************************/
+PlotShapes(
+    IIf( Buy, Buyshape,
+         IIf( Sell, Sellshape, Null ) ),
+    IIf( Buy, BuyColor, SellColor ), 0,
+    IIf( Buy, L, H ), IIf( Buy, -def_BuyShapeOffset, -def_SellShapeOffset ) );
+
+Plot( IIf( SRplot, Plot_Buy, Null ), "Support", Buycolor, 1 + styleNoTitle );
+
+Plot( IIf( SRplot, Plot_Sell, Null ), "Resistance", Sellcolor, 1 + styleNoTitle );
+
+/*******************************************************************************************/
+if ( TextPlot )
+{
+    //PlotSignalText (Condition,Text,AdText,AdTextArray,Distance,Array,TextColor,BGColor);
+    PlotSignalText ( PR > 0, "Buy", 0, L, -0.8, L, BuyColor, colorDefault );
+    PlotSignalText ( PR < 0, "Sell", 0, H, 1.0, H, SellColor, colorDefault );
+}
+
+/*******************************************************************************************/
+AddAlert( Hammer, Audio, Email, "Bullish Hammer" + def_AudioAlertText, 1, BarComplete, def_BuySound1 );
+
+AddAlert( beSSTAR, Audio, Email, "Bearish Shooting Star" + def_AudioAlertText, 2, BarComplete, def_SellSound1 );
+
+AddAlert( InvertedHammer, Audio, Email, "Bullish Inverted Hammer" + def_AudioAlertText, 2, BarComplete, def_SellSound1 );
+
+AddAlert( HangingMan, Audio, Email, "Bearish Hanging Man" + def_AudioAlertText, 2, BarComplete, def_SellSound1 );
+
+AddAlert( SpinningTop AND NOT buDS, Audio, Email, "Bearish Spinning Top" + def_AudioAlertText, 2, BarComplete, def_SellSound1 );
+
+AddAlert( buENG, Audio, Email, "Bullish Engulfing" + def_AudioAlertText, 1, BarComplete, def_BuySound1 );
+
+AddAlert( beENG, Audio, Email, "Bearish Engulfing" + def_AudioAlertText, 2, BarComplete, def_SellSound1 );
+
+AddAlert( buHARAMI, Audio, Email, "Bullish Harami" + def_AudioAlertText, 1, BarComplete, def_BuySound1 );
+
+AddAlert( beHARAMI, Audio, Email, "Bearish Harami" + def_AudioAlertText, 2, BarComplete, def_SellSound1 );
+
+AddAlert( buHARAMICROSS, Audio, Email, "Bullish Harami Cross" + def_AudioAlertText, 1, BarComplete, def_BuySound1 );
+
+AddAlert( beHARAMICROSS, Audio, Email, "Bearish Harami Cross" + def_AudioAlertText, 2, BarComplete, def_SellSound1 );
+
+AddAlert( buDS, Audio, Email, "Bullish Doji Star" + def_AudioAlertText, 1, BarComplete, def_BuySound1 );
+
+AddAlert( beDS, Audio, Email, "Bearish Doji Star" + def_AudioAlertText, 2, BarComplete, def_SellSound1 );
+
+AddAlert( buPIERCINGLINE, Audio, Email, "Bullish Piercingline" + def_AudioAlertText, 1, BarComplete, def_BuySound1 );
+
+AddAlert( beDARKCLOUDCOVER, Audio, Email, "Bearish Dark Cloud Cover" + def_AudioAlertText, 2, BarComplete, def_SellSound1 );
+
+AddAlert( buMorningStar, Audio, Email, "Bullish Morning Star" + def_AudioAlertText, 1, BarComplete, def_BuySound1 );
+
+AddAlert( buMorningDojiStar, Audio, Email, "Bullish Morning Doji Star" + def_AudioAlertText, 1, BarComplete, def_BuySound1 );
+
+AddAlert( beEveningStar, Audio, Email, "Bearish Evening Star" + def_AudioAlertText, 2, BarComplete, def_SellSound1 );
+
+AddAlert( beEveningDojiStar, Audio, Email, "Bearish Evening Doji Star" + def_AudioAlertText, 2, BarComplete, def_SellSound1 );
+
+/*******************************************************************************************/
+ToolTip = def_ToolTip + "\n\n" + CandlePattern;
+
+/*******************************************************************************************/
+AddCustomCodeAfterPE();
+
+/*******************************************************************************************/
+Title = "PatternExplorer.com - Candlestick Recognition" + default_priceTitle + ", " + EncodeColor( def_Color3 ) + WriteIf( CandlePatternRank > 0, "Bullish ", WriteIf( CandlePatternRank < 0, "Bearish ", "" ) ) + CandlePattern + " ";

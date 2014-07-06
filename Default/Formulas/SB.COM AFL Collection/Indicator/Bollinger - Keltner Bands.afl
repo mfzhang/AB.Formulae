@@ -1,0 +1,55 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Bollinger - Keltner Bands
+//  Author/Uploader: Prakash Shenoi 
+//  E-mail:          
+//  Date/Time Added: 2006-08-13 09:40:02
+//  Origin:          
+//  Keywords:        Volatility Indicators
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=678
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=678
+//
+//------------------------------------------------------------------------------
+//
+//  Although Volatility-based Bollinger Bands and Keltner Bands share many
+//  similarities, they differ in their construction. While Bollinger Bands rely
+//  on Std Deviation calculations, Keltner Band uses Average True Range, in
+//  representing volatility. Like Bollinger bands, Keltner Band signals are
+//  produced when the price action breaks above or below the channel bands and
+//  return to the median line. Some traders use this combination as Volatility
+//  Squeeze Indicator. When either of the band, converge, a volatility Squeeze
+//  occurs, which lead to sharp moves, upon "opening up" of the bands.
+//
+//  of the bands.
+//
+//------------------------------------------------------------------------------
+
+/* Bollinger - Keltner Bands */
+
+/* AFL code by Prakash Shenoi */
+
+/* Change BB Length and Std dev / Keltner Band periods and ATR settings by using Param function (CTLR-R) to your preferred settings. */ 
+
+BBLength= Param("BBLength",10,2,30,2);
+StdDv= Param("Stdev",2,0.5,5,0.1);
+K1= Param("Kelt EMA Periods?",5,3,50);
+K2= Param("ATR Periods?",10,2,50);
+Mul= Param("ATR Multiplier?",1,0.5,5,0.5);
+Mi=EMA(C, K1);
+Kel= ATR(K2)*Mul;
+UB= Mi + Kel;
+LB= Mi - Kel;
+UpB=BBandTop(H,BBLength,StdDv);
+Mdb=MA(C, BBLength);
+DnB=BBandBot(L,BBLength,StdDv);
+Plot (Close, "close",1,64);
+Plot (Mi,"",3,1);
+Plot (UB,"",3,1);
+Plot (LB,"",3,1);
+Plot(UpB,"",12,1);
+Plot(MdB,"",12,1);
+Plot(DnB,"",12,1);
+GraphXSpace=4;
+Title=Name()+ EncodeColor (colorViolet )+  "   Bollinger - Keltner Bands: " +"\n"+"RESISTANCE = "+WriteVal(UpB,1.2) + ", " +WriteVal (Ub,1.2) + "   SUPPORT = " +WriteVal (Lb,1.2) + ", "+ WriteVal(Dnb,1.2);

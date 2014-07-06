@@ -1,0 +1,73 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Customised Avg. Profit %, Avg. Loss % etc
+//  Author/Uploader: Paul Ho 
+//  E-mail:          paultsho@yahoo.com.au
+//  Date/Time Added: 2006-09-28 08:54:39
+//  Origin:          
+//  Keywords:        Average Profit Loss Custom Backtest Procedure
+//  Level:           medium
+//  Flags:           system
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=722
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=722
+//
+//------------------------------------------------------------------------------
+//
+//  With the current definition of Avg. Profit %, Avg. Loss % and Avg.
+//  Profit/Loss %, it is possible to have a negative Avg. profit/loss % even
+//  though the Avg. profit/loss is positive.
+//
+//  An alternative defintion is being implemented through the custom backtest
+//  procedure. Avg. Profit/loss %is to be equal to "sum of Profit / sum of
+//  position value", and similar defintions to Avg. Profit % and Avg. Loss %.
+//
+//------------------------------------------------------------------------------
+
+SetCustomBacktestProc("");  
+if( Status("action") == actionPortfolio ) 
+{ 
+	bo = GetBacktesterObject();
+	bo.Backtest();
+	PosSumProfit = 0;
+	NegSumProfit = 0;
+	PosTradePos = 0;
+	NegTradePos = 0;
+	// iterate through closed trades first 
+	for( trade = bo.GetFirstTrade(); trade; trade = bo.GetNextTrade() ) 
+	{ 
+		profit = trade.GetProfit(); 
+		if(profit >= 0)
+		{
+			PosSumProfit = PosSumProfit + profit;
+			PosTradePos = PosTradePos + trade.GetPositionValue();
+		}
+		else
+		{
+			NegSumProfit = NegSumProfit + profit;
+			NegTradePos = NegTradePos + trade.GetPositionValue();
+		}			  
+	} 
+	// iterate through eventually still open positions 
+	for( trade = bo.GetFirstOpenPos(); trade; trade = bo.GetNextOpenPos() ) 
+	{ 
+		profit = trade.GetProfit(); 
+		if(profit >= 0)
+		{
+			PosSumProfit = PosSumProfit + profit;
+			PosTradePos = PosTradePos + trade.GetPositionValue();
+		}
+		else
+		{
+			NegSumProfit = NegSumProfit + profit;
+			NegTradePos = NegTradePos + trade.GetPositionValue();
+		}	
+   } 
+	bo.AddCustomMetric(" Avg Profit/Loss %", 100 * (PosSumProfit + NegSumProfit)/(PosTradePos + NegTradePos));
+	bo.AddCustomMetric(" Avg Profit %", 100 * PosSumProfit/PosTradePos);
+	bo.AddCustomMetric(" Avg Loss %", 100 * NegSumProfit/NegTradePos);
+//	bo.ListTrades();
+}
+// Your system codes starts here
+Sell = Cross(MACD(), Signal());
+Buy = Cross(Signal(), MACD());
+SetPositionSize(10 ,spsPercentOfEquity);

@@ -1,0 +1,83 @@
+_SECTION_BEGIN( "NMN-TradeMarking" );
+
+SetFormulaName( "NMN-TradeMarking" );
+
+Comm			= Param( "Buy-Sell Commission", 0.6, 0, 5, 0.001 );
+DayProfit		= Param( "Profit per day (in %)", 1.25, 0.05, 15, 0.01 );
+NMat			= Param( "Normal maturity (T+#days)", 4, 0, 365, 1 );
+ZMat			= Param( "Z-Group maturity (T+#days)", 11, 0, 365, 1 );
+
+// Indication colors & their toggles
+ShowBuyLine	= ParamToggle( "Show BUY line", "Off,On", 1 );
+BuyColor		= ParamColor( "Buy line color", colorAqua );
+ShowTPLine		= ParamToggle( "Show 'Take Profit' line", "Off,On", 1 );
+TPColor		= ParamColor( "TakeProfit line color", colorGreen );
+ShowBELine		= ParamToggle( "Show 'Break Even' line", "Off,On", 1 );
+BEColor		= ParamColor( "BreakEven line color", colorRose );
+ShowSLLine		= ParamToggle( "Show 'Stop Loss' line", "Off,On", 1 );
+SLColor		= ParamColor( "StopLoss line color", colorRed );
+ShowVertical	= ParamToggle( "Show vertical limits", "Off,On", 0 );
+CreateBand 	= ParamToggle( "Show band", "Off|On" );
+
+// Nifty Calculations
+Commission		= Comm / 100; // Percentage
+PerDayProfit	= DayProfit / 100 ;
+TradeDays		= IIf( GroupID( 1 ) == "Z", ZMat, NMat ) ;
+
+TradePrice		= C;//Min( O, C );
+
+TakeProfit		= TradePrice * ( 1 + Commission ) * ( 1 + PerDayProfit * TradeDays ) / ( 1 - Commission );
+BreakEven		= TradePrice * ( 1 + Commission ) * ( 1 + PerDayProfit / ( 1 - Commission ) );
+StopLoss		= TradePrice * ( 1 - Commission ) * ( 1 - PerDayProfit / ( 1 + Commission ) );
+
+if ( Status( "action" ) == actionIndicator )
+{
+    // Running trade marking
+
+    if ( ShowVertical == True )
+    {
+        bi = BarIndex();
+        arrayitem = SelectedValue( bi ) - bi[ 0 ];
+        bars = Tradedays;
+        Line1 = //Cum( 1 ) == LastValue( Cum(1) ) - bars;
+            //SelectedValue( BarIndex() ) - bars;
+            arrayitem - bars;
+        Plot( Line1, "Line is ( " + WriteVal( bars, 1 ) + " ) bars back", colorRose, styleHistogram | styleOwnScale );
+
+        //Plot( IIf( Ref( C, -4 ), 1, 0 ), "", colorRose, styleHistogram | styleOwnScale | styleNoLabel );
+    }
+
+    // Buy line : if it is opted to not have shown
+    if ( ShowBuyLine )
+    {
+        Plot( SelectedValue( TradePrice ), "\nBuy @", BuyColor, styleLine | styleThick );
+
+        // TakeProfit/TP line
+
+        if ( ShowTPLine )
+        {
+            Plot( SelectedValue( TakeProfit ), "\nTP @", TPColor, styleLine | styleThick );
+        }
+
+        // BE line
+        if ( ShowBELine )
+        {
+            Plot( SelectedValue( BreakEven ), "\nBE @", BEColor, styleThick | styleDashed );
+        }
+
+        // StopLoss line
+        if ( ShowSLLine )
+        {
+            Plot( SelectedValue( StopLoss ), "\nSL @", SLColor, styleLine | styleThick );
+        }
+    }
+
+    // Create band effect
+    if ( CreateBand )
+    {
+        PlotOHLC( SelectedValue( BreakEven ), SelectedValue( BreakEven ), SelectedValue( TakeProfit ), SelectedValue( TakeProfit ), "", ColorBlend( TPColor, colorWhite, 0.85 ), styleCloud | styleNoLabel | styleNoTitle );
+        PlotOHLC( SelectedValue( TradePrice ), SelectedValue( TradePrice ), SelectedValue( BreakEven ), SelectedValue( BreakEven ), "", ColorBlend( BuyColor, colorWhite, 0.75 ), styleCloud | styleNoLabel | styleNoTitle );
+        PlotOHLC( SelectedValue( StopLoss ), SelectedValue( StopLoss ), SelectedValue( TradePrice ), SelectedValue( TradePrice ), "", ColorBlend( SLColor, colorWhite, 0.85 ), styleCloud | styleNoLabel | styleNoTitle );
+    }
+}
+_SECTION_END();

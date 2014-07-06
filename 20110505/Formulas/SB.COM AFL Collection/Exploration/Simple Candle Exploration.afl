@@ -1,0 +1,31 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Simple Candle Exploration
+//  Author/Uploader: Herman van den Bergen 
+//  E-mail:          psytek@magma.ca
+//  Date/Time Added: 2005-01-28 17:33:59
+//  Origin:          
+//  Keywords:        
+//  Level:           medium
+//  Flags:           exploration
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=425
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=425
+//
+//------------------------------------------------------------------------------
+//
+//  Exploration to find and list Candle patterns. Requires
+//  CandleFunctionsInclude.afl (in this library) to be in your include folder.
+//  Modify to suit your needs.
+//
+//------------------------------------------------------------------------------
+
+#include <CandleFunctionsInclude.afl>
+SetOption("NoDefaultColumns",False);
+Filter = Status("LastbarInTest");
+
+for(CP=0; Cp<=44; CP++)
+	{
+	PV = CandlePattern(CP);
+	AddColumn(PV,PatternName,1.0);
+	}
+

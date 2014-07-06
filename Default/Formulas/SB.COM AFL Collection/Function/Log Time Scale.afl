@@ -1,0 +1,51 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Log Time Scale
+//  Author/Uploader: Jeff Parent 
+//  E-mail:          
+//  Date/Time Added: 2004-04-23 10:03:05
+//  Origin:          
+//  Keywords:        
+//  Level:           medium
+//  Flags:           function
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=354
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=354
+//
+//------------------------------------------------------------------------------
+//
+//  Uses Param feature to adjust increaasing time compression as chart moves
+//  back in time. A bit like looking at multiple time frame charts, except its
+//  all in one chart.
+//
+//------------------------------------------------------------------------------
+
+//Log Time
+
+s=Param("speed",0,0,0.04,0.0001);
+b=BarCount-1;
+bc=b;
+Hy=Null;Ly=Null;Oy=Null;Cy=Null;
+
+do
+{
+Hx=0;Lx=1000000;
+Cy[bc]=C[b];
+f=int(exp(s*(BarCount-bc+1)));
+b1=b-f;
+
+while (b>b1 AND b>-1)
+{
+if (H[b]>Hx) Hx=H[b];
+if (L[b]<Lx) Lx=L[b];
+b--;
+}
+Hy[bc]=Hx;Ly[bc]=Lx;Oy[bc]=O[b+1];
+bc--;
+
+} while (b>-1);
+
+PlotOHLC(Oy,Hy,Ly,Cy,"",1,styleCandle);
+Plot(Oy,"open",1,styleNoDraw);
+Plot(Hy,"hi",1,styleNoDraw);
+Plot(Ly,"lo",1,styleNoDraw);
+Plot(Cy,"close",1,styleNoDraw);

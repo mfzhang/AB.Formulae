@@ -1,0 +1,71 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Index of 30 Wk Highs Vs Lows
+//  Author/Uploader: Geoff Mulhall 
+//  E-mail:          gmulhall@urban.net.au
+//  Date/Time Added: 2002-11-08 22:47:11
+//  Origin:          
+//  Keywords:        
+//  Level:           semi-advanced
+//  Flags:           exploration,indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=232
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=232
+//
+//------------------------------------------------------------------------------
+//
+//  The number of stocks making new 30 week highs vs the number making new 30
+//  week lows is a useful adjunct to the Advance Decline line, especially when
+//  both are compared to a market index (eg XAO Australian All Ords or NYSE
+//  Composite).
+//
+//  Attached is both an exploration to create the 2 indices, and indicator to
+//  plot the chart of the indices.
+//
+//  (Note - one index is only of the closes while the other plots the
+//  highs/lows - as you would expect there is little difference between the
+//  two).
+//
+//  First run the exploration over all quotes for a given market with period
+//  set to weekly. 2 new indices will be created in Group 253 in the ticker
+//  tree.
+//
+//  These can then be viewed using the indicator to plot both indices.
+//
+//------------------------------------------------------------------------------
+
+/* Calculate indices of new 30 week high's vs new 30 week lows */
+/* Set the filter so as to scan a given market */
+/* Set Period to Weekly */
+/* The new indexes will be found in Group 253 */
+
+H1 = Close > Ref(HHV(Close,30),-1);
+H2 = High > Ref(HHV(High,30),-1);
+
+L1 = Close < Ref(LLV(Close,30),-1);
+L2 = Low < Ref(LLV(Low,30),-1);
+
+H_L_Array1 = H1 - L1;
+H_L_Array2 = H2 - L2;
+
+// Do not generate signals
+
+Buy = 0; 
+Filter = 0;
+
+AddToComposite( H_L_Array1, "~Idx30Wk_Close_HL", "X", 19);
+AddToComposite( H_L_Array2, "~Idx30Wk_Abs_HL", "X", 19);
+
+// 300 Week Highs Indicator
+// Set Scaling to automatic
+// Set Gridlines - Level 0, Show dates, Middle
+
+GraphXSpace = 10;
+
+Plot(Foreign("~Idx30Wk_Close_HL","C",1),"Close_HL",colorRed,styleLine);    
+Plot(Foreign("~Idx30Wk_Abs_HL","C",1),"Abs_HL",colorBlue,styleLine); 
+
+   
+         
+    
+                             
+                                                                             

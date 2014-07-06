@@ -1,0 +1,50 @@
+_SECTION_BEGIN("Price Oscillation");
+function DetrendedPriceOsc( Periods )
+{
+ return C - Ref( MA( C, Periods ), -( 1 + Periods/2 ) );
+}
+DPO = DetrendedPriceOsc( Param("Periods", 20, 1, 100 ) );
+DPO_Color = ParamColor("DPO Color", colorLightBlue );
+DPO_Style = ParamStyle("DPO Style", styleLine|styleOwnScale, maskAll);
+Plot( DPO, "DPO", DPO_Color );
+
+r1 = Param( "Fast avg", 9, 2, 200, 1 );
+r2 = Param( "Slow avg", 18, 2, 200, 1 );
+POSC = OscP( r1,r2);
+POSC_Color = ParamColor( "P-OSC Color", colorSkyblue );
+POSC_Style = ParamStyle( "P osc Style", styleLine|styleOwnScale, maskAll);
+Plot( POSC, "P-osc", POSC_Color, POSC_Style );
+
+BuyCond = Cross(DPO,POSC) AND 
+( (Ref(DPO,-2) - Ref(DPO,-1)) < (DPO - Ref(DPO,-1)) ) AND 
+( DPO-Ref(DPO,-1) > 2 ) ;				// - showing an up trend
+
+Buy= BuyCond ; //Cross(DPO, POSC);
+//Buy=Cross(DPO,POSC) AND ( (Ref(DPO,-2) - Ref(DPO,-1)) < (DPO - Ref(DPO,-1)) AND (DPO-Ref(DPO,-1))> 2) ;				// - showing an up trend
+Sell=Cross(POSC, DPO);
+
+shape = Buy * shapeUpArrow + Sell * shapeDownArrow;
+Plot( Close, "Price", ParamColor("Price color",colorBlack), ParamStyle("Style",styleCandle|styleSwingDots|styleHistogram,maskAll) );
+
+Offset = Param("Signal Offset",-15,-20, 0, 1, 1);
+PlotShapes( shape, IIf( Buy, ParamColor("BUY color",colorOrange), ParamColor("SELL color",colorBlue ) ), 0, IIf( Buy, Low, High ), Offset );
+
+_SECTION_END();
+
+/*
+You can position your arrows relative to High/Low too. See the code below for the example:
+
+Buy=Cross(MACD(), Signal());
+
+Sell=Cross(Signal(), MACD());
+
+shape = Buy * shapeUpArrow + Sell * shapeDownArrow;
+
+Plot( Close, "Price", colorBlack, styleCandle );
+
+PlotShapes( shape, IIf( Buy, colorGreen, colorRed ), 0, IIf( Buy, Low, High ) );
+
+GraphXSpace = 5;
+*/
+//Cross(DPO,POSC) AND				// - had a definite crossover!
+//		(Ref(DPO,-1) < Ref(DPO,-2)) AND 	// - a definite bend up

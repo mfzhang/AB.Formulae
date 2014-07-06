@@ -1,0 +1,44 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Evaluating Candle Patterns in a trading system
+//  Author/Uploader: Herman van den Bergen 
+//  E-mail:          psytek@magma.ca
+//  Date/Time Added: 2005-01-28 17:54:38
+//  Origin:          
+//  Keywords:        
+//  Level:           medium
+//  Flags:           system
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=426
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=426
+//
+//------------------------------------------------------------------------------
+//
+//  A simple example program to show how one can evaluate candle patterns in a
+//  simple trading system. Use the AA param() to select Long or Short only mode
+//  and to set the profit period after the pattern. Run in Optimize on stock or
+//  watchlist.
+//
+//------------------------------------------------------------------------------
+
+#include <CandleFunctionsInclude.afl>
+
+SetTradeDelays(1,1,1,1);
+// remember to set BuyPrice, SellPrice, etc.
+Md = ParamToggle("System Mode","Long Only|Short Only",0);
+
+CP = Optimize("CP",0,0,44,1);
+PP = Optimize("PP",1,1,5,1);
+
+if(Md)
+	{
+	Buy = CandlePattern(CP);
+	Sell = Ref(Buy,-PP);
+	Short = Cover = 0;
+	}
+else
+	{
+	Short = CandlePattern(CP);
+	Cover = Ref(Short,-PP);
+	Buy = Sell = 0;
+	}
+	

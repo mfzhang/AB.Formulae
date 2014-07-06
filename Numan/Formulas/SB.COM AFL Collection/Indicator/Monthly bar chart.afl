@@ -1,0 +1,118 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Monthly bar chart
+//  Author/Uploader: Graham Kavanagh 
+//  E-mail:          gkavanag@bigpond.net.au
+//  Date/Time Added: 2003-01-01 22:47:12
+//  Origin:          
+//  Keywords:        monthly
+//  Level:           medium
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=249
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=249
+//
+//------------------------------------------------------------------------------
+//
+//  Weekly chart to be shown in indicator window. This is for fixed months
+//  starting at first trading day of each month.
+//
+//------------------------------------------------------------------------------
+
+//Monthly candlestick chart
+//by Graham Kavanagh 26 Dec 2002
+
+firstmonth = ValueWhen(Cum(1)==1,Month());
+numyear = Year()-ValueWhen(Cum(1)==1,Year());
+numbars = LastValue(numyear)*12 - (12-LastValue(Month())) + (12-firstmonth+1);
+nummonth = numyear*12 - (12-Month()) + (12-firstmonth+1);
+Monthbars = 
+IIf(nummonth==1 AND nummonth!=Ref(nummonth,1),Cum(1), 
+IIf(nummonth==numbars AND Cum(1)==LastValue(Cum(1)), 
+LastValue(Cum(1)) - ValueWhen( Ref(nummonth,-1)==numbars-1,Cum(1) )+1, 
+ValueWhen(nummonth<Ref(nummonth,1),Cum(1) )-ValueWhen(nummonth>Ref(nummonth,-1),Cum(1))+1 ));
+MonthBar = Monthbars;
+mO = IIf( nummonth==1 , Ref(O,-Cum(1)+1), ValueWhen(nummonth>Ref(nummonth,-1),O ) );
+mH = HHV(H,Monthbars);
+mL = LLV(L,Monthbars);
+mC = C;
+thismonth = Month();
+thisyear = Year();
+SetBarsRequired(100000,100000);
+
+EnableScript("jscript");
+<%
+mo = VBArray( AFL( "mO" ) ).toArray();
+mh = VBArray( AFL( "mH" ) ).toArray();
+ml = VBArray( AFL( "mL" ) ).toArray();
+mc = VBArray( AFL( "mC" ) ).toArray();
+Monthbars = VBArray( AFL( "Monthbars" ) ).toArray();
+Close = VBArray( AFL( "Close" ) ).toArray();
+thismonth = VBArray( AFL( "thismonth" ) ).toArray();
+thisyear = VBArray( AFL( "thisyear" ) ).toArray();
+
+Mtho = new Array();
+Mthh = new Array();
+Mthl = new Array();
+Mthc = new Array();
+mymonth = new Array();
+myyear = new Array();
+
+// initialize first element
+j = 0;
+Mtho[0] = mo[0];
+Mthh[0] = mh[0];
+Mthl[0] = ml[0];
+Mthc[0] = mc[0];
+mymonth[0] = thismonth[0];
+myyear[0] = thisyear[0];
+
+// perform the loop 
+for( i = 1; i < Close.length; i++ )
+{
+ if(Monthbars[i] > 0 )
+ {
+  Mtho[j] = mo[i] ;
+  Mthh[j] = mh[i] ;
+  Mthl[j] = ml[i] ;
+  Mthc[j] = mc[i] ;
+  mymonth[j] = thismonth[i];
+  myyear[j] = thisyear[i];
+  j++;
+ }
+}
+
+delta = Close.length - j-1;
+AFL.Var("delta") = delta;
+AFL.Var("Mtho") = Mtho;
+AFL.Var("Mthh") = Mthh;
+AFL.Var("Mthl") = Mthl;
+AFL.Var("Mthc") = Mthc;
+AFL.Var("mymonth") = mymonth;
+AFL.Var("myyear") = myyear;
+%>
+
+Montho =IIf(Cum(1)<delta-LastValue(Cum(1)),0, Ref(mtho,-delta-1));
+Monthh =IIf(Cum(1)<delta-LastValue(Cum(1)),0, Ref(mthh,-delta-1));
+Monthl =IIf(Cum(1)<delta-LastValue(Cum(1)),0, Ref(mthl,-delta-1));
+Monthc =IIf(Cum(1)<delta-LastValue(Cum(1)),0, Ref(mthc,-delta-1));
+MonthDate = IIf(Cum(1)<delta-LastValue(Cum(1)),0, Ref(Mymonth,-delta-1));
+YearDate = IIf(Cum(1)<delta-LastValue(Cum(1)),0, Ref(myyear,-delta-1));
+
+GraphXSpace=5;
+PlotOHLC(monthO,monthH,monthL,monthC,"weekly",colorBlack,styleCandle);
+
+Title = "Monthly Chart, O:" + WriteVal(monthO,1.1) + ", H:" + WriteVal(Monthh,1.1) + ", L:" + WriteVal(monthL,1.1) + ", C:" + WriteVal(monthC,1.1) + ", for month: " + WriteVal(MonthDate,1.0) + "-" + WriteVal(YearDate,1.0);
+
+
+Filter=1;
+AddColumn(O,"  O    ",1.1);
+AddColumn(H,"  H    ",1.1);
+AddColumn(L,"  L    ",1.1);
+AddColumn(C,"  C    ",1.1);
+AddColumn(nummonth ,"nummth",1.0);
+AddColumn(Monthbar ,"mthbars",1.0);
+AddColumn(monthO,"mtho",1.1);
+AddColumn(Monthh,"mthh",1.1);
+AddColumn(monthL,"mthl",1.1);
+AddColumn(Monthc,"mthc",1.1);
+AddColumn(YearDate+Monthdate/100,"monthDate");

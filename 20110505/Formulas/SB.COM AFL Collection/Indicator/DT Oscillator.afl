@@ -1,0 +1,56 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    DT Oscillator
+//  Author/Uploader: X-Trader 
+//  E-mail:          
+//  Date/Time Added: 2005-06-04 13:35:04
+//  Origin:          
+//  Keywords:        Dynamic Traders Miner StochRSI
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=465
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=465
+//
+//------------------------------------------------------------------------------
+//
+//  The very known indicator created by Robert Miner based on StochRSI. Use it
+//  as a Stochastic or to help you counting waves. Set MAType=1 if you want the
+//  simple version, or MAType=2 for exponential.
+//
+//------------------------------------------------------------------------------
+
+/* DT Oscillator 
+**
+** AFL translation by X-Trader
+** http://www.x-trader.net
+**
+*/
+
+PeriodRSI= Param("PeriodRSI", 13, 1, 250, 1);
+PeriodStoch=Param("PeriodStoch", 8, 1, 250, 1);
+MAType=Param("MAType", 1, 1, 2, 1);
+PeriodSK=Param("PeriodSK", 5, 1, 250, 1);
+PeriodSD=Param("PeriodSD", 3, 1, 250, 1);
+Upper=Param("Upper", 70, 50, 100, 1);
+Lower=Param("Lower", 30, 0, 50, 1);
+
+
+StoRSI= 100*(( RSI( PeriodRSI) - LLV( RSI( PeriodRSI ) , PeriodStoch ) ) / ( ( HHV( RSI( PeriodRSI) , PeriodStoch ) ) - LLV(RSI( PeriodRSI ), PeriodStoch ) ) );
+
+if(MAType==1)
+	{
+		SK=MA(StoRSI,PeriodSK);
+		SD=MA(SK,PeriodSD);
+	}
+
+if(MAType==2)
+	{
+		SK=EMA(StoRSI,PeriodSK);
+		SD=EMA(SK,PeriodSD);
+	}
+
+Plot(SK,"DTOscSK",ParamColor( "ColorSK", colorBlue ),styleLine); 
+Plot(SD,"DTOscSD",ParamColor( "ColorSD", colorBlack ),styleDashed);
+Plot(0,"ZeroLine",ParamColor( "ColorZero", colorBlack ),styleLine);
+Plot(Upper,"Upper",ParamColor( "ColorUpper", colorRed ),styleLine);
+Plot(Lower,"Lower",ParamColor( "ColorLower", colorGreen ),styleLine);

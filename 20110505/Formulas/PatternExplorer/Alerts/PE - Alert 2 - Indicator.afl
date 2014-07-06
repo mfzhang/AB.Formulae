@@ -1,0 +1,91 @@
+//|-----------------------------------------------------------------------------------------
+//|PatternExplorer.com - Alert 2 Indicator based
+//|Copyright © 2007, PatternExplorer.com
+//|http://www.PatternExplorer.com
+//|e-mail: support@PatternExplorer.com
+//|-----------------------------------------------------------------------------------------
+FormulaName = "PE - Alert 2 - Indicator";
+
+SetChartOptions( 0, chartShowDates | chartWrapTitle );
+#pragma nocache
+#include_once  <\PEInc\PatternExplorer_f0.afl>
+#Include_once "C:\Program Files (x86)\AmiBroker5\Formulas\PatternExplorer\#Defaults & Mods\PE - Defaults.afl"
+#Include_once "C:\Program Files (x86)\AmiBroker5\Formulas\PatternExplorer\#Defaults & Mods\PE - Mods.afl"
+/*******************************************************************************************/
+AddCustomCodeBeforePE();
+/*******************************************************************************************/
+//AddparamUsefromChartFull(0);
+AddAlertParam( def_AudioAlert = 1, def_EmailAlert, def_BarComplete );
+/*******************************************************************************************/
+_SECTION_BEGIN( "Indicator Periods" );
+period1 = Param( "Period 1", 5, 1, 30, 1 );
+period2 = Param( "Period 2", 8, 1, 30, 1 );
+//if(InChart) StaticVarSet("X34320",period1);if(inAA AND Usefromchart) period1 = StaticVarGet("X34320");
+//if(InChart) StaticVarSet("X059df",period2);if(inAA AND Usefromchart) period2 = StaticVarGet("X059df");
+_SECTION_END();
+/*******************************************************************************************/
+_SECTION_BEGIN( "Main Parameters" );
+Offset = Param( "Maximum Deviation", 20, 0.01, 200, 0.01 );
+//if(InChart) StaticVarSet("X0S2V0",Offset);if(inAA AND Usefromchart) Offset = StaticVarGet("X0S2V0");
+Centering = ParamToggle( "Range Centering", "Off,On", 0 );
+//if(InChart) StaticVarSet("C3A8G2",Centering);if(inAA AND Usefromchart) Centering = StaticVarGet("C3A8G2");
+RE = Param( "Upper Level", 100, -100, 100, 1 );
+//if(InChart) StaticVarSet("G8A7E1",RE);if(inAA AND Usefromchart) RE = StaticVarGet("G8A7E1");
+SU = Param( "Lower Level", -100, -100, 100, 1 );
+//if(InChart) StaticVarSet("W5R0Q2",SU);if(inAA AND Usefromchart) SU = StaticVarGet("W5R0Q2");
+_SECTION_END();
+/*******************************************************************************************/
+_SECTION_BEGIN( "Styles" );
+Indstyle = ParamStyle( "Indicator", styleLine, maskAll );
+_SECTION_END();
+/*******************************************************************************************/
+_SECTION_BEGIN( "Colors" );
+ReColor = ParamColor( "Upper Range", colorRed );
+SuColor = ParamColor( "Lower Range", colorGreen );
+Indcolor = ParamColor( "Indicator", def_IndicatorColor );
+_SECTION_END();
+/*******************************************************************************************/
+AddGradientBackground( def_BGColorswitch, def_BgTopcolor, def_BgBottomcolor, def_titlebkcolor );
+/*******************************************************************************************/
+Ind = PeTaio( period1, period2 ); //Enter your indicator here
+/*******************************************************************************************/
+#include_once  <\PEInc\Lib\PatternExplorer_f03.afl>
+/*******************************************************************************************/
+Buy = def_Buy AND ( Buy_1 OR Buy_2 );
+Sell = def_Sell AND ( Sell_1 OR Sell_2 );
+/*******************************************************************************************/
+Filter = def_Filter AND NOT GroupID() == 253;
+Filter = Filter AND ( Buy OR Sell );
+/*******************************************************************************************/
+AddAlert( Buy_1, Audio, Email, "Indicator in Lower Range", 1, BarComplete, def_BuySound1 );
+AddAlert( Buy_2, Audio, Email, "Indicator left Lower Range", 1, BarComplete, def_BuySound2 );
+AddAlert( Sell_2, Audio, Email, "Indicator in Upper Range", 2, BarComplete, def_SellSound1 );
+AddAlert( Sell_1, Audio, Email, "Indicator left Upper Range", 2, BarComplete, def_SellSound2 );
+/*******************************************************************************************/
+Addefaultcolumns();
+Adddefaultcolumns( 2, 1 );
+AddTextColumn( FullName(), "Full name" );
+/*******************************************************************************************/
+Plot( Ind, "Indicator", Indcolor, Indstyle );
+Plot( SU, "Low-Level", SuColor, styleDashed );
+Plot( RE, "High-Level", ReColor, styleDashed );
+Plot( IIf( Lx, SuAL_L, Null ), "", SuColor, styleNoRescale + styleNoLabel, 0, 0, Shift );
+Plot( IIf( Lx, SuAL_H, Null ), "", SuColor, styleNoRescale, 0, 0, Shift );
+Plot( IIf( Lx, ReAL_L, Null ), "", ReColor, styleNoRescale, 0, 0, Shift );
+Plot( IIf( Lx, ReAL_H, Null ), "", ReColor, styleNoRescale + styleNoLabel, 0, 0, Shift );
+/*******************************************************************************************/
+ToolTip = def_Tooltip;
+/*******************************************************************************************/
+AddCustomCodeAfterPE();
+/*******************************************************************************************/
+Title = "PatternExplorer.com - Alert 2, " +
+        StrFormat( " - {{NAME}} - {{INTERVAL}} {{DATE}}, " ) +
+        EncodeColor( Sucolor ) + "Low Level: " + WriteVal( SU, 1.0 ) +
+        " (" + WriteVal( SuAL_L, 1.1 ) + " to " + WriteVal( SuAL_H, 1.0 ) + "), " +
+        EncodeColor( Recolor ) + "High Level: " + WriteVal( RE, 1.0 ) +
+        " (" + WriteVal( ReAL_L, 1.0 ) + " to " + WriteVal( ReAL_H, 1.0 ) + "), " +
+        EncodeColor( def_Text2 ) + "Max. Deviation = " + WriteVal( Offset, 1.0 ) + " Points, " +
+        EncodeColor( def_Text1 ) + "Activated Alerts:"
+        + WriteIf( Audio AND NOT Email, " Audio ",
+                   WriteIf( Email AND NOT Audio, " Email ",
+                            WriteIf( Email AND Audio, " Audio & Email ", " None " ) ) );

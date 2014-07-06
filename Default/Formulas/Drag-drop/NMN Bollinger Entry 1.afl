@@ -1,0 +1,186 @@
+SetFormulaName( "NMN Bollinger Entry" );
+SetChartOptions( 1, chartShowDates | chartWrapTitle );
+
+_SECTION_BEGIN( "Bollinger Parameters" );
+P 		= ParamField( "Bollinger Band on", 3 );
+Pd1 	= Param( "BB 1 Period", 10, 3, 100, 1 );
+W1 		= Param( "BB 1 Width", 1.35, 0, 50, 0.01 );
+Pd2 	= Param( "BB 2 Period", 15, 3, 100, 1 );
+W2 		= Param( "BB 2 Width", 2, 0, 50, 0.01 );
+
+Plot( P, "Price Chart", IIf( O < C, colorBrightGreen, colorRed ), styleCandle );
+Plot( bb1 = BBandBot( P, Pd1, W1 ), "Inner/Top Bollinger", colorLightOrange, styleLine );
+Plot( bb2 = BBandBot( P, Pd2, W2 ), "Outer/Btm Bollinger", colorLightGrey, styleLine );
+_SECTION_END();
+
+_SECTION_BEGIN( "Candle-Bollinger positions" );
+
+DnCandle 	= ( O >= C );
+UpCandle 	= ( O < C );
+
+CandleBody = abs( O - C );
+FullCandle = abs( H - L );
+CandleWick = FullCandle - CandleBody;
+
+WickCandleRatio = CandleWick/CandleBody ;
+CandleWickRatio = CandleBody/CandleWick ;
+
+LastIsDnCandle = Ref( DnCandle, -1 );
+LastIsUpCandle = Ref( UpCandle, -1 );
+
+BollingerSeperation = ( bb1 - bb2 );
+
+bb1cut 	= ( O - bb1 ) / ( O - C );
+bb1cutLo 	= ( bb1cut < ( Param( "Low cut by BB1 (in %)", 60, 1, 100, 1 ) / 100 ) ) AND ( bb1 < C ) AND ( bb1 > O );
+bb1cutHi 	= ( bb1cut < ( Param( "High cut by BB1 (in %)", 50, 1, 100, 1 ) / 100 ) ) AND ( bb1 < C ) AND ( bb1 > O );
+
+bb2cut 	= ( O - bb2 ) / ( O - C );
+bb2cutLo 	= abs( bb2cut ) < 0.9 ;//AND bb2cut > 0.0 ;
+bb2cutHi 	= abs( bb2cut ) < 0.3 ;//AND bb2cut > 0.0 ;
+
+// Down candle 'buy' logics
+DnCandle_below_both_BB 	= DnCandle AND ( bb2 > O ) AND ( bb2 > C );
+DnCandle_between_BB 		= DnCandle AND ( ( bb1 > C ) AND ( bb2 < C ) ) OR ( ( bb1 > O ) AND ( bb2 < O ) );
+LongBorderDnCandle 		= DnCandle AND ( ( O - C ) > ( bb1 - bb2 ) * 1.5 ) AND ( O > bb1 ) AND ( bb2 > C );
+
+// Up Candle 'buy' logics
+UpCandleBelowBothBB	=	UpCandle AND ( bb1 > O ) AND ( bb2 > O );
+UpCandleBetweenBB		=	UpCandle AND ( bb1 > O ) AND ( bb2 < O ) AND ( bb2 > C );
+
+OpenAboveBB1 	= O > bb1;
+OpenBelowBB1 	= O < bb1;
+CloseAboveBB1 = C > bb1;
+CloseBelowBB1 = C < bb1;
+
+CloseBelowBB2	= C < bb2;
+CloseAboveBB2	= C > bb2;
+
+OpenBelowBB2 = O < bb2;
+
+/*------------------------------------------
+					TRADE
+ -------------------------------------------*/
+
+Buy1 = DnCandle AND bb1cutLo AND DnCandle_below_both_BB ;
+Buy2 = DnCandle AND OpenBelowBB1 AND LongBorderDnCandle ;
+Buy3 = DnCandle AND bb1cutHi AND DnCandle_between_BB ;
+Buy4 = DnCandle AND LongBorderDnCandle AND bb2cutHi AND CloseBelowBB2 ;
+
+myBuy = Buy = Buy1 OR Buy2 OR Buy3 OR Buy4;
+Sell = False;
+
+// Signals
+// [Indicator]
+
+shape1 = Buy1 * shapeSmallUpTriangle ;
+shape2 = Buy2 * shapeSmallUpTriangle ;
+shape3 = Buy3 * shapeSmallUpTriangle ;
+shape4 = Buy4 * shapeSmallUpTriangle ;
+
+shape1color = colorBrightGreen;
+shape2color = colorViolet;
+shape3color = colorGreen;
+shape4color = colorRed;
+
+/*------------------------------------------
+				Automatic Analysis
+ -------------------------------------------*/
+TransmitOrder = False;  // Set to True to really trade!
+
+AASettings = Status( "action" );
+
+if ( AASettings == 1 )
+{
+    // [Indicator]
+
+    PlotShapes( shape1, shape1color, 0, L, -12 );
+    PlotShapes( shape2, shape2color, 0, L, -24 );
+    PlotShapes( shape3, shape3color, 0, L, -36 );
+    PlotShapes( shape4, shape4color, 0, L, -48 );
+
+}
+else
+    if ( AASettings == actionCommentary )
+    {
+        // [Commentary]
+        printf( "Study of parameters.\n---------------------------\n" );
+        printf( "Gap between Bollingers	= %g\n", BollingerSeperation );
+        printf( "Body of the candle		= %g\n", CandleBody );
+        printf( "Full-candle Size 		= %g\n", FullCandle );
+        printf( "Candle-wick ratio		= %g%%\n", CandleWickRatio * 100 );
+        printf( "Wick-candle ratio		= %g%%\n", WickCandleRatio * 100 );
+//        printf( "Candle type		= %g%%\n", IIf(DnCandle, "Down / Red / Black", "Up / Green / White") );
+
+        bi 	= BarIndex();
+        cid 	= ( SelectedValue( bi ) - bi[ 0 ] );	// candle identification
+
+        if ( DnCandle[cid] )
+        {
+            printf( "\nRed / Down Candle parameters:\n~~~~~~~~~~~~~~~~~~~~~~" );
+
+            if ( DnCandle_between_BB[cid] )
+                printf( "\nCandle enclosed inside the Bollingers!" );
+            else
+                if ( CloseBelowBB1[cid] )
+                {
+                    if ( OpenBelowBB1[cid] )
+                        printf( "\nCandle opened below BB1" );
+                    else
+                        printf( "\nbb1cut = %g%% (O - bb1) = %g", round( bb1cut*100 ), ( O - bb1 ) );
+
+                    if ( CloseBelowBB2[cid] )
+                        printf( "\nbb2cut = %g%% (O - bb2) = %g", round( bb2cut*100 ), ( O - bb2 ) );
+                    else
+                        printf( "\nCandle closed above BB2" );
+                }
+                else
+                    printf( "\nCandle closed above BB1" );
+        }
+        else	// it is an up candle
+        {
+            printf( "\nGreen / Up Candle parameters:\n~~~~~~~~~~~~~~~\n" );
+        }
+
+        printf( "\n\n" );
+    }
+    else
+        if ( AASettings == actionScan )
+        {
+            // Scan
+        }
+        else
+            if ( AASettings == actionExplore )
+            {
+                // Exploration
+                Strength = Buy1 + Buy2 + Buy3 + Buy4;
+                bi = BarIndex();
+                Filter = Buy ;//Buy1 OR Buy2 OR Buy3 OR Buy4;
+
+                AddColumn( C, "Close", 3.2, colorBlue, colorDefault, 80 );
+                AddTextColumn( WriteIf( Buy1, "Dn Candle below both Bollinger", "" ), "Buy1", 1, IIf( Buy1, colorWhite, colorDefault ), IIf( Buy1, shape1color, colorDefault ), 100 );
+                AddTextColumn( WriteIf( Buy2, "Long down candle at border", "" ), "Buy2", 1, IIf( Buy2, colorWhite, colorDefault ), IIf( Buy2, shape2color, colorDefault ), 100 );
+                AddTextColumn( WriteIf( Buy3, "Candle between Bollinger borders", "" ), "Buy3", 1, IIf( Buy3, colorWhite, colorDefault ), IIf( Buy3, shape3color, colorDefault ), 100 );
+                AddTextColumn( WriteIf( Buy4, "Long candle closed below Bollingers", "" ), "Buy4", 1, IIf( Buy4, colorWhite, colorDefault ), IIf( Buy4, shape4color, colorDefault ), 100 );
+                AddColumn( Strength, "Strength", 1, colorRed, colorDefault, 40 );
+
+            }
+            else
+                if ( AASettings == actionBacktest )
+                {
+                    // Backtest
+                }
+
+_SECTION_END();
+
+//_N("{{NAME}} - {{INTERVAL}} - {{DATE}} - {{VALUES}}" + "\n");
+
+Title = "{{NAME}} - {{INTERVAL}} - {{DATE}} - {{VALUES}}" + "\n" +
+        " bb1cut = " + floor( bb1cut * 100 ) + "%\n" +
+        " bb2cut = " + floor( bb2cut * 100 ) + "%";
+
+_SECTION_BEGIN("MA");
+P = ParamField("Price field",-1);
+Periods = Param("Periods", 15, 2, 300, 1, 10 );
+Plot( MA( P, Periods ), _DEFAULT_NAME(), ParamColor( "Color", colorCycle ), ParamStyle("Style") ); 
+_SECTION_END();
+

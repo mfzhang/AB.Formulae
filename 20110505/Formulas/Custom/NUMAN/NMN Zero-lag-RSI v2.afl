@@ -1,0 +1,44 @@
+/*ZeroLag RSI */
+/*Code adapted from ZeroLag Williams %R Indicator */
+/* Additional params added for change of RSI periods and EMA1&2 */
+ 
+GraphXSpace = 3;
+ 
+RSIPeriod=Param("RSI Period Length", 14, 3 , 50, 1);
+R = RSI(RSIperiod);
+ 
+MaxGraph=10;
+Period1=Param("Period 1", 10, 5, 50, 1);
+Period2=Param("Period 2", 10, 5, 50, 1);
+EMA1= EMA(R,Period1);
+EMA2= EMA(EMA1,Period2);
+Difference= EMA1 - EMA2;
+ZeroLagEMA= EMA1 + Difference;
+PR=abs(ZeroLagEMA); 
+ 
+Graph0=PR;
+ 
+MoveAvg=MA(PR,5);  
+ 
+// Graph1=MoveAvg;          Remove the // if you want a Crossover MA to plot
+// Graph1Color=colorTan;
+ 
+Graph0Style=4;
+upbar= PR>= MoveAvg AND PR>= Ref(PR,-1) ;
+downbar=(PR < MoveAvg) OR PR>= MoveAvg AND PR< Ref(PR,-1) ;
+barcolor = IIf( downbar,colorRed, IIf( upbar, colorBrightGreen, 7));
+Graph0BarColor = ValueWhen( barcolor != 0, barcolor );
+Graph2=30;
+Graph3=70;
+ 
+Graph2Style=Graph3Style=Graph4Style=1;
+Graph4Color=2;
+Graph2Color=5;
+Graph3Color=4;
+ 
+Graph5=0;
+Graph6=100;
+Graph5Style=Graph6Style=1;
+Graph5Color=Graph6Color=2;
+ 
+Title=Name()+" - ZeroLag RSI V2 :"+WriteVal(PR)+"%";

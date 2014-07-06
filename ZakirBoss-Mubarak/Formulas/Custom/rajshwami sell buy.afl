@@ -1,0 +1,132 @@
+/*
+   rajaswamy's Alligator System II
+
+   Reference Website:
+   ==================
+   http://www.alpari-idc.com/en/market-analysis-guide/chaos-theory/alligator-and-gator.html
+
+   Modified from http://www.amibroker.com/library/detail.php?id=100, by Steve Wiser - slwiserr@erols.com
+   Modified by TohMz  on June 9th, 2008
+*/
+SetChartOptions( 0, chartShowArrows|chartShowDates );
+
+_SECTION_BEGIN("Price Chart");
+_N(Title = StrFormat("{{NAME}}- {{INTERVAL}} {{DATE}} O= %g, H= %g, L= %g, C= %g (%.1f%%) V= " +WriteVal( V, 1.0 ) +"\n{{VALUES}}", O, H, L, C, SelectedValue( ROC( C, 1 )) ));
+PriceStyle = GetPriceStyle();
+PriceStyleOpt = ParamStyle("Price Style")|PriceStyle;
+
+if (PriceStyle==styleCandle)
+   Plot( C, "", colorBlack,  PriceStyleOpt); 
+else
+   Plot( C, "", IIf( Close >= Ref(C, -1), colorBlue, colorRed ), PriceStyleOpt);
+_SECTION_END();
+
+_SECTION_BEGIN("BW Alligator");
+/*** The trend indicators ***/
+
+P= ParamList("Price", "Close|(H+L)/2|(H+C+L)/3",1);
+
+if (P=="Close")
+   A = C;
+   
+else
+if (P=="(H+C+L)/3")
+   A = (H+C+L)/3;
+else
+  A = (H+L)/2;
+
+AlligatorJaw   = Ref(Wilders(A,13),-8);
+AlligatorTeeth = Ref(Wilders(A,8), -5);
+AlligatorLips  = Ref(Wilders(A,5), -3);
+LT=AlligatorLips-AlligatorTeeth;
+JT=AlligatorJaw-AlligatorTeeth;
+
+Plot(AlligatorJaw,  "Jaw", ParamColor("Jaw's Color",colorBlue), ParamStyle("Jaw's Style", styleLine));
+Plot(AlligatorTeeth,"Teeth", ParamColor("Teeth's Color",colorRed), ParamStyle("Teeth's Style", styleThick));
+Plot(AlligatorLips, "Lips", ParamColor("Lips's Color",colorGreen), ParamStyle("Lips's Style", styleLine));
+
+_SECTION_END();
+
+
+_SECTION_BEGIN("BW Fractal");
+
+/* UpFractal= ValueWhen( */
+SellFractal= ValueWhen(
+  (Ref(H,-2) > Ref(H, -4)) AND
+  (Ref(H,-2) > Ref(H, -3)) AND
+  (Ref(H,-2) > Ref(H, -1)) AND
+  (Ref(H,-2) > H), Ref(H,-2));
+
+/* DownFractal= ValueWhen( */
+BuyFractal= ValueWhen(
+  (Ref(L,-2) <= Ref(L, -4)) AND
+  (Ref(L,-2) <=  Ref(L, -3)) AND
+  (Ref(L,-2) <=  Ref(L, -1)) AND
+  (Ref(L,-2) <=  L), Ref(L,-2));
+
+
+NewSellFractal=(Ref(SellFractal,2) > Ref(SellFractal,1) OR Ref(SellFractal,2) < Ref(SellFractal,1)); 
+NewBuyFractal=(Ref(BuyFractal,2) > Ref(BuyFractal,1) OR Ref(BuyFractal,2) < Ref(BuyFractal,1) );
+
+//== Added Crash  crashandburn59 [at] hotmail.com solution
+Plot(Ref(SellFractal,2), "Sell Fractal", ParamColor("Sell Fractal Color",colorRed), ParamStyle("Sell Fractal Style", styleDashed));
+Plot(Ref(BuyFractal,2), "Buy Fractal",ParamColor("Buy Fractal Color",colorBlue), ParamStyle("Buy Fractal Style", styleDashed));
+
+PlotShapes(IIf(NewSellFractal,shapeDownArrow,shapeNone),colorRed,0,High,Offset=-12);
+PlotShapes(IIf(NewBuyFractal,shapeUpArrow,shapeNone),colorBlue,0,Low,Offset=-12);
+
+
+//Plot(Max(HHV(H,3),Ref(UpFractal,2)), "Up Fractal", ParamColor("Up Fractal Color",colorRed), ParamStyle("Up Fractal Style", styleDashed));
+//Plot(Max(HHV(H,3),Ref(UpFractal,2)), "Down Fractal",ParamColor("Down Fractal Color",colorBlue), ParamStyle("Down Fractal Style", styleDashed));
+
+_SECTION_END();
+
+
+_SECTION_BEGIN("Exploration");
+
+/*
+   Buy:  Scan stocks only breakout..maxbreakout (1~30%, default) and Trend is bullish
+   Sell: Scan stocks only breakout..maxbreakout (1~30%, default) and Trend is bearish
+
+*/
+//== Price Increment Value - depend on different country
+Inc = 1;  
+
+
+//== Set the Price Range for stock to scan
+PriceFrom = Param("Price From:", 50,  1, 200000, Inc); 
+PriceTo   = Param("Price To:",   200000, 1, 200000, Inc); 
+MaxBreakOut = Param("Max Breakout (%)", 5, 1, 30);  
+MaxBreakOut = MaxBreakOut/100;
+
+Buy  = C>SellFractal AND C<=(1+MaxBreakOut)*SellFractal AND AlligatorTeeth>AlligatorJaw; /* AND AlligatorLips>AlligatorTeeth; */
+Sell = C<BuyFractal AND C>=(1-MaxBreakOut)*BuyFractal AND AlligatorTeeth<AlligatorJaw; /* AND AlligatorLips<AlligatorTeeth; */
+
+Trendup = LT>0 AND JT<=0;
+Trenddn= LT<0 AND JT>0;
+
+Filter = Trendup OR Trenddn AND  (MA(V,3)/EMA(V,17)) >=1; // Trend up or trend down with volume
+ 
+
+AddTextColumn(FullName(), "Security", 1.0, colorDefault, colorDefault, 200); 
+/* AddTextColumn( WriteIf(Buy,"Buy", WriteIf(Sell, "Sell", "")), "Trade", 1.0);*/
+AddColumn(Trendup,"Trendup",1.0);
+AddColumn(Trenddn,"Trenddown",1.0);
+AddColumn( SellFractal, "Sell Fractal");
+AddColumn( BuyFractal, "Buy Fratal");
+AddColumn( MA(V,3)/EMA(V,17), "MAV(3/17)");
+AddColumn( C, "Today's Close");
+AddColumn(Buy,"Buy",1.0);
+AddColumn(Sell,"Sell",1.0);
+
+
+
+
+_SECTION_END(); 
+
+GfxSetOverlayMode(1);
+GfxSelectFont("Tahoma", Status("pxheight")/6 );
+GfxSetTextAlign( 6 );// center alignment
+GfxSetTextColor( ParamColor( "Warna", colorLightGrey ) );
+GfxSetBkMode(0); // transparent
+GfxTextOut( "Alligator", Status("pxwidth")/2, Status("pxheight")/2 );

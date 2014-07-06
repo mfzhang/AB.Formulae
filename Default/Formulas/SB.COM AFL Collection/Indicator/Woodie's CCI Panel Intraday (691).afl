@@ -1,0 +1,837 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Woodie's CCI Panel Intraday
+//  Author/Uploader: Dennis Skoblar 
+//  E-mail:          DennisAndLisa@sbcglobal.net
+//  Date/Time Added: 2006-09-06 03:32:25
+//  Origin:          www.woodiescciclub.com
+//  Keywords:        Woodie's CCI
+//  Level:           medium
+//  Flags:           system,exploration,indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=691
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=691
+//
+//------------------------------------------------------------------------------
+//
+//  Woodie's CCI Panel Intraday.
+//
+//  *** The Sidewinder and CZI included in the panel are very close
+//  approximations derrived from watching the moderator's charts and are not
+//  derrived from Woodie's proprietary formula ***
+//
+//  Disclaimer: For educational purposes only, trade at your own risk.
+//
+//  For updates...goto:
+//
+//  http://woodiescciclub.com/forum/viewtopic.php?p=5609#5609
+//
+//------------------------------------------------------------------------------
+
+/////////////////////////////// 
+
+// CCI Woodies Style  
+
+// Codded/Added by Dennis, Kris, Wring, Greg
+
+// Last Update: 9/4/2006
+
+// Amibroker 4.70 
+
+/////////////////////////////// 
+
+// Color setup
+
+// Go to Tools==>Colors==>Palette Editor==>Custom Colors
+
+// Input these values under the Custom Colors section on the bottom, the first
+// square 
+
+// is custom1, the last is custom16.
+
+// These settings are for the background screen color. Put them in Custom1 if
+// you wish.
+
+// Hue: 86
+
+// Sat: 36
+
+// Lum: 102
+
+// Red: 92
+
+// Green: 124
+
+// Blue: 97
+
+/////////////////////////////// 
+
+//Setup Parameters section, right click on chart panel, click on Parameters:
+
+// (1) =zlr
+
+// (2) =famir
+
+// (3) =vegas trade
+
+// (4) =gb 100 line cross
+
+// (5) =tony trade
+
+// The last one "choppy" is not a pattern, but a signal that indicates a
+// choppy market
+
+//  defined as cci chopping
+
+// back and forth inbetween the 100's. Choppy is gone once a Hook From Extreme
+// occures.
+
+/////////////////////////////// 
+
+//Setup Axes and Grid section (right click on chart panel, click on
+
+//Parameters):
+
+// Scaling: Custom , Min=-275  Max=275
+
+// Show Date Axis = Yes , Show Middle Lines = No
+
+/////////////////////////////// 
+
+// To activate the timer properly, make sure the following is set:
+
+// click on Tools==>Preferences==>Intraday....
+
+// make sure "Allign minute bars to market hours" is checked...
+
+// make sure "Start time of interval" is checked...
+
+// make sure "Override: Weekly/monthly bars use day of last trade" is checked.
+
+/////////////////////////////// 
+
+// Discalimer: For educational purposes only. Trade at your own risk.
+
+/////////////////////////////// 
+
+Version(4.70); 
+
+PositionSize = MarginDeposit = 1;
+
+MH1=Param("Market Open",default=063000,000000,240000);
+
+MH2=Param("Market Close",default=122700,000000,240000);
+
+MarketHours = TimeNum()>=MH1 AND TimeNum()<=MH2; 
+
+MArketClose= TimeNum()<=MH2; 
+
+zperiod=Param("CCI Period",default=14,0,100);
+
+z = CCI(zperiod); 
+
+z6 = CCI(6); 
+
+CCI50_var = CCI(50); 
+
+LSMA25 = LinearReg(C, 25 ); 
+
+EMA34 = EMA(C,34); 
+
+PI = atan(1.00) * 4; 
+
+periods = 30; 
+
+HighHigh = HHV(H, periods); 
+
+LowLow = LLV(L, periods); 
+
+range = 25 / (HighHigh - LowLow) * LowLow; 
+
+TTMperiod = 6; 
+
+Low_ma = EMA(L, TTMperiod); 
+
+High_ma = EMA(H, TTMperiod); 
+
+Low_third = (High_ma - Low_ma) / 3 + Low_ma; 
+
+High_third = 2 * (High_ma - Low_ma) / 3 + Low_ma; 
+
+tempnum = Now( 4 ) - TimeNum(); 
+
+TimeRem = Interval() - ((int(tempnum[BarCount - 1] / 100) * 60) + (tempnum[BarCount - 1] - int(tempnum[BarCount - 1] / 100) * 100)); 
+
+if (TimeRem[BarCount - 1] < 0) TimeRem = 0; 
+
+TitleTimeRem = EncodeColor(colorWhite); 
+
+MinuteVar = int(TimeRem );  
+
+if (TimeRem[BarCount - 1] > 60) 
+
+{ 
+
+TitleTimeRem = TitleTimeRem + EncodeColor(colorWhite) + MinuteVar + "s"; 
+
+} 
+
+else if (TimeRem[BarCount - 1] > 45) 
+
+{ 
+
+TitleTimeRem = TitleTimeRem  +  EncodeColor(colorWhite) + MinuteVar + "s"; 
+
+} 
+
+else 
+
+{ 
+
+TitleTimeRem = TitleTimeRem +  EncodeColor(colorYellow) + MinuteVar + "s"; 
+
+} 
+
+if(SelectedValue(CCI50_var) < 0) 
+
+{ 
+
+CCI50Title = EncodeColor(colorRed); 
+
+} 
+
+else 
+
+{ 
+
+CCI50Title = EncodeColor(colorLime); 
+
+} 
+
+CCI50Title = CCI50Title + "CCI 50 = " + round(CCI50_var) + ", "; 
+
+stop_range = IIf(O < C, IIf((H - O) < (C - L), C - L, H - O), 
+
+IIf((O - L) < (H - C), H - C, O - L)); 
+
+StopTitle = EncodeColor(colorWhite) + "Stop = " + EncodeColor(colorYellow); 
+
+StopTitle = StopTitle + StrToNum(NumToStr(stop_range, 4.4)); 
+
+x1_EMA34 = 0; 
+
+x2_EMA34 = 1; 
+
+y1_EMA34 = 0; 
+
+y2_EMA34 = (Ref(EMA34, -1) - EMA34) / Avg * range; 
+
+c_EMA34 = sqrt((x2_EMA34 - x1_EMA34)*(x2_EMA34 - x1_EMA34) + (y2_EMA34 - y1_EMA34)*(y2_EMA34 - y1_EMA34)); 
+
+angle_EMA34 = round(180 * acos((x2_EMA34 - x1_EMA34)/c_EMA34) / PI); 
+
+TitleAngleEMA34 = EncodeColor(colorWhite) + "\nEMA34 angle = "; 
+
+angle_EMA34 = IIf(y2_EMA34 > 0, - angle_EMA34, angle_EMA34); 
+
+if(SelectedValue(angle_EMA34) >= 25) 
+
+{ 
+
+TitleAngleEMA34 = TitleAngleEMA34 + EncodeColor(colorTurquoise); 
+
+} 
+
+else if(SelectedValue(angle_EMA34) <= -25) 
+
+{ 
+
+TitleAngleEMA34 = TitleAngleEMA34 + EncodeColor(colorRed); 
+
+} 
+
+else if(SelectedValue(angle_EMA34) >= 5) 
+
+{ 
+
+TitleAngleEMA34 = TitleAngleEMA34 + EncodeColor(colorTurquoise); 
+
+} 
+
+else if(SelectedValue(angle_EMA34) <= -5) 
+
+{ 
+
+TitleAngleEMA34 = TitleAngleEMA34 + EncodeColor(colorRed); 
+
+} 
+
+else 
+
+{ 
+
+TitleAngleEMA34 = TitleAngleEMA34 + EncodeColor(colorYellow); 
+
+} 
+
+TitleAngleEMA34 = TitleAngleEMA34 + angle_EMA34; 
+
+x1_LSMA25 = 0; 
+
+x2_LSMA25 = 1; 
+
+y1_LSMA25 = 0; 
+
+y2_LSMA25 = (Ref(LSMA25, -1) - LSMA25) / Avg * range; 
+
+c_LSMA25 = sqrt((x2_LSMA25 - x1_LSMA25)*(x2_LSMA25 - x1_LSMA25) + (y2_LSMA25 - y1_LSMA25)*(y2_LSMA25 - y1_LSMA25)); 
+
+angle_LSMA25 = round(180 * acos((x2_LSMA25 - x1_LSMA25)/c_LSMA25) / PI); 
+
+TitleAngleLSMA25 = EncodeColor(colorWhite) + "LSMA25 angle = "; 
+
+angle_LSMA25 = IIf(y2_LSMA25 > 0, - angle_LSMA25, angle_LSMA25); 
+
+if(SelectedValue(angle_LSMA25) >= 25) 
+
+{ 
+
+TitleAngleLSMA25 = TitleAngleLSMA25 + EncodeColor(colorTurquoise); 
+
+} 
+
+else if(abs(SelectedValue(angle_LSMA25)) <= -25) 
+
+{ 
+
+TitleAngleLSMA25 = TitleAngleLSMA25 + EncodeColor(colorRed); 
+
+} 
+
+else if(SelectedValue(angle_LSMA25) >= 5) 
+
+{ 
+
+TitleAngleLSMA25 = TitleAngleLSMA25 + EncodeColor(colorTurquoise); 
+
+} 
+
+else if(SelectedValue(angle_LSMA25) <= -5) 
+
+{ 
+
+TitleAngleLSMA25 = TitleAngleLSMA25 + EncodeColor(colorRed); 
+
+} 
+
+else 
+
+{ 
+
+TitleAngleLSMA25 = TitleAngleLSMA25 + EncodeColor(colorYellow); 
+
+} 
+
+TitleAngleLSMA25 = TitleAngleLSMA25 + angle_LSMA25; 
+
+// Colour the bars for Woodies Trend Following 
+
+Plusbars = BarsSince(z < 0); 
+
+Minusbars = BarsSince(z > 0); 
+
+TrendBarCount = 6; 
+
+Color[0] = colorDefault; 
+
+Trend[0] = 0; 
+
+TTMColor[0] = colorDefault; 
+
+for( i = 1; i < BarCount; i++ ) 
+
+{ 
+
+if (C[i] > High_third[i]) 
+
+{ 
+
+TTMColor[i] = colorDarkGreen; 
+
+} 
+
+else if (C[i] < Low_third[i]) 
+
+{ 
+
+TTMColor[i] = colorDarkRed; 
+
+} 
+
+else 
+
+{ 
+
+TTMColor[i] = TTMColor[i - 1]; 
+
+} 
+
+if (Plusbars[i] >= TrendBarCount) 
+
+{ 
+
+Trend[i] = 1; 
+
+} 
+
+else if (Minusbars[i] >= TrendBarCount) 
+
+{ 
+
+Trend[i] = -1; 
+
+} 
+
+else 
+
+{ 
+
+Trend[i] = Trend[i - 1]; 
+
+} 
+
+if (Trend[i] == 1) 
+
+{ 
+
+if (Minusbars[i] == TrendBarCount - 1) 
+
+{ 
+
+Color[i] = colorYellow; 
+
+} 
+
+else if (z[i] < 0) 
+
+{ 
+
+Color[i] = colorDarkGrey; 
+
+} 
+
+else 
+
+{ 
+
+Color[i] = colorLime; 
+
+} 
+
+} 
+
+else if (Trend[i] == -1) 
+
+{ 
+
+if (Plusbars[i] == TrendBarCount - 1) 
+
+{ 
+
+Color[i] = colorYellow; 
+
+} 
+
+else if (z[i] >= 0) 
+
+{ 
+
+Color[i] = colorDarkGrey; 
+
+} 
+
+else 
+
+{ 
+
+Color[i] = colorRed; 
+
+} 
+
+} 
+
+else 
+
+{ 
+
+Color[i] = colorDefault; 
+
+} 
+
+} 
+
+// Turbo CCI 
+
+Plot(z6,"CCI 6", colorDarkRed, styleLine | styleNoLabel); 
+
+// zero line 25lsma 
+ 
+PlotShapes(IIf(C > LSMA25,shapeSmallCircle,shapeNone),colorLime,0,0,0); 
+
+PlotShapes(IIf(C < LSMA25,shapeSmallCircle,shapeNone),colorRed,0,0,0);
+
+PlotShapes(IIf(C == LSMA25,shapeSmallCircle,shapeNone),colorTeal,0,0,0);
+
+// CCI Histogram 
+
+Plot(z,"", Color, styleHistogram | styleThick | styleNoLabel); 
+
+// Plot the 100s 
+
+ColorANGLE_EMA = IIf(angle_EMA34 >=5, colorTurquoise, 
+
+IIf(angle_EMA34 <=-5, colorRed, colorYellow)); 
+
+Plot(100,"", ColorANGLE_EMA , styleLine | styleThick | styleNoLabel); 
+
+Plot(-100,"", ColorANGLE_EMA , styleLine | styleThick | styleNoLabel); 
+
+// Plot the Sidewinder on the 200s 
+
+TitleTrending = WriteIf((abs(angle_EMA34) >= 15) AND (abs(angle_EMA34 + angle_LSMA25) >= 50), EncodeColor(colorWhite)  + EncodeColor(colorLime) + "TRENDING", 
+
+WriteIf((abs(angle_EMA34) >= 5) AND (((angle_EMA34 >= 0) AND (angle_LSMA25 >= 0)) OR ((angle_EMA34 <= 0) AND (angle_LSMA25 <= 0))) AND (abs(angle_EMA34 + angle_LSMA25) >= 30), EncodeColor(colorWhite) + EncodeColor(colorYellow) + "NORMAL", 
+
+EncodeColor(colorWhite) + EncodeColor(colorRed) + "FLAT")); 
+
+SW = IIf((abs(angle_EMA34) >= 15) AND (abs(angle_EMA34 + angle_LSMA25) >= 50), IIf(angle_LSMA25 > 0, 2, -2), 
+
+IIf((abs(angle_EMA34) >= 5) AND (((angle_EMA34 >= 0) AND (angle_LSMA25 >= 0)) OR ((angle_EMA34 <= 0) AND (angle_LSMA25 <= 0))) AND (abs(angle_EMA34 + angle_LSMA25) >= 30), IIf(angle_LSMA25 > 0, 1, -1), 0)); 
+
+ColorSW = IIf(abs(SW) == 2, colorLime, 
+
+IIf(abs(SW) == 1, colorYellow, colorRed)); 
+
+Plot(200,"", ColorSW, styleThick | styleNoLabel); 
+
+Plot(-200,"", ColorSW, styleThick | styleNoLabel); 
+
+// Plot Grids
+
+PlotTheGrids = ParamToggle("Plot the grids","No|Yes",1); 
+
+if (PlotTheGrids ==1) 
+{ 
+PlotGrid(0); 
+
+PlotGrid(-100); 
+
+PlotGrid(100); 
+
+PlotGrid(-200); 
+
+PlotGrid(200); 
+} 
+
+// choppy - wcci is 10 bars within the 100's
+
+A= (HHV(z,10)<=100 AND LLV(z,10)>=-100); 
+
+B= (Ref(z,-1)>200 AND z<200) OR (Ref(z,-1)<-200 AND z>-200); 
+
+bs_a=BarsSince(A); 
+
+bs_b=BarsSince(B); 
+
+bars = IIf( bs_A < Bs_B, bs_a, 0); 
+
+NoChop= a == 0 AND bars == 0;
+
+// ZLR Long 
+
+Linex_long=Ref(z,-1)>100 AND z<100; 
+
+barsfromline_long=BarsSince(Linex_long); 
+
+CCIhook_long=z>Ref(z,-1) AND Ref(z,-1)>-100 AND Ref(z,-1)<Ref(z,-2) AND Ref(z,-2)>-100 AND z>0;
+
+SW_trendinglong= sw==1 OR sw==2; 
+
+zlrlong=  (Ref(angle_ema34,-2)>=5 AND Ref(angle_ema34,-1)>=5 AND angle_ema34>=5) AND SW_trendinglong AND z<120 AND barsfromline_long<10 AND CCIhook_long AND trend==1;
+
+// ZLR Short 
+
+Linex_short=Ref(z,-1)<=-100 AND z>=-100; 
+
+barsfromline_short=BarsSince(Linex_short); 
+
+CCIhook_short=z<Ref(z,-1) AND Ref(z,-1)<100 AND Ref(z,-1)>Ref(z,-2) AND Ref(z,-2)<100 AND z<0; 
+
+SW_trendingshort= sw==-1 OR sw==-2;
+
+zlrshort=  (Ref(angle_ema34,-2)<=-5 AND Ref(angle_ema34,-1)<=-5 AND angle_ema34<=-5) AND SW_trendingshort AND z>-120 AND barsfromline_short<10 AND CCIhook_short AND trend==-1;
+
+// Famir Long 
+
+FamirLinex_long=Ref(z,-1)<=-100 AND z>-100; 
+
+Famir_barsfromline_long=BarsSince(FamirLinex_long); 
+
+Famir_pivotlong= (Ref(z,-2)>Ref(z,-1)AND Ref(z,-1)>=-55 AND Ref(z,-2)>=-55) OR (Ref(z,-3)>Ref(z,-1) AND Ref(z,-1)>=-55 AND Ref(z,-2)>=-55 AND Ref(z,-3)>=-55) 
+
+					OR (Ref(z,-4)>Ref(z,-1) AND Ref(z,-1)>=-55 AND Ref(z,-2)>=-55 AND Ref(z,-3)>=-55); 
+
+Famirhook_long=Famir_pivotlong AND z>Ref(HHV(z,Famir_barsfromline_long),-1) AND (z>=-55 AND z<=55); 
+
+Famirlong= Famir_barsfromline_long<10 AND Famirhook_long AND trend==-1 AND C>LSMA25; 
+
+// Famir Short 
+
+FamirLinex_short=Ref(z,-1)>=100 AND z<100; 
+
+Famir_barsfromline_short=BarsSince(FamirLinex_short); 
+
+Famir_pivotshort= (Ref(z,-2)<Ref(z,-1)AND Ref(z,-1)<=55 AND Ref(z,-2)<=55) OR (Ref(z,-3)<Ref(z,-1)AND Ref(z,-1)<=55 AND Ref(z,-2)<=55 AND Ref(z,-3)<=55) 
+
+					OR (Ref(z,-4)<Ref(z,-1) AND Ref(z,-1)<=55 AND Ref(z,-2)<=55 AND Ref(z,-3)<=55); 
+
+Famirhook_short=Famir_pivotshort AND z<Ref(LLV(z,Famir_barsfromline_short),-1) AND (z>=-55 AND z<=55); 
+
+Famirshort= Famir_barsfromline_short<10 AND Famirhook_short AND trend==1 AND C<LSMA25; 
+
+// HFE 
+
+HFEshort=(Ref(z,-1)>200 AND z<200); 
+
+HFElong=(Ref(z,-1)<-200 AND z>-200); 
+
+HFE= (Ref(z,-1)>200 AND z<200) OR (Ref(z,-1)<-200 AND z>-200); 
+
+// VT Long 
+
+vtLinex_long=Ref(z,-1)<=-200 AND z>-200; 
+
+vt_barsfromline_long=BarsSince(vtLinex_long); 
+
+vtlong_A = z<-200; 
+
+vtlong_B = Ref(z,-1)<=Ref(z,-2) OR 
+
+Ref(z,-2)<=Ref(z,-3) OR 
+
+Ref(z,-3)<=Ref(z,-4) OR 
+
+Ref(z,-4)<=Ref(z,-5) OR 
+
+Ref(z,-5)<=Ref(z,-6) OR 
+
+Ref(z,-6)<=Ref(z,-7) OR 
+
+Ref(z,-7)<=Ref(z,-8); 
+
+vtlong_bs_A = BarsSince(vtlong_A); 
+
+vtlong_bs_B = BarsSince(vtlong_b); 
+
+Vtlong_bars = vtlong_bs_A>=5 AND vtlong_bs_B<=0; 
+
+vt_pivotlong= Vtlong_bars; 
+
+swinghibars=BarsSince(z>Ref(HHV(z,vt_barsfromline_long),-1)); 
+
+vthook_long= vt_pivotlong AND z>Ref(HHV(z,vt_barsfromline_long),-1); 
+
+vtlong= vt_barsfromline_long<=11 AND (Ref(HHV(z,vt_barsfromline_long),-1)<0 OR HHV(z,vt_barsfromline_long)<=0) AND vthook_long AND C>Lsma25 AND Ref(swinghibars>=2,-1) AND z>-100; 
+
+// VT Short 
+
+vtLinex_short=Ref(z,-1)>=200 AND z<200; 
+
+vt_barsfromline_short=BarsSince(vtLinex_short); 
+
+vtshort_A = z>200 ; 
+
+vtshort_B =Ref(z,-1)>=Ref(z,-2) OR 
+
+Ref(z,-2)>=Ref(z,-3) OR 
+
+Ref(z,-3)>=Ref(z,-4) OR 
+
+Ref(z,-4)>=Ref(z,-5) OR 
+
+Ref(z,-5)>=Ref(z,-6) OR 
+
+Ref(z,-6)>=Ref(z,-7) OR 
+
+Ref(z,-7)>=Ref(z,-8); 
+
+vtshort_bs_A = BarsSince(vtshort_A); 
+
+vtshort_bs_B = BarsSince(vtshort_b); 
+
+Vtshort_bars = vtshort_bs_A>=5 AND vtshort_bs_B<=0; 
+
+vt_pivotshort= Vtshort_bars; 
+
+swinglowbars= BarsSince(z<Ref(LLV(z,vt_barsfromline_short),-1)); 
+
+vthook_short= vt_pivotshort AND z<Ref(LLV(z,vt_barsfromline_short),-1); 
+
+vtshort= vt_barsfromline_short<=11 AND (Ref(LLV(z,vt_barsfromline_short),-1)>0 OR LLV(z,vt_barsfromline_short)>0) AND vthook_short AND C<Lsma25 AND Ref(swinglowbars>=2,-1) AND z<100; 
+
+// GB 100 Long 
+
+Linex_longGB=Ref(z,-1)>100 AND z<100; 
+
+barsfromline_longGB=BarsSince(Linex_longGB); 
+
+CCIhook_longGB= Ref(z,-1)<-100 AND z>-100; 
+
+GB100long= barsfromline_longGB<20 AND angle_EMA34>=5 AND CCIhook_longGB AND trend==1;
+
+// GB100 Short 
+
+Linex_shortGB=Ref(z,-1)<-100 AND z>-100; 
+
+barsfromline_shortGB=BarsSince(Linex_shortGB); 
+
+CCIhook_shortGB=Ref(z,-1)>100 AND z<100; 
+
+GB100short= barsfromline_shortGB<20 AND angle_EMA34<=-5 AND CCIhook_shortGB AND trend==-1;
+
+// TT Long 
+
+Minuszero=BarsSince(Ref(z,-1)>0);
+
+TTCCIhook_long= z>Ref(z,-1) AND z>0; 
+
+TTlong= Ref(trend,-Minuszero)==1 AND LLV(Ref(z,-1),BarsSince(Ref(z,-1)>=100))>-100 AND TTCCIhook_long AND Ref(minusbars,-1)>=4 AND Ref(minusbars,-1)<=9;
+
+// TT Short 
+
+Pluszero=BarsSince(Ref(z,-1)<0);
+
+TTCCIhook_short=z<Ref(z,-1) AND z<0; 
+
+TTshort= Ref(trend,-Pluszero)==-1 AND HHV(Ref(z,-1),BarsSince(Ref(z,-1)<=-100))<100 AND  TTCCIhook_short AND Ref(plusbars,-1)>=4 AND Ref(plusbars,-1)<=9;
+
+// Columns for exploration 
+
+Filter =(zlrlong OR famirlong OR Vtlong OR gb100long OR ttlong OR hfelong OR zlrshort OR famirshort OR vtshort OR gb100short OR ttshort OR Hfeshort AND NOT nochop);
+
+Buy = (zlrlong OR famirlong OR Vtlong OR gb100long OR ttlong);
+
+Sell= z<=Ref(z,-1) ;// OR MArketClose; ; 
+
+Short = (zlrshort OR famirshort OR Vtshort OR gb100short OR ttshort);
+
+Cover = z>=Ref(z,-1) ;// OR MArketClose; 
+
+AddColumn( IIf(zlrlong,1,IIf(zlrshort,-1,0)) ,"ZLR",1.0,colorWhite,IIf(zlrlong,colorLime,IIf(zlrshort,colorDarkRed,colorBlack))); 
+
+AddColumn(IIf(famirlong,1,IIf(famirShort,-1,0)),"Famir",1.0,colorWhite,IIf(famirlong,colorLime,IIf(famirShort,colorDarkRed,colorBlack))); 
+
+AddColumn(IIf(vtlong AND NOT famirlong,1,IIf(vtShort AND NOT famirshort,-1,0)),"Vegas",1.0,colorWhite,IIf(vtlong AND NOT famirlong,colorLime,IIf(vtShort AND NOT famirshort,colorDarkRed,colorBlack))); 
+
+AddColumn(IIf(gb100long,1,IIf(gb100Short,-1,0)),"GB100",1.0,colorWhite,IIf(gb100long,colorLime,IIf(gb100Short,colorDarkRed,colorBlack))); 
+
+AddColumn(IIf(ttlong,1,IIf(ttShort,-1,0)),"TT",1.0,colorWhite,IIf(ttlong,colorLime,IIf(ttShort,colorDarkRed,colorBlack))); 
+
+AddColumn(IIf(hfelong,1,IIf(hfeshort,-1,0)),"HFE",1.0,colorWhite,IIf(hfelong,colorLime,IIf(hfeshort,colorDarkRed,colorBlack))); 
+
+AddColumn(IIf(A OR bars,1,IIf(A OR bars,-1,0)),"Choppy",1.0,colorWhite,IIf(A OR bars,colorDarkYellow,IIf(A OR bars,colorDarkYellow,colorBlack))); 
+
+// Price Panel
+
+Lastpricetitlehi= WriteIf(H>Ref(H,-1),EncodeColor(colorLime) + Ref(H,-1) + "  " + H , EncodeColor(colorBlack)+ Ref(H,-1) + "  " + H);
+
+Lastpricetitlelo= WriteIf(L<Ref(L,-1),EncodeColor(colorDarkRed) + Ref(L,-1) + "  " + L , EncodeColor(colorBlack) + Ref(L,-1) + "  " + L);
+
+// Display Patterns
+
+		zlrcode=ParamToggle("(1)  zlr ","No|Yes",1); 
+
+		famircode=ParamToggle("(2)  famir ","No|Yes",1); 
+
+		Vtcode=ParamToggle("(3)  vt ","No|Yes",1); 
+	
+		gb100code=ParamToggle("(4)  gb100 ","No|Yes",1); 
+
+		ttcode=ParamToggle("(5)  tt ","No|Yes",1); 
+
+		Hfecode=ParamToggle("hfe","No|Yes",1); 
+
+		Choppycode=ParamToggle("choppy","No|Yes",1); 
+
+		CCIcolorChoppycode=ParamToggle("Hilite wcci line when choopy","No|Yes",1); 
+
+		// CCI Line 
+
+		CCIcolorChoppy= IIf(NOT nochop AND CCIcolorChoppycode==1,colorWhite,colorBlack);
+
+		Plot(round(z),"WCCI", CCIcolorChoppy, styleLine | styleThick); 
+
+			//Signal Title 
+
+			Signaltitle= WriteIf(zlrlong AND zlrcode==1,EncodeColor(colorWhite) + "ZLR ", 
+
+			WriteIf(zlrshort AND zlrcode==1,EncodeColor(colorWhite) + "ZLR ",
+
+			WriteIf(Famirshort AND famircode==1,EncodeColor(colorWhite) + "FAMIR ", 
+
+			WriteIf(Famirlong AND famircode==1,EncodeColor(colorWhite) + "FAMIR ",
+
+			WriteIf(VTlong AND Vtcode==1,EncodeColor(colorWhite) + "VT ", 
+
+			WriteIf(VTshort AND Vtcode==1,EncodeColor(colorWhite) + "VT ",
+
+			WriteIf(GB100long AND gb100code==1,EncodeColor(colorWhite) + "GB100 ", 
+
+			WriteIf(Gb100short AND gb100code==1,EncodeColor(colorWhite) + "GB100 ",
+
+			WriteIf(TTLong AND ttcode==1,EncodeColor(colorWhite) + "TT ",
+
+			WriteIf(TTShort AND ttcode==1,EncodeColor(colorWhite) + "TT ",
+
+			WriteIf(HFE AND Hfecode==1,EncodeColor(colorWhite) + "HFE ","")))))))))));
+
+			//Choppy Title 
+
+			ChoppyTitle= WriteIf(A AND Choppycode==1,EncodeColor(colorWhite) + "CHOPPY",WriteIf(bars AND Choppycode==1,EncodeColor(colorWhite) + "CHOPPY",""));
+
+		patterntitle= WriteIf(zlrcode==1 OR famircode==1 OR Hfecode==1 OR Vtcode==1 OR gb100code==1 OR ttcode==1 OR choppycode==1,Signaltitle + ChoppyTitle,"");
+
+		//Pattern Codes
+
+		PlotShapes(IIf(zlrlong AND  zlrcode==1,shapeDigit1,shapeNone),colorLime,0,0,-15); 
+
+		PlotShapes(IIf(zlrshort AND  zlrcode==1,shapeDigit1+ shapePositionAbove,shapeNone),colorDarkRed,0,0,-15);
+
+		PlotShapes(IIf(famirlong AND  famircode==1,shapeDigit2,shapeNone),colorLime,0,0,-15); 
+
+		PlotShapes(IIf(famirShort AND famircode==1,shapeDigit2+ shapePositionAbove,shapeNone),colorDarkRed,0,0,-15) ;
+
+		PlotShapes(IIf(Ref(z,-1)>200 AND z<200 AND  Hfecode==1,shapeHollowDownTriangle,shapeNone),IIf(Ref(z,-1)>200 AND z<200 AND Hfecode==1,colorYellow,shapeNone),0,200,-20); 
+
+		PlotShapes(IIf(Ref(z,-1)<-200 AND z>-200 AND  Hfecode==1,shapeHollowUpTriangle,shapeNone),IIf(Ref(z,-1)<-200 AND z>-200 AND Hfecode==1,colorYellow,shapeNone),0,-200,-20) ;
+
+		PlotShapes(IIf(vtlong AND NOT famirlong AND Vtcode==1,shapeDigit3,shapeNone),colorLime,0,Min(z,0),-45); 
+
+		PlotShapes(IIf(vtshort AND NOT famirshort AND Vtcode==1,shapeDigit3+ shapePositionAbove,shapeNone),colorDarkRed,0,Max(z,0),-45);
+
+		PlotShapes(IIf(GB100long AND gb100code==1,shapeDigit4,shapeNone),colorLime,0,0,-60); 
+
+		PlotShapes(IIf(GB100short AND gb100code==1,shapeDigit4+ shapePositionAbove,shapeNone),colorDarkRed,0,0,-60); 
+
+		PlotShapes(IIf(ttlong AND ttcode==1,shapeDigit5,shapeNone),colorLime,0,0,-50); 
+
+		PlotShapes(IIf(ttshort AND ttcode==1,shapeDigit5+ shapePositionAbove,shapeNone),colorDarkRed,0,Max(z,0),-50);
+
+//Title 
+
+Title = EncodeColor(colorBlack) + "" + Name() + ", " + Interval(2) + ", " + Date() + "\n" + 
+
+TitleTimeRem + EncodeColor(colorWhite) + "\n" +
+
+Titletrending + "\n" + Lastpricetitlehi + "\n" + EncodeColor(colorBlack) +  "     " + C  + "\n" + Lastpricetitlelo + "\n" + 
+
+patterntitle; 

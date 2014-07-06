@@ -1,0 +1,22 @@
+//START
+//==========================================================================================
+SetChartOptions(0,chartShowDates|chartShowArrows|chartLogarithmic|chartWrapTitle);
+_N(Title = StrFormat("{{NAME}} - {{INTERVAL}} {{DATE}} Open %g, Hi %g, Lo %g, Close %g (%.1f%%) {{VALUES}}", O, H, L, C, SelectedValue( ROC( C, 1 ) )));
+
+Plot( C, "", IIf(Close > Open, colorGreen, colorRed), styleBar + styleNoLabel);
+
+#include <T3_include.AFL>;
+Plot(T3(C,3),"T3",colorBlue,styleThick);
+Plot(T3(C,5),"T5",colorRed);
+
+Buy = Cross (T3(C,3), T3(C,5));
+Sell =  Cross (T3(C,5), T3(C,3));
+
+Filter = Buy OR Sell;
+
+AddColumn(Buy, "Buy", 1);
+AddColumn(Sell, "Sell", 1);
+AddColumn(V, "Volume", 1);
+AddColumn(C, "Close", 1.2);
+//END
+//============================================================================================

@@ -1,0 +1,53 @@
+_SECTION_BEGIN( "Price" );
+
+SetChartOptions( 0, chartShowArrows | chartShowDates );
+_N( Title = StrFormat( "Double BB - {{NAME}} - {{INTERVAL}} {{DATE}} Open %g, Hi %g, Lo %g, Close %g (%.1f%%) {{VALUES}}", O, H, L, C, SelectedValue( ROC( C, 1 ) ) ) );
+Plot( C, "Close", ParamColor( "Color", colorBlack ), styleNoTitle | ParamStyle( "Style" ) | GetPriceStyle() );
+_SECTION_END();
+
+_SECTION_BEGIN( "Small Bollinger Bands" );
+
+period1 = Param( "Period1", 20, 0, 100, 1 );
+width1 = Param( "Width1", 1, 0, 10, 0.05 );
+period2 = Param( "Period2", 20, 0, 100, 1 );
+width2 = Param( "Width2", 2, 0, 10, 0.05 );
+P = ParamField( "Price field", -1 );
+ADX_periods = Param( "ADX Periods", 14, 1, 400, 1, 0 );
+ADX_MA = Param( "MA Periods of ADX", 10, 1, 400, 1, 0 );
+
+ADX1 = ADX( ADX_periods );
+MA_ADX = MA( ADX1, ADX_MA );
+
+Style = ParamStyle( "Style" ) | styleNoRescale | styleNoLabel | styleDashed;
+BBT1 = BBandTop( P, period1, width1 );
+BBB1 = BBandBot( P, period1, width1 );
+BBT2 = BBandTop( P, period2, width2 );
+BBB2 = BBandBot( P, period2, width2 );
+
+
+Buy_signal = False;
+Buy_signal = IIf( C > BBT1, True, False ) AND IIf( ADX1 > MA_ADX, True, False );
+Buy = IIf( !Ref( Buy_signal, -1 ) AND Buy_signal, True, False );
+Filter = Buy;
+AddColumn( C, "Close" );
+AddColumn( BBT1, "Bollinger 1 top" );
+AddColumn( V, "Volume" );
+
+Sell_signal = False;
+Sell_signal = ( C < BBT1 ) AND ( ADX1 < Ref( ADX1, -1 ) );
+Sell = IIf( !Ref( Sell_signal, -1 ) AND Sell_signal, True, False ) AND !Buy_signal;
+
+Short = IIf( C < BBB1, True, False );
+Cover = C > BBB1;
+
+Plot( BBT1, "BBTop" + _PARAM_VALUES(), colorGreen, styleLine | styleThick );
+Plot( BBB1, "BBBot" + _PARAM_VALUES(), colorGreen, styleLine | styleThick );
+Plot( BBT2, "BBTop" + _PARAM_VALUES(), colorRed, styleLine | styleThick );
+Plot( BBB2, "BBBot" + _PARAM_VALUES(), colorRed, styleLine | styleThick );
+PlotOHLC( BBT1, BBT1, BBT2, BBT2, "", ParamColor( "Color", colorRose ), styleCloud );
+PlotOHLC( BBB1, BBB1, BBB2, BBB2, "", ParamColor( "Color", colorRose ), styleCloud );
+
+PlotShapes( Buy*shapeUpArrow, colorGreen, 0, Graph0 );
+PlotShapes( Sell*shapeDownArrow, colorRed, 0, Graph0 );
+
+_SECTION_END();

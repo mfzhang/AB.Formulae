@@ -1,0 +1,59 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    The Mean RSIt
+//  Author/Uploader: Dimitris Tsokakis 
+//  E-mail:          
+//  Date/Time Added: 2002-03-17 14:34:12
+//  Origin:          
+//  Keywords:        
+//  Level:           advanced
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=173
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=173
+//
+//------------------------------------------------------------------------------
+//
+//  The RSIt Indicator, defined from
+//
+//  Var=MACD();
+//
+//  Up=IIf(Var>Ref(Var,-1),abs(Var-Ref(Var,-1)),0);
+//
+//  Dn=IIf(Var<Ref(Var,-1),abs(Var-Ref(Var,-1)),0);
+//
+//  Ut=Wilders(Up,t);
+//
+//  Dt=Wilders(Dn,t);
+//
+//  RSIt=100*(Ut/(Ut+Dt));
+//
+//  may be applied to a group or sector or the whole market,
+//
+//  to produce the Mean RSIt. For a Market of N stocks, we have
+//
+//  MeanRSIt=(RSIt1+RSIt2+...+RSItN)/N
+//
+//  Together with the MeanRSI, the MeanStochD and other Mean Indicators,
+//  produced in a similar manner, they consist a group of descriptive curves,
+//  very useful to predict main market movements. These functions enlarge the
+//  breath indicators family and may be used in trading systems design.
+//
+//------------------------------------------------------------------------------
+
+/*The MEAN RSIt Indicator*/
+Var=MACD();
+Up=IIf(Var>Ref(Var,-1),abs(Var-Ref(Var,-1)),0);
+Dn=IIf(Var<Ref(Var,-1),abs(Var-Ref(Var,-1)),0);
+Ut=Wilders(Up,30);
+Dt=Wilders(Dn,30);
+RSIt=100*(Ut/(Ut+Dt));
+AddToComposite(RSIt,"~meanRSIt","V");
+/*ADDITIONAL MACD COMPOSITES ~MACDBULL AND ~MACDBEAR*/
+ob=Signal()<MACD();
+os=Signal()>=MACD();
+values8 = os>0;
+values9 = ob>0;
+AddToComposite(Values8,"~macdbear","V");
+AddToComposite(Values9,"~macdbull","V");
+
+Buy=0;

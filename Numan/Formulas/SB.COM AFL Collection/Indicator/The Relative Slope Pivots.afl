@@ -1,0 +1,49 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    The Relative Slope Pivots
+//  Author/Uploader: Dimitris Tsokakis 
+//  E-mail:          
+//  Date/Time Added: 2002-03-25 04:30:18
+//  Origin:          
+//  Keywords:        
+//  Level:           advanced
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=181
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=181
+//
+//------------------------------------------------------------------------------
+//
+//  Definitions:
+//
+//  "RS up pivot" (RSUP) is the population of stocks presenting a bearish
+//  turning point (bearish pivot)
+//
+//  over a certain (positive) level of their Relative Slope value.
+//
+//  "RS down pivot" (RSDP) is the population of stocks presenting a bullish
+//  turning point (bullish pivot)
+//
+//  below a certain (negative) level of their Relative Slope value.
+//
+//  The two levels are predetermined and estimated by the Technical Analyst, as
+//  the levels where the majority of stocks obtained their maximum
+//  (respectively minimum) Relative slope value.
+//
+//  Observation indicates that an 80% of this level performs well.
+//
+//  In the following code, conditions RS>2 and RS<-2 are used respectively.
+//  They may be modified according to market profile.
+//
+//------------------------------------------------------------------------------
+
+/*RSPIVOTS*/
+K=EMA((H+L+C)/3,10);
+S1=2*(K-Ref(K,-1))/(K+Ref(K,-1));
+RS=100*EMA(S1,3);
+s3=RS<Ref(RS,-1) AND Ref(RS,-1)>Ref(RS,-2) AND RS>2;
+s4=RS>Ref(RS,-1) AND Ref(RS,-1)<Ref(RS,-2) AND RS<-2;
+values9 = s3>0;
+values10=s4>0;
+AddToComposite(Values9,"~rsuppivot","V");
+AddToComposite(Values10,"~rsdownpivot","V");
+Buy=0;

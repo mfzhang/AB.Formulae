@@ -1,0 +1,8 @@
+Ticker = ParamStr("Symbol", Name() );
+PlotForeign( Ticker, Ticker, ParamColor("Color", colorCycle ), ParamStyle("Style") | GetPriceStyle() ); 
+GfxSetOverlayMode(1);
+GfxSelectFont("Tahoma", Status("pxheight")/6 );
+GfxSetTextAlign( 6 );// center alignment
+GfxSetTextColor( ColorRGB( 200, 200, 200 ) );
+GfxSetBkMode(1); // transparent
+GfxTextOut( Ticker, Status("pxwidth")/2, Status("pxheight")/12 );

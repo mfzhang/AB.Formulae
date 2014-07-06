@@ -1,0 +1,38 @@
+//CODE START ****************************************
+/*
+Plots the delta between Price and Donichan midline. Also in second
+plot i am plotting a modified version of this delta because this is
+what the tradestation code seems to be doing. but in addition to
+this
+the trade station code is calculating something using a function
+LinRegressionValue() that i am not able to replicate. This code is
+used in addition with the code to see if the squeeze is in effect
+(Bollinger bands inside Keltner channel) to use as a momemtum play.
+ */
+
+MomentumValues = ParamField( "Field" ) - Ref(ParamField
+( "Field" ), -12);
+Plot( MomentumValues, "myMomentum_12_Days", colorRed, styleLine);
+
+pds=20;
+DonchianUpper =HHV(Ref(H,-1),pds);
+DonchianLower = LLV(Ref(L,-1),pds);
+DonchianMiddle = (DonchianUpper+DonchianLower)/2;
+
+deltaDonichanPrice = Close - DonchianMiddle;
+
+Plot(deltaDonichanPrice, "myBBSqueeze",colorBlack, styleHistogram |styleThick );
+
+value2 = (Close - (( DonchianMiddle + EMA(Close, 20) )/2) );
+
+Plot(value2, "value2",colorRed, styleHistogram | styleThick );
+
+_SECTION_BEGIN("EMA1");
+P = ParamField("Price field",-1);
+Periods = Param("Periods", 15, 2, 200, 1, 10 );
+Plot( EMA( P, Periods ), _DEFAULT_NAME(), ParamColor( "Color",
+colorCycle ), ParamStyle("Style") );
+_SECTION_END();
+
+
+//CODE END ****************************************

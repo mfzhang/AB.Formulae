@@ -1,0 +1,304 @@
+function XOvers( b, OB, OS, BL, LookBack, BolingerBase, Entry )
+{
+    bbt = BBandTop( BollingerBase, 10, 1.35 );
+    bbb = BBandBot( BollingerBase, 10, 1.35 );
+
+    if ( LookBack > 0 )
+    {
+        BOSC 		= Ref( b, -LookBack );
+        OverB 	= Ref( OB, -LookBack );
+        OverS 	= Ref( OS, -LookBack );
+        BaseL 	= Ref( BL, -LookBack );
+        bbt 		= Ref( bbt, -LookBack );
+        bbb 		= Ref( bbb, -LookBack );
+    }
+    else
+    {
+        BOSC 		= b;
+        OverB 	= OB;
+        OverS 	= OS;
+        BaseL 	= BL;
+    }
+
+    if ( Entry == 0 )
+    {
+        Entry1	= Cross( BOSC, bbt ) AND ( BOSC < BaseL );		// Osc crosses-up BB3top below yellow-baseline
+        Entry2	= Cross( BOSC, bbb ) AND ( bbb > BaseL );			// Osc crosses-in BB3bot above yellow-baseline
+        Entry3	= Cross( BOSC, bbt ) AND Cross( BOSC, bbt );		// Osc crosses-up BB3top and BB1top ; usually above yellow and below red.
+        Entry4 	= Cross( BOSC, OverS ); 							// AND Cross( b, bb3b );
+        ;
+        //return ( Entry1 OR Entry2 OR Entry3 OR Entry4 ); 		// AND ( ( BottomUp AND TopDn ) OR ( BottomDn AND TopUp )OR UpTrendy ) ;
+    }
+    else
+    {
+        mp 		= Param( "Maturity Period", 3, 0, 1000, 1 ); 	// maturity period
+        Exit1		= Cross( bbt, BOSC ) AND ( BOSC > BaseL ) ;
+        Exit2		= Cross( Ref( BOSC, -mp ), Ref( bbt, -mp ) ) AND ( Ref( BOSC, -mp ) < Ref( BaseL, -mp ) );
+        ;
+        //return ( Exit1 OR Exit2 );
+    }
+}
+
+function trendup ( bollinger, lookback )
+{
+    trend = True;
+
+    for ( i = 1; i <= lookback; i++ )
+    {
+        trend = trend AND ( Ref( bollinger, -lookback + 1 ) > Ref( bollinger, -lookback ) );
+    }
+
+    return trend;
+}
+
+function trenddown( bollinger, lookback )
+{
+    trend = True;
+
+    for ( i = 1; i <= lookback; i++ )
+    {
+        trend = trend AND ( Ref( bollinger, -lookback + 1 ) < Ref( bollinger, -lookback ) );
+    }
+
+    return trend;
+}
+
+_SECTION_BEGIN( "% B of Bollinger Bands With Adaptive Zones" );
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    % B of Bollinger Bands With Adaptive Zones
+//  Author/Uploader: Anthony Faragasso
+//  E-mail:          ajf1111@epix.net
+//  Date/Time Added: 2001-12-20 14:22:02
+//  Origin:
+//  Keywords:
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=140
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=140
+//
+//------------------------------------------------------------------------------
+//
+//  %B of Bollinger Bands With Adaptive Zones. The % B raw figure
+//
+//  Gives Percentage of where the close is in relation to the bands.
+//
+//  High reading ( Upper band ) , Low reading (Lower band )
+//
+//  I have added the Adaptive Zones oscillator to help pinpoint possible Buy
+//  and sell areas.
+//
+//------------------------------------------------------------------------------
+
+/* %B of Bollinger Bands With Adaptive Zones */
+/* Gives Percentage of where the close is in relation to the bands.*/
+/* High reading ( Upper band ) , Low reading (Lower band )
+/* AFL code by Anthony Faragasso*/
+
+//Inputs
+Lookback	= 60;
+Baseline	= 50;/*Do not Change*/
+PerCent	= 95;
+Pds			= 14;
+
+
+b = ( ( C + 2 * StDev( C, 20 ) - MA( C, 20 ) ) / ( 4 * StDev( C, 20 ) ) ) * 100;
+/*Input */
+
+Osc = b;
+
+/*Value of Osc*/
+AZOsc = Osc;
+
+/*Highest AND Lowest Values of Osc during Lookback Period*/
+Value2 = HHV( AZOsc, Lookback );
+Value3 = LLV( AZOsc, Lookback );
+
+/*Range of Osc during Lookback Period*/
+Value4 = Value2 - Value3;
+
+/*Define PerCent of Range to determine OB AND OS levels*/
+Value5 = Value4 * ( PerCent / 100 );
+
+/*Calculate OB AND OS levels*/
+OB = Value3 + Value5;
+OS = Value2 - Value5;
+
+//baseline = IIf( Osc < 100 , 50 , IIf( Osc < 0, 0, 0 ) );
+
+baseline = IIf( Osc < 100 , 50 , IIf( Osc < 0, 100, 0 ) );
+
+Plot( baseline, " Baseline", 7, 1 + 4 ); 				/* yellow */
+Plot( AZOsc, "( Adaptive Zones OSC )", 6, 1 + 4 );	/* BLUE */
+Plot( OB, "O/B", 4, 1 + 4 );  							/* RED-TOP(SELL) */
+Plot( OS, "O/S", 5, 1 + 4 );  							/* GREEN-BOT(BUY) */
+
+Plot( b, "( % B  )" , 4, 1 );
+_SECTION_END();
+
+_SECTION_BEGIN( "BBSmallClose" );
+P = ParamField( "Price field" );
+Periods = Param( "Periods", 10, 2, 100, 1 );
+Width = Param( "Width", 1.35, 0, 10, 0.05 );
+bbSt = BBandTop( P, Periods, Width );
+bbSb = BBandBot( P, Periods, Width );
+/**/
+Color = ParamColor( "Color", colorLightGrey );
+Style = ParamStyle( "Style" ) | styleNoRescale | styleHidden ;
+Plot( bbSt, "BBsTop" + _PARAM_VALUES(), Color, Style );
+Plot( bbSb, "BBsBot" + _PARAM_VALUES(), Color, Style );
+PlotOHLC( bbSt, bbSt, bbSb, bbSb, "", ColorBlend( Color, colorWhite, 0.8 ), styleCloud | styleNoRescale | styleHidden, Null, Null, Null, -1 );
+/**/
+_SECTION_END();
+
+_SECTION_BEGIN( "BBBigClose" );
+P = ParamField( "Price field" );
+Periods = Param( "Periods", 15, 2, 100, 1 );
+Width = Param( "Width", 2, 0, 10, 0.05 );
+bbBt = BBandTop( P, Periods, Width );
+bbBb = BBandBot( P, Periods, Width );
+/**/
+Color = ParamColor( "Color", colorLightGrey );
+Style = ParamStyle( "Style" ) | styleNoRescale | styleHidden;;
+Plot( bbBt, "BBbTop" + _PARAM_VALUES(), Color, Style );
+Plot( bbBb, "BBbBot" + _PARAM_VALUES(), Color, Style );
+PlotOHLC( bbBt, bbBt, bbBb, bbBb, "", ColorBlend( Color, colorWhite, 0.8 ), styleCloud | styleNoRescale | styleHidden, Null, Null, Null, -1 );
+/**/
+_SECTION_END();
+
+_SECTION_BEGIN( "Bollinger Bands1" );
+P = ParamField( "Price field", -1 );
+Periods = Param( "Periods", 15, 2, 100, 1 );
+Width = Param( "Width", 2, 0, 10, 0.05 );
+Color = ParamColor( "Color", colorLightGrey );
+Style = ParamStyle( "Style" ) | styleNoRescale;;
+Plot( bb1t = BBandTop( P, Periods, Width ), "BBTop" + _PARAM_VALUES(), Color, Style );
+Plot( bb1b = BBandBot( P, Periods, Width ), "BBBot" + _PARAM_VALUES(), Color, Style );
+PlotOHLC( bb1t, bb1t, bb1b, bb1b, "", ColorBlend( Color, colorWhite, 0.5 ), styleCloud | styleNoRescale, Null, Null, Null, -1 );
+_SECTION_END();
+
+_SECTION_BEGIN( "Bollinger Bands2" );
+P = ParamField( "Price field", -1 );
+Periods = Param( "Periods", 10, 2, 100, 1 );
+Width = Param( "Width", 1.35, 0, 10, 0.05 );
+Color = ParamColor( "Color", colorDarkRed );
+Style = ParamStyle( "Style" ) | styleNoRescale;;
+Plot( bb2t = BBandTop( P, Periods, Width ), "BBTop" + _PARAM_VALUES(), Color, Style );
+Plot( bb2b = BBandBot( P, Periods, Width ), "BBBot" + _PARAM_VALUES(), Color, Style );
+PlotOHLC( bb2t, bb2t, bb2b, bb2b, "", ColorBlend( Color, colorWhite, 0.5 ), styleCloud | styleNoRescale, Null, Null, Null, -1 );
+_SECTION_END();
+
+_SECTION_BEGIN( "Bollinger Bands3" );
+P = ParamField( "Price field", 8 );
+Periods = Param( "Periods", 10, 2, 100, 1 );
+Width = Param( "Width", 1.35, 0, 10, 0.05 );
+Color = ParamColor( "Color", colorBlueGrey );
+Style = ParamStyle( "Style" ) | styleNoRescale;;
+Plot( bb3t = BBandTop( P, Periods, Width ), "BBTop" + _PARAM_VALUES(), Color, Style );
+Plot( bb3b = BBandBot( P, Periods, Width ), "BBBot" + _PARAM_VALUES(), Color, Style );
+PlotOHLC( bb3t, bb3t, bb3b, bb3b, "", ColorBlend( Color, colorWhite, 0.5 ), styleCloud | styleNoRescale, Null, Null, Null, -1 );
+_SECTION_END();
+
+_SECTION_BEGIN( "Price Oscillation" );
+SetChartOptions( 1, chartShowArrows | chartShowDates | chartWrapTitle );
+/**/
+BottomUp = trendup( bb3b, 3 ); // ( bb3b > Ref( bb3b, -1 ) > Ref( bb3b, -2 ) > Ref( bb3b, -3 ) );
+TopUp	  = trendup( bb3t, 3 ); // ( bb3t > Ref( bb3t, -1 ) > Ref( bb3t, -2 ) > Ref( bb3t, -3 ) );
+UpTrendy =  BottomUp AND TopUp AND ( b > Ref( b, -1 ) );
+
+BottomDn = trenddown( bb3b, 3 );// ( bb3b < Ref( bb3b, -1 ) < Ref( bb3b, -2 ) < Ref( bb3b, -3 ) );
+TopDn	  = trenddown( bb3t, 3 ); // ( bb3t < Ref( bb3t, -1 ) < Ref( bb3t, -2 ) < Ref( bb3t, -3 ) );
+DnTrendy =  BottomDn AND TopDn;
+
+BollingerSpread 		= ( trenddown( bb3b, 1 ) AND NOT BottomDn ) AND TopUp;
+BollingerSqueeze 		= BottomUp AND TopDn;
+//Neutral				= ( BottomUp AND TopDn ) OR ( BottomDn AND TopUp );
+
+/**/
+
+// Osc crosses-up BB3top when Osc above yellow-baseline
+Entry1	= Cross( b, bb3t ) AND
+         ( b < baseline ) AND
+         ( bb3t < ( baseline - ( baseline - OS ) / 3 ) ) ;
+
+// Osc crosses-in BB3bot when BB3bot above yellow-baseline :: a rare case !
+// Here the whole of BB3 passes over the BB1Top!
+Entry2	= Cross( b, bb3b ) AND
+         ( bb3b > bb1t ) ;//AND
+//         UpTrendy;
+
+// Osc crosses-up BB3top and BB1top ; usually above yellow and below red.
+Entry3	= Cross( b, bb3t ) AND
+         Cross( b, bb1t ) AND
+         ( bb3t > bb1t );
+
+Entry5 = //Cross( bb3b, baseline ) OR
+    ( trendup( bb2t, 1 ) AND
+      trendup( bb2b, 1 ) AND
+      NOT ( trendup( bb2t, 2 ) ) AND
+      NOT ( trendup( bb2b, 2 ) ) AND
+      UpTrendy );
+
+//Cross( b, baseline ) AND ( b > bb3t );
+Entry6	= Cross( b, OB )AND ( ( bb3t < OB ) OR ( bb3t < b ) );
+
+// bottom troughs below green(O/S) line.
+Entry7 = (
+             ( OS > b ) AND
+             ( OS < bb3b ) AND
+             ( bb3b < 0 ) AND
+//             ( 0 > bb3b > OS > b ) AND
+             ( OS < -1 )
+         ) OR (
+             Cross( b, OS ) AND
+             Cross( Ref( b, -1 ), Ref( bb3b, -1 ) )
+         ) ;
+
+// price reached a bottom and moving up
+Entry8 = Cross( b, bb3b ) AND
+         Cross( b, OS ) AND
+         ( baseline - OS < 10 );
+
+//Cross( b, OS ) AND ( bb3b > OS ) AND ( OS < -1 ); //AND Cross( b, bb3b );
+Entry9 = Cross( b, bb2t ) AND ( Ref( bb2t, -1 ) > 50 AND Ref( bb2b, -1 ) < 50 );
+
+Buy 	= (
+           Entry1 OR
+           Entry2 OR
+           Entry3 OR
+           Entry5 OR
+           Entry6 OR
+           Entry7 OR
+           Entry8 OR
+           Entry9 //OR
+       ) ;
+
+
+mp 		= Param( "Maturity Period", 3, 0, 1000, 1 ); // maturity period, 3-day default
+BuyColor = ParamColor( "BUY color", colorBrightGreen ) ;
+SellColor = ParamColor( "Sell color", colorRed );
+Exit0	= Ref( Buy, -mp );								//	Net 3 day maturity attained
+Exit1	= Cross( bb3t, b ) AND ( b > baseline ) ;		// 'b' crossed bollinger top above the baseline
+Exit2	= Cross( Ref( b, -mp ), Ref( bb3t, -mp ) ) AND ( Ref( b, -mp ) < Ref( baseline, -mp ) );
+Sell 	= //Exit0 OR
+    Exit1 OR
+    Exit2 ;
+
+shape	= Buy * shapeUpArrow + Sell * shapeDownArrow;
+shapemarks = Exit0 * shapeDigit4;
+
+Offset = Param( "Sign Offset", 20, 0, 100, 1, 1 );
+PlotShapes( shape, IIf( Buy, BuyColor, SellColor ), 0, b, -Offset );
+//KB: W-4-6-87; S-29-0ct-79;
+//IIf( ParamToggle( "Show exit at maturity", "Yes|No" ) == 0, PlotShapes( shapemarks, SellColor, 0, b, Offset*1.5 ), 0 );
+
+PlotShapes( Entry1 * shapeDigit1, BuyColor, 0, b, -Offset*1.5 );
+PlotShapes( Entry2 * shapeDigit2, BuyColor, 0, b, -Offset*1.5 );
+PlotShapes( Entry3 * shapeDigit3, BuyColor, 0, b, -Offset*1.5 );
+PlotShapes( Entry5 * shapeDigit5, BuyColor, 0, b, -Offset*1.5 );
+PlotShapes( Entry6 * shapeDigit6, BuyColor, 0, b, -Offset*1.5 );
+PlotShapes( Entry7 * shapeDigit7, BuyColor, 0, b, -Offset*1.5 );
+PlotShapes( Entry8 * shapeDigit8, BuyColor, 0, b, -Offset*1.5 );
+PlotShapes( Entry9 * shapeDigit9, BuyColor, 0, b, -Offset*1.5 );
+
+_SECTION_END();

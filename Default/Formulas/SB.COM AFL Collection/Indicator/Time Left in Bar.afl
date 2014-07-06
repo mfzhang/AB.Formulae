@@ -1,0 +1,43 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Time Left in Bar
+//  Author/Uploader: Ara Kaloustian 
+//  E-mail:          ara1@san.rr.com
+//  Date/Time Added: 2005-09-23 20:55:32
+//  Origin:          Ara Kaloustian
+//  Keywords:        Timenum,Time Counter
+//  Level:           medium
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=560
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=560
+//
+//------------------------------------------------------------------------------
+//
+//  This code computes the amount of time left in a bar. To display you need to
+//  include "TimeLeft" variable in your chart title.
+//
+//  Code is designed for eSignal or similar data feed. Data feed uses exchange
+//  timestamp and must be synchronized with PC clock. See eSignal data manager
+//  for synchronizing option.
+//
+//------------------------------------------------------------------------------
+
+//File: TimeLeft in Bar
+//Sept 20, 2005
+// Compute Time Left In Bar
+//
+
+BarTime1   = LastValue(TimeNum() - Now(4));
+DataError  = iif(Now(4) > TimeNum(),True,False);
+TimeBase   = iif(Interval(1)>0,1,0);
+
+
+_N(StrBarTime = NumToStr(BarTime1,1.0,False));
+BT_Length     = StrLen(StrBarTime);
+
+
+_N(TimeLeft_    = Writeif(BT_Length==1,"0:0"+StrBarTime,Writeif(BT_Length==2,"0:"+StrBarTime,
+                 Writeif(BT_Length==3,StrLeft(StrBarTime,1)+":"+StrRight(StrBarTime,2),
+                   StrLeft(StrBarTime,2)+":"+StrRight(StrBarTime,2)))));
+
+TimeLeft   = writeif(TimeBase==1,TimeLeft_,"N/A");

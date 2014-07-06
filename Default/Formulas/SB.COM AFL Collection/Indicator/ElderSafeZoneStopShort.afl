@@ -1,0 +1,53 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    ElderSafeZoneStopShort
+//  Author/Uploader: Leon Nedbalek 
+//  E-mail:          ned@hawaii.rr.com
+//  Date/Time Added: 2003-12-30 18:39:36
+//  Origin:          From Dr. Alexander Elder's "Come Into My Trading Room"
+//  Keywords:        Elder SafeZone Stop
+//  Level:           medium
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=319
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=319
+//
+//------------------------------------------------------------------------------
+//
+//  Provides results identical to the Excel spreadsheet discussed in the
+//  Trading Room book, except that it gives tomorrow's recommended stop from
+//  today's end-of-day data instead of today's stop from yesterday's data. To
+//  get today's stop, click on yesterday's date in the chart. For short
+//  positions only. Also see the companion indicator ElderSafeZoneStopLong.
+//
+//------------------------------------------------------------------------------
+
+H1=Ref(H,-1);
+Pd=Param("Period",10,1,50,1);
+UpPen=IIf(H>H1,H-H1,0);
+UpPenSum=Sum(UpPen,Pd);
+UpPenCount=Sum(H>H1,Pd);
+AvgUpPen=UpPenSum/UpPenCount;
+AvgUpPenMult=Param("Multiplier",2,1,4,0.1);
+DaysInTrade=Param("Days in trade",1,1,50,1);
+StopShort=H+(AvgUpPen*AvgUpPenMult);
+SafeZoneStopShort=LLV(StopShort,DaysInTrade);
+
+Graph0=Close; Graph0Style=styleBar|styleThick; Graph0Color=colorWhite;
+Graph1=SafeZoneStopShort; Graph1Style=styleDots|styleNoLine; Graph1Color=colorLightOrange;
+
+Title="\\c55"
++Name() 
++"\\c42  Elder SafeZone \\c40SHORT"
++"\\c42    SafeZoneStop for next trading day after \\c55"
++Date()
++": \\c33"
++WriteVal(SafeZoneStopShort,1.2)
++"\n\\c42    Period: \\c55"
++WriteVal(Pd,1.0)
++"\\c42    AvgUpPen: \\c55"
++WriteVal(AvgUpPen,1.2)
++"\\c42    Multiplier: \\c55"
++WriteVal(AvgUpPenMult,1.1)
++"\\c42    Days in trade (inclusive): \\c55"
++WriteVal(DaysInTrade,1.0);
+ 

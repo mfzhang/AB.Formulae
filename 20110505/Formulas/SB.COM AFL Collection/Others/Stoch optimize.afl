@@ -1,0 +1,24 @@
+/* Project:       AmiBroker
+** File:          Stoch optimize.afl
+** Title:         Stoch Optimize for Automatic Analysis (English)
+** Date:          Dec 8th, 2003
+** Written by:    Grayesso (grayesso dog rambler dot ru)
+*/ 
+
+/*After entering the formula just click on Optimize button in "Automatic Analysis" window. AmiBroker will start testing all possible combinations of optimization variables and report the results in the list. After optimization is done the list of result is presented sorted by the Net % profit. As you can sort the results by any column in the result list it is easy to get the optimal values of parameters for the lowest drawdown, lowest number of trades, largest profit factor, lowest market exposure and highest risk adjusted annual % return. The last three columns of result list present the values of optimization variables for given test.
+
+
+When you decide which combination of parameters suits your needs the best all you need to do is to replace the default values in optimize function calls with the optimal values. At current stage you need to type them by hand in the formula edit window (the second parameter of optimize function call).
+ */
+
+/* Stochastic (8,3,3  -  14,5,5 == by DiNapoli - by default for Amibroker */ 
+
+/* variable = optimize( "Description", default, min, max, step ) */
+
+
+range = Optimize( "Range", 8, 8, 14, 1 );
+Ksmooth = Optimize("%K smooth", 3, 2, 5, 1 );
+Dsmooth = Optimize("%D smooth", 3, 2, 5, 1 );
+
+Buy=Cross( StochK (range,Ksmooth), StochD (range,Ksmooth,Dsmooth) );
+Sell = Cross( StochD(range,Ksmooth,Dsmooth), StochK(range,Ksmooth) ); 

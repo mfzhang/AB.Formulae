@@ -1,0 +1,56 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Aroon
+//  Author/Uploader: Tomasz Janeczko 
+//  E-mail:          tj@amibroker.com
+//  Date/Time Added: 2001-06-16 07:42:21
+//  Origin:          Originally developed by Tushar Chande.
+//  Keywords:        trend
+//  Level:           medium
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=2
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=2
+//
+//------------------------------------------------------------------------------
+//
+//  Aroon is Sanskrit word meaning "dawn's early light" or the change from
+//  night to day. The Aroon indicator allows you to anticipate changes in
+//  security prices from trending to trading range. The indicator uses two
+//  lines: Aroon Up and Aroon Down. Aroon Down is a measure of how close the
+//  current bar is to the most recent lowest Low bar found in the last N bars.
+//  Aroon Up is a measure of how close the current bar is to the most recent
+//  highest High bar found in the last N bars. Additionally Aroon oscillator
+//  can be defined as the difference between the Aroon Up and Aroon Down
+//  indicators. For more information on the Aroon indicator see the article
+//  written by Tushar Chande in the September 1995 issue of Technical Analysis
+//  of Stocks &amp; Commodities magazine.
+//
+//  Aroon indicator ranges from 0 to 100 and it is drawn with additional 30/70
+//  levels. The default period is 14 days. The indicator works as follows: if a
+//  security makes a new 14-day high, the Aroon Up = 100; when the security
+//  makes a new 14-day low, the Aroon Down = 100; when there was no new high in
+//  14 days, the Aroon Up = 0; and consequently when there was no new low for
+//  14 days, the Aroon Down = 0.
+//
+//  Aroon indicator is an another way (in addition to VHF and ADX indicators)
+//  of detemining if market is trending or not.
+//
+//------------------------------------------------------------------------------
+
+
+L14 = LLV( Low, 14 );
+H14 = HHV( High, 14 );
+
+AroonDown =
+100* (14 - (( IIF(Ref(L,-1) == L14 ,1 , IIF( Ref(L ,-2 ) == L14 ,2 , IIF( Ref(L ,- 3 ) == 
+L14 ,3 ,IIF( Ref(L ,-4 ) == L14 ,4 ,IIF(Ref( L ,-5 ) == L14 ,5 ,IIF(Ref(L ,-6 ) == 
+L14 ,6 ,IIF( Ref(L ,-7 ) == L14 ,7 ,IIF(Ref( L ,-8 ) == L14 ,8 ,IIF(Ref( L ,-9 ) == 
+L14 ,9 ,IIF( Ref(L,-10) == LLV(L,14 ) ,10 ,IIF(Ref(L ,-11) == L14 ,11 ,IIF(Ref(L,-12 ) == 
+LLV(L ,14) ,12,IIF( Ref(L,-13) == LLV(L ,14 ) ,13 ,IIF( Ref( L,-14) == L14 ,14 ,0) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) / 14;
+
+AroonUp =
+100 * ( 14 - ( ( IIF(Ref(H ,-1) == H14 ,1 ,IIF(Ref(H ,-2 ) == H14 ,2 ,IIF(Ref(H ,- 3 ) == 
+H14 ,3, IIF(Ref(H ,-4 ) == H14 ,4 ,IIF(Ref(H ,-5 ) == H14 ,5 ,IIF(Ref(H ,-6 ) == 
+H14 ,6 ,IIF(Ref(H,-7 ) == H14 ,7 ,IIF(Ref(H ,-8 ) == H14 ,8 , IIF(Ref(H ,-9 ) == 
+H14 ,9 ,IIF(Ref(H ,-10 ) == H14 ,10 ,IIF(Ref(H ,-11 ) == H14 ,11 ,IIF(Ref(H ,-12 ) == 
+H14 ,12 ,IIF(Ref(H ,-13) == H14 ,13 ,IIF(Ref(H ,-14 ) == H14 ,14 ,0 ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) / 14;

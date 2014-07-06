@@ -1,0 +1,43 @@
+_SECTION_BEGIN("Stochastics Trendlines");
+/*Slow Stochastic and Trendlines
+for Indicator Builder,
+by Dimitris Tsokakis*/
+D1=14;
+maxgraph=8;
+ST3=stochk(D1);
+ST33=stochd(D1);
+GRAPH0=ST3;
+GRAPH1=ST33;
+TITLE=NAME()+" - %K="+writeval(st3,FORMAT=1.2)+", %D="+
+WRITEVAL(ST33,FORMAT=1.2)+
+writeif(cross(st3,st33),"     POSITIVE CROSS"," ")+
+WRITEIF(CROSS(ST33,ST3),"     NEGATIVE CROSS","");
+x = cum(1);
+per = 0.1;
+s1=st33;
+s11=st33;
+pS = troughBars( s1, per, 1 ) == 0;
+endt= lastvalue(ValueWhen( pS, x, 1 ));
+startt=lastvalue(ValueWhen( pS, x, 2 ));
+dtS =endt-startt;
+endS = lastvalue(ValueWhen( pS, s1, 1 ) );
+startS = lastvalue( ValueWhen( pS, s1, 2  ));
+aS = (endS-startS)/dtS;
+bS = endS;
+trendlineS = aS * ( x  -endt ) + bS; 
+graph6 = iif(x>startt-1 AND TRENDLINES>0 AND TRENDLINES<100,trendlineS,-1e10);
+graph6style = 1;
+graph6color = 1;
+pR = PEAKBars( s11, per, 1 ) == 0;
+endt1= lastvalue(ValueWhen( pR, x, 1 ));
+startt1=lastvalue(ValueWhen( pR, x, 2 ));
+dtR =endt1-startt1;
+endR = lastvalue(ValueWhen( pR, s11, 1 ) );
+startR = lastvalue( ValueWhen( pR, s11, 2  ));
+aR = (endR-startR)/dtR;
+bR = endR;
+trendlineR = aR * ( x  -endt1 ) + bR; 
+graph7 = iif(x>startT1-1  AND TRENDLINER>0 AND TRENDLINER<100,trendlineR,-1e10);
+graph7style = 1;
+graph7color = 1;
+_SECTION_END();

@@ -1,0 +1,44 @@
+/* 'R' Channel */
+/*Author Marc Valley */
+
+
+Var = 4;
+M1 = MA(Max(H,Var ),2);
+L1 = MA(Min(L,Var ),2);
+K = M1 - L1;
+Num1 = sqrt(K);
+Dem1 = sqrt(1.00+K);
+H1 = (Num1/Dem1)/2;
+Num2 = sqrt(1.0);
+Dem2 = sqrt(1+K);
+H2 = ((Num2/Dem2)/2) *C;
+H3 =(H1 + H2) ;
+MAH2MA =MA(L - (H2/100),Var );
+MAH3MA= MA(H + (H3/100) ,Var);
+MA3 = (MAH3MA + MAH2MA) /2;
+UCL =( MAH3MA + MA3 )/2;
+LCL = (MA3 + MAH2MA )/2;
+
+//Buy = INSERT RULES HERE ;
+//Sell = INSERT RULES HERE  ;
+//Cover = Buy;
+//Short = Sell;
+//Equity(1);
+
+Plot(Close,"Valley 'R' Channel    Close",1,8);
+//Plot(L,"Low",6,8);
+//Plot(Close,"Close",1,64);
+Plot(MAH2MA ,"H2",5,4);
+Plot(MAH3MA ,"H3",4,4);
+Plot(MA3 ,"Center",2,4);
+Plot(UCL ,"UCL",10,4);
+Plot(LCL ,"LCL",10,4);
+//Plot(Avg,"Valley 'R' Channel (C) 2004  Avg",colorYellow,8);
+
+
+////////////////////////////////// Market Trend Plot Section
+//Plot(MA(C,18),"MA18",4,4);
+Plot(MA(C,40),"MA40",7,4);
+Plot(MA(C,100),"MA100",5,4);
+Plot(MA(C,200),"MA200",6,4);
+Plot(Close  ,"Close" + EncodeColor( colorBlack )  ,2, styleNoLine | styleNoRescale );

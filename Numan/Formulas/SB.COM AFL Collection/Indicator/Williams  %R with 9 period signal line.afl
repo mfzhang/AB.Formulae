@@ -1,0 +1,55 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Williams  %R with 9 period signal line
+//  Author/Uploader: Anthony Faragasso 
+//  E-mail:          ajf1111@epix.net
+//  Date/Time Added: 2001-11-11 07:31:44
+//  Origin:          
+//  Keywords:        
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=133
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=133
+//
+//------------------------------------------------------------------------------
+//
+//  An interesting phenomena of the %R indicator is its uncanny ability to
+//  anticipate a
+//
+//  reversal in the security's price. The indicator almost always forms a peak
+//  an turns
+//
+//  down a few days before the security's price peaks and turns down. Likewise,
+//  %R
+//
+//  usually creates a trough and turns up a few days before the security's
+//  price
+//
+//  turns up.
+//
+//------------------------------------------------------------------------------
+
+/* Williams %R and 9 day Mov.avg.*/
+/* by Anthony Faragasso */
+MaxGraph =10;
+
+R = ((HHV(H,14) - C) /(HHV (H,14) -LLV (L,14))) *-100;
+Graph0 = R;
+Graph1 =-30;
+Graph2 =-70;
+Graph3 =-90;
+Graph4 =-10;
+Graph5=MA(R , 9);
+Graph5Style = 1+4;
+Graph5Color =1;
+Graph0Style=1+4;
+Graph1Style =Graph2Style= 1;
+Graph3Style  =Graph4Style =2;
+Graph3Color = Graph4Color =5;
+Graph2Color = Graph1Color =12;
+
+/*x = BarsSince( Cross( r, MA( r, 9)));*/
+/*y = BarsSince( Cross( MA(r, 9), r));*/
+/*Graph8 = ( x == 0 OR y == 0 ) * 30;*/
+
+Title =Name() + " -Williams %R: " +" % R Line " +"("+ WriteVal ( Graph0,format=1.2)+")"+ "  Signal Line " + ""+"("+WriteVal(Graph5,format=1.2)+")" +" , "   + Date(  );

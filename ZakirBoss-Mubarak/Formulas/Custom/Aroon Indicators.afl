@@ -1,0 +1,64 @@
+// AROON.AFL v 0.006 20/12/2001
+// Aroon
+// Coded by Marek Chlopek, December 2001
+// For interpretation of the Aroon indicators refer to Tushar Chande's article
+// "Time Price Oscillator" in the Sep, 95 S&C magazine
+
+// Thanks to Mr Dimitris Tsokakis for his suggestions.
+// See message tread: http://groups.yahoo.com/group/amibroker/message/7367
+
+
+// ****************************************************************************************
+// INITIALIZATION OF EXPLORATION IN AMIBROKER 
+// ****************************************************************************************
+Filter = 1;
+NumColumns = 5;
+Column0 = O; Column0Name = "O"; Column0Format = 1.2;
+Column1 = H; Column1Name = "H"; Column1Format = 1.2;
+Column2 = L; Column2Name = "L"; Column2Format = 1.2;
+Column3 = C; Column3Name = "C"; Column3Format = 1.2;
+Column4 = V; Column4Name = "V"; Column4Format = 1.0;
+
+// END OF "INITIALIZATION OF EXPLORATION IN AMIBROKER" SECTION
+
+// ****************************************************************************************
+// AROON INDICATORS
+// ****************************************************************************************
+Period = 14;
+LLVBarsSince = LLVBars(L, Period) + 1;
+HHVBarsSince = HHVBars(H, Period) + 1;
+
+Aroon_Down = 100 * (Period - LLVBarsSince) / (Period - 1);
+Aroon_Up   = 100 * (Period - HHVBarsSince) / (Period - 1);
+Aroon_Osc  = Aroon_Up - Aroon_Down;
+
+// Exploration in Amibroker
+AddColumn(LLVBarsSince, "LLVBarsSince", format=1.0);
+AddColumn(HHVBarsSince, "HHVBarsSince", format=1.0);
+AddColumn(Aroon_Down,   "Aroon_Down",   format=1.2);
+AddColumn(Aroon_Up,     "Aroon_Up",     format=1.2);
+AddColumn(Aroon_Osc,    "Aroon_Osc",    format=1.2);
+
+// END OF "AROON INDICATORS" SECTION
+
+
+// ****************************************************************************************
+// GRAPHICS PRESENTATION IN AMIBROKER
+// ****************************************************************************************
+MaxGraph = 3;
+Graph0 = Aroon_Down; Graph0Style = 8+4; Graph0Color = 7;
+Graph1 = Aroon_Up;   Graph1Style = 1+4; Graph1Color = 4;
+Graph2 = Aroon_Osc;  Graph2Style = 2;   Graph2Color = 1;
+
+Title = Name()
+        + " - Aroon_Down = " + WriteVal(Graph0, 1.2) + " %"
+        + ", Aroon_Up = " + WriteVal(Graph1, 1.2) + " %"
+        + ", Aroon_Osc = " + WriteVal(Graph2, 1.2) + " %";
+
+// END OF "GRAPHICS PRESENTATION IN AMIBROKER" SECTION
+
+
+// ****************************************************************************************
+// END OF CODE (ARRON.AFL)
+// ****************************************************************************************
+/**/

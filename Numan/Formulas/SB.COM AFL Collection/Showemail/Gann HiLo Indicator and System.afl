@@ -1,0 +1,85 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Gann HiLo Indicator and System
+//  Author/Uploader: Steve Wiser 
+//  E-mail:          slwiserr@erols.com
+//  Date/Time Added: 2001-07-05 19:17:42
+//  Origin:          
+//  Keywords:        
+//  Level:           basic
+//  Flags:           showemail
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=60
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=60
+//
+//------------------------------------------------------------------------------
+//
+//  Uses a Gann HiLo Indicator to build a system for testing.
+//
+//------------------------------------------------------------------------------
+
+/*name = Gunn hi lo*/
+
+GraphMax=6;
+
+Graph0=C;
+
+Periods= 6;    /* Change this value as needed */
+HLd=IIf(CLOSE>Ref(Ma(H,Periods),-1),
+/*then*/ 1,
+/*else*/IIf(CLOSE<Ref(Ma(L,Periods),-1),
+/*then*/-1,
+/*else*/0));
+HLv=ValueWhen(HLd != 0,HLd,1);
+HiLo=IIf(HLv=-1,
+/*then*/Ma(H,Periods),
+/*else*/Ma(L,Periods));
+Graph1=HiLo;
+
+/*Name = Gunn hi lo invert*/
+
+Periods = 3;  /* Change this as needed */
+HLd=IIf(CLOSE>Ref(Ma(H,Periods),-1),
+/*then*/1,
+/*else*/IIf(CLOSE<Ref(Ma(L,Periods),-1),
+/*then*/-1,
+/*else*/0));
+HLv=ValueWhen(HLd != 0,HLd,1);
+HiLoInvert=IIf(HLv=-1,
+/*then*/Ma(H,Periods),
+/*else*/Ma(L,Periods));
+Graph2=HiLoInvert;
+
+Graph2Style=4;
+Graph0Style=68;
+
+Buy= Cross(HiLo,HiLoInvert) ;
+Sell=Cross(HiLoInvert,HiLo) ;
+
+Buy=exrem(buy,sell);
+Sell=exrem(sell,buy);
+
+short=sell;
+cover=buy;
+
+Filter=  (Buy==1)  ;
+numcolumns = 5;
+column0 =ref(HiLo,-1);
+column0format = 1.2;
+column0name = "Trigger Price";
+column1 = C;
+column1name = "Close       ";
+column1format = 1.2;
+column2 = ma(v,17);
+column2name = "Volume    ";
+column2format = 1.0;
+column3 = ma(C,17)/ma(c,50);
+column3name = "% 17/50 ";
+column3format = 1.2;
+column3format = 1.2;
+column4= ma(c,17);
+column4name="17 C ma";
+column4format = 1.2;
+column4= ma(c,50);
+column4name="50 C ma";
+column4format = 1.2;
+

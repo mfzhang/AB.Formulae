@@ -1,0 +1,35 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Tushar Chande's Projected Range
+//  Author/Uploader: Prakash Shenoi 
+//  E-mail:          
+//  Date/Time Added: 2006-08-13 12:14:03
+//  Origin:          
+//  Keywords:        Range Projection
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=679
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=679
+//
+//------------------------------------------------------------------------------
+//
+//  Plots projected price targets for the next day.
+//
+//------------------------------------------------------------------------------
+
+/*Tushar Chande's Range Projection */
+
+/* AFL Code by Prakash Shenoi */
+
+Av=MA(abs(C-Ref(C,-1)),10);
+r1=(C+Av);
+r2=(C+(2*Av));
+s1=(C-Av);
+s2=(C-(2*Av));
+Plot (Close,"",3,128);
+Plot (r1,"",24,16+8);
+Plot (r2,"",24,16+8);
+Plot (s1,"",26,16+8);
+Plot (s2,"",26,16+8);
+GraphXSpace=5;
+Title=Name ()+ "  Tushar Chande's Projected Range "+"\n"+ "RES =" + WriteVal  (r1,1.2) + ", "+ WriteVal  (r2,1.2) + "  " + " SUPP= "+ WriteVal (s1,1.2)+ ", " + WriteVal(s2,1.2) ;

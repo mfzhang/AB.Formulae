@@ -1,0 +1,51 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Randomize()
+//  Author/Uploader: Antonio Marra 
+//  E-mail:          ant.marra@virgilio.it
+//  Date/Time Added: 2004-07-20 06:40:47
+//  Origin:          
+//  Keywords:        Random interval
+//  Level:           basic
+//  Flags:           showemail,function
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=365
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=365
+//
+//------------------------------------------------------------------------------
+//
+//  This function will generate random numbers included in a given numeric
+//  interval.
+//
+//------------------------------------------------------------------------------
+
+/*_________________________________________________________________________________________ 
+
+  SYNTAX:
+         Randomize(a,b)
+  
+  PURPOSE:
+          This function will generate random numbers included in a given numeric interval.
+  
+  HOW TO USE:
+          Copy this file in your include directory or append it to another file that You 
+          use as "functions database".
+          "a" is the lowest value, "b" is the highest value.
+
+  EXAMPLE:
+          1. if you want to generate random between 1 e 100 (with decimal values):
+          
+             RandomNumber = Randomize(1,100);
+          
+          2. if you want to generate random between 1 e 100 (with only integer values):
+          
+             RandomNumber = int( Randomize(1,100) ) ;
+
+  ________________________________________________________________________________________  
+                                                                                          */
+
+
+function Randomize(a,b)
+{
+   result = Random()*(b-a)+a;
+   return result;
+}

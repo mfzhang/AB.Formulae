@@ -1,0 +1,14 @@
+/* S T A R C Bands */
+/* AFL code by Prakash Shenoi */
+
+x=Param("Average ",5,1,21);
+y=Param("ATR ",1,1,21);
+typ=(H+L+C)/3;
+s=MA(typ,x);
+Up=(s +(ATR(y)*1.33));
+Lo=(s-(ATR(y)*1.33));
+Plot (C,"STARC BANDS - Close",1,64);
+Plot (Up,"UB",27,4);
+Plot (s,"Mid",22,1);
+Plot (Lo,"LB",27,4);
+GraphXSpace=3;

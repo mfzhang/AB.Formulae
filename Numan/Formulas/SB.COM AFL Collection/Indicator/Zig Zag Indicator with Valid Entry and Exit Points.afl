@@ -1,0 +1,67 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Zig Zag Indicator with Valid Entry and Exit Points
+//  Author/Uploader: Eric Tangen 
+//  E-mail:          
+//  Date/Time Added: 2004-04-21 21:37:30
+//  Origin:          self
+//  Keywords:        Zig Zag, Pivot Points, Pivot High, Pivot Low
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=353
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=353
+//
+//------------------------------------------------------------------------------
+//
+//  The Zig Zag indicator identifies pivot points but looks into the future -
+//  (beyond the right edge of the chart) to do this. This indicator plots a dot
+//  at the pivot point and an arrow at the bar when the pivot becomes known.
+//  The price bars are colored red for a pivot downtrend, green for a pivot
+//  uptrend, and blue at the known pivot point. Three addional horizontal lines
+//  are plotted and tied to the selected bar - the current close and +/- x%
+//  from the current close. The x% is the same % used in the Zig Zag function.
+//
+//------------------------------------------------------------------------------
+
+//z_ZigZagValid
+// ******** CHARTING 
+PercentChange = 6;
+mystartbar = SelectedValue(BarIndex());  // FOR GRAPHING
+
+mystartbardate = LastValue(ValueWhen(mystartbar == BarIndex(), DateNum(),1));
+
+InitialValue = LastValue(ValueWhen(mystartbardate == DateNum(), C , 1 ) ) ;
+Temp1 = IIf(BarIndex() >= mystartbar, InitialValue, Null) ;
+Plot(Temp1, " ", colorBlack,styleLine);
+Plot((1+(LastValue(PercentChange)/100))*(Temp1), " ", colorGreen, styleLine) ;
+Plot((1-(LastValue(PercentChange)/100))*(Temp1), " ", colorRed, styleLine) ;
+
+ZZ = Zig(C,LastValue(PercentChange)) ; 
+PivotLow = Ref(IIf(Ref(ROC(ZZ,1),-1) < 0 AND ROC(ZZ,1) > 0, 1, Null),1);
+PivotHigh = Ref(IIf(Ref(ROC(ZZ,1),-1) > 0 AND ROC(ZZ,1) < 0, 1, Null),1);
+
+PlotShapes( shapeCircle*PivotLow, colorGreen,0, L, -20) ; 
+PlotShapes( shapeCircle*PivotHigh,colorRed,0,H, 20) ;
+
+Buy_Valid = IIf(C>(1+(LastValue(PercentChange)/100))*(ValueWhen(PivotLow, C, 1))
+AND ROC(ZZ,1) > 0,1,0); 
+Sell_Valid = IIf(C<(1-(LastValue(PercentChange)/100))*(ValueWhen(PivotHigh, C, 1))
+AND ROC(ZZ,1) < 0,1,0); 
+
+Buy_Valid = ExRem(Buy_Valid,Sell_Valid);
+Sell_Valid = ExRem(Sell_Valid,Buy_Valid);
+
+PlotShapes( shapeUpArrow*Buy_Valid, colorGreen,0, L, -20); 
+PlotShapes( shapeDownArrow*Sell_Valid, colorRed,0,H, -20) ;
+
+BarColors = 
+IIf(BarsSince(Buy_Valid) < BarsSince(Sell_Valid) 
+AND BarsSince(Buy_Valid)!=0, colorGreen,
+IIf(BarsSince(Sell_Valid) < BarsSince(Buy_Valid)
+AND BarsSince(Sell_Valid)!=0,  colorRed, colorBlue));
+
+Plot(C, " ", BarColors,  styleBar ) ; 
+Plot(ZZ," ", colorLightGrey,styleLine|styleThick);
+Plot(ZZ," ", BarColors,styleDots|styleNoLine);
+
+Title = Name() + " " + Date() + WriteIf(PivotLow, " Up Pivot ","")+WriteIf(PivotHigh," Down Pivot ","")+ WriteIf(Buy_Valid, " Buy Point ", "") + WriteIf(Sell_Valid, " Sell Point ", "") ;

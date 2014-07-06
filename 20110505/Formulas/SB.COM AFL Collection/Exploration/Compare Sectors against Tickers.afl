@@ -1,0 +1,87 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Compare Sectors against Tickers
+//  Author/Uploader: goldfreaz 
+//  E-mail:          goldfreaz@thelion.com
+//  Date/Time Added: 2002-05-09 13:44:50
+//  Origin:          
+//  Keywords:        
+//  Level:           advanced
+//  Flags:           exploration
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=188
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=188
+//
+//------------------------------------------------------------------------------
+//
+//  Compares relative strength, StochRSI, relative volume, and RSI. Good stocks
+//  must be assigned to the right sectors...garbage in / garbage out. Scan the
+//  enclosed AFL then set up the indicators that follow.
+//
+//------------------------------------------------------------------------------
+
+/* SectorRSI swing system
+** goldfreaz - 5 May 2002
+*/
+/* StochRSI  */
+Nrsi=14;
+Nstoch=17;
+Nslow=7;
+rrsi=RSI( Nrsi );
+Stochrsi=EMA((rrsi-LLV(rrsi,Nstoch))/(HHV(rrsi,Nstoch)-LLV(rrsi,Nstoch)),Nslow);
+
+
+/* Relative Volume  */
+RelVol=EMA(V,3)/ Ref(MA(V,40),-4);
+
+/* Rate of Change  */
+xp=0.1*(4.0*(O+C)+H+L);
+Chan=EMA(ROC(xp,1),2);
+
+
+/* RSI  */
+Rt=RSI( 14 );
+Rmean=IIf(Rt>0.1 AND Rt<99.9,Rt,0);
+
+
+/*MACD BULL-BEAR*/
+Mid=IIf(MarketID(1)=="NYSE" OR MarketID(1)=="Nasdaq",1,0);
+ob=Signal(11,23,7)<MACD(11,23);
+AddToComposite(IIf(Mid,Ob,0.0),"~macdbullbear","H",7);
+AddToComposite(IIf(Mid,NOT(ob),0.0),"~macdbullbear","L",7);
+
+/*  Market Total  */
+AddToComposite(IIf(Mid,StochRsi,0.0),"~market","O",7);
+AddToComposite(IIf(Mid,Rmean,0.0),"~market","H",7);
+AddToComposite(IIf(Mid,Relvol,0.0),"~market","L",7);
+AddToComposite(IIf(Mid,Chan,0.0),"~market","C",7);
+AddToComposite(IIf(Mid,1,0),"~market","V",7);
+
+sectorname="Healthcare";
+AddToComposite(IIf(SectorID(1)==sectorname,StochRsi,0),"~Drug","O",7);
+AddToComposite(IIf(SectorID(1)==sectorname,Rmean,0),"~Drug","H",7);
+AddToComposite(IIf(SectorID(1)==sectorname,RelVol,0),"~Drug","L",7);
+AddToComposite(IIf(SectorID(1)==sectorname,Chan,0),"~Drug","C",7);
+AddToComposite(IIf(SectorID(1)==sectorname,1,0),"~Drug","V",7);
+
+sectorname="Financial";
+AddToComposite(IIf(SectorID(1)==sectorname,StochRsi,0),"~Bank","O",7);
+AddToComposite(IIf(SectorID(1)==sectorname,Rmean,0),"~Bank","H",7);
+AddToComposite(IIf(SectorID(1)==sectorname,RelVol,0),"~Bank","L",7);
+AddToComposite(IIf(SectorID(1)==sectorname,Chan,0),"~Bank","C",7);
+AddToComposite(IIf(SectorID(1)==sectorname,1,0),"~Bank","V",7);
+
+sectorname="Technology";
+AddToComposite(IIf(SectorID(1)==sectorname,StochRsi,0),"~techy","O",7);
+AddToComposite(IIf(SectorID(1)==sectorname,Rmean,0),"~techy","H",7);
+AddToComposite(IIf(SectorID(1)==sectorname,RelVol,0),"~techy","L",7);
+AddToComposite(IIf(SectorID(1)==sectorname,Chan,0),"~techy","C",7);
+AddToComposite(IIf(SectorID(1)==sectorname,1,0),"~techy","V",7);
+
+sectorname="Basic Materials";
+AddToComposite(IIf(SectorID(1)==sectorname,StochRsi,0),"~raw","O",7);
+AddToComposite(IIf(SectorID(1)==sectorname,Rmean,0),"~raw","H",7);
+AddToComposite(IIf(SectorID(1)==sectorname,RelVol,0),"~raw","L",7);
+AddToComposite(IIf(SectorID(1)==sectorname,Chan,0),"~raw","C",7);
+AddToComposite(IIf(SectorID(1)==sectorname,1,0),"~raw","V",7);
+
+Buy=0;

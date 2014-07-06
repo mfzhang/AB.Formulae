@@ -1,0 +1,3 @@
+Filter = Close < 3 AND Volume >50000;
+AddColumn(Close,"Close",1.4);
+AddColumn(Volume,"Volume",1.0);

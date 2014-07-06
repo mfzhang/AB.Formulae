@@ -1,0 +1,1847 @@
+/////////////////////////////// 
+
+// CCI Woodies Style  
+
+// Codded/Added by Dennis, Kris, Wring, Graham, Greg
+
+// Last Update: 6/16/2007
+
+// Amibroker 4.85 
+
+/////////////////////////////// 
+
+// Color setup
+
+// Go to Tools==>Colors==>Palette Editor==>Custom Colors
+
+// Input these values under the Custom Colors section on the bottom, the first 
+
+//  square is custom1, the last is custom16.
+
+// These settings are for the outer border panel color. Put them in Custom11 ... 
+
+// Hue: 86 
+
+// Sat: 35 
+
+// Lum: 76 
+
+// Red: 78 
+
+// Green: 85 
+
+// Blue: 102 
+
+// 
+
+// These settings are for the color of the inner panal color, 
+
+// both the upper half AND the lower half. Put them in Custom14 ... 
+
+// Hue: 86 
+
+// Sat: 36 
+
+// Lum: 102 
+
+// Red: 92 
+
+// Green: 124 
+
+// Blue: 97 
+
+/////////////////////////////// 
+
+
+//Setup Parameters section, right click on chart panel, click on Parameters:
+
+// (1) =zlr
+
+// (2) =famir
+
+// (3) =vegas trade
+
+// (4) =gb 100 line cross
+
+// (5) =tony trade
+
+// (6) =ghost
+
+// (7) = mghost (mittons ghost)
+
+// The last one "choppy" is not a pattern, but a signal that indicates a choppy market defined as cci chopping
+
+// back and forth inbetween the 100's. Choppy is gone once a Hook From Extreme occures.
+
+/////////////////////////////// 
+
+//Setup Axes and Grid section (right click on chart panel, click on Parameters):
+
+// Scaling: Custom , Min=-275  Max=275
+
+// Show Date Axis = Yes , Show Middle Lines = No
+
+/////////////////////////////// 
+
+// To activate the timer properly, make sure the following is set:
+
+// click on Tools==>Preferences==>Intraday....
+
+// make sure "Allign minute bars to market hours" is checked...
+
+// make sure "Start time of interval" is checked...
+
+// make sure "Override: Weekly/monthly bars use day of last trade" is checked.
+
+/////////////////////////////// 
+
+// Discalimer: For educational purposes only. Trade at your own risk.
+
+/////////////////////////////// 
+
+Version(4.70); 
+
+PositionSize = MarginDeposit = 1;
+
+MH1=Param("Market Open",default=000000,000000,240000);
+
+MH2=Param("Market Close",default=000000,000000,240000);
+
+MarketHours = TimeNum()>=MH1 AND TimeNum()<=MH2; 
+
+MArketClose= TimeNum()<=MH2; 
+
+SetChartBkColor(ParamColor("Outer panel color ",colorLightGrey)); // color of outer border 
+
+SetChartBkGradientFill( ParamColor("Inner panel color upper half", colorGrey40),ParamColor("Inner panel color lower half",  
+
+colorGrey40)); // color of inner panel
+
+Tick= Param("Tick (ER2=0.10, YM=1, NQ=0.25, Stocks=1)",default=1,0,1); // Russel
+
+TicMult= Param("Tick Multiple (ER2=10, YM=1, NQ=4, Stocks=1)",default= 1,0,100);// Russel
+
+zperiod=Param("WCCI Period",default=20,0,100);
+
+WCCIcolor=ParamColor("WCCI color",colorBlack);
+
+z6period=Param("Turbo CCI Period",default=6,0,100);
+
+z = CCI(20); 
+
+z6 = CCI(z6period); 
+
+TCCIcolor=ParamColor("Turbo CCI color",colorDarkRed);
+
+CCI50_var = CCI(50); 
+
+LSMA25 = LinearReg(C, 25 ); 
+
+EMA34 = EMA(C,34); 
+
+PI = atan(1.00) * 4; 
+
+periods = 30; 
+
+HighHigh = HHV(H, periods); 
+
+LowLow = LLV(L, periods); 
+
+range = 25 / (HighHigh - LowLow) * LowLow; 
+
+TTMperiod = 6; 
+
+Low_ma = EMA(L, TTMperiod); 
+
+High_ma = EMA(H, TTMperiod); 
+
+Low_third = (High_ma - Low_ma) / 3 + Low_ma; 
+
+High_third = 2 * (High_ma - Low_ma) / 3 + Low_ma; 
+
+tempnum = Now( 4 ) - TimeNum(); 
+
+TimeRem = Interval() - ((int(tempnum[BarCount - 1] / 100) * 60) + (tempnum[BarCount - 1] - int(tempnum[BarCount - 1] / 100) * 100)); 
+
+if (TimeRem[BarCount - 1] < 0) TimeRem = 0; 
+
+TitleTimeRem = EncodeColor(colorWhite); 
+
+MinuteVar = int(TimeRem );  
+
+if (TimeRem[BarCount - 1] > 60) 
+
+{ 
+
+TitleTimeRem = TitleTimeRem + EncodeColor(colorWhite) + MinuteVar + "s"; 
+
+} 
+
+else if (TimeRem[BarCount - 1] > 45) 
+
+{ 
+
+TitleTimeRem = TitleTimeRem  +  EncodeColor(colorWhite) + MinuteVar + "s"; 
+
+} 
+
+else 
+
+{ 
+
+TitleTimeRem = TitleTimeRem +  EncodeColor(colorYellow) + MinuteVar + "s"; 
+
+} 
+
+if(SelectedValue(CCI50_var) < 0) 
+
+{ 
+
+CCI50Title = EncodeColor(colorRed); 
+
+} 
+
+else 
+
+{ 
+
+CCI50Title = EncodeColor(colorLime); 
+
+} 
+
+CCI50Title = CCI50Title + "CCI 50 = " + round(CCI50_var) + ", "; 
+
+stop_range = IIf(O < C, IIf((H - O) < (C - L), C - L, H - O), 
+
+IIf((O - L) < (H - C), H - C, O - L)); 
+
+StopTitle = EncodeColor(colorWhite) + "Stop = " + EncodeColor(colorYellow); 
+
+StopTitle = StopTitle + StrToNum(NumToStr(stop_range, 4.4)); 
+
+x1_EMA34 = 0; 
+
+x2_EMA34 = 1; 
+
+y1_EMA34 = 0; 
+
+y2_EMA34 = (Ref(EMA34, -1) - EMA34) / Avg * range; 
+
+c_EMA34 = sqrt((x2_EMA34 - x1_EMA34)*(x2_EMA34 - x1_EMA34) + (y2_EMA34 - y1_EMA34)*(y2_EMA34 - y1_EMA34)); 
+
+angle_EMA34 = round(180 * acos((x2_EMA34 - x1_EMA34)/c_EMA34) / PI); 
+
+angle_EMA34 = IIf(y2_EMA34 > 0, - angle_EMA34, angle_EMA34); 
+
+x1_LSMA25 = 0; 
+
+x2_LSMA25 = 1; 
+
+y1_LSMA25 = 0; 
+
+y2_LSMA25 = (Ref(LSMA25, -1) - LSMA25) / Avg * range; 
+
+c_LSMA25 = sqrt((x2_LSMA25 - x1_LSMA25)*(x2_LSMA25 - x1_LSMA25) + (y2_LSMA25 - y1_LSMA25)*(y2_LSMA25 - y1_LSMA25)); 
+
+angle_LSMA25 = round(180 * acos((x2_LSMA25 - x1_LSMA25)/c_LSMA25) / PI); 
+
+angle_LSMA25 = IIf(y2_LSMA25 > 0, - angle_LSMA25, angle_LSMA25); 
+
+// Colour the bars for Woodies Trend Following 
+
+trendbarcolorabove=ParamColor("CCI trend bar color above zero line",colorLime);
+
+trendbarcolorbelow=ParamColor("CCI trend bar color below zero line",colorRed);
+
+trendbarcolorchanging=ParamColor("CCI changing trend bar Color",colorYellow);
+
+neutralbarcolor=ParamColor("CCI neutral bar color",colorDarkGrey);
+
+Plusbars = BarsSince(z < 0); 
+
+Minusbars = BarsSince(z > 0); 
+
+TrendBarCount = 6; 
+
+Color[0] = colorDefault; 
+
+Trend[0] = 0; 
+
+TTMColor[0] = colorDefault; 
+
+for( i = 1; i < BarCount; i++ ) 
+
+{ 
+
+if (C[i] > High_third[i]) 
+
+{ 
+
+TTMColor[i] = trendbarcolorabove; 
+
+} 
+
+else if (C[i] < Low_third[i]) 
+
+{ 
+
+TTMColor[i] = trendbarcolorbelow; 
+
+} 
+
+else 
+
+{ 
+
+TTMColor[i] = TTMColor[i - 1]; 
+
+} 
+
+if (Plusbars[i] >= TrendBarCount) 
+
+{ 
+
+Trend[i] = 1; 
+
+} 
+
+else if (Minusbars[i] >= TrendBarCount) 
+
+{ 
+
+Trend[i] = -1; 
+
+} 
+
+else 
+
+{ 
+
+Trend[i] = Trend[i - 1]; 
+
+} 
+
+if (Trend[i] == 1) 
+
+{ 
+
+if (Minusbars[i] == TrendBarCount - 1) 
+
+{ 
+
+Color[i] = trendbarcolorchanging; 
+
+} 
+
+else if (z[i] < 0) 
+
+{ 
+
+Color[i] = neutralbarcolor; 
+
+} 
+
+else 
+
+{ 
+
+Color[i] = trendbarcolorabove; 
+
+} 
+
+} 
+
+else if (Trend[i] == -1) 
+
+{ 
+
+if (Plusbars[i] == TrendBarCount - 1) 
+
+{ 
+
+Color[i] = trendbarcolorchanging; 
+
+} 
+
+else if (z[i] >= 0) 
+
+{ 
+
+Color[i] = neutralbarcolor; 
+
+} 
+
+else 
+
+{ 
+
+Color[i] = trendbarcolorbelow; 
+
+} 
+
+} 
+
+else 
+
+{ 
+
+Color[i] = colorDefault; 
+
+} 
+
+} 
+
+// Turbo CCI 
+
+Plot(round(z6),"TCCI", TCCIcolor, styleLine); 
+
+// zero line 25lsma 
+
+LSMA25Colorgreater=ParamColor("C > LSMA",colorLime);
+
+LSMA25Colorless=ParamColor("C < LSMA",colorRed);
+
+LSMA25Colorequal=ParamColor("C = LSMA",colorTeal);
+
+Plot(0,"", IIf(C > LSMA25,LSMA25Colorgreater,IIf(C < LSMA25,LSMA25Colorless,LSMA25Colorequal)), 
+
+styleLine | styleThick | styleNoLabel); 
+
+//PlotShapes(IIf(C > LSMA25,shapeSmallCircle,shapeNone),LSMA25Colorgreater,0,0,0); 
+
+//PlotShapes(IIf(C < LSMA25,shapeSmallCircle,shapeNone),LSMA25Colorless,0,0,0);
+
+//PlotShapes(IIf(C == LSMA25,shapeSmallCircle,shapeNone),LSMA25Colorequal,0,0,0);
+
+// CCI Histogram 
+
+Plot(z,"", Color, styleHistogram | styleThick | styleNoLabel); 
+
+// Plot the Mock CZI on the 100s 
+
+ColorANGLE_EMA = IIf(angle_EMA34 >=5, ParamColor("CZI uptrend color",colorTurquoise), 
+
+IIf(angle_EMA34 <=-5, ParamColor("CZI downtrend color",colorRed), ParamColor("CZI notrend color",colorYellow))); 
+
+Plot(100,"", ColorANGLE_EMA , styleLine | styleThick | styleNoLabel); 
+
+Plot(-100,"", ColorANGLE_EMA , styleLine | styleThick | styleNoLabel); 
+
+// Plot the Mock Sidewinder on the 200s 
+
+Sidewindertrendingcolor= ParamColor("Sidewinder trending",colorLime);
+
+Sidewindernormalcolor= ParamColor("Sidewinder normal",colorYellow);
+
+Sidewinderflatcolor= ParamColor("Sidewinder flat",colorRed);
+
+TitleTrending = WriteIf((abs(angle_EMA34) >= 15) AND (abs(angle_EMA34 + angle_LSMA25) >= 50), EncodeColor(Sidewindertrendingcolor) + "TRENDING", 
+
+WriteIf((abs(angle_EMA34) >= 5) AND (((angle_EMA34 >= 0) AND (angle_LSMA25 >= 0)) OR ((angle_EMA34 <= 0) AND (angle_LSMA25 <= 0))) AND (abs(angle_EMA34 + angle_LSMA25) >= 30), EncodeColor(Sidewindernormalcolor) + "NORMAL", 
+
+EncodeColor(Sidewinderflatcolor) + "FLAT")); 
+
+SW = IIf((abs(angle_EMA34) >= 15) AND (abs(angle_EMA34 + angle_LSMA25) >= 50), IIf(angle_LSMA25 > 0, 2, -2), 
+
+IIf((abs(angle_EMA34) >= 5) AND (((angle_EMA34 >= 0) AND (angle_LSMA25 >= 0)) OR ((angle_EMA34 <= 0) AND (angle_LSMA25 <= 0))) AND (abs(angle_EMA34 + angle_LSMA25) >= 30), IIf(angle_LSMA25 > 0, 1, -1), 0)); 
+
+ColorSW = IIf(abs(SW) == 2, Sidewindertrendingcolor, 
+
+IIf(abs(SW) == 1, Sidewindernormalcolor, Sidewinderflatcolor)); 
+
+Plot(200,"", ColorSW, styleLine | styleThick | styleNoLabel); 
+
+Plot(-200,"", ColorSW, styleLine | styleThick | styleNoLabel); 
+
+//Pivot Points Calculations
+
+DayH = TimeFrameGetPrice("H", inDaily, -1);// yesterdays high
+ 
+DayL = TimeFrameGetPrice("L", inDaily, -1);//low 
+
+DayC = TimeFrameGetPrice("C", inDaily, -1);//close 
+
+DayO = TimeFrameGetPrice("O", inDaily);// current day open 
+
+HiDay = TimeFrameGetPrice("H", inDaily); 
+
+LoDay = TimeFrameGetPrice("L", inDaily); 
+
+PP = (DayH + DayL + DayO + DayO) / 4 ; 
+
+R1 = (2 * PP) - DayL; 
+
+S1 = (2 * PP) - DayH; 
+
+R2 = PP + R1 - S1; 
+
+S2 = PP + S1 - R1; 
+
+R3 = R2 + (R1 - PP); 
+
+S3 = S2 - (PP - S1); 
+
+// Threshold calculation
+
+// Use "Not Warnlong" for longs and "Not Warnshort" for shorts to filter trades when close to a pivot
+
+threshlong=-5;
+
+threshlong1= 0;
+
+warnlong= ((((round((C-pp)*100)*.01)*ticMult)>=threshlong AND ((round((C-pp)*100)*.01)*ticMult)<threshlong1) OR  
+
+          (((round((C-r1)*100)*.01)*ticMult)>=threshlong AND ((round((C-r1)*100)*.01)*ticMult)<threshlong1) OR
+
+          (((round((C-s1)*100)*.01)*ticMult)>=threshlong AND ((round((C-s1)*100)*.01)*ticMult)<threshlong1) OR
+
+          (((round((C-r2)*100)*.01)*ticMult)>=threshlong AND ((round((C-r2)*100)*.01)*ticMult)<threshlong1) OR
+
+          (((round((C-s2)*100)*.01)*ticMult)>=threshlong AND ((round((C-s2)*100)*.01)*ticMult)<threshlong1) OR
+
+          (((round((C-r3)*100)*.01)*ticMult)>=threshlong AND ((round((C-r3)*100)*.01)*ticMult)<threshlong1) OR
+
+          (((round((C-s3)*100)*.01)*ticMult)>=threshlong AND ((round((C-s3)*100)*.01)*ticMult)<threshlong1));
+
+threshshort=5;
+
+threshshort1=0;
+
+warnshort= ((((round((C-pp)*100)*.01)*ticMult)<=threshshort AND ((round((C-pp)*100)*.01)*ticMult)>threshshort1) OR
+
+           (((round((C-r1)*100)*.01)*ticMult)<=threshshort AND ((round((C-r1)*100)*.01)*ticMult)>threshshort1) OR
+
+           (((round((C-s1)*100)*.01)*ticMult)<=threshshort AND ((round((C-s1)*100)*.01)*ticMult)>threshshort1) OR
+
+           (((round((C-r2)*100)*.01)*ticMult)<=threshshort AND ((round((C-r2)*100)*.01)*ticMult)>threshshort1) OR
+
+           (((round((C-s2)*100)*.01)*ticMult)<=threshshort AND ((round((C-s2)*100)*.01)*ticMult)>threshshort1) OR
+
+           (((round((C-r3)*100)*.01)*ticMult)<=threshshort AND ((round((C-r3)*100)*.01)*ticMult)>threshshort1) OR
+
+           (((round((C-s3)*100)*.01)*ticMult)<=threshshort AND ((round((C-s3)*100)*.01)*ticMult)>threshshort1));
+
+	ppvalue= abs(((round((C-pp)*100)*.01)*ticMult));
+
+	r1value= abs(((round((C-r1)*100)*.01)*ticMult));
+
+	s1value= abs(((round((C-s1)*100)*.01)*ticMult));
+
+	r2value= abs(((round((C-r2)*100)*.01)*ticMult));
+
+	s2value= abs(((round((C-s2)*100)*.01)*ticMult));
+
+	r3value= abs(((round((C-r3)*100)*.01)*ticMult));
+
+	s3value= abs(((round((C-s3)*100)*.01)*ticMult));
+
+// title
+
+	PivotWarningCode= ParamToggle("Display Woodie's pivots","No|Yes",0); 
+
+	wptitle=  WriteIf(C>=R3 AND PivotWarningCode==1, "\n" + EncodeColor(colorYellow)+"R3 " + "-" + round(R3value),
+
+				WriteIf(C<=R3 AND C>=R2 AND PivotWarningCode==1, "\n" + EncodeColor(colorYellow)+"R3  " + "+" + round(R3value) + "\n" + EncodeColor(colorYellow) + "R2  " + "-" + round(R2value) + "\n", 
+
+				WriteIf(C<=R2 AND C>=R1 AND PivotWarningCode==1, "\n" + EncodeColor(colorYellow)+"R2  " + "+" + round(R2value) + "\n" +  EncodeColor(colorYellow) + "R1  " + "-" + round(R1value)+ "\n",  
+
+				WriteIf(C<=R1 AND C>=PP AND PivotWarningCode==1, "\n" + EncodeColor(colorYellow)+"R1  " + "+" + round(R1value) + "\n" +  EncodeColor(colorYellow) + "PP  " + "-" + round(PPvalue) + "\n",  
+
+				WriteIf(C<=PP AND C>=S1 AND PivotWarningCode==1, "\n" + EncodeColor(colorYellow)+"PP  " + "+" + round(PPvalue) + "\n" +  EncodeColor(colorYellow) + "S1  " + "-" + round(S1value) + "\n",  
+
+				WriteIf(C<=S1 AND C>=S2 AND PivotWarningCode==1, "\n" + EncodeColor(colorYellow)+"S1  " + "+" + round(S1value) + "\n" +  EncodeColor(colorYellow) + "S2  " + "-" + round(S2value) + "\n",  
+
+				WriteIf(C<=S2 AND C>=S3 AND PivotWarningCode==1, "\n" + EncodeColor(colorYellow)+"S2  " + "+" + round(S2value) + "\n" +  EncodeColor(colorYellow) + "S3  " + "-" + round(S3value) + "\n", 
+
+				WriteIf(C<=S3 AND PivotWarningCode==1, "\n" + EncodeColor(colorYellow)+"S3  " + "-" + round(S3value) + "\n",""))))))));
+
+wptitle= WriteIf(PivotWarningCode==1,wptitle,"");
+
+// Heikin-Ashi
+
+HaClose =EMA((O+H+L+C)/4,3); 
+
+HaOpen = AMA( Ref( HaClose, -1 ), 0.5 ); 
+
+HaHigh = Max( H, Max( HaClose, HaOpen ) ); 
+
+HaLow = Min( L, Min( HaClose, HaOpen ) );
+
+// Plot Grids
+
+PlotTheGrids = ParamToggle("Plot the grids","No|Yes",0); 
+
+if (PlotTheGrids ==1) 
+{ 
+PlotGrid(0); 
+
+PlotGrid(-100); 
+
+PlotGrid(100);
+
+PlotGrid(-200); 
+
+PlotGrid(200); 
+} 
+
+// choppy - wcci is 10 bars within the 100's
+
+A= (HHV(z,10)<=100 AND LLV(z,10)>=-100); 
+
+B= (Ref(z,-1)>200 AND z<200) OR (Ref(z,-1)<-200 AND z>-200); 
+
+bs_a=BarsSince(A); 
+
+bs_b=BarsSince(B); 
+
+bars = IIf( bs_A < Bs_B, bs_a, 0); 
+
+NoChop= a == 0 AND bars == 0;
+
+// ZLR Long 
+
+Linex_long=Ref(z,-1)>100 AND z<100; 
+
+barsfromline_long=BarsSince(Linex_long); 
+
+CCIhook_long=z>Ref(z,-1) AND Ref(z,-1)>-100 AND Ref(z,-1)<Ref(z,-2) AND Ref(z,-2)>-100 AND z>0;
+
+SW_trendinglong= sw==1 OR sw==2; 
+
+zlrlong=  round(abs(z-Ref(z,-1)))>=15 AND(Ref(angle_ema34,-2)>=5 AND Ref(angle_ema34,-1)>=5 AND angle_ema34>=5) AND SW_trendinglong AND z<120 AND barsfromline_long<10 AND CCIhook_long AND trend==1;
+
+// ZLR Short 
+
+Linex_short=Ref(z,-1)<=-100 AND z>=-100; 
+
+barsfromline_short=BarsSince(Linex_short); 
+
+CCIhook_short=z<Ref(z,-1) AND Ref(z,-1)<100 AND Ref(z,-1)>Ref(z,-2) AND Ref(z,-2)<100 AND z<0; 
+
+SW_trendingshort= sw==-1 OR sw==-2;
+
+zlrshort= round(abs(z-Ref(z,-1)))>=15 AND (Ref(angle_ema34,-2)<=-5 AND Ref(angle_ema34,-1)<=-5 AND angle_ema34<=-5) AND SW_trendingshort AND z>-120 AND barsfromline_short<10 AND CCIhook_short AND trend==-1;
+
+// Famir Long 
+
+FamirLinex_long=Ref(z,-1)<=-100 AND z>-100; 
+
+Famir_barsfromline_long=BarsSince(FamirLinex_long); 
+
+Famir_pivotlong= (Ref(z,-2)>Ref(z,-1)AND Ref(z,-1)>=-55 AND Ref(z,-2)>=-55) OR (Ref(z,-3)>Ref(z,-1) AND Ref(z,-1)>=-55 AND Ref(z,-2)>=-55 AND Ref(z,-3)>=-55) 
+
+					OR (Ref(z,-4)>Ref(z,-1) AND Ref(z,-1)>=-55 AND Ref(z,-2)>=-55 AND Ref(z,-3)>=-55); 
+
+Famirhook_long=Famir_pivotlong AND z>Ref(HHV(z,Famir_barsfromline_long),-1) AND (z>=-55 AND z<=55); 
+
+Famirlong= Famir_barsfromline_long<10 AND Famirhook_long AND trend==-1 AND C>LSMA25; 
+
+// Famir Short 
+
+FamirLinex_short=Ref(z,-1)>=100 AND z<100; 
+
+Famir_barsfromline_short=BarsSince(FamirLinex_short); 
+
+Famir_pivotshort= (Ref(z,-2)<Ref(z,-1)AND Ref(z,-1)<=55 AND Ref(z,-2)<=55) OR (Ref(z,-3)<Ref(z,-1)AND Ref(z,-1)<=55 AND Ref(z,-2)<=55 AND Ref(z,-3)<=55) 
+
+					OR (Ref(z,-4)<Ref(z,-1) AND Ref(z,-1)<=55 AND Ref(z,-2)<=55 AND Ref(z,-3)<=55); 
+
+Famirhook_short=Famir_pivotshort AND z<Ref(LLV(z,Famir_barsfromline_short),-1) AND (z>=-55 AND z<=55); 
+
+Famirshort= Famir_barsfromline_short<10 AND Famirhook_short AND trend==1 AND C<LSMA25; 
+
+// HFE 
+
+HFEshort=(Ref(z,-1)>200 AND z<200); 
+
+HFElong=(Ref(z,-1)<-200 AND z>-200); 
+
+HFE= (Ref(z,-1)>200 AND z<200) OR (Ref(z,-1)<-200 AND z>-200); 
+
+// VT Long 
+
+vtLinex_long=Ref(z,-1)<=-200 AND z>-200; 
+
+vt_barsfromline_long=BarsSince(vtLinex_long); 
+
+vtlong_A = z<-200; 
+
+vtlong_B = Ref(z,-1)<=Ref(z,-2) OR 
+
+Ref(z,-2)<=Ref(z,-3) OR 
+
+Ref(z,-3)<=Ref(z,-4) OR 
+
+Ref(z,-4)<=Ref(z,-5) OR 
+
+Ref(z,-5)<=Ref(z,-6) OR 
+
+Ref(z,-6)<=Ref(z,-7) OR 
+
+Ref(z,-7)<=Ref(z,-8); 
+
+vtlong_bs_A = BarsSince(vtlong_A); 
+
+vtlong_bs_B = BarsSince(vtlong_b); 
+
+Vtlong_bars = vtlong_bs_A>=5 AND vtlong_bs_B<=0; 
+
+vt_pivotlong= Vtlong_bars; 
+
+swinghibars=BarsSince(z>Ref(HHV(z,vt_barsfromline_long),-1)); 
+
+vthook_long= vt_pivotlong AND z>Ref(HHV(z,vt_barsfromline_long),-1); 
+
+vtlong= z<100 AND vt_barsfromline_long<=11 AND (Ref(HHV(z,vt_barsfromline_long),-1)<0 OR HHV(z,vt_barsfromline_long)<=0) AND vthook_long AND C>Lsma25 AND Ref(swinghibars>=2,-1) AND z>-100; 
+
+// VT Short 
+
+vtLinex_short=Ref(z,-1)>=200 AND z<200; 
+
+vt_barsfromline_short=BarsSince(vtLinex_short); 
+
+vtshort_A = z>200 ; 
+
+vtshort_B =Ref(z,-1)>=Ref(z,-2) OR 
+
+Ref(z,-2)>=Ref(z,-3) OR 
+
+Ref(z,-3)>=Ref(z,-4) OR 
+
+Ref(z,-4)>=Ref(z,-5) OR 
+
+Ref(z,-5)>=Ref(z,-6) OR 
+
+Ref(z,-6)>=Ref(z,-7) OR 
+
+Ref(z,-7)>=Ref(z,-8); 
+
+vtshort_bs_A = BarsSince(vtshort_A); 
+
+vtshort_bs_B = BarsSince(vtshort_b); 
+
+Vtshort_bars = vtshort_bs_A>=5 AND vtshort_bs_B<=0; 
+
+vt_pivotshort= Vtshort_bars; 
+
+swinglowbars= BarsSince(z<Ref(LLV(z,vt_barsfromline_short),-1)); 
+
+vthook_short= vt_pivotshort AND z<Ref(LLV(z,vt_barsfromline_short),-1); 
+
+vtshort= z>-100 AND vt_barsfromline_short<=11 AND (Ref(LLV(z,vt_barsfromline_short),-1)>0 OR LLV(z,vt_barsfromline_short)>0) AND vthook_short AND C<Lsma25 AND Ref(swinglowbars>=2,-1) AND z<100; 
+
+// GB 100 Long 
+
+Linex_longGB=Ref(z,-1)>100 AND z<100; 
+
+barsfromline_longGB=BarsSince(Linex_longGB); 
+
+CCIhook_longGB= Ref(z,-1)<-100 AND z>-100; 
+
+GB100long= z<100 AND barsfromline_longGB<=12 AND angle_EMA34>=5 AND CCIhook_longGB AND trend==1;
+
+// GB100 Short 
+
+Linex_shortGB=Ref(z,-1)<-100 AND z>-100; 
+
+barsfromline_shortGB=BarsSince(Linex_shortGB); 
+
+CCIhook_shortGB=Ref(z,-1)>100 AND z<100; 
+
+GB100short= z>-100 AND barsfromline_shortGB<=12 AND angle_EMA34<=-5 AND CCIhook_shortGB AND trend==-1;
+
+// TT Long 
+
+Minuszero=BarsSince(Ref(z,-1)>0);
+
+TTCCIhook_long= z>Ref(z,-1) AND z>0; 
+
+TTlong= z<100 AND Ref(trend,-Minuszero)==1 AND LLV(Ref(z,-1),BarsSince(Ref(z,-1)>=100))>-100 AND HHV(Ref(z,-1),BarsSince(Ref(z,-1)< 0))>=100 
+
+		AND TTCCIhook_long AND Ref(minusbars,-1)>=4 AND Ref(minusbars,-1)<=9;
+
+// TT Short 
+
+Pluszero=BarsSince(Ref(z,-1)<0);
+
+TTCCIhook_short=z<Ref(z,-1) AND z<0; 
+
+TTshort= z>-100 AND Ref(trend,-Pluszero)==-1 AND HHV(Ref(z,-1),BarsSince(Ref(z,-1)<=-100))<100 AND LLV(Ref(z,-1),BarsSince(Ref(z,-1)>0))<=-100 
+
+		AND  TTCCIhook_short AND Ref(plusbars,-1)>=4 AND Ref(plusbars,-1)<=9;
+
+//Ghost Long and Short
+
+SetBarsRequired(10000,10000);
+
+// Tools
+
+bi=BarIndex();
+
+#include <
+
+procedure gkZigZag( n, arrayL, arrayH, type, point, startbar )
+
+{
+
+//_SECTION_BEGIN("gkZig_"+n);
+
+global pb;
+
+global tb;
+
+global tp;
+
+global pp;
+
+global Ctb;
+
+global Cpb;
+
+global CPp;
+
+global CTp;
+
+global Value;
+
+global reverse;
+
+global moveup;
+
+global turnprice;
+
+Pup=ArrayH;
+
+Pdn=ArrayL; 
+
+Value[startbar] = Pdn[startbar];
+
+if(type==1) Reverse = Point;
+
+if(type==2) Reverse = Value*(Point/100);
+
+if(type==3) Reverse = Point;
+
+//[startbar]
+
+Bar = BarIndex();
+
+BarTurn = 0;
+
+BarEnd[startbar] = bar[startbar];
+
+Moveup[startbar] = 0;
+
+Movedown[startbar] = 1;
+
+turnaround = turnprice[startbar] = Null;
+
+for( i = StartBar+1; i < BarCount; i++ )
+
+{
+
+if(type==1) Reverse[i] = Point;
+
+if(type==2) Reverse[i] = Value[i-1]*(Point/100);
+
+if(type==3) Reverse[i] = Point[i];
+
+	if( Pup[i] >= Value[i-1] && Moveup[i-1] ) // UU
+
+	{
+
+		Value[i] = Pup[i];
+
+		BarEnd[i] = Bar[i];
+
+		Moveup[i] = 1;
+
+		Movedown[i] = 0;
+
+		/*if((Value[i]-reverse[i])>=turnaround)*/ turnaround = Value[i]-reverse[i];
+
+		turnprice[i] = turnaround;
+	}
+
+	else
+
+	{   
+
+		if( Pdn[i] <= turnaround && Moveup[i-1] ) // UD
+
+		{
+
+			Value[i] = Pdn[i];
+
+			BarTurn[i] = Bar[i];
+
+			BarEnd[i] = Bar[i];
+
+			Moveup[i] = 0;
+
+			Movedown[i] = 1;
+
+ 			turnaround = Value[i]+reverse[i];
+
+			turnprice[i] = turnaround;
+		}
+
+		else
+
+		{
+			if( Pdn[i] <= Value[i-1] && Movedown[i-1] ) // DD
+
+			{
+				Value[i] = Pdn[i];
+
+				BarEnd[i] = Bar[i];
+
+				Moveup[i] = 0;
+
+				Movedown[i] = 1;
+
+				/*if((Value[i]+reverse[i])<=turnaround)*/ turnaround = Value[i]+reverse[i];
+
+				turnprice[i] = turnaround;
+			}
+
+			else
+
+			{
+
+				if( Pup[i]>=turnaround && Movedown[i-1] ) // DU
+
+				{
+
+					Value[i] = Pup[i];
+
+					BarTurn[i] = Bar[i];
+
+					BarEnd[i] = Bar[i];
+
+					Moveup[i] = 1;
+
+					Movedown[i] = 0; 
+  
+					turnaround = Value[i]-reverse[i];
+
+					turnprice[i] = turnaround;
+				}
+
+				else
+
+				{
+
+					Moveup[i] = Moveup[i-1];
+
+					Movedown[i] = Movedown[i-1];
+
+					Value[i] = Value[i-1];
+
+					Reverse[i] = Reverse[i-1];
+
+					BarEnd[i] = BarEnd[i-1];
+
+					turnprice[i] = turnprice[i-1];
+
+				}
+			}
+		}
+	}
+
+if(type==1) Reverse[i] = Point;
+
+if(type==2) Reverse[i] = Value[i]*(Point/100);
+
+if(type==3) Reverse[i] = Point[i];
+
+}
+
+Turn = ValueWhen(Barend==BarIndex(),Value-(moveup-movedown)*Reverse);
+
+CreateTrough = moveUp AND Ref(moveDown,-1); 
+
+CreatePeak = movedown AND Ref(moveup,-1);
+
+LastOfRunUp = Ref(CreatePeak,1); 
+
+LastOfRunDown = Ref(CreateTrough,1);
+
+turnref = barend==bar AND Ref(Barturn==Bar,1);
+
+tptop = moveup AND BarIndex()==IIf( turnref, ValueWhen( LastOfRunUp, barend, 1 ), ValueWhen( LastOfRunUp, barend, 0 ) );
+
+tpbot = movedown AND BarIndex()==IIf( turnref, ValueWhen( LastOfRunDown, barend, 1 ),ValueWhen( LastOfRunDown, barend, 0 ) );
+
+pb = BarsSince(tptop);
+
+tb = BarsSince(tpbot);
+
+pp = ValueWhen( tptop, Value );
+
+tp = ValueWhen( tpbot, Value );
+
+TroughTurnPrice = ValueWhen( tpbot, tp+Reverse );
+
+PeakTurnPrice = ValueWhen( tptop, pp-Reverse );
+
+Ctb = BarsSince( CreateTrough );
+
+Cpb = BarsSince( CreatePeak );
+
+CPp = ValueWhen( Createpeak, PeakTurnPrice );
+
+CTp = ValueWhen( Createtrough, TroughTurnPrice );
+
+RightTP = IIf( BarIndex()<ValueWhen( tpbot, BarIndex(), 0 ), ValueWhen( tpbot, Value, 0 ), LastValue(pdn) );
+
+RightPP = IIf( BarIndex()<ValueWhen( tptop, BarIndex(), 0 ), ValueWhen( tptop, Value, 0 ), LastValue(pup) );
+
+RightTB = IIf( BarIndex()<ValueWhen( tpbot, BarIndex(), 0 ), ValueWhen( tpbot, BarIndex(), 0 ), BarCount-1 );
+
+RightPB = IIf( BarIndex()<ValueWhen( tptop, BarIndex(), 0 ), ValueWhen( tptop, BarIndex(), 0 ), BarCount-1 );
+
+x0 = IIf( tptop, ValueWhen( tptop, BarIndex(), 1 ),  ValueWhen( tpbot, BarIndex(), 1 ) );
+
+x1 = IIf( tptop, rightTB, RightPB );
+
+y0 = IIf( tptop, pp, tp );
+
+y1 = IIf( tptop, RightTP, RightPP );
+
+//_SECTION_END();
+
+}
+
+points = Param("Ghost and M-ghost sensetivity", 4, 1, 100 , 1); 
+
+gkZigZag( "p", z, z, 1, points, zperiod );
+
+// define base peaks and troughs
+
+Pk = pb==0;
+
+Tr = tb==0;
+
+function P(n){ return ValueWhen(Pk,z,n);}
+
+function T(n){ return ValueWhen(Tr,z,n);}
+
+// Ghost
+
+LPeak = P(0)>P(1) AND P(0)>P(-1) AND P(1)>0 AND P(0)>0 AND P(-1)>0
+
+ AND T(0)>T(1) AND T(0)>0 AND T(-1)>0 AND IIf(T(1)>0,P(1)>P(2),1);
+
+HPeak = P(1)>P(2) AND P(1)>P(0) AND P(2)>0 AND P(1)>0 AND P(0)>0
+
+ AND T(1)>T(2) AND T(1)>0 AND T(0)>0 AND IIf(T(2)>0,P(2)>P(3),1);
+
+RPeak = P(2)>P(3) AND P(2)>P(1) AND P(3)>0 AND P(2)>0 AND P(1)>0
+
+ AND T(2)>T(3) AND T(2)>0 AND T(1)>0 AND IIf(T(3)>0,P(3)>P(4),1);
+
+pLeftShoulder = Pk AND LPeak AND z>0;
+
+pHead = Pk AND HPeak AND z>0;
+
+pRightShoulder = Pk AND RPeak AND z>0;
+
+pLeftNeck = Tr AND Ref(LPeak,-1) AND z>0;
+
+pRightNeck = Tr AND Ref(HPeak,-1) AND z>0;
+
+// Ghost INVERTED 
+
+LTrough = T(0)<T(1) AND T(0)<T(-1) AND T(1)<0 AND T(0)<0 AND T(-1)<0
+
+ AND P(0)<P(1) AND P(0)<0 AND P(-1)<0 AND IIf(P(1)<0,T(1)<T(2),1);
+
+HTrough = T(1)<T(2) AND T(1)<T(0) AND T(2)<0 AND T(1)<0 AND T(0)<0
+
+ AND P(1)<P(2) AND P(1)<0 AND P(0)<0 AND IIf(P(2)<0,T(4)<T(3),1);
+
+RTrough = T(2)<T(3) AND T(2)<T(1) AND T(3)<0 AND T(2)<0 AND T(1)<0
+
+ AND P(2)<P(3) AND P(2)<0 AND P(1)<0 AND IIf(P(3)<0,T(3)<T(4),1);
+
+nLeftShoulder = Tr AND LTrough AND z<0;
+
+nHead = Tr AND HTrough AND z<0;
+
+nRightShoulder = Tr AND RTrough AND z<0;
+
+nLeftNeck = Pk AND Ref(LTrough,-1) AND z<0;
+
+nRightNeck = Pk AND Ref(HTrough,-1) AND z<0;
+
+// Mittons
+
+bLPeak = P(0)<P(1) AND P(0)<P(-1) AND P(1)>0 AND P(0)>0 AND P(-1)>0
+
+ AND T(0)>T(1) AND T(0)>0 AND T(-1)>0 AND IIf(T(1)>0,P(1)>P(2),1);
+
+bHPeak = P(1)<P(2) AND P(1)<P(0) AND P(2)>0 AND P(1)>0 AND P(0)>0
+
+ AND T(1)>T(2) AND T(1)>0 AND T(0)>0 AND IIf(T(2)>0,P(2)>P(3),1);
+
+bRPeak = P(2)<P(3) AND P(2)<P(1) AND P(3)>0 AND P(2)>0 AND P(1)>0
+
+ AND T(2)>T(3) AND T(2)>0 AND T(1)>0 AND IIf(T(3)>0,P(3)>P(4),1);
+
+bpLeftShoulder = Pk AND bLPeak AND z>0;
+
+bpHead = Pk AND bHPeak AND z>0;
+
+bpRightShoulder = Pk AND bRPeak AND z>0;
+
+bpLeftNeck = Tr AND Ref(bLPeak,-1) AND z>0;
+
+bpRightNeck = Tr AND Ref(bHPeak,-1) AND z>0;
+
+// Mittons INVERTED 
+
+bLTrough = T(0)>T(1) AND T(0)>T(-1) AND T(1)<0 AND T(0)<0 AND T(-1)<0
+
+ AND P(0)<P(1) AND P(0)<0 AND P(-1)<0 AND IIf(P(1)<0,T(1)<T(2),1);
+
+bHTrough = T(1)>T(2) AND T(1)>T(0) AND T(2)<0 AND T(1)<0 AND T(0)<0
+
+ AND P(1)<P(2) AND P(1)<0 AND P(0)<0 AND IIf(P(2)<0,T(4)<T(3),1);
+
+bRTrough = T(2)>T(3) AND T(2)>T(1) AND T(3)<0 AND T(2)<0 AND T(1)<0
+
+ AND P(2)<P(3) AND P(2)<0 AND P(1)<0 AND IIf(P(3)<0,T(3)<T(4),1);
+
+bnLeftShoulder = Tr AND bLTrough AND z<0;
+
+bnHead = Tr AND bHTrough AND z<0;
+
+bnRightShoulder = Tr AND bRTrough AND z<0;
+
+bnLeftNeck = Pk AND Ref(bLTrough,-1) AND z<0;
+
+bnRightNeck = Pk AND Ref(bHTrough,-1) AND z<0;
+
+pPattern = Flip(pLeftNeck ,Ref(pRightShoulder,-1));
+
+nPattern = Flip(nLeftNeck ,Ref(nRightShoulder,-1));
+
+bpPattern = Flip(bpLeftNeck ,Ref(bpRightShoulder,-1));
+
+bnPattern = Flip(bnLeftNeck ,Ref(bnRightShoulder,-1));
+
+glong = 0;
+
+gshort = 0;
+
+mlong = 0;
+
+mshort = 0;
+
+pb0=px0=0;
+
+pp0=py0=Null;
+
+pb1=px1=0;
+
+pp1=py1=Null;
+
+pb1x=px1x=0;
+
+pp1x=py1x=Null;
+
+pdraw = pTrade = 0;
+
+pslope = pline = Null;
+
+nb0=nx0=0;
+
+np0=ny0=Null;
+
+nb1=nx1=0;
+
+np1=ny1=Null;
+
+nb1x=nx1x=0;
+
+np1x=ny1x=Null;
+
+ndraw = nTrade = 0;
+
+nslope = nline = Null;
+
+bpb0=bpx0=0;
+
+bpp0=bpy0=Null;
+
+bpb1=bpx1=0;
+
+bpp1=bpy1=Null;
+
+bpb1x=bpx1x=0;
+
+bpp1x=bpy1x=Null;
+
+bpdraw = bpTrade = 0;
+
+bpslope = bpline = Null;
+
+bnb0=bnx0=0;
+
+bnp0=bny0=Null;
+
+bnb1=bnx1=0;
+
+bnp1=bny1=Null;
+
+bnb1x=bnx1x=0;
+
+bnp1x=bny1x=Null;
+
+bndraw = bnTrade = 0;
+
+bnslope = bnline = Null;
+
+for(i=BarCount-1;i>0;i--)
+
+{
+
+// Ghost Short
+
+	if(pRightNeck[i])
+	{
+		pb1x = i;
+
+		pp1x = z[i];
+	}
+		px1x[i] = pb1x;
+
+		py1x[i] = pp1x;
+
+	if(pLeftNeck[i])
+	{
+		pb1x = 0;
+
+		pp1x = Null;
+	}
+
+// Ghost Long
+
+	if(nRightNeck[i])
+	{
+		nb1x = i;
+
+		np1x = z[i];
+	}
+		nx1x[i] = nb1x;
+
+		ny1x[i] = np1x;
+
+	if(nLeftNeck[i])
+	{
+		nb1x = 0;
+
+		np1x = Null;
+	}
+
+// Mittons Short
+
+	if(bpRightNeck[i])
+	{
+		bpb1x = i;
+
+		bpp1x = z[i];
+	}
+		bpx1x[i] = bpb1x;
+
+		bpy1x[i] = bpp1x;
+
+	if(bpLeftNeck[i])
+	{
+		bpb1x = 0;
+
+		bpp1x = Null;
+	}
+
+// Mittons Long
+
+	if(bnRightNeck[i])
+	{
+		bnb1x = i;
+
+		bnp1x = z[i];
+	}
+		bnx1x[i] = bnb1x;
+
+		bny1x[i] = bnp1x;
+
+	if(bnLeftNeck[i])
+	{
+		bnb1x = 0;
+
+		bnp1x = Null;
+	}
+
+}
+
+for(i=1;i<BarCount;i++)
+
+{
+
+// Ghost Short
+
+	if(pLeftNeck[i])
+
+	{
+		pb0 = i;
+
+		pp0 = z[i];
+
+		pb1 = px1x[i];
+
+		pp1 = py1x[i];
+
+		pslope = (pp1-pp0)/(pb1-pb0);
+
+		pdraw = 1;
+
+	}
+
+	if(pdraw)	pline[i] = pp0 + pslope*(i-pb0);
+
+	else pline[i] = Null;
+
+	if(pRightShoulder[i-1] AND z[i-1]>pline[i-1]) pTrade = 1;
+
+	if(z[i]<pline[i] AND pTrade) gshort[i] = 1;
+
+//AND z[i-1]>=pline[i-1] 
+
+	if(pDraw AND (z[i]<pline[i] OR Tr[i]) AND pPattern[i]==0 )
+
+	{
+		pdraw = 0;
+
+		pTrade = 0;
+	}
+
+
+// Ghost Long
+
+	if(nLeftNeck[i])
+
+	{
+		nb0 = i;
+
+		np0 = z[i];
+
+		nb1 = nx1x[i];
+
+		np1 = ny1x[i];
+
+		nslope = (np1-np0)/(nb1-nb0);
+
+		ndraw = 1;
+	}
+	if(ndraw)	nline[i] = np0 + nslope*(i-nb0);
+
+	else nline[i] = Null;
+
+	if(nRightShoulder[i-1] AND z[i-1]<nline[i-1]) nTrade = 1;
+
+	if(z[i]>nline[i] AND nTrade) glong[i] = 1;
+
+//AND z[i-1]<=nline[i-1]
+ 
+	if(nDraw AND (z[i]>nline[i] OR Tr[i]) AND nPattern[i]==0 )
+
+	{
+		ndraw = 0;
+
+		nTrade = 0;
+	}
+
+// Mittons Short
+
+	if(bpLeftNeck[i])
+
+	{
+		bpb0 = i;
+
+		bpp0 = z[i];
+
+		bpb1 = bpx1x[i];
+
+		bpp1 = bpy1x[i];
+
+		bpslope = (bpp1-bpp0)/(bpb1-bpb0);
+
+		bpdraw = 1;
+
+	}
+
+	if(bpdraw)	bpline[i] = bpp0 + bpslope*(i-bpb0);
+
+	else bpline[i] = Null;
+
+	if(bpRightShoulder[i-1] AND z[i-1]>bpline[i-1]) bpTrade = 1;
+
+	if(z[i]<bpline[i] AND bpTrade) mshort[i] = 1;
+
+//AND z[i-1]>=bpline[i-1] 
+
+	if(bpDraw AND (z[i]<bpline[i] OR Tr[i]) AND bpPattern[i]==0 )
+	{
+		bpdraw = 0;
+
+		bpTrade = 0;
+	}
+
+// Mittons Long
+
+	if(bnLeftNeck[i])
+
+	{
+		bnb0 = i;
+
+		bnp0 = z[i];
+
+		bnb1 = bnx1x[i];
+
+		bnp1 = bny1x[i];
+
+		bnslope = (bnp1-bnp0)/(bnb1-bnb0);
+
+		bndraw = 1;
+
+	}
+
+	if(bndraw)	bnline[i] = bnp0 + bnslope*(i-bnb0);
+
+	else bnline[i] = Null;
+
+	if(bnRightShoulder[i-1] AND z[i-1]<bnline[i-1]) bnTrade = 1;
+
+	if(z[i]>bnline[i] AND bnTrade) mlong[i] = 1;
+
+//AND z[i-1]<=bnline[i-1] 
+
+	if(bnDraw AND (z[i]>bnline[i] OR Tr[i]) AND bnPattern[i]==0 )
+
+	{
+		bndraw = 0;
+
+		bnTrade = 0;
+
+	}
+
+}
+
+//Plot(pLine,"Ghost NeckLine",colorBrightGreen,styleThick);
+
+//Plot(nLine,"Ghost NeckLine",colorBrightGreen,styleThick);
+
+//Plot(bpLine,"Mittons NeckLine",colorLightBlue,styleThick);
+
+//Plot(bnLine,"Mittons NeckLine",colorLightBlue,styleThick);
+
+// 
+
+// CCI Exit
+
+HookExitLong= z<=Ref(z,-1);
+
+HookExitShort= z>=Ref(z,-1);
+
+// Mplay Exit 
+
+MplayExitLong= z<Ref(z,-1) AND Ref(z,-1)<Ref(z,-2) AND C<O; 
+
+MplayExitShort= z>Ref(z,-1) AND Ref(z,-1)>Ref(z,-2) AND C>O; 
+
+// Heikin-Ashi Conservative Exit
+
+HExitConLong=  HaLow < HaOpen;
+
+HExitConShort=  HaHigh > HaOpen;
+
+// Heikin-Ashi Agressive Exit
+
+HExitAgrLong= HaClose < HaOpen;
+
+HExitAgrShort= HaClose > HaOpen;
+
+// Exit code
+
+ExitCode= Param("Exits:CCI Hook=0,Mplay=1,H-AshiCon=2,H-AshiAgr=3",0,0,3);
+
+ExitCodeTitleLong= IIf(ExitCode==0,HookExitLong,IIf(Exitcode==1,MplayExitLong,IIf(Exitcode==2,HExitConLong,IIf(Exitcode==3,HExitAgrLong,4))));
+
+ExitCodeTitleShort= IIf(ExitCode==0,HookExitShort,IIf(Exitcode==1,MplayExitShort,IIf(Exitcode==2,HExitConShort,IIf(Exitcode==3,HExitAgrShort,4))));
+
+Filter =(hfelong OR zlrlong OR famirlong OR Vtlong OR gb100long OR ttlong OR (glong AND z<100) OR (mlong AND z<100) OR hfeshort OR zlrshort OR famirshort OR vtshort OR gb100short OR ttshort OR (gshort AND z>-100) OR (mshort AND z>-100));// AND markethours;
+
+Buy = (hfelong OR zlrlong OR famirlong OR (Vtlong AND NOT famirlong) OR gb100long OR ttlong OR (glong AND z<100) OR (mlong AND z<100)) AND markethours;
+
+Sell= ExitCodeTitleLong OR MArketClose ; 
+
+Short = (hfeshort OR zlrshort OR famirshort OR (Vtshort AND NOT famirshort) OR gb100short OR ttshort OR (gshort AND z>-100) OR (mshort AND z>-100)) AND markethours;
+
+Cover = ExitCodeTitleShort OR MArketClose; 
+
+AddColumn( IIf(zlrlong,1,IIf(zlrshort,-1,0)) ,"ZLR",1.0,colorWhite,IIf(zlrlong,colorBlue,IIf(zlrshort,colorDarkRed,colorBlack))); 
+
+AddColumn(IIf(famirlong,1,IIf(famirShort,-1,0)),"Famir",1.0,colorWhite,IIf(famirlong,colorBlue,IIf(famirShort,colorDarkRed,colorBlack))); 
+
+AddColumn(IIf(vtlong AND NOT famirlong,1,IIf(vtShort AND NOT famirshort,-1,0)),"Vegas",1.0,colorWhite,IIf(vtlong AND NOT famirlong,colorBlue,IIf(vtShort AND NOT famirshort,colorDarkRed,colorBlack))); 
+
+AddColumn(IIf(gb100long,1,IIf(gb100Short,-1,0)),"GB100",1.0,colorWhite,IIf(gb100long,colorBlue,IIf(gb100Short,colorDarkRed,colorBlack))); 
+
+AddColumn(IIf(ttlong,1,IIf(ttShort,-1,0)),"TT",1.0,colorWhite,IIf(ttlong,colorBlue,IIf(ttShort,colorDarkRed,colorBlack))); 
+
+AddColumn(IIf(glong,1,IIf(gShort,-1,0)),"Ghost",1.0,colorWhite,IIf(glong,colorBlue,IIf(gShort,colorDarkRed,colorBlack))); 
+
+AddColumn(IIf(mlong,1,IIf(mShort,-1,0)),"M-Ghost",1.0,colorWhite,IIf(mlong,colorBlue,IIf(mShort,colorDarkRed,colorBlack))); 
+
+AddColumn(IIf(hfelong,1,IIf(hfeshort,-1,0)),"HFE",1.0,colorWhite,IIf(hfelong,colorBlue,IIf(hfeshort,colorDarkRed,colorBlack))); 
+
+AddColumn(IIf(A OR bars,1,IIf(A OR bars,-1,0)),"Choppy",1.0,colorWhite,IIf(A OR bars,colorDarkYellow,IIf(A OR bars,colorDarkYellow,colorBlack)));
+
+//Plot Sell/Cover Arrows 
+
+Sell1=ExRem(Sell,Buy); 
+
+Cover1=ExRem(Cover,Short); 
+
+SellCode=ParamToggle("Plot sell/cover arrows ","No|Yes",0); 
+
+PlotShapes(IIf(Sell1 AND SellCode==1,shapeHollowDownArrow,shapeNone),colorBlue,0,200,10); 
+
+PlotShapes(IIf(Cover1 AND SellCode==1,shapeHollowDownArrow,shapeNone),colorDarkRed,0,200,10);  
+
+// Calculate pattern hilites
+
+	// Long
+
+	AsellL= Buy;
+
+	BsellL= Sell1;
+
+	bs_AsellL= BarsSince(AsellL);
+
+	bs_BsellL= BarsSince(BsellL);
+
+	bars_sellL= IIf(bs_ASellL<= bs_BsellL,bs_AsellL,0);
+
+	//Short
+
+	AsellS= Short;
+
+	BsellS= Cover1;
+
+	bs_AsellS= BarsSince(AsellS);
+
+	bs_BsellS= BarsSince(BsellS);
+
+	bars_sellS= IIf(bs_ASellS<= bs_BsellS,bs_AsellS,0);
+
+	hilitecode=ParamToggle("Hi-lite patterns","No|Yes",0);  
+
+// Price Panel
+
+Lastpricetitlehi= WriteIf(H>Ref(H,-1),EncodeColor(colorBrightGreen) + Ref(H,-1) + "  " + H , EncodeColor(colorBlack)+ Ref(H,-1) + "  " + H);
+
+Lastpricetitlelo= WriteIf(L<Ref(L,-1),EncodeColor(colorDarkRed) + Ref(L,-1) + "  " + L , EncodeColor(colorBlack) + Ref(L,-1) + "  " + L);
+
+// Display Patterns
+
+		zlrcode=ParamToggle("(1)  zlr ","No|Yes",0); 
+
+		famircode=ParamToggle("(2)  famir ","No|Yes",0); 
+
+		Vtcode=ParamToggle("(3)  vt ","No|Yes",0); 
+	
+		gb100code=ParamToggle("(4)  gb100 ","No|Yes",0); 
+
+		ttcode=ParamToggle("(5)  tt ","No|Yes",0); 
+
+		Ghostcode=ParamToggle("(6) ghost","No|Yes",0); 
+
+		Mghostcode=ParamToggle("(7) m-ghost","No|Yes",0); 
+
+		Hfecode=ParamToggle("(Triangle) hfe","No|Yes",0); 
+
+		Choppycode=ParamToggle("choppy","No|Yes",0); 
+
+		CCIcolorChoppycode=ParamToggle("Hi-lite wcci line when choopy","No|Yes",0); 
+
+		// CCI Line 
+
+		CCIcolor= IIf(((bars_sellL OR bars_sellS) OR Filter) AND hilitecode==1,colorWhite,IIf(NOT nochop AND CCIcolorChoppycode==1,colorLightOrange,WCCIcolor));
+
+		Plot(round(z),"WCCI", CCIcolor, styleLine | styleThick); 
+
+// Ticks on bar entry
+
+MArginCode= ParamToggle("Display Ticks on bar entry","No|Yes",0);  
+
+MarginLong= (round((C-O)*100)*.01)*ticMult;
+
+MarginShort= (round((O-C)*100)*.01)*ticMult;
+
+MArginCodeTitleLong= WriteIf(MArginCode==1, EncodeColor(colorYellow) + "   " + MarginLong,"");
+
+MArginCodeTitleShort= WriteIf(MArginCode==1, EncodeColor(colorYellow) + "   " +  MarginShort,"");
+
+		//Signal Title 
+
+			Signaltitle= WriteIf(zlrlong AND zlrcode==1 AND MArkethours,EncodeColor(colorWhite) + "ZLR " + MArginCodeTitleLong + "\n", 
+
+			WriteIf(zlrshort AND zlrcode==1 AND MArkethours,EncodeColor(colorWhite) + "ZLR" + MArginCodeTitleShort + "\n", 
+
+			WriteIf(Famirshort AND famircode==1 AND MArkethours,EncodeColor(colorWhite) + "FAMIR " + MArginCodeTitleShort + "\n",  
+
+			WriteIf(Famirlong AND famircode==1 AND MArkethours,EncodeColor(colorWhite) + "FAMIR " + MArginCodeTitleLong + "\n", 
+
+			WriteIf(VTlong AND Vtcode==1 AND MArkethours,EncodeColor(colorWhite) + "VT " + MArginCodeTitleLong + "\n", 
+
+			WriteIf(VTshort AND Vtcode==1 AND MArkethours,EncodeColor(colorWhite) + "VT " + MArginCodeTitleShort + "\n", 
+	
+			WriteIf(GB100long AND gb100code==1 AND MArkethours,EncodeColor(colorWhite) + "GB100 " + MArginCodeTitleLong + "\n", 
+
+			WriteIf(Gb100short AND gb100code==1 AND MArkethours,EncodeColor(colorWhite) + "GB100 " + MArginCodeTitleShort + "\n", 
+
+			WriteIf(TTLong AND ttcode==1 AND MArkethours,EncodeColor(colorWhite) + "TT " + MArginCodeTitleLong + "\n", 
+
+			WriteIf(TTShort AND ttcode==1 AND MArkethours,EncodeColor(colorWhite) + "TT " + MArginCodeTitleShort + "\n", 
+			
+			WriteIf(gLong AND z<100 AND ghostcode==1 AND MArkethours,EncodeColor(colorWhite) + "GHOST " + MArginCodeTitleLong + "\n", 
+
+			WriteIf(gshort AND z>-100 AND ghostcode==1 AND MArkethours,EncodeColor(colorWhite) + "GHOST " + MArginCodeTitleShort + "\n", 
+
+			WriteIf(mLong AND z<100 AND mghostcode==1 AND MArkethours,EncodeColor(colorWhite) + "M-GHOST " + MArginCodeTitleLong + "\n", 
+
+			WriteIf(mshort AND z>-100 AND mghostcode==1 AND MArkethours,EncodeColor(colorWhite) + "M-GHOST " + MArginCodeTitleShort + "\n", 
+
+			WriteIf(HFElong AND Hfecode==1 AND MArkethours,EncodeColor(colorWhite) + "HFE " + MArginCodeTitleLong + "\n",
+
+			WriteIf(HFEshort AND Hfecode==1 AND MArkethours,EncodeColor(colorWhite) + "HFE " + MArginCodeTitleShort + "\n",""))))))))))))))));
+
+			//Choppy Title 
+
+			ChoppyTitle= WriteIf(A AND Choppycode==1,EncodeColor(colorLightOrange) + "CHOPPY" + "\n",WriteIf(bars AND Choppycode==1,EncodeColor(colorLightOrange) + "CHOPPY" + "\n",""));
+
+		patterntitle= WriteIf(zlrcode==1 OR famircode==1 OR Hfecode==1 OR Vtcode==1 OR gb100code==1 OR Ghostcode==1 OR Mghostcode==1 OR ttcode==1 OR choppycode==1,Signaltitle + ChoppyTitle,"");
+
+		//Pattern Codes
+
+		PlotShapes(IIf(zlrlong AND  zlrcode==1 AND MArkethours,shapeDigit1,shapeNone),colorCustom15,0,0,-15); 
+
+		PlotShapes(IIf(zlrshort AND  zlrcode==1 AND MArkethours,shapeDigit1+ shapePositionAbove,shapeNone),colorDarkRed,0,0,-15);
+
+		PlotShapes(IIf(famirlong AND  famircode==1 AND MArkethours,shapeDigit2,shapeNone),colorCustom15,0,0,-15); 
+
+		PlotShapes(IIf(famirShort AND famircode==1 AND MArkethours,shapeDigit2+ shapePositionAbove,shapeNone),colorDarkRed,0,0,-15) ;
+
+		PlotShapes(IIf(Ref(z,-1)>200 AND z<200 AND  Hfecode==1 AND MArkethours,shapeHollowDownTriangle,shapeNone),IIf(Ref(z,-1)>200 AND z<200 AND Hfecode==1 AND MArkethours,colorYellow,shapeNone),0,200,-20); 
+
+		PlotShapes(IIf(Ref(z,-1)<-200 AND z>-200 AND  Hfecode==1 AND MArkethours,shapeHollowUpTriangle,shapeNone),IIf(Ref(z,-1)<-200 AND z>-200 AND Hfecode==1 AND MArkethours,colorYellow,shapeNone),0,-200,-20) ;
+
+		PlotShapes(IIf(vtlong AND NOT famirlong AND Vtcode==1 AND MArkethours,shapeDigit3,shapeNone),colorCustom15,0,Min(z,0),-45); 
+
+		PlotShapes(IIf(vtshort AND NOT famirshort AND Vtcode==1 AND MArkethours,shapeDigit3+ shapePositionAbove,shapeNone),colorDarkRed,0,Max(z,0),-45);
+
+		PlotShapes(IIf(GB100long AND gb100code==1 AND MArkethours,shapeDigit4,shapeNone),colorCustom15,0,0,-60); 
+
+		PlotShapes(IIf(GB100short AND gb100code==1 AND MArkethours,shapeDigit4+ shapePositionAbove,shapeNone),colorDarkRed,0,0,-60); 
+
+		PlotShapes(IIf(ttlong AND ttcode==1 AND MArkethours,shapeDigit5,shapeNone),colorCustom15,0,0,-50); 
+
+		PlotShapes(IIf(ttshort AND ttcode==1 AND MArkethours,shapeDigit5+ shapePositionAbove,shapeNone),colorDarkRed,0,Max(z,0),-50);
+
+		PlotShapes(IIf(glong AND z<100 AND ghostcode==1 AND MArkethours,shapeDigit6,shapeNone),colorCustom15,0,0,-35); 
+
+		PlotShapes(IIf(gShort AND z>-100 AND ghostcode==1 AND MArkethours,shapeDigit6+ shapePositionAbove,shapeNone),colorDarkRed,0,Max(z,0),-35);
+
+		PlotShapes(IIf(mlong AND z<100 AND mghostcode==1 AND MArkethours,shapeDigit7,shapeNone),colorCustom15,0,0,-35); 
+
+		PlotShapes(IIf(mShort AND z>-100 AND mghostcode==1 AND MArkethours,shapeDigit7+ shapePositionAbove,shapeNone),colorDarkRed,0,Max(z,0),-35);
+
+//Backtest Stats
+
+Stopcode=Param("Stop below entry bar",default=1,0.01,100);
+
+// BackTest Long
+
+LastPatLong= Buy;
+
+LastPatBarLong= BarsSince(LastPatLong);
+
+DDL=IIf((round((LLV(L,LastPatBarLong)-Ref(C,-LastPatBarLong))*100)*.01)*ticmult>=0,0,(round((LLV(L,LastPatBarLong)-Ref(C,-LastPatBarLong))*100)*.01)*ticmult);
+
+BTExitLong= (round((C-Ref(C,-LastPatBarLong))*100)*.01)*ticMult; 
+
+PeakLong= IIf((round((HHV(H,LastPatBarLong)-Ref(C,-LastPatBarLong))*100)*.01)*ticmult<=0,0,(round((HHV(H,LastPatBarLong)-Ref(C,-LastPatBarLong))*100)*.01)*ticmult);
+
+StopLong1=  (Ref(L,-LastPatBarLong) - (Stopcode*tick)) - Ref(C,-LastPatBarLong);
+
+stoplong= (round((StopLong1)*100)*.01)*ticMult;
+
+BackTestLongTitle= WriteIf(Sell1,EncodeColor(colorCustom15) + "\n" +
+
+"Stop:   " + stoplong + "\n" +
+
+"DD:     " + DDL + "\n" + 
+
+"Exit:      " + BTExitLong+ "\n" +
+
+"Peak:   " +  PeakLong +"\n",EncodeColor(colorBlack) + "\n" +
+
+"Stop:   " + stoplong + "\n" +
+
+"DD:     " + DDL + "\n" + 
+
+"Exit:      " + BTExitLong+ "\n" +
+
+"Peak:   " +  PeakLong +"\n"); 
+
+// BackTest Short
+
+LastPatShort= Short;
+
+LastPatBarShort= BarsSince(LastPatShort);
+
+DDS= IIf((round((Ref(C,-LastPatBarShort)- HHV(H,LastPatBarShort))*100)*.01)*ticmult>=0,0,(round((Ref(C,-LastPatBarShort)- HHV(H,LastPatBarShort))*100)*.01)*ticmult);
+
+BTExitShort= (round((Ref(C,-LastPatBarShort)-C)*100)*.01)*ticMult; 
+
+PeakShort= IIf((round((Ref(C,-LastPatBarShort)-LLV(L,LastPatBarShort))*100)*.01)*ticmult<=0,0,(round((Ref(C,-LastPatBarShort)-LLV(L,LastPatBarShort))*100)*.01)*ticmult);
+
+StopShort1=  Ref(C,-LastPatBarShort) - (Ref(H,-LastPatBarShort) + (Stopcode*tick));
+
+StopShort= (round((StopShort1)*100)*.01)*ticMult;
+
+BackTestShortTitle= WriteIf(Cover1,EncodeColor(colorDarkRed) + "\n" +
+
+"Stop:   " + StopShort + "\n" +
+
+"DD:     " + DDS + "\n" + 
+
+"Exit:      " + BTExitShort+ "\n" +
+
+"Peak:   " +  PeakShort +"\n",EncodeColor(colorBlack)+ "\n" + 
+
+"Stop:   " + StopShort + "\n" +
+
+"DD:     " + DDS + "\n" + 
+
+"Exit:      " + BTExitShort+ "\n" + 
+
+"Peak:   " +  PeakShort +"\n");
+
+// HOD , LOD, Range
+
+HiDayTitle = EncodeColor(colorYellow) + "HOD  "; 
+
+HiDayTitle = HiDayTitle + EncodeColor(colorYellow) + HiDay + "   +" + abs(((round((HiDay-C)*100)*.01)*ticMult));
+
+LoDayTitle = EncodeColor(colorYellow) + "LOD  "; 
+
+LoDayTitle = LoDayTitle + EncodeColor(colorYellow) + LoDay + "    -" + abs(((round((C-LoDay)*100)*.01)*ticMult));
+
+RangeTitle1 = EncodeColor(colorBlack) + "Day Range    " + EncodeColor(colorBlack) + StrToNum(NumToStr(round((HiDay - LoDay)*TicMult), 4.4));
+
+DayStatsCode= ParamToggle("Display HOD,LOD,Range","No|Yes",0); 
+
+DayStatsTitle= WriteIf(DayStatsCode==1,"\n" + HiDayTitle + "\n" + LoDayTitle + "\n" + RangeTitle1,"");
+
+// Backtest title
+
+BackTestCode= ParamToggle("Display Stop,DD,Peak,Exit stats","No|Yes",0); 
+
+BackTestTitle= WriteIf((bars_sellL>0 OR Sell1) AND BackTestCode==1,BackTestLongTitle ,WriteIf((bars_sellS>0 OR Cover1 )AND BackTestCode==1,BackTestShortTitle ,""));
+
+// Plot EMA angle
+
+//EMAdist=(round((EMA34-C)*100)*.01)*ticMult; 
+
+//EMAcolorvar= WriteIf(angle_EMA34>=0,EncodeColor(colorTurquoise) + "+" + //abs(round(angle_EMA34)) + "d",WriteIf(angle_EMA34<=0, //EncodeColor(colorDarkRed) +  "-" + abs(round(angle_EMA34)) + "d",""));
+
+//EMAdisttitle=WriteIf(EMAdist<=0 AND AllAnglesCode==1, "\n" + "\n" + //EncodeColor(colorTurquoise) + "34EMA  -" + round(abs(EMAdist)) + "    " + //EMAcolorvar,
+
+			   //WriteIf(EMAdist>=0 AND AllAnglesCode==1, "\n" + "\n" + //EncodeColor(colorDarkRed) + "34EMA  +" + round(abs(EMAdist)) + "    " + //EMAcolorvar,""));
+
+// Plot LSMA angle
+
+//LSMAdist= (round((LSMA25-C)*100)*.01)*ticMult; 
+
+//LSMAcolorvar= WriteIf(angle_LSMA25>=0,EncodeColor(colorBrightGreen)+ "+" + //abs(round(angle_LSMA25)) + "d",WriteIf(angle_LSMA25<=0, //EncodeColor(colorDarkRed) + "-" + abs(round(angle_LSMA25)) + "d",""));
+
+//LSMAdisttitle= WriteIf(LSMAdist<=0 AND AllAnglesCode==1, "\n" + //EncodeColor(colorBrightGreen) + "25LSMA  -" + round(abs(LSMAdist)) + "    " + //LSMAcolorvar,
+
+			     //WriteIf(LSMAdist>=0 AND AllAnglesCode==1, "\n" + //EncodeColor(colorDarkRed) + "25LSMA   +" + round(abs(LSMAdist)) + "    " + //LSMAcolorvar,""));
+
+// Plot CCI Angle
+
+//x1_z = 0; 
+
+//x2_z = 1; 
+
+//y1_z = 0; 
+
+//y2_z = (Ref(z, -1) - z) / Avg * range; 
+
+//c_z = sqrt((x2_z - x1_z)*(x2_z - x1_z) + (y2_z - y1_z)*(y2_z - y1_z)); 
+
+//PI = atan(1.00) * 4; 
+
+//angle_z = round(180 * acos((x2_z - x1_z)/c_z) / PI); 
+
+//angle_z = IIf(y2_z > 0, - angle_z, angle_z); 
+
+//CCIanglestitle= WriteIf(angle_z>=0 AND AllAnglesCode==1, 
+
+//EncodeColor(colorBrightGreen) + "\n"  + "WCCI Angle   " + "+" + abs(Angle_z) 
+
+//+ "d",
+
+				  //WriteIf(angle_z<=0 AND AllAnglesCode==1, 
+
+//EncodeColor(colorDarkRed) + "\n" + "WCCI Angle   " + "-" + abs(angle_z) + 
+
+//"d",""));
+
+//Plot CCI Points
+
+Pointcode= ParamToggle("Display CCI Points","No|Yes",0); 
+
+CCipointmove= round(abs(z-Ref(z,-1)));
+
+CCIpointmovetitle= WriteIf(CCipointmove<15 AND 
+
+Pointcode==1,EncodeColor(colorDarkRed) + "\n"  + "WCCI Points   " + " " + 
+
+CCipointmove,WriteIf(CCipointmove>=15 AND CCipointmove<20 AND 
+
+Pointcode==1,EncodeColor(colorYellow) + "\n"  + "WCCI Points   " + " " + 
+
+CCipointmove,WriteIf(CCIpointmove>=20 AND 
+
+Pointcode==1,EncodeColor(colorBrightGreen) + "\n"  + "WCCI Points   " + " " + 
+
+CCipointmove,"")));
+
+// Title
+
+Title = "\n" + "" + Name() + ", " + Interval(2) + ", " + Date() + "\n" +
+
+TitleTimeRem + EncodeColor(colorWhite) + "\n" +
+
+Titletrending  + "\n" + Lastpricetitlehi + "\n" + EncodeColor(colorBlack) +  " " + Close +   
+
+ "\n" + Lastpricetitlelo + "\n"  +
+
+patterntitle + BackTestTitle + wptitle + DayStatsTitle + 
+
+CCIpointmovetitle; // + EMAdisttitle + LSMAdisttitle;

@@ -1,0 +1,27 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Derivative Oscillator
+//  Author/Uploader: Dan 
+//  E-mail:          
+//  Date/Time Added: 2003-03-15 12:22:53
+//  Origin:          
+//  Keywords:        
+//  Level:           basic
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=263
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=263
+//
+//------------------------------------------------------------------------------
+//
+//  Derivative Oscillator as mentioned in Constance Brown's book Technical
+//  Analysys for Trading Professional.
+//
+//------------------------------------------------------------------------------
+
+/* CBDerivative */
+/* Set Scaling to Automatic, Show dates On, Percent On, Middle On */
+
+Graph0= (EMA(EMA(RSI(14),5),3))-(MA(EMA(EMA(RSI(14),5),3),9));
+
+Graph0Style = 2; 
+Graph0Color = 4;

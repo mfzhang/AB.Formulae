@@ -1,0 +1,156 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Price with Woodies Pivots
+//  Author/Uploader: Larry Jameson 
+//  E-mail:          cljameson@hotmail.com
+//  Date/Time Added: 2004-11-16 18:19:36
+//  Origin:          
+//  Keywords:        Price Woodie Woodies Pivots
+//  Level:           semi-advanced
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=406
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=406
+//
+//------------------------------------------------------------------------------
+//
+//  Produces a price chart with Woodies Pivots. Only the pivots within a
+//  specified range are displayed to prevent autoscaling problems
+//
+//------------------------------------------------------------------------------
+
+////////////////////////////
+// Price with Woodies Pivots - Coded by Wring
+// Amibroker 4.63.1
+////////////////////////////
+//
+// Note:  Turn on GridLine boxes "Middle" and "Show Dates" 
+//        in the dialogue box just below
+//
+//	  Set the Background Colour to DarkOliveGreen
+//	  Set the Axes Colour to White
+//
+////////////////////////////////////
+// Calculate and plot Woodies Pivots
+////////////////////////////////////
+function Pivots()
+{
+TimeFrameSet(inDaily);
+//global R1,R2,S1,S2,PP,ColorR,ColorS,ColorP;
+PP  =  round((Ref(H,-1) + Ref(L,-1) + O*2) / 4);
+R1  =  (2 * PP) - Ref(L,-1);
+S1  =  (2 * PP)  - Ref(H,-1);
+R2  =  (PP - S1) + R1;
+S2  =  PP - (R1 - S1);
+TimeFrameRestore();
+
+ColorR = colorRose; 		// Resistance Bars colour
+ColorS = colorOrange; 	// Support Bars colour
+ColorP = colorSkyblue; 	// Woodies Pivot colour
+
+// set all pivots but last to close +5
+// This is done to eliminate problems with autoscaling
+//
+for (i=0;i<(BarCount-2);i++)
+{
+	PP[i] = H[i]+5;
+	R1[i] = H[i]+5;
+	R2[i] = H[i]+5;
+	S1[i] = H[i]+5;
+	S2[i] = H[i]+5;
+}
+//
+// I want the pivot line to emerge as a straight line from the right
+// side of the chart
+//
+for (i=BarCount-2;i>(BarCount-13);i--)//set the last bars to the final PP value
+{
+	PP[i] = PP[BarCount-1];
+	R1[i] = R1[BarCount-1];
+	R2[i] = R2[BarCount-1];
+	S1[i] = S1[BarCount-1];
+	S2[i] = S2[BarCount-1];
+
+	ColorR[i] = colorRose;
+	ColorS[i] = colorOrange;
+	ColorP[i] = colorSkyblue;
+}
+//
+// Conceal all but the trailing portion of the line
+//
+for (i=0;i<BarCount-10;i++) //hide the line except most recent 10 bars
+{
+	ColorR[i] = ColorS[i] = ColorP[i] = colorDarkOliveGreen;
+}
+
+//
+// If price is above or below current price by more than this 
+// amount then the pivot won't print.  Trying to print offscreen
+// values causes problems with autoscaling
+//
+tolerance = 25;  
+//
+// Over how many bars should the tolerance be applied
+//
+range=30;
+// 
+// set up some constants
+//
+LastBar = BarCount-1;
+HiVal = HHV(H,range);
+LoVal = LLV(L,range);
+style = styleLine;
+
+//
+//only plot pivots close to price
+//
+if (PP[LastBar]<(HiVal[LastBar]+tolerance) AND 
+						PP[LastBar]>(LoVal[LastBar]-tolerance))
+{
+//	PlotOHLC(PP,PP,PP,PP,"PP",colorSkyblue);
+	Plot(PP,"PP",ColorP,style);
+}
+if (R1[LastBar]<(HiVal[LastBar]+tolerance) )//only plot pivots close to close price
+{
+	Plot(R1,"R1",ColorR,style);
+}
+if (R2[LastBar]<(HiVal[LastBar]+tolerance) )//only plot pivots close to close price
+{
+	Plot(R2,"R2",ColorR,style);
+}
+if (S1[LastBar] > (LoVal[LastBar]-tolerance) )//only plot pivots close to close price
+{
+	Plot(S1,"S1",ColorS,style);
+}
+if (S2[LastBar] > (LoVal[LastBar]-tolerance) )//only plot pivots close to close price
+{
+	Plot(S2,"S2",ColorS,style);
+}
+}
+
+
+// Main Program starts here
+
+////////////////////////////
+// Price with Woodies Pivots 
+////////////////////////////
+CCI14 = CCI(14);
+LSMA = round(LinearReg( Close, 25 )); 
+// Plot Woodies Pivots
+pivots();
+
+// Setup the title
+TitleStr = Interval(2) + " " + Name() + ", " + 
+			EncodeColor(colorPink) + 
+			"Price=" + H + ", " + L + ", " + C + ", " + 
+			EncodeColor(colorTurquoise) + "34EMA" +	",\n" +
+			EncodeColor(colorYellow) + "25lsma" + 
+			EncodeColor(colorCustom12) + ", " +
+			EncodeColor(colorWhite) + Date();
+Title = TitleStr;
+
+// Plot the price bars
+PlotOHLC(O,H,L,C,"Price",
+		IIf(C >= Ref(C,-1),colorGreen,colorRed),styleCandle);
+
+Plot(EMA(C,34),"ema34",colorTurquoise,styledashed | styleNoLabel);
+Plot(LSMA,"lsma",colorYellow,styleLine | styleNoLabel);

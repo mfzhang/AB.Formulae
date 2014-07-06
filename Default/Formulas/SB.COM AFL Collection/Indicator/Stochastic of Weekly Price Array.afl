@@ -1,0 +1,43 @@
+//------------------------------------------------------------------------------
+//
+//  Formula Name:    Stochastic of Weekly Price Array
+//  Author/Uploader: Anthony Faragasso 
+//  E-mail:          ajf1111@epix.net
+//  Date/Time Added: 2002-09-21 20:03:31
+//  Origin:          
+//  Keywords:        
+//  Level:           medium
+//  Flags:           indicator
+//  Formula URL:     http://www.amibroker.com/library/formula.php?id=225
+//  Details URL:     http://www.amibroker.com/library/detail.php?id=225
+//
+//------------------------------------------------------------------------------
+//
+//  Plot the Stochastic of Weekly Price array , while staying in
+//
+//  Daily mode.
+//
+//------------------------------------------------------------------------------
+
+//Stochastic of Weekly Price Array
+//Coded by Anthony Faragasso
+//Ver. 1.01 Update#1
+//Credit to Tomasz for some help
+
+weekstart = DayOfWeek() < Ref( DayOfWeek(), -1 );
+weekend = DayOfWeek() > Ref( DayOfWeek(),1);
+/**Establish Weekly Price arrays**/
+WeeklyOpen=ValueWhen(DayOfWeek()< Ref(DayOfWeek(),-1) ,Open);
+WeeklyHigh = ValueWhen( weekend, HighestSince( weekstart, High ) );
+WeeklyLow = ValueWhen( weekend, LowestSince( weekstart, Low ) );
+WeeklyClose=ValueWhen(DayOfWeek() > Ref( DayOfWeek(),1),Close);
+WeeklyVolume=ValueWhen(DayOfWeek() > Ref(DayOfWeek(),1),Sum(V,5));
+
+/***Stochastic of Weekly Price Array***/
+
+t=3;//Slowing Variable
+
+StochWeekly=(Sum((weeklyclose-weeklylow),t)/Sum((weeklyhigh-weeklylow),t))*100;
+
+Plot(Stochweekly,EncodeColor(colorBlack)+"Stoch_Weekly",colorRed,styleLine);
+Plot(EMA(Stochweekly,3),EncodeColor(colorBlue)+"Signal",colorBlue,styleLine);

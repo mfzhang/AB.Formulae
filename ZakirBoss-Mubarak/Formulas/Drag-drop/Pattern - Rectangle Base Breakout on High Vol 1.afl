@@ -1,0 +1,33 @@
+_SECTION_BEGIN("Pattern");
+function rectBaseBreakout() {
+
+  hhv9d = HHV(H, 9);
+  llv9d = LLV(L, 9);
+
+  hhv1m = HHV(H, 20);
+  llv1m = LLV(L, 20);
+
+  hhv2m = HHV(H, 40);
+  llv2m = LLV(L, 40);
+
+  hhv50d = HHV(H, 50);
+  llv50d = LLV(L, 50);
+
+  vhhv60d = HHV(V, 60);
+
+  cav50d = MA(C, 50);
+  vav20d = MA(V, 20);
+
+  C1 = H > Ref(hhv9d, -1);
+  C2 = L > Ref(llv9d, -1);
+  C3 = C > Ref(hhv50d, -1);
+  C4 = C > cav50d;
+  C5 = V > (vav20d * 2);
+  C6 = vav20d > minAvgVolume;
+  C7 = cav50d > 0;
+  C8 = (llv1m < (llv2m * 1.05)) OR (llv1m <= (llv2m + 1));
+  C9 = (hhv1m > (hhv2m * 0.95)) OR (hhv1m >= (hhv2m - 1));
+
+  return( C1 AND C2 AND C3 AND C4 AND C5 AND C6 AND C7 AND C8 AND C9 );
+}
+_SECTION_END();
