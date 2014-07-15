@@ -1,10 +1,11 @@
-AB.Formulae (**AmiBroker formula collection**)
+AB.Formulae 
 ==============================================
-## Web Analysis
----------------
+(**AmiBroker formula collection**)
+### Special topic: Web Analysis
+
 In order to see a page with the `e` button on **AmiBroker** for a web-analysis you need to setup a mechanism to wonder!
 
-Go to `Tools -> Customize -> Web Pages -> New` and paste the following in the `URL` field
+> Go to `Tools -> Customize -> Web Pages -> New` and paste the following in the `URL` field
 ```
 http://www.dsebd.org/print_Company.php?name={t}&tko=t&obr=t&odn=t
 ```
